@@ -58,6 +58,7 @@ local onlyUnlocked = false
 local colorOn = { W = true, U = true, B = true, R = true, G = true }
 local typeOn  = { Prayer = true, Creature = true, Spell = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
+local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local sortMode = "COST"      -- "COST" or "ZONE"
 local cardPoolKeys = {}
 local deckListKeys = {}
@@ -93,6 +94,7 @@ local function CardPassesFilters(cardId, card)
     if card.color and colorOn[card.color] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
+    if zoneFilter and GetTypeGroup(card) == "Creature" and card.zone ~= zoneFilter then return false end
     return true
 end
 
@@ -482,6 +484,87 @@ sortBtn:SetScript("OnClick", function()
     D:RefreshAll()
 end)
 
+-- =========================================================================
+-- ZONE FILTER (applies to creatures only)
+-- =========================================================================
+local function BuildZoneList()
+    local present, list = {}, {}
+    for _, card in pairs(TTS.Cards or {}) do
+        if card.zone and not present[card.zone] then
+            present[card.zone] = true
+            table.insert(list, card.zone)
+        end
+    end
+    table.sort(list)
+    return list
+end
+
+local zoneLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+zoneLabel:SetPoint("TOPLEFT", D, "TOPLEFT", 500, -46)
+zoneLabel:SetText("Zone:")
+
+local zoneBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
+zoneBtn:SetSize(150, 22)
+zoneBtn:SetPoint("TOPLEFT", D, "TOPLEFT", 540, -41)
+zoneBtn:SetNormalFontObject("GameFontNormalSmall")
+zoneBtn:SetHighlightFontObject("GameFontHighlightSmall")
+
+local function UpdateZoneButton()
+    zoneBtn:SetText(zoneFilter or "All Zones")
+end
+UpdateZoneButton()
+
+local zoneMenu = CreateFrame("Frame", nil, D, backdropTemplate)
+zoneMenu:SetPoint("TOPRIGHT", zoneBtn, "BOTTOMRIGHT", 0, -2)
+zoneMenu:SetFrameStrata("DIALOG")
+zoneMenu:EnableMouse(true)
+if zoneMenu.SetBackdrop then
+    zoneMenu:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    zoneMenu:SetBackdropColor(0, 0, 0, 0.95)
+end
+zoneMenu:Hide()
+
+local function SetZoneFilter(zone)
+    zoneFilter = zone
+    UpdateZoneButton()
+    zoneMenu:Hide()
+    D:RefreshPool()
+end
+
+do
+    local entries = { false }  -- false = "All Zones"
+    for _, z in ipairs(BuildZoneList()) do table.insert(entries, z) end
+
+    local ROW_H, COL_W, COLS = 18, 130, 3
+    local rowsPerCol = math.ceil(#entries / COLS)
+    for i, zone in ipairs(entries) do
+        local col = math.floor((i - 1) / rowsPerCol)
+        local rowIdx = (i - 1) % rowsPerCol
+        local row = CreateFrame("Button", nil, zoneMenu)
+        row:SetSize(COL_W - 4, ROW_H)
+        row:SetPoint("TOPLEFT", zoneMenu, "TOPLEFT", 6 + col * COL_W, -6 - rowIdx * ROW_H)
+        row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text:SetPoint("LEFT", 4, 0)
+        row.text:SetWidth(COL_W - 10)
+        row.text:SetJustifyH("LEFT")
+        row.text:SetWordWrap(false)
+        row.text:SetText(zone or "All Zones")
+        row:SetScript("OnClick", function() SetZoneFilter(zone or nil) end)
+    end
+    local usedCols = math.ceil(#entries / rowsPerCol)
+    zoneMenu:SetSize(12 + usedCols * COL_W, 12 + rowsPerCol * ROW_H)
+end
+
+zoneBtn:SetScript("OnClick", function()
+    if zoneMenu:IsShown() then zoneMenu:Hide() else zoneMenu:Show() end
+end)
+
 local resetFiltersBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
 resetFiltersBtn:SetSize(110, 22)
 resetFiltersBtn:SetPoint("TOPLEFT", D, "TOPLEFT", 500, -68)
@@ -493,6 +576,9 @@ resetFiltersBtn:SetScript("OnClick", function()
     classFilter = nil
     UpdateClassButton()
     classMenu:Hide()
+    zoneFilter = nil
+    UpdateZoneButton()
+    zoneMenu:Hide()
     for _, cb in ipairs(filterChecks) do cb:Sync() end
     D:RefreshPool()
 end)
@@ -1039,6 +1125,7 @@ end)
 D:SetScript("OnHide", function()
     CardTooltip_OnLeave()
     classMenu:Hide()
+    zoneMenu:Hide()
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end

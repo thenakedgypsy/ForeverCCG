@@ -19,6 +19,9 @@ local achievementUIPatched = false
 local recentKilledGUIDs = {}
 local recentKilledCount = 0
 
+local KILL_DEDUPE_SECONDS = 15    -- same kill reported by several events
+local LOOT_DEDUPE_SECONDS = 600   -- looting a corpse that was already credited
+
 -- Fast lookup maps for open-world mob cards
 local mobCardsByNpcID = {}
 local mobCardsByName = {}
@@ -165,9 +168,10 @@ function TTS.BossTracker:RecordMobKill(card)
     end
 end
 
-function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name)
+function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
+    local window = dedupeSeconds or KILL_DEDUPE_SECONDS
     if guid and not IsSecret(guid) then
-        if recentKilledGUIDs[guid] and (GetTime() - recentKilledGUIDs[guid]) < 15 then
+        if recentKilledGUIDs[guid] and (GetTime() - recentKilledGUIDs[guid]) < window then
             return
         end
         recentKilledGUIDs[guid] = GetTime()
@@ -175,7 +179,7 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name)
         if recentKilledCount > 1000 then
             local now = GetTime()
             for g, t in pairs(recentKilledGUIDs) do
-                if (now - t) > 30 then recentKilledGUIDs[g] = nil end
+                if (now - t) > LOOT_DEDUPE_SECONDS then recentKilledGUIDs[g] = nil end
             end
             recentKilledCount = 0
         end
@@ -447,7 +451,7 @@ tracker:SetScript("OnEvent", function(self, event, ...)
             local guid = SafeCall(UnitGUID, "target")
             local name = SafeCall(UnitName, "target")
             if guid and not IsSecret(guid) then
-                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name)
+                                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, LOOT_DEDUPE_SECONDS)
             end
         end
 
@@ -456,7 +460,11 @@ tracker:SetScript("OnEvent", function(self, event, ...)
         if msg and not IsSecret(msg) and type(msg) == "string" then
             local mobName = msg:match("^(.-) dies, you gain")
             if mobName then
-                TTS.BossTracker:RecordMobKillByGUIDOrName(nil, mobName)
+                local guid
+                if SafeCall(UnitIsDead, "target") and SafeCompare(SafeCall(UnitName, "target"), mobName) then
+                    guid = SafeCall(UnitGUID, "target")
+                end
+                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, mobName)
             end
         end
     end
