@@ -789,6 +789,11 @@ end
 -- =========================================================================
 -- BOTTOM CONTROLS (DEV UNLOCK, RESET & SCAN, CLEAR DECK)
 -- =========================================================================
+-- =========================================================================
+-- BOTTOM CONTROLS (CLEAR DECK)
+-- Dev Unlock and Reset / Scan buttons disabled for release.
+-- =========================================================================
+--[==[
 local devBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
 devBtn:SetSize(115, 24)
 devBtn:SetPoint("BOTTOMLEFT", 20, 18)
@@ -822,6 +827,7 @@ resetBtn:SetScript("OnClick", function()
         D:RefreshAll()
     end
 end)
+]==]
 
 local countLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 countLabel:SetPoint("BOTTOMRIGHT", -40, 20)
