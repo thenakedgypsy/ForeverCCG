@@ -249,10 +249,12 @@ pU:SetJustifyH("LEFT")
 pU:SetWordWrap(true)
 pU.rawText = "You build your collection by playing World of Warcraft. Some cards are free, the rest are earned.\n\n" ..
     "|cFFFFD200Always available:|r Prayers and Class Spells (10 for each of the nine classes: Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid).\n\n" ..
-    "|cFFFFD200Creature cards start locked.|r Every zone has 10 creatures to collect. Defeat the creature in the world to unlock its card:\n" ..
-    "• Each kill adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
+    "|cFFFFD200Creature cards start locked.|r Every zone has 10 creatures to collect. Defeat the creature in the world for a |cFFFFD200chance|r to unlock its card:\n" ..
+    "• Each card drop adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
+    "• The chance falls with each copy you own: 1st copy |cFF00FF00100%|r, 2nd |cFFFFFFFF25%|r, 3rd |cFFFFFFFF12%|r, 4th |cFFFFFFFF6%|r.\n" ..
     "• Kills count when you, your party or your raid (including pets) defeat the creature.\n" ..
-    "• Dungeon and raid boss cards unlock from the boss kills recorded on your character, 1 copy per defeat (up to 4). They update when you log in, reload, or leave an instance.\n\n" ..
+    "• |cFFFFD200Dungeon bosses|r that aren't the final boss drop their card with the |cFFFFFFFFsame chance|r as normal creatures.\n" ..
+    "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
     "|cFFFFD200In the Deckbuilder:|r locked cards are greyed out and cannot be added; hover a card to see your kills. Tick |cFF00FF00Unlocked only|r to hide everything you can't use yet.\n\n"
 
 local h2 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
