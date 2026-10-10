@@ -12,7 +12,6 @@ TTS.BossTracker = {}
 local tracker = CreateFrame("Frame")
 tracker:RegisterEvent("ADDON_LOADED")
 
--- Detect client environment matching KillDex logic
 local buildNum = select(4, GetBuildInfo()) or 0
 local isMainlineProject = WOW_PROJECT_ID ~= nil and WOW_PROJECT_MAINLINE ~= nil
                           and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
