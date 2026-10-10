@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: ForeverCCG
+## Notes: 2-Player card game engine inspired by MTG.
+## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos
+## Version: 0.0.1
+## Author: the_naked_gypsy
+
+Database.lua
+BossTracker.lua
+MobTooltip.lua
+Network.lua
+MinimapButton.lua
+CoreEngine.lua
+CardLogic.lua
+DummyLogic.lua
+WaitingRoom.lua
+Rules.lua
+UI\MainFrame.lua
+UI\DeckBuilder.lua
+UI\Board.lua
