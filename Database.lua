@@ -602,21 +602,21 @@ TTS.Cards = {
     ["ELW01"] = {
         id = "ELW01", name = "Kobold Vermin", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10913,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 6,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Kobold", npcId = 6,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ELW02"] = {
         id = "ELW02", name = "Kobold Worker", cost = "{W}", cmc = 1, color = "W", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10912,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 257,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Kobold", npcId = 257,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ELW03"] = {
         id = "ELW03", name = "Defias Thug", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 5035,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 38,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 38,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -629,10 +629,11 @@ TTS.Cards = {
     },
     ["ELW05"] = {
         id = "ELW05", name = "Kobold Tunneler", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 139,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 475,
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 139,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Kobold", npcId = 475,
+        anthem = { tag = "faction", value = "Kobold", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Kobolds you control get +1/+0."
     },
     ["ELW06"] = {
         id = "ELW06", name = "Porcine Entourage", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -644,30 +645,31 @@ TTS.Cards = {
     ["ELW07"] = {
         id = "ELW07", name = "Defias Rogue Wizard", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 2359,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 474,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 474,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["ELW08"] = {
         id = "ELW08", name = "Murloc Forager", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 441,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 46,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Murloc", npcId = 46,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ELW09"] = {
         id = "ELW09", name = "Murloc Lurker", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 983,
-        zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 732,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Murloc", npcId = 732,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ELW10"] = {
         id = "ELW10", name = "Gruff Swiftbite", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 175,
+        power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 175,
         zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 100,
+        anthem = { tag = "zone", value = "Elwynn Forest", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Elwynn Forest creatures you control get +1/+1."
     },
 
     -- DUN MOROGH
@@ -695,7 +697,7 @@ TTS.Cards = {
     ["DUN04"] = {
         id = "DUN04", name = "Frostmane Troll Whelp", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 5606,
-        zone = "Dun Morogh", creatureType = "Humanoid", npcId = 706,
+        zone = "Dun Morogh", creatureType = "Humanoid", faction = "Troll", npcId = 706,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -788,30 +790,31 @@ TTS.Cards = {
     ["TIR07"] = {
         id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 1005,
-        zone = "Tirisfal Glades", creatureType = "Humanoid", npcId = 1544,
+        zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Murloc", npcId = 1544,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["TIR08"] = {
         id = "TIR08", name = "Vile Fin Muckdweller", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 346,
-        zone = "Tirisfal Glades", creatureType = "Humanoid", npcId = 1545,
+        zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Murloc", npcId = 1545,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["TIR09"] = {
         id = "TIR09", name = "Scarlet Vanguard", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
-        zone = "Tirisfal Glades", creatureType = "Humanoid", npcId = 1540,
+        zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["TIR10"] = {
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 8, toughness = 10, isMob = true, isBoss = true, displayId = 5430,
+        power = 7, toughness = 9, isMob = true, isBoss = true, displayId = 5430,
         zone = "Tirisfal Glades", creatureType = "Undead", npcId = 10358,
+        anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Undead you control get +1/+0."
     },
 
     -- WESTFALL
@@ -825,7 +828,7 @@ TTS.Cards = {
     ["WES02"] = {
         id = "WES02", name = "Defias Smuggler", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 4418,
-        zone = "Westfall", creatureType = "Humanoid", npcId = 95,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 95,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -860,14 +863,14 @@ TTS.Cards = {
     ["WES07"] = {
         id = "WES07", name = "Defias Digger", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2441,
-        zone = "Westfall", creatureType = "Humanoid", npcId = 824,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["WES08"] = {
         id = "WES08", name = "Riverpaw Bandit", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 383,
-        zone = "Westfall", creatureType = "Humanoid", npcId = 452,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Gnoll", npcId = 452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -880,17 +883,18 @@ TTS.Cards = {
     },
     ["WES10"] = {
         id = "WES10", name = "Vultros", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 8, toughness = 8, flying = true, isMob = true, isBoss = true, displayId = 507,
+        power = 7, toughness = 7, flying = true, isMob = true, isBoss = true, displayId = 507,
         zone = "Westfall", creatureType = "Beast", npcId = 462,
+        anthem = { tag = "zone", value = "Westfall", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Flying."
+        text = "Flying. Other Westfall creatures you control get +1/+0."
     },
 
     -- LOCH MODAN
     ["LOC01"] = {
         id = "LOC01", name = "Tunnel Rat Vermin", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10913,
-        zone = "Loch Modan", creatureType = "Humanoid", npcId = 1172,
+        zone = "Loch Modan", creatureType = "Humanoid", faction = "Kobold", npcId = 1172,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -962,7 +966,7 @@ TTS.Cards = {
     ["SIL01"] = {
         id = "SIL01", name = "Moonrage Whitescalp", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 11180,
-        zone = "Silverpine Forest", creatureType = "Humanoid", npcId = 1769,
+        zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Worgen", npcId = 1769,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -983,14 +987,14 @@ TTS.Cards = {
     ["SIL04"] = {
         id = "SIL04", name = "Moonrage Glutton", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1947,
-        zone = "Silverpine Forest", creatureType = "Humanoid", npcId = 1779,
+        zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Worgen", npcId = 1779,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["SIL05"] = {
         id = "SIL05", name = "Vile Fin Shredder", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 441,
-        zone = "Silverpine Forest", creatureType = "Humanoid", npcId = 1767,
+        zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Murloc", npcId = 1767,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1048,56 +1052,58 @@ TTS.Cards = {
     ["RED03"] = {
         id = "RED03", name = "Redridge Poacher", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 551,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 424,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Gnoll", npcId = 424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["RED04"] = {
         id = "RED04", name = "Redridge Mystic", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 10789,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 430,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Gnoll", npcId = 430,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["RED05"] = {
         id = "RED05", name = "Murloc Flesheater", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 506,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 422,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 422,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = ""
     },
     ["RED06"] = {
         id = "RED06", name = "Redridge Basher", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 609,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 446,
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 609,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Gnoll", npcId = 446,
+        anthem = { tag = "faction", value = "Gnoll", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Gnolls you control get +1/+0."
     },
     ["RED07"] = {
         id = "RED07", name = "Murloc Scout", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 391,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 578,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 578,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = "Haste."
     },
     ["RED08"] = {
         id = "RED08", name = "Blackrock Champion", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 6044,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 435,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["RED09"] = {
         id = "RED09", name = "Squiddic", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 7, toughness = 7, isMob = true, isBoss = true, displayId = 5243,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 14270,
+        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 5243,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 14270,
+        anthem = { tag = "faction", value = "Murloc", p = 1, t = 1 },
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = ""
+        text = "Other Murlocs you control get +1/+1."
     },
     ["RED10"] = {
         id = "RED10", name = "Kazon", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 6041,
-        zone = "Redridge Mountains", creatureType = "Humanoid", npcId = 584,
+        zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 584,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = ""
     },
@@ -1134,7 +1140,7 @@ TTS.Cards = {
     ["DSK05"] = {
         id = "DSK05", name = "Defias Night Runner", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4276,
-        zone = "Duskwood", creatureType = "Humanoid", npcId = 215,
+        zone = "Duskwood", creatureType = "Humanoid", faction = "Defias", npcId = 215,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike, Haste."
     },
@@ -1148,7 +1154,7 @@ TTS.Cards = {
     ["DSK07"] = {
         id = "DSK07", name = "Nightbane Worgen", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 657,
-        zone = "Duskwood", creatureType = "Humanoid", npcId = 898,
+        zone = "Duskwood", creatureType = "Humanoid", faction = "Worgen", npcId = 898,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1162,7 +1168,7 @@ TTS.Cards = {
     ["DSK09"] = {
         id = "DSK09", name = "Nightbane Dark Runner", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 736,
-        zone = "Duskwood", creatureType = "Humanoid", npcId = 205,
+        zone = "Duskwood", creatureType = "Humanoid", faction = "Worgen", npcId = 205,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -1178,21 +1184,21 @@ TTS.Cards = {
     ["HIL01"] = {
         id = "HIL01", name = "Rot Hide Brute", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10851,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", npcId = 1939,
+        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1939,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["HIL02"] = {
         id = "HIL02", name = "Rot Hide Plague Weaver", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10855,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", npcId = 1940,
+        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1940,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["HIL03"] = {
         id = "HIL03", name = "Raging Rot Hide", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 10856,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", npcId = 1943,
+        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1943,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1206,7 +1212,7 @@ TTS.Cards = {
     ["HIL05"] = {
         id = "HIL05", name = "Syndicate Watchman", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 3, vigilance = true, isMob = true, isBoss = true, displayId = 3623,
-        zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2261,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Syndicate", npcId = 2261,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -1234,7 +1240,7 @@ TTS.Cards = {
     ["HIL09"] = {
         id = "HIL09", name = "Witherbark Headhunter", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 3997,
-        zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2556,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Troll", npcId = 2556,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1257,7 +1263,7 @@ TTS.Cards = {
     ["WET02"] = {
         id = "WET02", name = "Mosshide Fenrunner", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 714,
-        zone = "Wetlands", creatureType = "Humanoid", npcId = 1010,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Gnoll", npcId = 1010,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
@@ -1271,7 +1277,7 @@ TTS.Cards = {
     ["WET04"] = {
         id = "WET04", name = "Crimson Whelp", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 505,
-        zone = "Wetlands", creatureType = "Dragonkin", npcId = 1069,
+        zone = "Wetlands", creatureType = "Dragonkin", faction = "Scarlet Crusade", npcId = 1069,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1292,7 +1298,7 @@ TTS.Cards = {
     ["WET07"] = {
         id = "WET07", name = "Syndicate Highwayman", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 3984,
-        zone = "Wetlands", creatureType = "Humanoid", npcId = 2586,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2586,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -1313,7 +1319,7 @@ TTS.Cards = {
     ["WET10"] = {
         id = "WET10", name = "Molok the Crusher", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 536,
-        zone = "Wetlands", creatureType = "Humanoid", npcId = 2604,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = "Trample."
     },
@@ -1329,7 +1335,7 @@ TTS.Cards = {
     ["ALT02"] = {
         id = "ALT02", name = "Syndicate Thief", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 3709,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2241,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2241,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -1350,42 +1356,42 @@ TTS.Cards = {
     ["ALT05"] = {
         id = "ALT05", name = "Syndicate Wizard", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 2, toughness = 4, isMob = true, isBoss = true, displayId = 3712,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2319,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2319,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ALT06"] = {
         id = "ALT06", name = "Crushridge Ogre", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 11567,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2252,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2252,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["ALT07"] = {
         id = "ALT07", name = "Crushridge Brute", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 610,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2253,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2253,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["ALT08"] = {
         id = "ALT08", name = "Syndicate Assassin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2246,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["ALT09"] = {
         id = "ALT09", name = "Crushridge Mage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 8, isMob = true, isBoss = true, displayId = 6705,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2255,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2255,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ALT10"] = {
         id = "ALT10", name = "Crushridge Warmonger", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 536,
-        zone = "Alterac Mountains", creatureType = "Humanoid", npcId = 2287,
+        zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2287,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = ""
     },
@@ -1394,7 +1400,7 @@ TTS.Cards = {
     ["ARA01"] = {
         id = "ARA01", name = "Drywhisker Kobold", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 2153,
-        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2572,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Kobold", npcId = 2572,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1429,7 +1435,7 @@ TTS.Cards = {
     ["ARA06"] = {
         id = "ARA06", name = "Syndicate Prowler", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 4016,
-        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2588,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2588,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
@@ -1443,21 +1449,22 @@ TTS.Cards = {
     ["ARA08"] = {
         id = "ARA08", name = "Boulderfist Shaman", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 416,
-        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2570,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2570,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
         text = ""
     },
     ["ARA09"] = {
         id = "ARA09", name = "Darbel Montrose", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 4027,
-        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2598,
+        power = 6, toughness = 7, isMob = true, isBoss = true, displayId = 4027,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2598,
+        anthem = { tag = "faction", value = "Syndicate", p = 1, t = 1 },
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = ""
+        text = "Other Syndicate you control get +1/+1."
     },
     ["ARA10"] = {
         id = "ARA10", name = "Foulbelly", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 10, toughness = 10, isMob = true, isBoss = true, displayId = 11551,
-        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2601,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2601,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = ""
     },
@@ -1487,7 +1494,7 @@ TTS.Cards = {
     ["STV04"] = {
         id = "STV04", name = "Venture Co. Geologist", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 7197,
-        zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 1096,
+        zone = "Stranglethorn Vale", creatureType = "Humanoid", faction = "Venture Co.", npcId = 1096,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1515,7 +1522,7 @@ TTS.Cards = {
     ["STV08"] = {
         id = "STV08", name = "Venture Co. Strip Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 7202,
-        zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 674,
+        zone = "Stranglethorn Vale", creatureType = "Humanoid", faction = "Venture Co.", npcId = 674,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1538,14 +1545,14 @@ TTS.Cards = {
     ["BAD01"] = {
         id = "BAD01", name = "Shadowforge Tunneler", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 4932,
-        zone = "Badlands", creatureType = "Humanoid", npcId = 2739,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 2739,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BAD02"] = {
         id = "BAD02", name = "Shadowforge Darkweaver", cost = "{U}", cmc = 1, color = "U", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 4933,
-        zone = "Badlands", creatureType = "Humanoid", npcId = 2740,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 2740,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1580,21 +1587,21 @@ TTS.Cards = {
     ["BAD07"] = {
         id = "BAD07", name = "Dark Iron Kidnapper", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 7789,
-        zone = "Badlands", creatureType = "Humanoid", npcId = 15692,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 15692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BAD08"] = {
         id = "BAD08", name = "Shadowforge Surveyor", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6051,
-        zone = "Badlands", creatureType = "Humanoid", npcId = 4844,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4844,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BAD09"] = {
         id = "BAD09", name = "Shadowforge Digger", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 7, toughness = 7, isMob = true, isBoss = true, displayId = 6052,
-        zone = "Badlands", creatureType = "Humanoid", npcId = 4846,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4846,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1659,14 +1666,14 @@ TTS.Cards = {
     ["SWA08"] = {
         id = "SWA08", name = "Witherbark Sadist", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 6489,
-        zone = "Swamp of Sorrows", creatureType = "Humanoid", npcId = 2653,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Troll", npcId = 2653,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["SWA09"] = {
         id = "SWA09", name = "Witherbark Broodguard", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 1157,
-        zone = "Swamp of Sorrows", creatureType = "Beast", npcId = 2686,
+        zone = "Swamp of Sorrows", creatureType = "Beast", faction = "Troll", npcId = 2686,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
@@ -1696,7 +1703,7 @@ TTS.Cards = {
     ["HIN03"] = {
         id = "HIN03", name = "Witherbark Hideskinner", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 6483,
-        zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2651,
+        zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2651,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1724,21 +1731,21 @@ TTS.Cards = {
     ["HIN07"] = {
         id = "HIN07", name = "Revantusk Watcher", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 14760,
-        zone = "The Hinterlands", creatureType = "Humanoid", npcId = 14730,
+        zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 14730,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["HIN08"] = {
         id = "HIN08", name = "Vilebranch Shadow Hunter", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6538,
-        zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2645,
+        zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2645,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["HIN09"] = {
         id = "HIN09", name = "Vilebranch Blood Drinker", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 6495,
-        zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2646,
+        zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2646,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -1754,7 +1761,7 @@ TTS.Cards = {
     ["SEA01"] = {
         id = "SEA01", name = "Dark Iron Slaver", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 7789,
-        zone = "Searing Gorge", creatureType = "Humanoid", npcId = 5844,
+        zone = "Searing Gorge", creatureType = "Humanoid", faction = "Dark Iron", npcId = 5844,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -1781,10 +1788,11 @@ TTS.Cards = {
     },
     ["SEA05"] = {
         id = "SEA05", name = "Dark Iron Taskmaster", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 7798,
-        zone = "Searing Gorge", creatureType = "Humanoid", npcId = 5846,
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 7798,
+        zone = "Searing Gorge", creatureType = "Humanoid", faction = "Dark Iron", npcId = 5846,
+        anthem = { tag = "faction", value = "Dark Iron", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Dark Iron you control get +1/+0."
     },
     ["SEA06"] = {
         id = "SEA06", name = "Magma Elemental", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -1882,7 +1890,7 @@ TTS.Cards = {
     ["BLA09"] = {
         id = "BLA09", name = "Dreadmaul Mauler", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 14401,
-        zone = "Blasted Lands", creatureType = "Humanoid", npcId = 5977,
+        zone = "Blasted Lands", creatureType = "Humanoid", faction = "Ogre", npcId = 5977,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Trample."
     },
@@ -1898,14 +1906,14 @@ TTS.Cards = {
     ["BUR01"] = {
         id = "BUR01", name = "Dustbelcher Mauler", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 2, toughness = 1, isMob = true, isBoss = true, displayId = 1120,
-        zone = "Burning Steppes", creatureType = "Humanoid", npcId = 2717,
+        zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 2717,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
         text = ""
     },
     ["BUR02"] = {
         id = "BUR02", name = "Firegut Ogre", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 11549,
-        zone = "Burning Steppes", creatureType = "Humanoid", npcId = 7033,
+        zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 7033,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
         text = ""
     },
@@ -1947,7 +1955,7 @@ TTS.Cards = {
     ["BUR08"] = {
         id = "BUR08", name = "Firegut Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 10707,
-        zone = "Burning Steppes", creatureType = "Humanoid", npcId = 7035,
+        zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 7035,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
@@ -2019,7 +2027,7 @@ TTS.Cards = {
     ["WPL08"] = {
         id = "WPL08", name = "Scarlet Worker", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 4, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 10303,
-        zone = "Western Plaguelands", creatureType = "Humanoid", npcId = 1883,
+        zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1883,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -2033,7 +2041,7 @@ TTS.Cards = {
     ["WPL10"] = {
         id = "WPL10", name = "Scarlet High Clerist", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
         power = 9, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 10342,
-        zone = "Western Plaguelands", creatureType = "Humanoid", npcId = 1839,
+        zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1839,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -2176,10 +2184,11 @@ TTS.Cards = {
     },
     ["DUR10"] = {
         id = "DUR10", name = "Death Flayer", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 7, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
+        power = 6, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
         zone = "Durotar", creatureType = "Beast", npcId = 5823,
+        anthem = { tag = "zone", value = "Durotar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Deathtouch. Other Durotar creatures you control get +1/+1."
     },
 
     -- MULGORE
@@ -2207,7 +2216,7 @@ TTS.Cards = {
     ["MUL04"] = {
         id = "MUL04", name = "Bristleback Quilboar", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1967,
-        zone = "Mulgore", creatureType = "Humanoid", npcId = 2952,
+        zone = "Mulgore", creatureType = "Humanoid", faction = "Quilboar", npcId = 2952,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -2235,21 +2244,22 @@ TTS.Cards = {
     ["MUL08"] = {
         id = "MUL08", name = "Venture Co. Worker", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 7247,
-        zone = "Mulgore", creatureType = "Humanoid", npcId = 2978,
+        zone = "Mulgore", creatureType = "Humanoid", faction = "Venture Co.", npcId = 2978,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["MUL09"] = {
         id = "MUL09", name = "Venture Co. Supervisor", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 7245,
-        zone = "Mulgore", creatureType = "Humanoid", npcId = 2979,
+        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 7245,
+        zone = "Mulgore", creatureType = "Humanoid", faction = "Venture Co.", npcId = 2979,
+        anthem = { tag = "faction", value = "Venture Co.", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Venture Co. you control get +1/+1."
     },
     ["MUL10"] = {
         id = "MUL10", name = "Snagglespear", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 275,
-        zone = "Mulgore", creatureType = "Humanoid", npcId = 5786,
+        zone = "Mulgore", creatureType = "Humanoid", faction = "Quilboar", npcId = 5786,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -2307,7 +2317,7 @@ TTS.Cards = {
     ["DAR08"] = {
         id = "DAR08", name = "Stormscale Myrmidon", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 4036,
-        zone = "Darkshore", creatureType = "Humanoid", npcId = 2181,
+        zone = "Darkshore", creatureType = "Humanoid", faction = "Naga", npcId = 2181,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -2372,14 +2382,14 @@ TTS.Cards = {
     ["TEL07"] = {
         id = "TEL07", name = "Gnarlpine Shaman", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 897,
-        zone = "Teldrassil", creatureType = "Humanoid", npcId = 2009,
+        zone = "Teldrassil", creatureType = "Humanoid", faction = "Furbolg", npcId = 2009,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["TEL08"] = {
         id = "TEL08", name = "Gnarlpine Defender", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 4, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 6801,
-        zone = "Teldrassil", creatureType = "Humanoid", npcId = 2010,
+        zone = "Teldrassil", creatureType = "Humanoid", faction = "Furbolg", npcId = 2010,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -2495,7 +2505,7 @@ TTS.Cards = {
     ["STO04"] = {
         id = "STO04", name = "Windshear Digger", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 2153,
-        zone = "Stonetalon Mountains", creatureType = "Humanoid", npcId = 3999,
+        zone = "Stonetalon Mountains", creatureType = "Humanoid", faction = "Kobold", npcId = 3999,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -2601,10 +2611,11 @@ TTS.Cards = {
     },
     ["ASH09"] = {
         id = "ASH09", name = "Ghostpaw Alpha", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 7, toughness = 5, isMob = true, isBoss = true, displayId = 776,
+        power = 6, toughness = 5, isMob = true, isBoss = true, displayId = 776,
         zone = "Ashenvale", creatureType = "Beast", npcId = 3825,
+        anthem = { tag = "type", value = "Beast", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Beasts you control get +1/+0."
     },
     ["ASH10"] = {
         id = "ASH10", name = "Terrowulf Packlord", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
@@ -2690,7 +2701,7 @@ TTS.Cards = {
     ["DES01"] = {
         id = "DES01", name = "Burning Blade Augur", cost = "{W}", cmc = 1, color = "W", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 4699,
-        zone = "Desolace", creatureType = "Humanoid", npcId = 4663,
+        zone = "Desolace", creatureType = "Humanoid", faction = "Burning Blade", npcId = 4663,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -2704,7 +2715,7 @@ TTS.Cards = {
     ["DES03"] = {
         id = "DES03", name = "Burning Blade Reaver", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 4703,
-        zone = "Desolace", creatureType = "Humanoid", npcId = 4664,
+        zone = "Desolace", creatureType = "Humanoid", faction = "Burning Blade", npcId = 4664,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -2776,7 +2787,7 @@ TTS.Cards = {
     ["DUS03"] = {
         id = "DUS03", name = "Mirefin Murloc", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 652,
-        zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 4359,
+        zone = "Dustwallow Marsh", creatureType = "Humanoid", faction = "Murloc", npcId = 4359,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = ""
     },
@@ -2834,14 +2845,14 @@ TTS.Cards = {
     ["FER01"] = {
         id = "FER01", name = "Woodpaw Mystic", cost = "{W}", cmc = 1, color = "W", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10794,
-        zone = "Feralas", creatureType = "Humanoid", npcId = 5254,
+        zone = "Feralas", creatureType = "Humanoid", faction = "Gnoll", npcId = 5254,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = ""
     },
     ["FER02"] = {
         id = "FER02", name = "Woodpaw Reaver", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 10795,
-        zone = "Feralas", creatureType = "Humanoid", npcId = 5255,
+        zone = "Feralas", creatureType = "Humanoid", faction = "Gnoll", npcId = 5255,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = "First Strike."
     },
@@ -2855,7 +2866,7 @@ TTS.Cards = {
     ["FER04"] = {
         id = "FER04", name = "Hatecrest Sorceress", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 11260,
-        zone = "Feralas", creatureType = "Humanoid", npcId = 5336,
+        zone = "Feralas", creatureType = "Humanoid", faction = "Naga", npcId = 5336,
         modelCam = { zoom = 0.80, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = ""
     },
@@ -2955,7 +2966,7 @@ TTS.Cards = {
     ["TAN08"] = {
         id = "TAN08", name = "Dunemaul Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 11545,
-        zone = "Tanaris", creatureType = "Humanoid", npcId = 5474,
+        zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 5474,
         modelCam = { zoom = 0.67, camScale = 1.13, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
@@ -2969,7 +2980,7 @@ TTS.Cards = {
     ["TAN10"] = {
         id = "TAN10", name = "Cyclok the Mad", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
         power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 11532,
-        zone = "Tanaris", creatureType = "Humanoid", npcId = 8202,
+        zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 8202,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
@@ -2992,14 +3003,14 @@ TTS.Cards = {
     ["AZS03"] = {
         id = "AZS03", name = "Spitelash Warrior", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 6747,
-        zone = "Azshara", creatureType = "Humanoid", npcId = 6190,
+        zone = "Azshara", creatureType = "Humanoid", faction = "Naga", npcId = 6190,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["AZS04"] = {
         id = "AZS04", name = "Timbermaw Shaman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 2000,
-        zone = "Azshara", creatureType = "Humanoid", npcId = 6188,
+        zone = "Azshara", creatureType = "Humanoid", faction = "Furbolg", npcId = 6188,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3013,7 +3024,7 @@ TTS.Cards = {
     ["AZS06"] = {
         id = "AZS06", name = "Spitelash Myrmidon", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 11265,
-        zone = "Azshara", creatureType = "Humanoid", npcId = 6196,
+        zone = "Azshara", creatureType = "Humanoid", faction = "Naga", npcId = 6196,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = ""
     },
@@ -3027,7 +3038,7 @@ TTS.Cards = {
     ["AZS08"] = {
         id = "AZS08", name = "Legashi Rogue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 6743,
-        zone = "Azshara", creatureType = "Demon", npcId = 6201,
+        zone = "Azshara", creatureType = "Demon", faction = "Satyr", npcId = 6201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -3064,7 +3075,7 @@ TTS.Cards = {
     ["FEL03"] = {
         id = "FEL03", name = "Deadwood Warrior", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 2000,
-        zone = "Felwood", creatureType = "Humanoid", npcId = 7153,
+        zone = "Felwood", creatureType = "Humanoid", faction = "Furbolg", npcId = 7153,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3078,7 +3089,7 @@ TTS.Cards = {
     ["FEL05"] = {
         id = "FEL05", name = "Jadefire Satyr", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2019,
-        zone = "Felwood", creatureType = "Demon", npcId = 7105,
+        zone = "Felwood", creatureType = "Demon", faction = "Satyr", npcId = 7105,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3243,14 +3254,14 @@ TTS.Cards = {
     ["SLI08"] = {
         id = "SLI08", name = "Twilight Avenger", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 11811,
-        zone = "Silithus", creatureType = "Humanoid", npcId = 11880,
+        zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11880,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["SLI09"] = {
         id = "SLI09", name = "Twilight Geolord", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 11819,
-        zone = "Silithus", creatureType = "Humanoid", npcId = 11881,
+        zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11881,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3358,7 +3369,7 @@ TTS.Cards = {
     ["RFC03"] = {
         id = "RFC03", name = "Searing Blade Warlock", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11438,
-        zone = "Ragefire Chasm", creatureType = "Humanoid", npcId = 11324,
+        zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11324,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -3378,94 +3389,97 @@ TTS.Cards = {
     },
     ["RFC06"] = {
         id = "RFC06", name = "Jergosh the Invoker", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 11429,
-        zone = "Ragefire Chasm", creatureType = "Humanoid", npcId = 11518,
+        power = 3, toughness = 5, deathtouch = true, isMob = true, isBoss = true, displayId = 11429,
+        zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11518,
+        anthem = { tag = "faction", value = "Burning Blade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Deathtouch. Other Burning Blade you control get +1/+1."
     },
     ["RFC07"] = {
         id = "RFC07", name = "Taragaman the Hungerer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 7970,
-        zone = "Ragefire Chasm", creatureType = "Humanoid", npcId = 11520,
+        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 7970,
+        zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11520,
+        anthem = { tag = "zone", value = "Ragefire Chasm", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Ragefire Chasm creatures you control get +1/+1."
     },
 
     -- THE DEADMINES
     ["DMS01"] = {
         id = "DMS01", name = "Defias Pirate", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 2347,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 657,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 657,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
     ["DMS02"] = {
         id = "DMS02", name = "Defias Watchman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 184,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 1725,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["DMS03"] = {
         id = "DMS03", name = "Goblin Engineer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 7109,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 622,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 622,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["DMS04"] = {
         id = "DMS04", name = "Defias Blackguard", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 2314,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 636,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 636,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Cannot be blocked."
     },
     ["DMS05"] = {
         id = "DMS05", name = "Defias Evoker", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2318,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 1729,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1729,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["DMS06"] = {
         id = "DMS06", name = "Gilnid", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 7124,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 1763,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1763,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["DMS07"] = {
         id = "DMS07", name = "Rhahk'Zor", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 14403,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 644,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 644,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["DMS08"] = {
         id = "DMS08", name = "Sneed's Shredder", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1269,
-        zone = "The Deadmines", creatureType = "Mechanical", npcId = 642,
+        zone = "The Deadmines", creatureType = "Mechanical", faction = "Defias", npcId = 642,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
     ["DMS09"] = {
         id = "DMS09", name = "Cookie", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 1305,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 645,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 645,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["DMS10"] = {
         id = "DMS10", name = "Captain Greenskin", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 7113,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 647,
+        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 7113,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 647,
+        anthem = { tag = "faction", value = "Defias", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Defias you control get +1/+1."
     },
     ["DMS11"] = {
         id = "DMS11", name = "Mr. Smite", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2026,
-        zone = "The Deadmines", creatureType = "Humanoid", npcId = 646,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 646,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -3495,7 +3509,7 @@ TTS.Cards = {
     ["WCV04"] = {
         id = "WCV04", name = "Druid of the Fang", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 4233,
-        zone = "Wailing Caverns", creatureType = "Humanoid", npcId = 3840,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3840,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -3523,44 +3537,46 @@ TTS.Cards = {
     ["WCV08"] = {
         id = "WCV08", name = "Lady Anacondra", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 4313,
-        zone = "Wailing Caverns", creatureType = "Humanoid", npcId = 3671,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3671,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["WCV09"] = {
         id = "WCV09", name = "Lord Cobrahn", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 4213,
-        zone = "Wailing Caverns", creatureType = "Humanoid", npcId = 3669,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3669,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
     ["WCV10"] = {
         id = "WCV10", name = "Lord Pythas", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 4214,
-        zone = "Wailing Caverns", creatureType = "Humanoid", npcId = 3670,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3670,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["WCV11"] = {
         id = "WCV11", name = "Lord Serpentis", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 4215,
-        zone = "Wailing Caverns", creatureType = "Humanoid", npcId = 3673,
+        power = 6, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 4215,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3673,
+        anthem = { tag = "faction", value = "Druids of the Fang", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Deathtouch. Other Druids of the Fang you control get +1/+1."
     },
     ["WCV12"] = {
         id = "WCV12", name = "Verdan the Everliving", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 8, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 4256,
+        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 4256,
         zone = "Wailing Caverns", creatureType = "Elemental", npcId = 5775,
+        anthem = { tag = "zone", value = "Wailing Caverns", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Wailing Caverns creatures you control get +1/+1."
     },
 
     -- SHADOWFANG KEEP
     ["SFK01"] = {
         id = "SFK01", name = "Shadowfang Whitescalp", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 729,
-        zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 3851,
+        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3851,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3588,7 +3604,7 @@ TTS.Cards = {
     ["SFK05"] = {
         id = "SFK05", name = "Lupine Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 2446,
-        zone = "Shadowfang Keep", creatureType = "Undead", npcId = 3863,
+        zone = "Shadowfang Keep", creatureType = "Undead", faction = "Worgen", npcId = 3863,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3602,14 +3618,14 @@ TTS.Cards = {
     ["SFK07"] = {
         id = "SFK07", name = "Razorclaw the Butcher", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 524,
-        zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 3886,
+        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3886,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["SFK08"] = {
         id = "SFK08", name = "Odo the Blindwatcher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 522,
-        zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 4279,
+        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 4279,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
@@ -3622,17 +3638,19 @@ TTS.Cards = {
     },
     ["SFK10"] = {
         id = "SFK10", name = "Commander Springvale", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 3223,
+        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 3223,
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 4278,
+        anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Shadowfang Keep creatures you control get +1/+1."
     },
     ["SFK11"] = {
         id = "SFK11", name = "Wolf Master Nandos", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 6, haste = true, isMob = true, isBoss = true, displayId = 11179,
-        zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 3927,
+        power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 11179,
+        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3927,
+        anthem = { tag = "faction", value = "Worgen", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Haste. Other Worgen you control get +1/+1."
     },
     ["SFK12"] = {
         id = "SFK12", name = "Fenrus the Devourer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -3646,7 +3664,7 @@ TTS.Cards = {
     ["BFD01"] = {
         id = "BFD01", name = "Blindlight Murloc", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 4920,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 4818,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Murloc", npcId = 4818,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3660,30 +3678,31 @@ TTS.Cards = {
     ["BFD03"] = {
         id = "BFD03", name = "Fallenroot Shadowstalker", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2014,
-        zone = "Blackfathom Deeps", creatureType = "Demon", npcId = 4798,
+        zone = "Blackfathom Deeps", creatureType = "Demon", faction = "Satyr", npcId = 4798,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Cannot be blocked."
     },
     ["BFD04"] = {
         id = "BFD04", name = "Twilight Reaver", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2901,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 4810,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4810,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BFD05"] = {
         id = "BFD05", name = "Blackfathom Sea Witch", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 4982,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 4805,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4805,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BFD06"] = {
         id = "BFD06", name = "Lady Sarevess", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 4979,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 4831,
+        power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 4979,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4831,
+        anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "First Strike. Other Naga you control get +1/+1."
     },
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -3701,10 +3720,11 @@ TTS.Cards = {
     },
     ["BFD09"] = {
         id = "BFD09", name = "Gelihast", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 7, toughness = 7, isMob = true, isBoss = true, displayId = 1773,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 6243,
+        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 1773,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Murloc", npcId = 6243,
+        rally = { tag = "faction", value = "Murloc", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Gets +1/+1 for each other Murloc you control."
     },
     ["BFD10"] = {
         id = "BFD10", name = "Old Serra'kis", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -3715,61 +3735,63 @@ TTS.Cards = {
     },
     ["BFD11"] = {
         id = "BFD11", name = "Twilight Lord Kelris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 4939,
-        zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 4832,
+        power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 4939,
+        zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4832,
+        anthem = { tag = "faction", value = "Twilight's Hammer", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Lifelink. Other Twilight's Hammer you control get +1/+1."
     },
 
     -- THE STOCKADE
     ["STK01"] = {
         id = "STK01", name = "Defias Prisoner", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2148,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1706,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1706,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["STK02"] = {
         id = "STK02", name = "Defias Insurgent", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 2147,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1715,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1715,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
     ["STK03"] = {
         id = "STK03", name = "Targorr the Dread", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 517,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1696,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1696,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["STK04"] = {
         id = "STK04", name = "Dextren Ward", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2149,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1663,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1663,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["STK05"] = {
         id = "STK05", name = "Kam Deepfury", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 825,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1666,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1666,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["STK06"] = {
         id = "STK06", name = "Hamhock", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, isMob = true, isBoss = true, displayId = 3250,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1717,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1717,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["STK07"] = {
         id = "STK07", name = "Bruegal Ironknuckle", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 2142,
-        zone = "The Stockade", creatureType = "Humanoid", npcId = 1720,
+        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2142,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1720,
+        anthem = { tag = "zone", value = "The Stockade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "First Strike. Other Stockade creatures you control get +1/+1."
     },
 
     -- GNOMEREGAN
@@ -3811,7 +3833,7 @@ TTS.Cards = {
     ["GNO06"] = {
         id = "GNO06", name = "Dark Iron Ambassador", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6669,
-        zone = "Gnomeregan", creatureType = "Humanoid", npcId = 6228,
+        zone = "Gnomeregan", creatureType = "Humanoid", faction = "Dark Iron", npcId = 6228,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3824,31 +3846,32 @@ TTS.Cards = {
     },
     ["GNO08"] = {
         id = "GNO08", name = "Crowd Pummeler 9-60", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 6774,
+        power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 6774,
         zone = "Gnomeregan", creatureType = "Mechanical", npcId = 6229,
+        anthem = { tag = "type", value = "Mechanical", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Mechanicals you control get +1/+1."
     },
 
     -- RAZORFEN KRAUL
     ["RFK01"] = {
         id = "RFK01", name = "Razorfen Warrior", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 6109,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4435,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["RFK02"] = {
         id = "RFK02", name = "Razorfen Quilguard", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 6108,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4436,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4436,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["RFK03"] = {
         id = "RFK03", name = "Razorfen Geomancer", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 4647,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4520,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4520,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -3862,7 +3885,7 @@ TTS.Cards = {
     ["RFK05"] = {
         id = "RFK05", name = "Death's Head Priest", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 6096,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4517,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4517,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -3876,37 +3899,38 @@ TTS.Cards = {
     ["RFK07"] = {
         id = "RFK07", name = "Roogug", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 6110,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 6168,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 6168,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["RFK08"] = {
         id = "RFK08", name = "Aggem Thorncurse", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 6097,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4424,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["RFK09"] = {
         id = "RFK09", name = "Death Speaker Jargba", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 4644,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4428,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4428,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
     ["RFK10"] = {
         id = "RFK10", name = "Earthcaller Halmgar", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 6102,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4842,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4842,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
     ["RFK11"] = {
         id = "RFK11", name = "Overlord Ramtusk", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 4652,
-        zone = "Razorfen Kraul", creatureType = "Humanoid", npcId = 4420,
+        power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 4652,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4420,
+        anthem = { tag = "faction", value = "Quilboar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Quilboar you control get +1/+1."
     },
     ["RFK12"] = {
         id = "RFK12", name = "Agathelos the Raging", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -3920,28 +3944,28 @@ TTS.Cards = {
     ["SMO01"] = {
         id = "SMO01", name = "Scarlet Torturer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2607,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 4306,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4306,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["SMO02"] = {
         id = "SMO02", name = "Scarlet Tracking Hound", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 2709,
-        zone = "Scarlet Monastery", creatureType = "Beast", npcId = 4304,
+        zone = "Scarlet Monastery", creatureType = "Beast", faction = "Scarlet Crusade", npcId = 4304,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
     ["SMO03"] = {
         id = "SMO03", name = "Scarlet Monk", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 2604,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 4540,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["SMO04"] = {
         id = "SMO04", name = "Scarlet Adept", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 5725,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 4296,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4296,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -3955,30 +3979,32 @@ TTS.Cards = {
     ["SMO06"] = {
         id = "SMO06", name = "Scarlet Myrmidon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 2515,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 4295,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4295,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
     ["SMO07"] = {
         id = "SMO07", name = "Scarlet Champion", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 5, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 2460,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 4302,
+        power = 3, toughness = 3, vigilance = true, isMob = true, isBoss = true, displayId = 2460,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4302,
+        rally = { tag = "faction", value = "Scarlet Crusade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Gets +1/+1 for each other Scarlet Crusade you control."
     },
     ["SMO08"] = {
         id = "SMO08", name = "Interrogator Vishas", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 2044,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 3983,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3983,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
     ["SMO09"] = {
         id = "SMO09", name = "Houndmaster Loksey", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 2040,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 3974,
+        power = 5, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 2040,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3974,
+        anthem = { tag = "type", value = "Beast", kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Haste. Other Beasts you control have Haste."
     },
     ["SMO10"] = {
         id = "SMO10", name = "Fallen Champion", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -3997,16 +4023,17 @@ TTS.Cards = {
     ["SMO12"] = {
         id = "SMO12", name = "High Inquisitor Fairbanks", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 6, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 2605,
-        zone = "Scarlet Monastery", creatureType = "Undead", npcId = 4542,
+        zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade", npcId = 4542,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["SMO13"] = {
         id = "SMO13", name = "Scarlet Commander Mograine", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 8, toughness = 9, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 2042,
-        zone = "Scarlet Monastery", creatureType = "Humanoid", npcId = 3976,
+        power = 7, toughness = 8, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 2042,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3976,
+        anthem = { tag = "faction", value = "Scarlet Crusade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike, Vigilance."
+        text = "First Strike, Vigilance. Other Scarlet Crusade you control get +1/+1."
     },
 
     -- RAZORFEN DOWNS
@@ -4034,28 +4061,28 @@ TTS.Cards = {
     ["RFD04"] = {
         id = "RFD04", name = "Death's Head Necromancer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11381,
-        zone = "Razorfen Downs", creatureType = "Humanoid", npcId = 7337,
+        zone = "Razorfen Downs", creatureType = "Humanoid", faction = "Quilboar", npcId = 7337,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["RFD05"] = {
         id = "RFD05", name = "Mordresh Fire Eye", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 8055,
-        zone = "Razorfen Downs", creatureType = "Undead", npcId = 7357,
+        zone = "Razorfen Downs", creatureType = "Undead", faction = "Quilboar", npcId = 7357,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["RFD06"] = {
         id = "RFD06", name = "Glutton", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 7864,
-        zone = "Razorfen Downs", creatureType = "Undead", npcId = 8567,
+        zone = "Razorfen Downs", creatureType = "Undead", faction = "Quilboar", npcId = 8567,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Lifelink."
     },
     ["RFD07"] = {
         id = "RFD07", name = "Ragglesnout", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 11382,
-        zone = "Razorfen Downs", creatureType = "Humanoid", npcId = 7354,
+        zone = "Razorfen Downs", creatureType = "Humanoid", faction = "Quilboar", npcId = 7354,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
@@ -4071,7 +4098,7 @@ TTS.Cards = {
     ["ULD02"] = {
         id = "ULD02", name = "Shadowforge Relic Hunter", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6054,
-        zone = "Uldaman", creatureType = "Humanoid", npcId = 4847,
+        zone = "Uldaman", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4847,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4127,7 +4154,7 @@ TTS.Cards = {
     ["ULD10"] = {
         id = "ULD10", name = "Galgann Firehammer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 6059,
-        zone = "Uldaman", creatureType = "Humanoid", npcId = 7291,
+        zone = "Uldaman", creatureType = "Humanoid", faction = "Dark Iron", npcId = 7291,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4140,31 +4167,32 @@ TTS.Cards = {
     },
     ["ULD12"] = {
         id = "ULD12", name = "Ancient Stone Keeper", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 8, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 10798,
+        power = 7, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 10798,
         zone = "Uldaman", creatureType = "Elemental", npcId = 7206,
+        anthem = { tag = "zone", value = "Uldaman", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Uldaman creatures you control get +1/+1."
     },
 
     -- ZUL'FARRAK
     ["ZFK01"] = {
         id = "ZFK01", name = "Sandfury Blood Drinker", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 3, lifelink = true, isMob = true, isBoss = true, displayId = 6423,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 5649,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 5649,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["ZFK02"] = {
         id = "ZFK02", name = "Sandfury Shadowhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 6425,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 7246,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ZFK03"] = {
         id = "ZFK03", name = "Sandfury Executioner", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6440,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 7274,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7274,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4178,28 +4206,29 @@ TTS.Cards = {
     ["ZFK05"] = {
         id = "ZFK05", name = "Theka the Martyr", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 6696,
-        zone = "Zul'Farrak", creatureType = "Undead", npcId = 7272,
+        zone = "Zul'Farrak", creatureType = "Undead", faction = "Troll", npcId = 7272,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["ZFK06"] = {
         id = "ZFK06", name = "Hydromancer Velratha", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 6685,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 7795,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7795,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["ZFK07"] = {
         id = "ZFK07", name = "Witch Doctor Zum'rah", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 6434,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 7271,
+        power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 6434,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7271,
+        anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Deathtouch. Other Trolls you control get +1/+1."
     },
     ["ZFK08"] = {
         id = "ZFK08", name = "Ruuzlu", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 6687,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 7797,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7797,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4213,7 +4242,7 @@ TTS.Cards = {
     ["ZFK10"] = {
         id = "ZFK10", name = "Sandarr Dunereaver", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 9291,
-        zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 10080,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 10080,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
@@ -4229,7 +4258,7 @@ TTS.Cards = {
     ["MAR01"] = {
         id = "MAR01", name = "Putridus Shadowstalker", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2021,
-        zone = "Maraudon", creatureType = "Demon", npcId = 11792,
+        zone = "Maraudon", creatureType = "Demon", faction = "Satyr", npcId = 11792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Cannot be blocked."
     },
@@ -4305,17 +4334,18 @@ TTS.Cards = {
     },
     ["MAR12"] = {
         id = "MAR12", name = "Landslide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 8, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 12293,
+        power = 7, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12293,
         zone = "Maraudon", creatureType = "Giant", npcId = 12203,
+        anthem = { tag = "zone", value = "Maraudon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Maraudon creatures you control get +1/+1."
     },
 
     -- SUNKEN TEMPLE
     ["SUN01"] = {
         id = "SUN01", name = "Atal'ai Warrior", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 7709,
-        zone = "Sunken Temple", creatureType = "Humanoid", npcId = 5256,
+        zone = "Sunken Temple", creatureType = "Humanoid", faction = "Troll", npcId = 5256,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -4329,7 +4359,7 @@ TTS.Cards = {
     ["SUN03"] = {
         id = "SUN03", name = "Atal'ai Witch Doctor", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 6670,
-        zone = "Sunken Temple", creatureType = "Humanoid", npcId = 5259,
+        zone = "Sunken Temple", creatureType = "Humanoid", faction = "Troll", npcId = 5259,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
@@ -4350,14 +4380,14 @@ TTS.Cards = {
     ["SUN06"] = {
         id = "SUN06", name = "Gasher", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 6698,
-        zone = "Sunken Temple", creatureType = "Undead", npcId = 5713,
+        zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5713,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
     ["SUN07"] = {
         id = "SUN07", name = "Hukku", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 6702,
-        zone = "Sunken Temple", creatureType = "Undead", npcId = 5715,
+        zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5715,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
@@ -4371,23 +4401,25 @@ TTS.Cards = {
     ["SUN09"] = {
         id = "SUN09", name = "Ogom the Wretched", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 6709,
-        zone = "Sunken Temple", creatureType = "Undead", npcId = 5711,
+        zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5711,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
     ["SUN10"] = {
         id = "SUN10", name = "Jammal'an the Prophet", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 6708,
-        zone = "Sunken Temple", creatureType = "Humanoid", npcId = 5710,
+        power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 6708,
+        zone = "Sunken Temple", creatureType = "Humanoid", faction = "Troll", npcId = 5710,
+        rally = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Lifelink. Gets +1/+1 for each other Troll you control."
     },
     ["SUN11"] = {
         id = "SUN11", name = "Morphaz", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 8, toughness = 8, flying = true, isMob = true, isBoss = true, displayId = 7975,
+        power = 7, toughness = 7, flying = true, isMob = true, isBoss = true, displayId = 7975,
         zone = "Sunken Temple", creatureType = "Dragonkin", npcId = 5719,
+        anthem = { tag = "type", value = "Dragonkin", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Flying."
+        text = "Flying. Other Dragonkin you control get +1/+1."
     },
     ["SUN12"] = {
         id = "SUN12", name = "Hazzas", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -4401,7 +4433,7 @@ TTS.Cards = {
     ["BRD01"] = {
         id = "BRD01", name = "Anvilrage Guardsman", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 8750,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 8891,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8891,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -4415,21 +4447,21 @@ TTS.Cards = {
     ["BRD03"] = {
         id = "BRD03", name = "Twilight's Hammer Torturer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 8790,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 8912,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 8912,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["BRD04"] = {
         id = "BRD04", name = "Anvilrage Medic", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 8752,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 8894,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8894,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["BRD05"] = {
         id = "BRD05", name = "Doomforge Dragoon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 8820,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 8899,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8899,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
@@ -4443,7 +4475,7 @@ TTS.Cards = {
     ["BRD07"] = {
         id = "BRD07", name = "High Interrogator Gerstahn", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 8761,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9018,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9018,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
@@ -4463,29 +4495,30 @@ TTS.Cards = {
     },
     ["BRD10"] = {
         id = "BRD10", name = "Houndmaster Grebmar", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 7, haste = true, isMob = true, isBoss = true, displayId = 9212,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9319,
+        power = 6, toughness = 6, haste = true, isMob = true, isBoss = true, displayId = 9212,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9319,
+        anthem = { tag = "type", value = "Beast", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Haste. Other Beasts you control get +1/+1."
     },
     ["BRD11"] = {
         id = "BRD11", name = "Fineous Darkvire", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 7, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 8704,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9056,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9056,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["BRD12"] = {
         id = "BRD12", name = "Pyromancer Loregrain", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 8762,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9024,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9024,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["BRD13"] = {
         id = "BRD13", name = "Warder Stilgiss", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 6, toughness = 9, isMob = true, isBoss = true, displayId = 9089,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9041,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9041,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -4499,14 +4532,14 @@ TTS.Cards = {
     ["BRD15"] = {
         id = "BRD15", name = "Doom'rel", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 8, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 8687,
-        zone = "Blackrock Depths", creatureType = "Undead", npcId = 9039,
+        zone = "Blackrock Depths", creatureType = "Undead", faction = "Dark Iron", npcId = 9039,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["BRD16"] = {
         id = "BRD16", name = "Golem Lord Argelmach", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 8, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 8759,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 8983,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8983,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
@@ -4540,52 +4573,54 @@ TTS.Cards = {
     },
     ["BRD21"] = {
         id = "BRD21", name = "General Angerforge", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, firstStrike = true, isMob = true, isBoss = true, displayId = 8756,
-        zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9033,
+        power = 9, toughness = 9, firstStrike = true, isMob = true, isBoss = true, displayId = 8756,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9033,
+        anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "First Strike. Other Dark Iron you control get +1/+1."
     },
     ["BRD22"] = {
         id = "BRD22", name = "Magmus", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 12162,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12162,
         zone = "Blackrock Depths", creatureType = "Giant", npcId = 9938,
+        anthem = { tag = "zone", value = "Blackrock Depths", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Blackrock Depths creatures you control get +1/+1."
     },
 
     -- BLACKROCK SPIRE
     ["BRS01"] = {
         id = "BRS01", name = "Scarshield Legionnaire", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 9629,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9097,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9097,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["BRS02"] = {
         id = "BRS02", name = "Spirestone Enforcer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 11577,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9199,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Ogre", npcId = 9199,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["BRS03"] = {
         id = "BRS03", name = "Smolderthorn Headhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 9682,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9241,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9241,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Haste."
     },
     ["BRS04"] = {
         id = "BRS04", name = "Smolderthorn Shadow Priest", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 9728,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9240,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9240,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink."
     },
     ["BRS05"] = {
         id = "BRS05", name = "Firebrand Pyromancer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 9656,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9264,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9264,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4599,7 +4634,7 @@ TTS.Cards = {
     ["BRS07"] = {
         id = "BRS07", name = "Blackhand Iron Guard", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 9696,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 10319,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 10319,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -4613,7 +4648,7 @@ TTS.Cards = {
     ["BRS09"] = {
         id = "BRS09", name = "Quartermaster Zigris", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 9738,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9736,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4627,14 +4662,14 @@ TTS.Cards = {
     ["BRS11"] = {
         id = "BRS11", name = "Shadow Hunter Vosh'gajin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 9732,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9236,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
     ["BRS12"] = {
         id = "BRS12", name = "War Master Voone", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 9733,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9237,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9237,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
@@ -4647,24 +4682,26 @@ TTS.Cards = {
     },
     ["BRS14"] = {
         id = "BRS14", name = "Jed Runewatcher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 9686,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 10509,
+        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 9686,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 10509,
+        anthem = { tag = "faction", value = "Blackrock", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Blackrock you control get +1/+1."
     },
     ["BRS15"] = {
         id = "BRS15", name = "Spirestone Butcher", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 11574,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9219,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Ogre", npcId = 9219,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["BRS16"] = {
         id = "BRS16", name = "Highlord Omokk", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 11565,
-        zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 9196,
+        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 11565,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Ogre", npcId = 9196,
+        rally = { tag = "faction", value = "Ogre", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Gets +1/+0 for each other Ogre you control."
     },
     ["BRS17"] = {
         id = "BRS17", name = "Goraluk Anvilcrack", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -4675,10 +4712,11 @@ TTS.Cards = {
     },
     ["BRS18"] = {
         id = "BRS18", name = "Pyroguard Emberseer", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 2172,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 2172,
         zone = "Blackrock Spire", creatureType = "Elemental", npcId = 9816,
+        anthem = { tag = "type", value = "Elemental", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Elementals you control get +1/+1."
     },
     ["BRS19"] = {
         id = "BRS19", name = "The Beast", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
@@ -4692,7 +4730,7 @@ TTS.Cards = {
     ["DMA01"] = {
         id = "DMA01", name = "Wildspawn Rogue", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2021,
-        zone = "Dire Maul", creatureType = "Demon", npcId = 11452,
+        zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Cannot be blocked."
     },
@@ -4706,7 +4744,7 @@ TTS.Cards = {
     ["DMA03"] = {
         id = "DMA03", name = "Gordok Brute", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 5, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 12473,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 11441,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11441,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
@@ -4734,16 +4772,17 @@ TTS.Cards = {
     ["DMA07"] = {
         id = "DMA07", name = "Gordok Mage-Lord", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 11537,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 11444,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11444,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["DMA08"] = {
         id = "DMA08", name = "Zevrim Thornhoof", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 11335,
-        zone = "Dire Maul", creatureType = "Demon", npcId = 11490,
+        power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 11335,
+        zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11490,
+        anthem = { tag = "faction", value = "Satyr", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Lifelink. Other Satyrs you control get +1/+1."
     },
     ["DMA09"] = {
         id = "DMA09", name = "Lethtendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -4776,44 +4815,47 @@ TTS.Cards = {
     ["DMA13"] = {
         id = "DMA13", name = "Cho'Rush the Observer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 7, toughness = 8, isMob = true, isBoss = true, displayId = 11537,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 14324,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14324,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
     ["DMA14"] = {
         id = "DMA14", name = "Guard Mol'dar", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 11561,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 14326,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14326,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Vigilance."
     },
     ["DMA15"] = {
         id = "DMA15", name = "Stomper Kreeg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 11545,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 14322,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14322,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
     ["DMA16"] = {
         id = "DMA16", name = "Tendris Warpwood", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 8, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 14383,
+        power = 7, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 14383,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11489,
+        anthem = { tag = "zone", value = "Dire Maul", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Dire Maul creatures you control get +1/+1."
     },
     ["DMA17"] = {
         id = "DMA17", name = "Captain Kromcrush", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 9, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 11564,
-        zone = "Dire Maul", creatureType = "Humanoid", npcId = 14325,
+        power = 8, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 11564,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14325,
+        anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Ogres you control get +1/+1."
     },
     ["DMA18"] = {
         id = "DMA18", name = "Immol'thar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 10, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 14173,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 14173,
         zone = "Dire Maul", creatureType = "Demon", npcId = 11496,
+        anthem = { tag = "type", value = "Demon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Demons you control get +1/+1."
     },
 
     -- SCHOLOMANCE
@@ -4917,10 +4959,11 @@ TTS.Cards = {
     },
     ["SCH15"] = {
         id = "SCH15", name = "Rattlegore", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12073,
+        power = 8, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 12073,
         zone = "Scholomance", creatureType = "Undead", npcId = 11622,
+        anthem = { tag = "zone", value = "Scholomance", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Trample. Other Scholomance creatures you control get +1/+1."
     },
     ["SCH16"] = {
         id = "SCH16", name = "The Ravenian", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -4931,17 +4974,18 @@ TTS.Cards = {
     },
     ["SCH17"] = {
         id = "SCH17", name = "Ras Frostwhisper", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 11, vigilance = true, isMob = true, isBoss = true, displayId = 7919,
+        power = 8, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 7919,
         zone = "Scholomance", creatureType = "Undead", npcId = 10508,
+        anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilance. Other Undead you control get +1/+1."
     },
 
     -- STRATHOLME
     ["STR01"] = {
         id = "STR01", name = "Crimson Initiate", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 10496,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 10420,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10420,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -4955,7 +4999,7 @@ TTS.Cards = {
     ["STR03"] = {
         id = "STR03", name = "Crimson Gallant", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 10424,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -5025,21 +5069,21 @@ TTS.Cards = {
     ["STR13"] = {
         id = "STR13", name = "Cannon Master Willey", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, isMob = true, isBoss = true, displayId = 10674,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 10997,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10997,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["STR14"] = {
         id = "STR14", name = "Archivist Galford", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, firstStrike = true, isMob = true, isBoss = true, displayId = 10544,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 10811,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10811,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
     ["STR15"] = {
         id = "STR15", name = "Malor the Zealous", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 10458,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 11032,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 11032,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance."
     },
@@ -5066,17 +5110,19 @@ TTS.Cards = {
     },
     ["STR19"] = {
         id = "STR19", name = "Maleki the Pallid", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 10546,
+        power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 10546,
         zone = "Stratholme", creatureType = "Humanoid", npcId = 10438,
+        anthem = { tag = "zone", value = "Stratholme", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Stratholme creatures you control get +1/+1."
     },
     ["STR20"] = {
         id = "STR20", name = "Grand Crusader Dathrohan", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
         power = 10, toughness = 10, lifelink = true, vigilance = true, isMob = true, isBoss = true, displayId = 10545,
-        zone = "Stratholme", creatureType = "Humanoid", npcId = 10812,
+        zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10812,
+        anthem = { tag = "faction", value = "Scarlet Crusade", kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink, Vigilance."
+        text = "Lifelink, Vigilance. Other Scarlet Crusade you control have Lifelink."
     },
 
     -- =========================================================================
@@ -5086,6 +5132,7 @@ TTS.Cards = {
     ["BOSS01"] = {
         id = "BOSS01", name = "Bazzalan", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 4, toughness = 4, isBoss = true, displayId = 2007, achievementId = 629,
+        zone = "Ragefire Chasm", creatureType = "Demon", faction = "Burning Blade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "{T}: Target opponent loses 2 life and you gain 2 life."
     },
@@ -5094,6 +5141,7 @@ TTS.Cards = {
     ["BOSS02"] = {
         id = "BOSS02", name = "Edwin VanCleef", cost = "{1}{R}{B}", cmc = 3, color = "B", type = "Creature",
         power = 5, toughness = 4, haste = true, firstStrike = true, isBoss = true, displayId = 2029, achievementId = 628,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
         text = "Haste, First Strike."
     },
@@ -5102,6 +5150,7 @@ TTS.Cards = {
     ["BOSS03"] = {
         id = "BOSS03", name = "Mutanus the Devourer", cost = "{3}{U}{B}", cmc = 5, color = "U", type = "Creature",
         power = 7, toughness = 8, isBoss = true, displayId = 4088, achievementId = 630,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Murloc",
         modelCam = { zoom = 0.55, camScale = 1.25, z = -0.18, rotation = 0.15 },
         text = "Whenever Mutanus attacks, target opponent discards a card and loses 1 life."
     },
@@ -5110,6 +5159,7 @@ TTS.Cards = {
     ["BOSS04"] = {
         id = "BOSS04", name = "Archmage Arugal", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 4, toughness = 6, isBoss = true, displayId = 2353, achievementId = 631,
+        zone = "Shadowfang Keep", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "{T}: Put target tapped creature on top of its owner's library."
     },
@@ -5118,6 +5168,7 @@ TTS.Cards = {
     ["BOSS05"] = {
         id = "BOSS05", name = "Aku'mai", cost = "{4}{G}{U}", cmc = 6, color = "G", type = "Creature",
         power = 8, toughness = 9, trample = true, isBoss = true, displayId = 2837, achievementId = 632,
+        zone = "Blackfathom Deeps", creatureType = "Beast",
         modelCam = { zoom = 0.20, camScale = 1.80, z = 0.00, rotation = -0.30 },
         text = "Trample. Aku'mai can block up to two creatures each combat."
     },
@@ -5126,6 +5177,7 @@ TTS.Cards = {
     ["BOSS06"] = {
         id = "BOSS06", name = "Bazil Thredd", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 4, toughness = 4, isBoss = true, displayId = 1621, achievementId = 634,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
         text = "Other creatures you control get +1/+1."
     },
@@ -5134,6 +5186,7 @@ TTS.Cards = {
     ["BOSS07"] = {
         id = "BOSS07", name = "Mekgineer Thermaplugg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 7, isBoss = true, displayId = 6980, achievementId = 635,
+        zone = "Gnomeregan", creatureType = "Humanoid",
         modelCam = { zoom = 0.70, camScale = 0.90, z = 0.05, rotation = 0.15 },
         text = "{T}: Deal 2 damage to each opposing creature."
     },
@@ -5142,6 +5195,7 @@ TTS.Cards = {
     ["BOSS08"] = {
         id = "BOSS08", name = "Charlga Razorflank", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 6, reach = true, isBoss = true, displayId = 4642, achievementId = 636,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
         text = "Reach. {T}: Tap target creature. It does not untap during its controller's next untap step."
     },
@@ -5150,6 +5204,7 @@ TTS.Cards = {
     ["BOSS09"] = {
         id = "BOSS09", name = "Bloodmage Thalnos", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 3, deathtouch = true, isBoss = true, displayId = 11396, achievementId = 638,
+        zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "Deathtouch. When Bloodmage Thalnos dies, draw a card."
     },
@@ -5158,6 +5213,7 @@ TTS.Cards = {
     ["BOSS10"] = {
         id = "BOSS10", name = "Arcanist Doan", cost = "{2}{U}{R}", cmc = 4, color = "R", type = "Creature",
         power = 5, toughness = 5, isBoss = true, displayId = 5266, achievementId = 638,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
         text = "{T}: Deal 2 damage to all opposing creatures."
     },
@@ -5166,6 +5222,7 @@ TTS.Cards = {
     ["BOSS11"] = {
         id = "BOSS11", name = "Herod", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, haste = true, isBoss = true, displayId = 2041, achievementId = 638,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
         text = "Haste. Herod attacks each combat if able."
     },
@@ -5174,6 +5231,7 @@ TTS.Cards = {
     ["BOSS12"] = {
         id = "BOSS12", name = "High Inquisitor Whitemane", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 6, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
+        zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
         text = "Lifelink. When Whitemane dies, return another target creature from your graveyard to the battlefield."
     },
@@ -5182,6 +5240,7 @@ TTS.Cards = {
     ["BOSS13"] = {
         id = "BOSS13", name = "Amnennar the Coldbringer", cost = "{3}{U}{B}", cmc = 5, color = "U", type = "Creature",
         power = 6, toughness = 8, isBoss = true, displayId = 7971, achievementId = 637,
+        zone = "Razorfen Downs", creatureType = "Undead",
         modelCam = { zoom = 0.65, camScale = 1.20, z = -0.15, rotation = 0.15 },
         text = "Whenever Amnennar attacks, tap target creature. That creature does not untap during its controller's next untap step."
     },
@@ -5190,6 +5249,7 @@ TTS.Cards = {
     ["BOSS14"] = {
         id = "BOSS14", name = "Archaedas", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 8, toughness = 10, vigilance = true, hexproof = true, isBoss = true, displayId = 5988, achievementId = 639,
+        zone = "Uldaman", creatureType = "Giant",
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
         text = "Vigilance, Hexproof (Archaedas cannot be the target of spells or abilities your opponents control)."
     },
@@ -5198,6 +5258,7 @@ TTS.Cards = {
     ["BOSS15"] = {
         id = "BOSS15", name = "Chief Ukorz Sandscalp", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
+        zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
         text = "Trample. Ukorz gets +3/+0 as long as your life total is 10 or less."
     },
@@ -5206,6 +5267,7 @@ TTS.Cards = {
     ["BOSS16"] = {
         id = "BOSS16", name = "Princess Theradras", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 9, toughness = 9, trample = true, isBoss = true, displayId = 12292, achievementId = 641,
+        zone = "Maraudon", creatureType = "Elemental",
         modelCam = { zoom = 0.35, camScale = 1.60, z = -0.25, rotation = 0.10 },
         text = "Trample. Whenever Theradras deals combat damage to a player, destroy target non-basic land that player controls."
     },
@@ -5214,6 +5276,7 @@ TTS.Cards = {
     ["BOSS17"] = {
         id = "BOSS17", name = "Shade of Eranikus", cost = "{3}{U}{G}", cmc = 5, color = "G", type = "Creature",
         power = 8, toughness = 8, flying = true, isBoss = true, displayId = 7806, achievementId = 642,
+        zone = "Sunken Temple", creatureType = "Dragonkin",
         modelCam = { zoom = 0.25, camScale = 1.80, z = -0.05, rotation = -0.20 },
         text = "Flying. Whenever Eranikus deals combat damage to a creature, tap that creature and it does not untap during its controller's next untap step."
     },
@@ -5222,6 +5285,7 @@ TTS.Cards = {
     ["BOSS18"] = {
         id = "BOSS18", name = "Emperor Dagran Thaurissan", cost = "{3}{R}{W}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 7, isBoss = true, displayId = 8807, achievementId = 643,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron",
         modelCam = { zoom = 0.75, camScale = 0.95, z = 0.00, rotation = 0.15 },
         text = "Other creatures you control gain +1/+1 and Vigilance."
     },
@@ -5230,6 +5294,7 @@ TTS.Cards = {
     ["BOSS19"] = {
         id = "BOSS19", name = "Overlord Wyrmthalak", cost = "{4}{R}{B}", cmc = 6, color = "R", type = "Creature",
         power = 9, toughness = 8, trample = true, isBoss = true, displayId = 8711, achievementId = 644,
+        zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.50, camScale = 1.35, z = -0.20, rotation = 0.15 },
         text = "Trample. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing creatures."
     },
@@ -5238,6 +5303,7 @@ TTS.Cards = {
     ["BOSS20"] = {
         id = "BOSS20", name = "General Drakkisath", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 10, toughness = 9, trample = true, isBoss = true, displayId = 10115, achievementId = 1307,
+        zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
         text = "Trample. All other creatures lose and cannot gain Haste."
     },
@@ -5246,6 +5312,7 @@ TTS.Cards = {
     ["BOSS21"] = {
         id = "BOSS21", name = "Alzzin the Wildshaper", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 8, deathtouch = true, isBoss = true, displayId = 14416, achievementId = 645,
+        zone = "Dire Maul", creatureType = "Demon", faction = "Satyr",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
         text = "Deathtouch. {T}: You gain 4 life."
     },
@@ -5254,6 +5321,7 @@ TTS.Cards = {
     ["BOSS22"] = {
         id = "BOSS22", name = "Prince Tortheldrin", cost = "{2}{U}{B}", cmc = 4, color = "U", type = "Creature",
         power = 5, toughness = 5, isBoss = true, displayId = 11256, achievementId = 645,
+        zone = "Dire Maul", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
         text = "{2}{U}: Draw a card, then discard a card. Tortheldrin gains +1/+1 until end of turn."
     },
@@ -5262,6 +5330,7 @@ TTS.Cards = {
     ["BOSS23"] = {
         id = "BOSS23", name = "King Gordok", cost = "{4}{G}{R}", cmc = 6, color = "R", type = "Creature",
         power = 10, toughness = 8, trample = true, isBoss = true, displayId = 11583, achievementId = 645,
+        zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre",
         modelCam = { zoom = 0.45, camScale = 1.45, z = -0.22, rotation = 0.15 },
         text = "Trample. Whenever King Gordok attacks, he gets +2/+0 until end of turn."
     },
@@ -5270,6 +5339,7 @@ TTS.Cards = {
     ["BOSS24"] = {
         id = "BOSS24", name = "Darkmaster Gandling", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 7, isBoss = true, displayId = 11070, achievementId = 646,
+        zone = "Scholomance", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
         text = "Whenever another creature dies, you draw a card."
     },
@@ -5278,6 +5348,7 @@ TTS.Cards = {
     ["BOSS25"] = {
         id = "BOSS25", name = "Baron Rivendare", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 8, toughness = 8, lifelink = true, isBoss = true, displayId = 10729, achievementId = 633,
+        zone = "Stratholme", creatureType = "Undead",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
         text = "Lifelink. Whenever an opposing creature dies, its controller loses 2 life."
     },
@@ -5286,6 +5357,7 @@ TTS.Cards = {
     ["BOSS26"] = {
         id = "BOSS26", name = "Balnazzar", cost = "{4}{B}{U}", cmc = 6, color = "B", type = "Creature",
         power = 8, toughness = 9, flying = true, isBoss = true, displayId = 10691, achievementId = 633,
+        zone = "Stratholme", creatureType = "Demon",
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
         text = "Flying. When Balnazzar enters the battlefield, gain control of target opposing creature with power 4 or less."
     },

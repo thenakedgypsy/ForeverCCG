@@ -60,6 +60,33 @@ function E:DetachAttachments(perm, isRemotePermanent)
     perm.attachments = nil
 end
 
+-- =========================================================================
+-- TAGS (faction / zone / creature type) & TRIBAL EFFECTS
+-- Database.lua creature fields used as tags:
+--   faction = "Defias"           -> tag "faction"
+--   zone = "Westfall"            -> tag "zone"
+--   creatureType = "Beast"       -> tag "type"
+-- Tribal abilities on a creature card:
+--   anthem = { tag, value, p, t, kw } : other creatures you control with the tag get +p/+t (and keywords)
+--   rally  = { tag, value, p, t }     : this creature gets +p/+t for each other creature you control with the tag
+-- =========================================================================
+local TAG_FIELDS = { faction = "faction", zone = "zone", type = "creatureType" }
+
+function E:CardHasTag(card, tag, value)
+    local field = card and TAG_FIELDS[tag]
+    return field ~= nil and card[field] == value
+end
+
+-- Calls fn(otherCard) for every other creature on the given side of the board
+local function ForEachOtherCreature(field, perm, fn)
+    for _, other in ipairs(field) do
+        if other ~= perm then
+            local oc = TTS.Cards[other.id]
+            if oc and oc.type == "Creature" then fn(oc) end
+        end
+    end
+end
+
 function E:HasKeyword(perm, isRemote, keyword)
     local card = TTS.Cards[perm.id]
     if not card then return end
@@ -83,6 +110,18 @@ function E:HasKeyword(perm, isRemote, keyword)
             end
         end
     end
+
+    -- Keywords granted by tribal anthems on other creatures you control
+    local granted = false
+    ForEachOtherCreature(isRemote and self.remoteState.field or self.localState.field, perm, function(oc)
+        local a = oc.anthem
+        if a and a.kw and self:CardHasTag(card, a.tag, a.value) then
+            for _, kw in ipairs(a.kw) do
+                if kw == keyword then granted = true end
+            end
+        end
+    end)
+    if granted then return true end
 
     -- Keywords granted by spells until end of turn
     if perm.tempKw and perm.tempKw[keyword] then return true end
@@ -115,6 +154,20 @@ function E:GetCreatureStats(perm, isRemote)
     if perm.id == "BOSS15" and myLife <= 10 then
         p = p + 3
     end
+
+    -- Tribal anthems from other creatures, and this creature's own rally bonus
+    local rally = card.rally
+    ForEachOtherCreature(checkField, perm, function(oc)
+        local a = oc.anthem
+        if a and self:CardHasTag(card, a.tag, a.value) then
+            p = p + (a.p or 0)
+            t = t + (a.t or 0)
+        end
+        if rally and self:CardHasTag(oc, rally.tag, rally.value) then
+            p = p + (rally.p or 0)
+            t = t + (rally.t or 0)
+        end
+    end)
 
     return math.max(0, p), t
 end

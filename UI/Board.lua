@@ -70,6 +70,17 @@ function TTS:FormatSymbols(str, size)
     return formatted
 end
 
+-- Creature type, faction and zone as one tooltip line, e.g. "Humanoid  •  Defias  •  The Deadmines"
+function TTS:GetCardTagLine(card)
+    if not card or card.type ~= "Creature" then return nil end
+    local parts = {}
+    if card.creatureType then table.insert(parts, card.creatureType) end
+    if card.faction then table.insert(parts, "|cFFFFD200" .. card.faction .. "|r") end
+    if card.zone then table.insert(parts, "|cFF888888" .. card.zone .. "|r") end
+    if #parts == 0 then return nil end
+    return table.concat(parts, "  •  ")
+end
+
 -- Forward declaration for camera refresher
 local RefreshAllModelCameras
 
@@ -335,6 +346,10 @@ local function Card_OnEnter(self)
         displayType = "Prayer"
     end
     GameTooltip:AddLine("Cost: " .. costStr .. "  |  " .. displayType, 0.8, 0.8, 0.8)
+    local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
+    if tagLine then
+        GameTooltip:AddLine(tagLine, 1, 1, 1)
+    end
 
     if card.power and card.toughness then
         local effP, effT = card.power, card.toughness

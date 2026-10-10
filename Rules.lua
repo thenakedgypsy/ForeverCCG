@@ -205,6 +205,10 @@ local function CreateExampleCard(parent, cardId)
             displayType = "Prayer"
         end
         GameTooltip:AddLine("Cost: " .. cStr .. "  |  " .. displayType, 0.8, 0.8, 0.8)
+        local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
+        if tagLine then
+            GameTooltip:AddLine(tagLine, 1, 1, 1)
+        end
         if card.power and card.toughness then
             GameTooltip:AddLine(string.format("P/T: %d/%d", card.power, card.toughness), 1, 0.8, 0)
         end

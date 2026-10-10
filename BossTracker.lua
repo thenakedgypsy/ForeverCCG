@@ -22,6 +22,10 @@ local recentKilledCount = 0
 local KILL_DEDUPE_SECONDS = 15    -- same kill reported by several events
 local LOOT_DEDUPE_SECONDS = 600   -- looting a corpse that was already credited
 
+-- Chance (in %) that a creature kill awards the next copy of its card, indexed by
+-- the copy being rolled for: 1st copy is guaranteed, then 25%, 12% and 6%.
+local COPY_DROP_CHANCE = { 100, 25, 12, 6 }
+
 -- Fast lookup maps for open-world mob cards
 local mobCardsByNpcID = {}
 local mobCardsByName = {}
@@ -149,6 +153,86 @@ function TTS.BossTracker:BuildMobCardCache()
 end
 
 -- =========================================================================
+-- INSTANCE CARD NOTICE
+-- On entering a dungeon or raid, tell the player if it still has cards they
+-- haven't collected 4/4. Dungeon creature cards carry their instance in
+-- card.zone; the final boss cards have no zone, so they are listed here.
+-- =========================================================================
+local BOSS_CARD_INSTANCES = {
+    BOSS01 = "Ragefire Chasm",
+    BOSS02 = "The Deadmines",
+    BOSS03 = "Wailing Caverns",
+    BOSS04 = "Shadowfang Keep",
+    BOSS05 = "Blackfathom Deeps",
+    BOSS06 = "The Stockade",
+    BOSS07 = "Gnomeregan",
+    BOSS08 = "Razorfen Kraul",
+    BOSS09 = "Scarlet Monastery",
+    BOSS10 = "Scarlet Monastery",
+    BOSS11 = "Scarlet Monastery",
+    BOSS12 = "Scarlet Monastery",
+    BOSS13 = "Razorfen Downs",
+    BOSS14 = "Uldaman",
+    BOSS15 = "Zul'Farrak",
+    BOSS16 = "Maraudon",
+    BOSS17 = "Sunken Temple",
+    BOSS18 = "Blackrock Depths",
+    BOSS19 = "Blackrock Spire",
+    BOSS20 = "Blackrock Spire",
+    BOSS21 = "Dire Maul",
+    BOSS22 = "Dire Maul",
+    BOSS23 = "Dire Maul",
+    BOSS24 = "Scholomance",
+    BOSS25 = "Stratholme",
+    BOSS26 = "Stratholme",
+}
+
+-- Other names the client may report for the same instance (normalized form)
+local INSTANCE_ALIASES = {
+    ["stormwind stockade"]          = "stockade",
+    ["temple of atal hakkar"]       = "sunken temple",
+    ["lower blackrock spire"]       = "blackrock spire",
+    ["upper blackrock spire"]       = "blackrock spire",
+    ["dire maul east"]              = "dire maul",
+    ["dire maul west"]              = "dire maul",
+    ["dire maul north"]             = "dire maul",
+    ["scarlet monastery graveyard"] = "scarlet monastery",
+    ["scarlet monastery library"]   = "scarlet monastery",
+    ["scarlet monastery armory"]    = "scarlet monastery",
+    ["scarlet monastery cathedral"] = "scarlet monastery",
+}
+
+local function InstanceKey(name)
+    local key = (Normalize(name):gsub("^the ", ""))
+    return INSTANCE_ALIASES[key] or key
+end
+
+function TTS.BossTracker:InstanceHasLockedCards(instanceName)
+    local key = InstanceKey(instanceName)
+    if key == "" then return false end
+
+    for cardId, card in pairs(TTS.Cards or {}) do
+        local cardInstance = card.zone or BOSS_CARD_INSTANCES[cardId]
+        if card.isBoss and cardInstance and InstanceKey(cardInstance) == key then
+            if SanitizeKillCount(TTS_KilledBosses and TTS_KilledBosses[cardId]) < 4 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function AnnounceInstanceCards()
+    local name, instanceType = SafeCall(GetInstanceInfo)
+    if not name or IsSecret(name) or IsSecret(instanceType) then return end
+    if instanceType ~= "party" and instanceType ~= "raid" then return end
+
+    if TTS.BossTracker:InstanceHasLockedCards(name) then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r |cFFFFD200This instance has cards you are yet to unlock!|r")
+    end
+end
+
+-- =========================================================================
 -- KILL EVALUATION & REWARD
 -- =========================================================================
 function TTS.BossTracker:RecordMobKill(card)
@@ -158,9 +242,15 @@ function TTS.BossTracker:RecordMobKill(card)
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
     if currentKills < 4 then
         local newKills = currentKills + 1
+        if math.random(100) > COPY_DROP_CHANCE[newKills] then return end
         TTS_KilledBosses[card.id] = newKills
         local zoneText = card.zone and string.format(" (%s)", card.zone) or ""
         DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Mob Slain: |cFFFFD200%s|r%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", card.name, zoneText, newKills))
+
+        -- Final copy: raid-warning style announcement in the middle of the screen
+        if newKills == 4 then
+            ShowCardCompletePopup(card)
+        end
 
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
             TTS.DeckBuilderFrame:RefreshAll()
@@ -400,6 +490,15 @@ tracker:SetScript("OnEvent", function(self, event, ...)
                 else
                     scan()
                 end
+            end
+        end
+
+        -- Entering a dungeon or raid: mention any cards still to unlock there
+        if inInstance and not wasInInstance then
+            if C_Timer and C_Timer.After then
+                C_Timer.After(2, AnnounceInstanceCards)
+            else
+                AnnounceInstanceCards()
             end
         end
         wasInInstance = inInstance

@@ -29,7 +29,7 @@ end
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local D = CreateFrame("Frame", "TTS_DeckBuilderFrame", UIParent, backdropTemplate)
 TTS.DeckBuilderFrame = D
-D:SetSize(720, 585)
+D:SetSize(720, 611)
 D:SetPoint("CENTER")
 D:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -59,6 +59,8 @@ local colorOn = { W = true, U = true, B = true, R = true, G = true }
 local typeOn  = { Prayer = true, Creature = true, Spell = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
+local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
+local creatureTypeFilter = nil -- nil = all creature types; otherwise only creatures of this type are shown
 local sortMode = "COST"      -- "COST" or "ZONE"
 local cardPoolKeys = {}
 local deckListKeys = {}
@@ -95,6 +97,8 @@ local function CardPassesFilters(cardId, card)
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
     if zoneFilter and GetTypeGroup(card) == "Creature" and card.zone ~= zoneFilter then return false end
+    if factionFilter and GetTypeGroup(card) == "Creature" and card.faction ~= factionFilter then return false end
+    if creatureTypeFilter and GetTypeGroup(card) == "Creature" and card.creatureType ~= creatureTypeFilter then return false end
     return true
 end
 
@@ -294,6 +298,10 @@ local function CardTooltip_OnEnter(self)
         displayType = "Prayer"
     end
     GameTooltip:AddLine("Cost: " .. costStr .. "  |  Type: " .. displayType, 0.8, 0.8, 0.8)
+    local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
+    if tagLine then
+        GameTooltip:AddLine(tagLine, 1, 1, 1)
+    end
 
     if card.power and card.toughness then
         GameTooltip:AddLine("Stats: " .. card.power .. "/" .. card.toughness, 1, 0.8, 0)
@@ -565,6 +573,101 @@ zoneBtn:SetScript("OnClick", function()
     if zoneMenu:IsShown() then zoneMenu:Hide() else zoneMenu:Show() end
 end)
 
+-- =========================================================================
+-- FACTION & CREATURE TYPE FILTERS (apply to creatures only)
+-- =========================================================================
+local function BuildFieldList(field)
+    local present, list = {}, {}
+    for _, card in pairs(TTS.Cards or {}) do
+        local v = card[field]
+        if v and not present[v] then
+            present[v] = true
+            table.insert(list, v)
+        end
+    end
+    table.sort(list)
+    return list
+end
+
+-- Label + button + popup list on the row under Class/Sort. onSelect receives the value, or nil for "All".
+-- Returns the popup menu and a function that sets the button text.
+local function MakeListDropdown(labelText, labelX, buttonX, allText, values, cols, onSelect)
+    local lbl = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lbl:SetPoint("TOPLEFT", D, "TOPLEFT", labelX, -126)
+    lbl:SetText(labelText)
+
+    local btn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
+    btn:SetSize(150, 22)
+    btn:SetPoint("TOPLEFT", D, "TOPLEFT", buttonX, -121)
+    btn:SetNormalFontObject("GameFontNormalSmall")
+    btn:SetHighlightFontObject("GameFontHighlightSmall")
+
+    local function UpdateButton(value)
+        btn:SetText(value or allText)
+    end
+    UpdateButton(nil)
+
+    local menu = CreateFrame("Frame", nil, D, backdropTemplate)
+    menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+    menu:SetFrameStrata("DIALOG")
+    menu:EnableMouse(true)
+    if menu.SetBackdrop then
+        menu:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true, tileSize = 16, edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        menu:SetBackdropColor(0, 0, 0, 0.95)
+    end
+    menu:Hide()
+
+    local entries = { false }  -- false = "All"
+    for _, v in ipairs(values) do table.insert(entries, v) end
+
+    local ROW_H, COL_W = 18, 130
+    local rowsPerCol = math.ceil(#entries / cols)
+    for i, value in ipairs(entries) do
+        local col = math.floor((i - 1) / rowsPerCol)
+        local rowIdx = (i - 1) % rowsPerCol
+        local row = CreateFrame("Button", nil, menu)
+        row:SetSize(COL_W - 4, ROW_H)
+        row:SetPoint("TOPLEFT", menu, "TOPLEFT", 6 + col * COL_W, -6 - rowIdx * ROW_H)
+        row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text:SetPoint("LEFT", 4, 0)
+        row.text:SetWidth(COL_W - 10)
+        row.text:SetJustifyH("LEFT")
+        row.text:SetWordWrap(false)
+        row.text:SetText(value or allText)
+        row:SetScript("OnClick", function()
+            UpdateButton(value or nil)
+            menu:Hide()
+            onSelect(value or nil)
+        end)
+    end
+    local usedCols = math.ceil(#entries / rowsPerCol)
+    menu:SetSize(12 + usedCols * COL_W, 12 + rowsPerCol * ROW_H)
+
+    btn:SetScript("OnClick", function()
+        if menu:IsShown() then menu:Hide() else menu:Show() end
+    end)
+
+    return menu, UpdateButton
+end
+
+local factionMenu, UpdateFactionButton = MakeListDropdown("Faction:", 22, 70, "All Factions",
+    BuildFieldList("faction"), 2, function(value)
+        factionFilter = value
+        D:RefreshPool()
+    end)
+
+local creatureTypeMenu, UpdateCreatureTypeButton = MakeListDropdown("Creature:", 236, 290, "All Creature Types",
+    BuildFieldList("creatureType"), 1, function(value)
+        creatureTypeFilter = value
+        D:RefreshPool()
+    end)
+
 local resetFiltersBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
 resetFiltersBtn:SetSize(110, 22)
 resetFiltersBtn:SetPoint("TOPLEFT", D, "TOPLEFT", 500, -68)
@@ -579,6 +682,12 @@ resetFiltersBtn:SetScript("OnClick", function()
     zoneFilter = nil
     UpdateZoneButton()
     zoneMenu:Hide()
+    factionFilter = nil
+    UpdateFactionButton(nil)
+    factionMenu:Hide()
+    creatureTypeFilter = nil
+    UpdateCreatureTypeButton(nil)
+    creatureTypeMenu:Hide()
     for _, cb in ipairs(filterChecks) do cb:Sync() end
     D:RefreshPool()
 end)
@@ -588,11 +697,11 @@ end)
 -- =========================================================================
 local poolScroll = CreateFrame("ScrollFrame", "TTS_PoolScroll", D, "FauxScrollFrameTemplate")
 poolScroll:SetSize(320, 380)
-poolScroll:SetPoint("TOPLEFT", 20, -126)
+poolScroll:SetPoint("TOPLEFT", 20, -152)
 
 local deckScroll = CreateFrame("ScrollFrame", "TTS_DeckScroll", D, "FauxScrollFrameTemplate")
 deckScroll:SetSize(320, 380)
-deckScroll:SetPoint("TOPRIGHT", -35, -126)
+deckScroll:SetPoint("TOPRIGHT", -35, -152)
 
 local poolButtons = {}
 local deckButtons = {}
@@ -1126,6 +1235,8 @@ D:SetScript("OnHide", function()
     CardTooltip_OnLeave()
     classMenu:Hide()
     zoneMenu:Hide()
+    factionMenu:Hide()
+    creatureTypeMenu:Hide()
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end
