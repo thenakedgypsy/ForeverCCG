@@ -1,3 +1,11 @@
+--[[
+    ForeverCCG - Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy
+    Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
+
+    This file is part of ForeverCCG. See LICENSE.txt for terms.
+    World of Warcraft names, creatures, icons and models are the property of
+    Blizzard Entertainment, Inc. and are not claimed by this notice.
+]]
 TTS = TTS or {}
 TTS.Engine = TTS.Engine or {
     inMatch = false,

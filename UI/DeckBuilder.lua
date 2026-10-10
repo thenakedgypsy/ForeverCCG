@@ -1,3 +1,11 @@
+--[[
+    ForeverCCG - Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy
+    Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
+
+    This file is part of ForeverCCG. See LICENSE.txt for terms.
+    World of Warcraft names, creatures, icons and models are the property of
+    Blizzard Entertainment, Inc. and are not claimed by this notice.
+]]
 TTS = TTS or {}
 
 -- =========================================================================
@@ -45,7 +53,7 @@ D:SetScript("OnDragStop", D.StopMovingOrSizing)
 D:Hide()
 local footer = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOM", D, "BOTTOM", 0, 12)
-footer:SetText("Tragic: The Saddening Engine")
+footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 local title = D:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 title:SetPoint("TOP", 0, -16)

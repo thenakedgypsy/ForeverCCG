@@ -1,0 +1,36 @@
+ForeverCCG - Tragic: The Saddening Engine
+Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
+
+This add-on, including its source code, the Tragic: The Saddening Engine,
+its rules text, card text, card designs, and original artwork, is the work
+of the_naked_gypsy and is protected by copyright.
+
+WHAT YOU MAY DO
+  - Download, install, and use this add-on for personal play, free of charge.
+  - Read and study the source code.
+
+WHAT YOU MAY NOT DO WITHOUT WRITTEN PERMISSION FROM the_naked_gypsy
+  - Redistribute or re-upload this add-on, in whole or in part, on any site
+    or service.
+  - Publish modified versions, forks, or derivative works of this add-on or
+    of the Tragic: The Saddening Engine.
+  - Copy substantial portions of the code, card data, or artwork into
+    another project.
+  - Remove or alter this notice or the copyright headers in the source files.
+  - Sell, charge for, or otherwise commercially exploit this add-on.
+
+THIRD-PARTY MATERIAL
+World of Warcraft, Warcraft, and all related names, creatures, zones, spell
+names, icons, models, and other game assets are the property of Blizzard
+Entertainment, Inc. They are referenced for use within the game client and
+are not claimed under this notice.
+
+Magic: The Gathering is a trademark of Wizards of the Coast LLC. This project
+is an independent fan work and is not affiliated with, endorsed by, or
+sponsored by Wizards of the Coast or Blizzard Entertainment.
+
+NO WARRANTY
+This add-on is provided "as is", without warranty of any kind. The author is
+not liable for any claim, damages, or other liability arising from its use.
+
+For permission requests, contact the_naked_gypsy.

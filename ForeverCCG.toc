@@ -4,6 +4,9 @@
 ## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos
 ## Version: 0.1.1
 ## Author: the_naked_gypsy
+## X-Engine: Tragic: The Saddening Engine
+## X-Copyright: Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
+## X-License: All Rights Reserved. See LICENSE.txt.
 
 Database.lua
 BossTracker.lua

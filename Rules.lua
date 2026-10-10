@@ -1,3 +1,11 @@
+--[[
+    ForeverCCG - Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy
+    Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
+
+    This file is part of ForeverCCG. See LICENSE.txt for terms.
+    World of Warcraft names, creatures, icons and models are the property of
+    Blizzard Entertainment, Inc. and are not claimed by this notice.
+]]
 TTS = TTS or {}
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
@@ -305,7 +313,7 @@ p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the b
     "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
 
 local footer = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-footer:SetText("Tragic: The Saddening Engine")
+footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 -- Card Frame containers
 local landFrames = {}
