@@ -87,7 +87,7 @@ soloBtn:SetPoint("TOP", 0, -158)
 soloBtn:SetText("Practice vs Dummy")
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before starting a match.")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Close the Deckbuilder before starting a match.")
         return
     end
     TTS.Engine:StartMatch("Target Dummy", true, true)
@@ -183,7 +183,7 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.MainFrame:Hide()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Deckbuilder frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTSE]|r Deckbuilder frame not initialized.")
         end
     elseif cmd == "board" or cmd == "game" then
         if TTS.BoardFrame then
@@ -201,7 +201,7 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.RulesFrame:Show()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Rules frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTSE]|r Rules frame not initialized.")
         end
     elseif cmd == "queue" or cmd == "lfm" or cmd == "waiting" then
         if TTS.WaitingRoom and TTS.WaitingRoom.frame then

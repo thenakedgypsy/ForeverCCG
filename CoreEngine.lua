@@ -66,17 +66,17 @@ function TTS:SafeAfter(seconds, callback)
 end
 
 function E:Log(msg, category)
-    local prefix = "|cFFFFFF00[TTS]|r "
+    local prefix = "|cFFFFFF00[TTSE]|r "
     if category == "ACTION" then
-        prefix = "|cFF00FF00[TTS]|r "
+        prefix = "|cFF00FF00[TTSE]|r "
     elseif category == "COMBAT" then
-        prefix = "|cFFFF4444[TTS]|r "
+        prefix = "|cFFFF4444[TTSE]|r "
     elseif category == "MANA" then
-        prefix = "|cFF66BBFF[TTS]|r "
+        prefix = "|cFF66BBFF[TTSE]|r "
     elseif category == "ERROR" then
-        prefix = "|cFFFF2222[TTS]|r "
+        prefix = "|cFFFF2222[TTSE]|r "
     elseif category == "SYSTEM" then
-        prefix = "|cFFFFA500[TTS]|r "
+        prefix = "|cFFFFA500[TTSE]|r "
     end
 
     local formattedMsg = TTS.FormatSymbols and TTS:FormatSymbols(msg, 14) or msg

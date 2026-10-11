@@ -784,7 +784,7 @@ for i = 1, TTS.MAX_DECK_SLOTS do
         TTS_ActiveDeckIndex = i
         CardTooltip_OnLeave()
         D:RefreshDeck()
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
     end)
     deckSlotButtons[i] = b
 end
@@ -1152,7 +1152,7 @@ function D:AddCardToDeck(cardId)
         totalCards = totalCards + qty
     end
     if totalCards >= 50 then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum deck size reached (50 cards).")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Maximum deck size reached (50 cards).")
         return
     end
 
@@ -1166,7 +1166,7 @@ function D:AddCardToDeck(cardId)
             end
         end
         if spellCards >= TTS.MAX_DECK_SPELLS then
-            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS))
+            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS))
             return
         end
     end
@@ -1177,22 +1177,22 @@ function D:AddCardToDeck(cardId)
         local kills = GetKillCount(cardId, card)
 
         if kills <= 0 then
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Defeat " .. card.name .. " to unlock this card!")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Defeat " .. card.name .. " to unlock this card!")
             return
         end
 
         local maxAllowed = math.min(4, kills)
         if current >= maxAllowed then
             if maxAllowed >= 4 then
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r Maximum 4 copies reached for %s.", card.name))
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r Maximum 4 copies reached for %s.", card.name))
             else
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name))
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name))
             end
             return
         end
     else
         if card.type ~= "Land" and current >= 4 then
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum 4 copies allowed for " .. card.name)
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Maximum 4 copies allowed for " .. card.name)
             return
         end
     end
@@ -1226,7 +1226,7 @@ local function InMatch()
 end
 
 local function PrintInMatchWarning()
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The Deckbuilder can't be opened during a game.")
+    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r The Deckbuilder can't be opened during a game.")
 end
 
 -- Use this instead of :Show(). Returns true if the Deckbuilder opened.

@@ -215,12 +215,12 @@ function WR:ToggleQueue()
 
     if self.isQueued then
         self:BroadcastPresence()
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r You joined the waiting room as " .. myName .. ".")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTSE]|r You joined the waiting room as " .. myName .. ".")
     else
         if TTS.Net and TTS.Net.BroadcastLFM then
             TTS.Net:BroadcastLFM("LFM_LEAVE:" .. myName)
         end
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTS]|r You left the waiting room.")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTSE]|r You left the waiting room.")
     end
     self:UpdateUI()
 end

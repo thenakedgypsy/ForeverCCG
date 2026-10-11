@@ -235,7 +235,7 @@ local function AnnounceInstanceCards()
     if instanceType ~= "party" and instanceType ~= "raid" then return end
 
     if TTS.BossTracker:InstanceHasLockedCards(name) then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r |cFFFFD200This instance has cards you are yet to unlock!|r")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTSE]|r |cFFFFD200This instance has cards you are yet to unlock!|r")
     end
 end
 
@@ -252,7 +252,7 @@ function TTS.BossTracker:RecordMobKill(card)
         if math.random(100) > COPY_DROP_CHANCE[newKills] then return end
         TTS_KilledBosses[card.id] = newKills
         local zoneText = card.zone and string.format(" (%s)", card.zone) or ""
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Mob Slain: |cFFFFD200%s|r%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", card.name, zoneText, newKills))
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Mob Slain: |cFFFFD200%s|r%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", card.name, zoneText, newKills))
 
         -- Final copy: raid-warning style announcement in the middle of the screen
         if newKills == 4 then
@@ -371,7 +371,7 @@ end
 function TTS.BossTracker:ResetBosses()
     TTS_DevModeActive = false
     TTS_KilledBosses = {}
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTS]|r Dev mode DISABLED. Rescanning character statistics and mob progress...")
+    DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r Dev mode DISABLED. Rescanning character statistics and mob progress...")
 
     self:ScanAllBosses()
 
@@ -413,7 +413,7 @@ function TTS.BossTracker:ScanAllBosses()
             if kills > oldKills then
                 TTS_KilledBosses[cardId] = kills
                 anyChange = true
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Boss Tracked: |cFFFFD200%s|r (%d kills recorded).", card.name, kills))
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Boss Tracked: |cFFFFD200%s|r (%d kills recorded).", card.name, kills))
             elseif TTS_KilledBosses[cardId] == nil then
                 TTS_KilledBosses[cardId] = oldKills
             end

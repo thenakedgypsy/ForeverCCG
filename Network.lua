@@ -97,15 +97,15 @@ function TTS.Net:InvitePlayer(target)
 
     local E = TTS.Engine
     if E and E.inMatch then
-        Print("|cFFFF2222[TTS]|r You are already in a match.")
+        Print("|cFFFF2222[TTSE]|r You are already in a match.")
         return
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        Print("|cFFFF2222[TTS]|r Close the Deckbuilder before challenging a player.")
+        Print("|cFFFF2222[TTSE]|r Close the Deckbuilder before challenging a player.")
         return
     end
     if E and not E:ValidateDeck() then
-        Print("|cFFFF2222[TTS]|r Your active deck must have 40-50 cards before you can challenge someone.")
+        Print("|cFFFF2222[TTSE]|r Your active deck must have 40-50 cards before you can challenge someone.")
         return
     end
 
@@ -114,7 +114,7 @@ function TTS.Net:InvitePlayer(target)
     self.pendingInvites[inviteKey] = target
 
     self:Send(target, "INVITE:" .. TTS.VERSION)
-    Print("|cFF00FF00[TTS]|r Invitation sent to " .. target .. ". Checking for addon...")
+    Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
 
     TTS:SafeAfter(2.5, function()
         if TTS.Net.pendingInvites[inviteKey] then
@@ -123,7 +123,7 @@ function TTS.Net:InvitePlayer(target)
             TTS.Net.outgoingInvites[inviteKey] = nil
             local whisperMsg = string.format("I tried to invite you to a game of Forever: CCG, but you dont have it installed! Visit: %s to download!", TTS.DOWNLOAD_URL)
             SendChatMessage(whisperMsg, "WHISPER", nil, originalTarget)
-            Print(string.format("|cFFFF4444[TTS]|r %s does not have the addon installed. Whisper sent!", originalTarget))
+            Print(string.format("|cFFFF4444[TTSE]|r %s does not have the addon installed. Whisper sent!", originalTarget))
         end
     end)
 end
@@ -175,7 +175,7 @@ local function VersionText(v)
 end
 
 local function ReportVersionMismatch(otherName, otherVersion)
-    Print(string.format("|cFFFF2222[TTS]|r Version mismatch: %s is on %s, you are on %s. Both players must use the same version of Forever: CCG.",
+    Print(string.format("|cFFFF2222[TTSE]|r Version mismatch: %s is on %s, you are on %s. Both players must use the same version of Forever: CCG.",
         otherName, VersionText(otherVersion), TTS.VERSION))
 end
 
@@ -240,20 +240,20 @@ function TTS.Net:OnReceive(msg, sender)
 
         if TTS.Engine and TTS.Engine.inMatch then
             TTS.Net:Send(sender, "DECLINE:IN_MATCH")
-            Print("|cFFFF0000[TTS]|r Auto-declined challenge from " .. sender .. ": you are already in a match.")
+            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": you are already in a match.")
             return
         end
 
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
             TTS.Net:Send(sender, "DECLINE:DECKBUILDER_OPEN")
-            Print("|cFFFF0000[TTS]|r Auto-declined challenge from " .. sender .. ": close Deckbuilder first.")
+            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": close Deckbuilder first.")
             return
         end
 
         -- Only one challenge popup at a time; a second challenger is told we're busy
         if TTS.Net.incomingChallenge and not SameName(TTS.Net.incomingChallenge, sender) then
             TTS.Net:Send(sender, "DECLINE:BUSY")
-            Print("|cFFFF0000[TTS]|r Auto-declined challenge from " .. sender .. ": another challenge is already pending.")
+            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": another challenge is already pending.")
             return
         end
         TTS.Net.incomingChallenge = sender
@@ -265,12 +265,12 @@ function TTS.Net:OnReceive(msg, sender)
             OnAccept = function()
                 if TTS.Engine and TTS.Engine.inMatch then
                     TTS.Net:Send(sender, "DECLINE:IN_MATCH")
-                    Print("|cFFFF0000[TTS]|r Cannot accept challenge while in a match.")
+                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge while in a match.")
                     return
                 end
                 if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
                     TTS.Net:Send(sender, "DECLINE:BUSY")
-                    Print("|cFFFF0000[TTS]|r Cannot accept challenge while Deckbuilder is open.")
+                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge while Deckbuilder is open.")
                     return
                 end
                 if TTS.Engine and TTS.Engine:ValidateDeck() then
@@ -280,7 +280,7 @@ function TTS.Net:OnReceive(msg, sender)
                     TTS.Engine:RefreshUI()
                 else
                     TTS.Net:Send(sender, "DECLINE:NO_DECK")
-                    Print("|cFFFF0000[TTS]|r Cannot accept challenge: your active deck must have 40-50 cards.")
+                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge: your active deck must have 40-50 cards.")
                 end
             end,
             OnCancel = function()
@@ -299,7 +299,7 @@ function TTS.Net:OnReceive(msg, sender)
 
     elseif cmd == "INVITE_ACK" then
         TTS.Net.pendingInvites[sender:lower()] = nil
-        Print("|cFF00FF00[TTS]|r " .. sender .. " has Forever: CCG installed. Awaiting their response...")
+        Print("|cFF00FF00[TTSE]|r " .. sender .. " has Forever: CCG installed. Awaiting their response...")
 
     elseif cmd == "ACCEPT" then
         local key = sender:lower()
@@ -322,21 +322,21 @@ function TTS.Net:OnReceive(msg, sender)
 
         if TTS.Engine and TTS.Engine.inMatch then
             TTS.Net:Send(sender, "CANCEL:IN_MATCH")
-            Print("|cFFFF0000[TTS]|r " .. sender .. " accepted, but you are already in a match.")
+            Print("|cFFFF0000[TTSE]|r " .. sender .. " accepted, but you are already in a match.")
             return
         end
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
             TTS.Net:Send(sender, "CANCEL:DECKBUILDER_OPEN")
-            Print("|cFFFF0000[TTS]|r Challenge accepted, but match cancelled because Deckbuilder is open.")
+            Print("|cFFFF0000[TTSE]|r Challenge accepted, but match cancelled because Deckbuilder is open.")
             return
         end
         if TTS.Engine and not TTS.Engine:ValidateDeck() then
             TTS.Net:Send(sender, "CANCEL:NO_DECK")
-            Print("|cFFFF0000[TTS]|r Challenge accepted, but match cancelled: your active deck must have 40-50 cards.")
+            Print("|cFFFF0000[TTSE]|r Challenge accepted, but match cancelled: your active deck must have 40-50 cards.")
             return
         end
 
-        Print("|cFF00FF00[TTS]|r Challenge accepted by " .. sender .. "!")
+        Print("|cFF00FF00[TTSE]|r Challenge accepted by " .. sender .. "!")
         if TTS.Engine then
             TTS.Engine:StartMatch(sender, true, false)
             TTS.Engine.remoteState.handCount = 7
@@ -360,7 +360,7 @@ function TTS.Net:OnReceive(msg, sender)
         if reason == "VERSION" then
             ReportVersionMismatch(sender, parts[3])
         else
-            Print("|cFFFF0000[TTS]|r " .. sender .. " declined or cancelled challenge (" .. reason .. ").")
+            Print("|cFFFF0000[TTSE]|r " .. sender .. " declined or cancelled challenge (" .. reason .. ").")
         end
 
     elseif cmd == "ACTION" then

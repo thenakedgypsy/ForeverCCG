@@ -5390,7 +5390,7 @@ function TTS:PruneRemovedCards()
         end
     end
     if removed > 0 and DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFFA500[TTS]|r Removed %d card(s) that no longer exist from your saved decks.", removed))
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFFA500[TTSE]|r Removed %d card(s) that no longer exist from your saved decks.", removed))
     end
 end
 
