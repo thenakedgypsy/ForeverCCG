@@ -68,13 +68,55 @@ btn:SetScript("OnDragStop", function(self)
 end)
 
 -- =========================================================================
+-- QUICK-OPEN HELPERS
+-- =========================================================================
+local function Print(msg)
+    DEFAULT_CHAT_FRAME:AddMessage(msg)
+end
+
+local function ToggleRules()
+    local R = TTS.RulesFrame
+    if not R then return end
+    if R:IsShown() then R:Hide() else R:Show() end
+end
+
+-- Same restrictions as the main window's "Open Waiting Room" button
+local function ToggleWaitingRoom()
+    local F = TTS.WaitingRoom and TTS.WaitingRoom.frame
+    if not F then return end
+    if F:IsShown() then
+        F:Hide()
+        return
+    end
+    if TTS.Engine and TTS.Engine.inMatch then
+        Print("|cFFFF2222[TTS]|r The waiting room can't be opened during a game.")
+        return
+    end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
+        Print("|cFFFF2222[TTS]|r Close the Deckbuilder before opening the waiting room.")
+        return
+    end
+    if TTS.Engine and not TTS.Engine:ValidateDeck() then
+        Print("|cFFFF2222[TTS]|r Your active deck must have 40-50 cards to open the waiting room.")
+        return
+    end
+    F:Show()
+end
+
+-- =========================================================================
 -- CLICKS & TOOLTIP
 -- =========================================================================
 btn:RegisterForClicks("LeftButtonUp")
 btn:SetScript("OnClick", function()
     if isDragging then return end
 
-    if IsShiftKeyDown() then
+    if IsAltKeyDown() then
+        -- Alt-Click: Open / Toggle Rules
+        ToggleRules()
+    elseif IsControlKeyDown() then
+        -- Ctrl-Click: Open / Toggle Waiting Room
+        ToggleWaitingRoom()
+    elseif IsShiftKeyDown() then
         -- Shift-Click: Open / Toggle Deckbuilder (blocked while a game is in progress)
         local D = TTS.DeckBuilderFrame
         if D then
@@ -132,6 +174,8 @@ btn:SetScript("OnEnter", function(self)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine("|cFF808080Left-Click: Toggle Main Window|r")
     GameTooltip:AddLine("|cFF808080Shift + Left-Click: Toggle Deckbuilder|r")
+    GameTooltip:AddLine("|cFF808080Alt + Left-Click: Toggle Rules|r")
+    GameTooltip:AddLine("|cFF808080Ctrl + Left-Click: Toggle Waiting Room|r")
     GameTooltip:AddLine("|cFF808080Left-Click & Drag: Move Button|r")
     GameTooltip:Show()
 end)

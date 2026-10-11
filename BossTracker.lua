@@ -575,12 +575,3 @@ tracker:SetScript("OnEvent", function(self, event, ...)
         end
     end
 end)
-
-SLASH_TTSDEV1 = "/ttsdev"
-SlashCmdList["TTSDEV"] = function()
-    if TTS_DevModeActive then
-        TTS.BossTracker:ResetBosses()
-    else
-        TTS.BossTracker:UnlockAllBosses()
-    end
-end

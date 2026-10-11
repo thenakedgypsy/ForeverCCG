@@ -271,4 +271,4 @@ F:SetScript("OnUpdate", function(self, elapsed)
         end
         WR:UpdateUI()
     end
-end)
+end)    
