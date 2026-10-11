@@ -87,7 +87,7 @@ soloBtn:SetPoint("TOP", 0, -158)
 soloBtn:SetText("Practice vs Dummy")
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Close the Deckbuilder before starting a match.")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before starting a match.")
         return
     end
     TTS.Engine:StartMatch("Target Dummy", true, true)
@@ -119,8 +119,9 @@ end)
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)
 -- =========================================================================
 function M:UpdatePlayState()
-    -- The Deckbuilder cannot be opened while a game is in progress
-    if TTS.Engine and TTS.Engine.inMatch then
+    -- The Deckbuilder cannot be opened while a game is in progress or while queued in the waiting room
+    local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
+    if (TTS.Engine and TTS.Engine.inMatch) or isQueued then
         deckBtn:Disable()
     else
         deckBtn:Enable()
@@ -156,6 +157,16 @@ function M:UpdatePlayState()
         waitingRoomBtn:Disable()
         statusLabel:SetText(string.format("|cFFFF2222Deck invalid: %s (%d/40 cards minimum)|r", deckName, cardCount))
     end
+
+    -- The waiting room cannot be opened while a game is in progress
+    if TTS.Engine and TTS.Engine.inMatch then
+        waitingRoomBtn:Disable()
+    end
+
+    -- Practice vs Dummy is unavailable during a game or while queued in the waiting room
+    if (TTS.Engine and TTS.Engine.inMatch) or isQueued then
+        soloBtn:Disable()
+    end
 end
 
 M:SetScript("OnShow", function()
@@ -183,7 +194,7 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.MainFrame:Hide()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTSE]|r Deckbuilder frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Deckbuilder frame not initialized.")
         end
     elseif cmd == "board" or cmd == "game" then
         if TTS.BoardFrame then
@@ -201,7 +212,7 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.RulesFrame:Show()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTSE]|r Rules frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Rules frame not initialized.")
         end
     elseif cmd == "queue" or cmd == "lfm" or cmd == "waiting" then
         if TTS.WaitingRoom and TTS.WaitingRoom.frame then

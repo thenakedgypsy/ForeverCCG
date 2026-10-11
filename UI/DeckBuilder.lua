@@ -299,7 +299,7 @@ local function CardTooltip_OnEnter(self)
             GameTooltip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
         else
             local maxAllowed = math.min(4, kills)
-            GameTooltip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
+            GameTooltip:AddLine(string.format("|cFF00FF00Kills: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
         end
     end
 
@@ -784,7 +784,7 @@ for i = 1, TTS.MAX_DECK_SLOTS do
         TTS_ActiveDeckIndex = i
         CardTooltip_OnLeave()
         D:RefreshDeck()
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
     end)
     deckSlotButtons[i] = b
 end
@@ -1073,7 +1073,7 @@ function D:RefreshPool()
             poolButtons[i].cardId = cId
             if isUnlocked then
                 if c.isBoss then
-                    poolButtons[i].text:SetText(string.format("[%s] %s (%d collected)  %s%s", cId, c.name, kills, costStr, suffix))
+                    poolButtons[i].text:SetText(string.format("[%s] %s (%d kills)  %s%s", cId, c.name, kills, costStr, suffix))
                 else
                     poolButtons[i].text:SetText(string.format("[%s] %s  %s%s", cId, c.name, costStr, suffix))
                 end
@@ -1152,7 +1152,7 @@ function D:AddCardToDeck(cardId)
         totalCards = totalCards + qty
     end
     if totalCards >= 50 then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Maximum deck size reached (50 cards).")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum deck size reached (50 cards).")
         return
     end
 
@@ -1166,7 +1166,7 @@ function D:AddCardToDeck(cardId)
             end
         end
         if spellCards >= TTS.MAX_DECK_SPELLS then
-            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS))
+            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS))
             return
         end
     end
@@ -1177,22 +1177,22 @@ function D:AddCardToDeck(cardId)
         local kills = GetKillCount(cardId, card)
 
         if kills <= 0 then
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Defeat " .. card.name .. " to unlock this card!")
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Defeat " .. card.name .. " to unlock this card!")
             return
         end
 
         local maxAllowed = math.min(4, kills)
         if current >= maxAllowed then
             if maxAllowed >= 4 then
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r Maximum 4 copies reached for %s.", card.name))
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r Maximum 4 copies reached for %s.", card.name))
             else
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTSE]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name))
+                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name))
             end
             return
         end
     else
         if card.type ~= "Land" and current >= 4 then
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r Maximum 4 copies allowed for " .. card.name)
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum 4 copies allowed for " .. card.name)
             return
         end
     end
@@ -1226,13 +1226,25 @@ local function InMatch()
 end
 
 local function PrintInMatchWarning()
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r The Deckbuilder can't be opened during a game.")
+    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The Deckbuilder can't be opened during a game.")
+end
+
+local function IsQueued()
+    return TTS.WaitingRoom and TTS.WaitingRoom.isQueued
+end
+
+local function PrintQueuedWarning()
+    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The Deckbuilder can't be opened while you're queued in the waiting room.")
 end
 
 -- Use this instead of :Show(). Returns true if the Deckbuilder opened.
 function D:TryOpen()
     if InMatch() then
         PrintInMatchWarning()
+        return false
+    end
+    if IsQueued() then
+        PrintQueuedWarning()
         return false
     end
     self:Show()
@@ -1256,6 +1268,11 @@ D:SetScript("OnShow", function()
     -- Safety net for any path that calls :Show() directly
     if InMatch() then
         PrintInMatchWarning()
+        D:Hide()
+        return
+    end
+    if IsQueued() then
+        PrintQueuedWarning()
         D:Hide()
         return
     end

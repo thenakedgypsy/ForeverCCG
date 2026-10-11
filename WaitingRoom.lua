@@ -210,19 +210,30 @@ function WR:BroadcastPresence()
 end
 
 function WR:ToggleQueue()
+    -- The Deckbuilder is disabled while queued, so it must be closed before joining
+    if not self.isQueued and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before joining the waiting room.")
+        return
+    end
+
     self.isQueued = not self.isQueued
     local myName = GetPlayerFullName()
 
     if self.isQueued then
         self:BroadcastPresence()
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTSE]|r You joined the waiting room as " .. myName .. ".")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r You joined the waiting room as " .. myName .. ".")
     else
         if TTS.Net and TTS.Net.BroadcastLFM then
             TTS.Net:BroadcastLFM("LFM_LEAVE:" .. myName)
         end
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTSE]|r You left the waiting room.")
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTS]|r You left the waiting room.")
     end
     self:UpdateUI()
+
+    -- Main menu's Deckbuilder button depends on the queue state
+    if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
+        TTS.MainFrame:UpdatePlayState()
+    end
 end
 
 toggleBtn:SetScript("OnClick", function()
@@ -236,7 +247,13 @@ refreshBtn:SetScript("OnClick", function()
     WR:UpdateUI()
 end)
 
-F:SetScript("OnShow", function()
+F:SetScript("OnShow", function(self)
+    -- The waiting room is unavailable during a game
+    if TTS.Engine and TTS.Engine.inMatch then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The waiting room can't be opened during a game.")
+        self:Hide()
+        return
+    end
     if TTS.Net and TTS.Net.BroadcastLFM then
         TTS.Net:BroadcastLFM("LFM_QUERY")
     end
