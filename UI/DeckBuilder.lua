@@ -65,7 +65,7 @@ title:SetText("Deckbuilder")
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -5, -5)
 
-local onlyUnlocked = false
+local onlyUnlocked = true   -- locked cards are never shown in the card pool
 local colorOn = { W = true, U = true, B = true, R = true, G = true }
 local typeOn  = { Prayer = true, Creature = true, Spell = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
@@ -299,7 +299,7 @@ local function CardTooltip_OnEnter(self)
             GameTooltip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
         else
             local maxAllowed = math.min(4, kills)
-            GameTooltip:AddLine(string.format("|cFF00FF00Kills: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
+            GameTooltip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
         end
     end
 
@@ -371,10 +371,6 @@ for n, def in ipairs(typeDefs) do
         function() return typeOn[def.key] end,
         function(v) typeOn[def.key] = v end)
 end
-
-MakeCheck(360, -41, "|cFF00FF00Unlocked only|r",
-    function() return onlyUnlocked end,
-    function(v) onlyUnlocked = v end)
 
 local sphereLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 sphereLabel:SetPoint("TOPLEFT", D, "TOPLEFT", 22, -72)
@@ -686,7 +682,6 @@ resetFiltersBtn:SetText("Reset Filters")
 resetFiltersBtn:SetScript("OnClick", function()
     for k in pairs(colorOn) do colorOn[k] = true end
     for k in pairs(typeOn) do typeOn[k] = true end
-    onlyUnlocked = false
     classFilter = nil
     UpdateClassButton()
     classMenu:Hide()
@@ -1073,7 +1068,7 @@ function D:RefreshPool()
             poolButtons[i].cardId = cId
             if isUnlocked then
                 if c.isBoss then
-                    poolButtons[i].text:SetText(string.format("[%s] %s (%d kills)  %s%s", cId, c.name, kills, costStr, suffix))
+                    poolButtons[i].text:SetText(string.format("[%s] %s (%d collected)  %s%s", cId, c.name, kills, costStr, suffix))
                 else
                     poolButtons[i].text:SetText(string.format("[%s] %s  %s%s", cId, c.name, costStr, suffix))
                 end

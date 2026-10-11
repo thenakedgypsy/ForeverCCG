@@ -262,9 +262,10 @@ pU.rawText = "You build your collection by playing World of Warcraft. Some cards
     "• Each card drop adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
     "• The chance falls with each copy you own: 1st copy |cFF00FF00100%|r, 2nd |cFFFFFFFF25%|r, 3rd |cFFFFFFFF12%|r, 4th |cFFFFFFFF6%|r.\n" ..
     "• Kills count when you, your party or your raid (including pets) defeat the creature.\n" ..
+    "• A tooltip icon shows if a creature has a card that can drop, the icon currently does not show in dungeons.\n" ..
     "• |cFFFFD200Dungeon bosses|r that aren't the final boss drop their card with the |cFFFFFFFFsame chance|r as normal creatures.\n" ..
     "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
-    "|cFFFFD200In the Deckbuilder:|r locked cards are greyed out and cannot be added; hover a card to see your kills. Tick |cFF00FF00Unlocked only|r to hide everything you can't use yet.\n\n"
+    "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies.\n\n"
 
 local h2 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 h2:SetText("Spheres of Mana")
