@@ -135,6 +135,7 @@ function E:EndMatch(outcome, reason)
     self:Log(string.format("Match ended (%s): %s", outcome:upper(), reason or ""), "SYSTEM")
 
     if TTS.BoardFrame then TTS.BoardFrame:Hide() end
+    if TTS.BoardRestoreFrame then TTS.BoardRestoreFrame:Hide() end
     if TTS.MainFrame then
         TTS.MainFrame:Show()
         if TTS.MainFrame.UpdatePlayState then
@@ -173,7 +174,11 @@ function E:DamagePlayer(isRemote, amount, reason)
         targetState.damageShield = targetState.damageShield - prevented
         amount = amount - prevented
         self:Log(string.format("Shield prevented %d damage to %s.", prevented, isRemote and self.opponent or "you"), "ACTION")
-        if amount <= 0 then return end
+        self:SyncEffects()
+        if amount <= 0 then
+            self:RefreshUI()
+            return
+        end
     end
 
     if isRemote then
@@ -399,6 +404,13 @@ function E:StartMatch(opponentName, isHost, isSolo)
         return
     end
 
+    -- Starting a game takes the player out of the waiting room
+    local WR = TTS.WaitingRoom
+    if WR then
+        if WR.isQueued then WR:ToggleQueue() end
+        if WR.frame then WR.frame:Hide() end
+    end
+
     if TTS.MatchLog and TTS.MatchLog.Clear then
         TTS.MatchLog:Clear()
     end
@@ -424,6 +436,7 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.localState.damageShield = 0
     self.localState.dots = {}
     self.localState.hots = {}
+    self.localState.mirror = nil
 
     local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex] and TTS_SavedDecks[TTS_ActiveDeckIndex].cards
     if activeDeck then
@@ -451,6 +464,7 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.remoteState.damageShield = 0
     self.remoteState.dots = {}
     self.remoteState.hots = {}
+    self.remoteState.mirror = nil
 
     if self.isSolo then
         local dummyLands = {

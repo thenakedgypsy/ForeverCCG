@@ -187,6 +187,8 @@ function E:HandleCreatureDeath(perm, isRemote)
     local card = TTS.Cards[perm.id]
     if not card then return end
 
+    if TTS.Sound then TTS.Sound:QueueCreature("death", perm.id) end
+
     self:DetachAttachments(perm, isRemote)
 
     if perm.id == "BOSS09" then
@@ -361,6 +363,14 @@ local function CreatureName(perm)
     return c and c.name or perm.id
 end
 
+-- Display name for the target of an over-time effect
+local function TargetName(self, d)
+    if d.kind == "PLAYER" then
+        return d.isRemote and (self.opponent or "the opponent") or "you"
+    end
+    return "|cFFFFD200" .. CreatureName(d.perm) .. "|r"
+end
+
 local SPELL_OPS = {}
 
 SPELL_OPS.damage = function(self, op, d, card)
@@ -468,14 +478,16 @@ SPELL_OPS.dot = function(self, op, d, card)
     local holder = d.perm
     if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
     holder.dots = holder.dots or {}
-    table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.name })
+    table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+    self:Log(string.format("%s: %s will take %d damage each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
 end
 
 SPELL_OPS.hot = function(self, op, d, card)
     local holder = d.perm
     if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
     holder.hots = holder.hots or {}
-    table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.name })
+    table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+    self:Log(string.format("%s: %s will restore %d each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
 end
 
 SPELL_OPS.shield = function(self, op, d, card)
@@ -581,6 +593,7 @@ function E:ResolveSpell(card, tgt)
             self:ApplySpellOp(op, tgt, card)
         end
     end
+    self:SyncEffects()
     self:CheckStateBasedActions()
 end
 
@@ -617,7 +630,81 @@ function E:TickOverTime()
             end
         end
     end
-    if self.inMatch then self:CheckStateBasedActions() end
+    if self.inMatch then
+        self:SyncEffects()
+        self:CheckStateBasedActions()
+    end
+end
+
+-- =========================================================================
+-- PLAYER EFFECT TRACKING
+-- Each client ticks the over-time effects it created (st.dots / st.hots / st.damageShield).
+-- Those are sent to the opponent as a snapshot so both boards can display every effect;
+-- the opponent's copy is kept in st.mirror and is display-only (never ticked).
+-- Wire format: ACTION:EFFECTS:<sender's own side>:<sender's opponent side>
+--   side = <shield>;<D|H>,<amount>,<turns>,<cardId>;...
+-- =========================================================================
+local function EncodeEffects(st)
+    local parts = { tostring(st.damageShield or 0) }
+    for _, e in ipairs(st.dots or {}) do
+        table.insert(parts, string.format("D,%d,%d,%s", e.n, e.turns, e.srcId or "?"))
+    end
+    for _, e in ipairs(st.hots or {}) do
+        table.insert(parts, string.format("H,%d,%d,%s", e.n, e.turns, e.srcId or "?"))
+    end
+    return table.concat(parts, ";")
+end
+
+local function DecodeEffects(str)
+    local mirror = { shield = 0, dots = {}, hots = {} }
+    if not str or str == "" then return mirror end
+    local entries = { strsplit(";", str) }
+    mirror.shield = tonumber(entries[1]) or 0
+    for i = 2, #entries do
+        local kind, n, turns, srcId = strsplit(",", entries[i])
+        n, turns = tonumber(n), tonumber(turns)
+        if n and turns then
+            local c = srcId and TTS.Cards[srcId]
+            local e = { n = n, turns = turns, srcId = srcId, src = c and c.name or "Unknown" }
+            if kind == "D" then table.insert(mirror.dots, e)
+            elseif kind == "H" then table.insert(mirror.hots, e) end
+        end
+    end
+    return mirror
+end
+
+function E:SyncEffects()
+    if self.isSolo or not self.inMatch or not self.opponent then return end
+    TTS.Net:Send(self.opponent, "ACTION:EFFECTS:" .. EncodeEffects(self.localState) .. ":" .. EncodeEffects(self.remoteState))
+end
+
+-- theirSide = effects the opponent tracks on themselves, mySide = effects they track on us
+function E:ReceiveEffects(theirSide, mySide)
+    self.remoteState.mirror = DecodeEffects(theirSide)
+    self.localState.mirror = DecodeEffects(mySide)
+    self:RefreshUI()
+end
+
+-- Every effect currently on a player: { kind = "dot"|"hot"|"shield", n, turns, srcId, src }
+function E:GetPlayerEffects(isRemote)
+    local st = isRemote and self.remoteState or self.localState
+    local list = {}
+    local function addFrom(shield, dots, hots)
+        if (shield or 0) > 0 then
+            table.insert(list, { kind = "shield", n = shield })
+        end
+        for _, e in ipairs(dots or {}) do
+            table.insert(list, { kind = "dot", n = e.n, turns = e.turns, srcId = e.srcId, src = e.src })
+        end
+        for _, e in ipairs(hots or {}) do
+            table.insert(list, { kind = "hot", n = e.n, turns = e.turns, srcId = e.srcId, src = e.src })
+        end
+    end
+    addFrom(st.damageShield, st.dots, st.hots)
+    if st.mirror then
+        addFrom(st.mirror.shield, st.mirror.dots, st.mirror.hots)
+    end
+    return list
 end
 
 -- =========================================================================
@@ -699,6 +786,7 @@ function E:PlayCard(handIndex)
         }
         table.insert(self.localState.field, perm)
         self:Log(string.format("Cast %s: |cFFFFD200%s|r.", card.type, card.name), "ACTION")
+        if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
 
         if cardId == "BOSS19" then
             for _, oppPerm in ipairs(self.remoteState.field) do
@@ -1013,6 +1101,7 @@ function E:TapCard(fieldIndex)
         perm.hasAttackedThisTurn = true
         self.blockingState = self.blockingState or { attackers = {}, blocks = {}, isRemoteAttacking = false }
         table.insert(self.blockingState.attackers, fieldIndex)
+        if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
 
         if perm.id == "BOSS03" then
             self.remoteState.handCount = math.max(0, self.remoteState.handCount - 1)

@@ -419,6 +419,7 @@ function TTS.Net:OnReceive(msg, sender)
                 uid = time() + #E.remoteState.field
             })
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Permanent", card and card.name or cardId), "ACTION")
+            if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
             E:RefreshUI()
 
         elseif actionType == "CAST_SPELL" then
@@ -481,6 +482,10 @@ function TTS.Net:OnReceive(msg, sender)
             -- DamagePlayer applies our own damage shield, logs, and handles defeat
             E:DamagePlayer(false, amt, string.format("%s from %s", reason, sender))
 
+        elseif actionType == "EFFECTS" then
+            -- Snapshot of the over-time effects / shields the opponent is tracking (display only)
+            E:ReceiveEffects(parts[3], parts[4])
+
         elseif actionType == "ATTACK" then
             local idx = tonumber(parts[3])
             if idx and E.remoteState.field[idx] then
@@ -500,6 +505,7 @@ function TTS.Net:OnReceive(msg, sender)
                 table.insert(E.blockingState.attackers, idx)
                 E:SetPhase("COMBAT_BLOCK")
                 E:Log(string.format("%s declared attacker: |cFFFF2222%s|r.", sender, card and card.name or "Creature"), "COMBAT")
+                if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
                 E:RefreshUI()
             end
 

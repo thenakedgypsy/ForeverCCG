@@ -246,6 +246,7 @@ p1.rawText = "Both players begin at |cFFFFD20020 Life|r. Victory is achieved by 
     "• Minimum deck size: |cFFFFFFFF40 cards|r.\n" ..
     "• Maximum deck size: |cFFFFFFFF50 cards|r.\n" ..
     "• Max copies per non-Prayer card: |cFFFFFFFF4 copies|r (Basic Prayers have no limit).\n" ..
+    "• Max spells per deck: |cFFFFFFFF12 spells|r (all non-Prayer, non-Creature cards count).\n" ..
     "• Creature cards must be |cFFFFD200unlocked|r by defeating them (see |cFFFFD200Unlocking Cards|r below)."
 
 local hU = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")

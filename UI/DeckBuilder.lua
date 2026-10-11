@@ -13,6 +13,9 @@ TTS = TTS or {}
 -- =========================================================================
 TTS.MAX_DECK_SLOTS = 3
 
+-- Maximum number of spells (non-Prayer, non-Creature cards) allowed in a deck
+TTS.MAX_DECK_SPELLS = 12
+
 local function DefaultDeckName(i)
     return (i == 1) and "Default Deck" or ("Deck " .. i)
 end
@@ -296,7 +299,7 @@ local function CardTooltip_OnEnter(self)
             GameTooltip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
         else
             local maxAllowed = math.min(4, kills)
-            GameTooltip:AddLine(string.format("|cFF00FF00Kills: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
+            GameTooltip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
         end
     end
 
@@ -1070,7 +1073,7 @@ function D:RefreshPool()
             poolButtons[i].cardId = cId
             if isUnlocked then
                 if c.isBoss then
-                    poolButtons[i].text:SetText(string.format("[%s] %s (%d kills)  %s%s", cId, c.name, kills, costStr, suffix))
+                    poolButtons[i].text:SetText(string.format("[%s] %s (%d collected)  %s%s", cId, c.name, kills, costStr, suffix))
                 else
                     poolButtons[i].text:SetText(string.format("[%s] %s  %s%s", cId, c.name, costStr, suffix))
                 end
@@ -1151,6 +1154,21 @@ function D:AddCardToDeck(cardId)
     if totalCards >= 50 then
         DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum deck size reached (50 cards).")
         return
+    end
+
+    -- Check spell cap (TTS.MAX_DECK_SPELLS spells maximum)
+    if GetTypeGroup(card) == "Spell" then
+        local spellCards = 0
+        for id, qty in pairs(deck.cards) do
+            local c = TTS.Cards[id]
+            if c and GetTypeGroup(c) == "Spell" then
+                spellCards = spellCards + qty
+            end
+        end
+        if spellCards >= TTS.MAX_DECK_SPELLS then
+            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS))
+            return
+        end
     end
 
     local current = deck.cards[cardId] or 0

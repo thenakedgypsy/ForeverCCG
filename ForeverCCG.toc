@@ -18,6 +18,7 @@ CardLogic.lua
 DummyLogic.lua
 WaitingRoom.lua
 Rules.lua
+Sound.lua
 UI\MainFrame.lua
 UI\DeckBuilder.lua
 UI\Board.lua

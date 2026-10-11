@@ -89,6 +89,20 @@ function TTS:GetCardTagLine(card)
     return table.concat(parts, "  •  ")
 end
 
+-- Card click feedback (cards are flagged ttsSilent so the generic button click is skipped)
+local function PlayUISound(name)
+    if TTS.Sound then TTS.Sound:PlayUI(name) end
+end
+
+-- After clicking one of your permanents: "tap" if it just became tapped (outside an attack), otherwise a card click
+local function PlayFieldClickSound(perm, wasTapped)
+    if perm and not wasTapped and perm.tapped and not perm.isAttacking then
+        PlayUISound("tap")
+    else
+        PlayUISound("card")
+    end
+end
+
 -- Forward declaration for camera refresher
 local RefreshAllModelCameras
 
@@ -139,6 +153,7 @@ resizer:SetPoint("BOTTOMRIGHT", -6, 6)
 resizer:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 resizer:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
 resizer:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+resizer.ttsSilent = true
 
 local isRescaling = false
 local startCursorX, startCursorY, startScale = 0, 0, 1.0
@@ -217,13 +232,81 @@ bottomLogBtn:SetText("Bottom")
 bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 
 -- =========================================================================
+-- MINIMIZE / RESTORE
+-- Minimizing hides the board (and its game log) and shows a small restore bar.
+-- =========================================================================
+local restoreBar = CreateFrame("Frame", "TTS_BoardRestoreFrame", UIParent, backdropTemplate)
+TTS.BoardRestoreFrame = restoreBar
+restoreBar:SetSize(250, 40)
+restoreBar:SetPoint("TOP", UIParent, "TOP", 0, -120)
+restoreBar:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 32, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+restoreBar:EnableMouse(true)
+restoreBar:SetMovable(true)
+restoreBar:RegisterForDrag("LeftButton")
+restoreBar:SetScript("OnDragStart", restoreBar.StartMoving)
+restoreBar:SetScript("OnDragStop", restoreBar.StopMovingOrSizing)
+restoreBar:Hide()
+
+local restoreText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+restoreText:SetPoint("LEFT", 14, 0)
+restoreText:SetText("Forever: CCG (minimized)")
+
+local restoreBtn = CreateFrame("Button", nil, restoreBar, "UIPanelButtonTemplate")
+restoreBtn:SetSize(70, 22)
+restoreBtn:SetPoint("RIGHT", -10, 0)
+restoreBtn:SetText("Restore")
+restoreBtn:SetScript("OnClick", function() B:Show() end)
+
+function B:Minimize()
+    GameTooltip:Hide()
+    self:Hide()
+    restoreBar:Show()
+end
+
+-- Any way the board comes back (Restore, /tragic board, a new match) removes the restore bar
+B:SetScript("OnShow", function(self)
+    restoreBar:Hide()
+    self:UpdateDisplay()
+end)
+
+local minimizeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
+minimizeBtn:SetSize(24, 24)
+minimizeBtn:SetPoint("TOPRIGHT", -16, -14)
+minimizeBtn:SetText("-")
+minimizeBtn:SetScript("OnClick", function() B:Minimize() end)
+minimizeBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:AddLine("Minimize")
+    GameTooltip:Show()
+end)
+minimizeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-- =========================================================================
 -- TOP & BOTTOM ACTION BUTTONS
 -- =========================================================================
 local concedeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 concedeBtn:SetSize(80, 24)
-concedeBtn:SetPoint("TOPRIGHT", -20, -14)
+concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
 concedeBtn:SetText("Concede")
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConcedeMatch() end)
+
+local soundCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
+soundCheck:SetSize(24, 24)
+soundCheck:SetPoint("RIGHT", concedeBtn, "LEFT", -6, 0)
+soundCheck:SetChecked(true)
+soundCheck:SetScript("OnClick", function(self)
+    if TTS.Sound then TTS.Sound:SetEnabled(self:GetChecked()) end
+end)
+
+local soundLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+soundLabel:SetPoint("RIGHT", soundCheck, "LEFT", 0, 1)
+soundLabel:SetText("Sounds")
+soundCheck:SetHitRectInsets(-(soundLabel:GetStringWidth() + 4), 0, 0, 0)
 
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.endTurnBtn:SetSize(90, 24)
@@ -322,6 +405,120 @@ B.myLifeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 B.manaText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 B.manaText:SetPoint("BOTTOMLEFT", 205, 20)
+
+-- =========================================================================
+-- PLAYER EFFECT BARS (damage / healing over time, damage shields)
+-- Opponent: top-right under Concede. You: right side above your deck.
+-- =========================================================================
+local EFFECT_ICON  = 24
+local EFFECT_GAP   = 4
+local EFFECT_COLS  = 3
+local EFFECT_ROWS  = 2
+local EFFECT_LABEL = 14
+
+local EFFECT_DEFAULT_ICONS = {
+    dot    = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
+    hot    = "Interface\\Icons\\Spell_Nature_Rejuvenation",
+    shield = "Interface\\Icons\\Spell_Holy_PowerWordShield",
+}
+local EFFECT_COLORS = {
+    dot    = { 1.0, 0.2, 0.2 },
+    hot    = { 0.2, 1.0, 0.2 },
+    shield = { 1.0, 0.82, 0.0 },
+}
+
+local function EffectIcon_OnEnter(self)
+    local e = self.effect
+    if not e then return end
+    local c = EFFECT_COLORS[e.kind]
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    if e.kind == "shield" then
+        GameTooltip:AddLine("Damage Shield", c[1], c[2], c[3])
+        GameTooltip:AddLine(string.format("Prevents the next %d damage.", e.n), 1, 1, 1, true)
+    else
+        GameTooltip:AddLine(e.src or "Effect", c[1], c[2], c[3])
+        if e.kind == "dot" then
+            GameTooltip:AddLine(string.format("Takes %d damage each turn.", e.n), 1, 1, 1, true)
+        else
+            GameTooltip:AddLine(string.format("Restores %d life each turn.", e.n), 1, 1, 1, true)
+        end
+        GameTooltip:AddLine(string.format("%d turn%s remaining", e.turns, e.turns == 1 and "" or "s"), 0.8, 0.8, 0.8)
+    end
+    GameTooltip:Show()
+end
+
+local function CreateEffectBar(labelText)
+    local bar = CreateFrame("Frame", nil, B)
+    bar:SetSize(EFFECT_COLS * (EFFECT_ICON + EFFECT_GAP) - EFFECT_GAP,
+        EFFECT_LABEL + EFFECT_ROWS * (EFFECT_ICON + EFFECT_GAP))
+
+    bar.label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bar.label:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
+    bar.label:SetJustifyH("RIGHT")
+    bar.label:SetText(labelText)
+
+    bar.icons = {}
+    for i = 1, EFFECT_COLS * EFFECT_ROWS do
+        local col = (i - 1) % EFFECT_COLS
+        local row = math.floor((i - 1) / EFFECT_COLS)
+        local icon = CreateFrame("Frame", nil, bar)
+        icon:SetSize(EFFECT_ICON, EFFECT_ICON)
+        icon:SetPoint("TOPRIGHT", bar, "TOPRIGHT",
+            -col * (EFFECT_ICON + EFFECT_GAP),
+            -EFFECT_LABEL - row * (EFFECT_ICON + EFFECT_GAP))
+
+        icon.border = icon:CreateTexture(nil, "BACKGROUND")
+        icon.border:SetPoint("TOPLEFT", icon, "TOPLEFT", -2, 2)
+        icon.border:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 2, -2)
+        icon.border:SetColorTexture(1, 1, 1, 1)
+
+        icon.tex = icon:CreateTexture(nil, "ARTWORK")
+        icon.tex:SetAllPoints(icon)
+        icon.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        icon.count = icon:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        local fontPath = icon.count:GetFont()
+        if fontPath then icon.count:SetFont(fontPath, 12, "OUTLINE") end
+        icon.count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1, 0)
+
+        icon:EnableMouse(true)
+        icon:SetScript("OnEnter", EffectIcon_OnEnter)
+        icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        icon:Hide()
+        bar.icons[i] = icon
+    end
+    bar:Hide()
+    return bar
+end
+
+local function UpdateEffectBar(bar, effects)
+    if #effects == 0 then
+        bar:Hide()
+        return
+    end
+    for i, icon in ipairs(bar.icons) do
+        local e = effects[i]
+        if e then
+            local src = e.srcId and TTS.Cards[e.srcId]
+            icon.effect = e
+            icon.tex:SetTexture((src and src.art) or EFFECT_DEFAULT_ICONS[e.kind])
+            local c = EFFECT_COLORS[e.kind]
+            icon.border:SetVertexColor(c[1], c[2], c[3], 1)
+            icon.count:SetText(e.kind == "shield" and e.n or e.turns)
+            icon:Show()
+        else
+            icon.effect = nil
+            icon:Hide()
+        end
+    end
+    bar:Show()
+end
+
+B.oppEffectBar = CreateEffectBar("Opponent Effects")
+B.oppEffectBar:SetPoint("TOPRIGHT", B, "TOPRIGHT", -20, -44)
+
+B.myEffectBar = CreateEffectBar("Your Effects")
+B.myEffectBar:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -20, 148)
 
 local myHandFrames     = {}
 local oppHandFrames    = {}
@@ -460,6 +657,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     local f = CreateFrame("Button", nil, parent)
     f:SetSize(sizeX, sizeY)
     f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    f.ttsSilent = true
 
     f.tuckedFrames = {}
     for k = 1, 3 do
@@ -586,6 +784,7 @@ for i = 1, 10 do
     f.origFrameLevel = f:GetFrameLevel()
     f:SetPoint("CENTER", slot, "CENTER", 0, 0)
     f:SetScript("OnClick", function(self, btn)
+        PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
             return
@@ -599,6 +798,7 @@ for i = 1, 10 do
     local f = CreateFrame("Button", nil, B)
     f:SetSize(52, 70)
     f:SetPoint("TOPLEFT", 35 + ((i - 1) * 64), -46)
+    f.ttsSilent = true
     f.back = f:CreateTexture(nil, "ARTWORK")
     f.back:SetAllPoints(f)
     ApplyBackTexture(f.back)
@@ -610,6 +810,7 @@ for i = 1, 10 do
 
     f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     f:SetScript("OnClick", function(self, btn)
+        PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
             return
@@ -636,21 +837,52 @@ local BF_CARD_H  = 84
 local BF_STEP_X  = 86
 local BF_START_X = 35
 
+local function MyLand_OnClick(self, btn)
+    if btn == "RightButton" and TTS.Engine.targeting then
+        TTS.Engine:CancelTargeting()
+        return
+    end
+    if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "LAND") then
+        if self.fieldIndex then TTS.Engine:ResolveTarget("LAND", false, self.fieldIndex) end
+        return
+    end
+    if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
+end
+
+local function MyNonLand_OnClick(self, btn)
+    if btn == "RightButton" then
+        if TTS.Engine.targeting then TTS.Engine:CancelTargeting(); return end
+        if TTS.Engine.blockingState and TTS.Engine.blockingState.selectedBlocker then
+            TTS.Engine.blockingState.selectedBlocker = nil
+            TTS.Engine:RefreshUI()
+            return
+        end
+    end
+    if TTS.Engine.targeting then
+        local t = TTS.Engine.targeting.targetType
+        if t == "CREATURE" or t == "ANY" or t == "ARTIFACT_ENCHANTMENT" then
+            if self.fieldIndex then TTS.Engine:ResolveTarget("CREATURE", false, self.fieldIndex) end
+            return
+        end
+    end
+    if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
+end
+
+-- Wraps a click handler for your own permanents with the click / tap sound
+local function WithFieldSound(handler)
+    return function(self, btn)
+        local perm = self.fieldIndex and TTS.Engine.localState.field[self.fieldIndex]
+        local wasTapped = perm and perm.tapped
+        handler(self, btn)
+        PlayFieldClickSound(perm, wasTapped)
+    end
+end
+
 for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = false
     f:SetPoint("BOTTOMLEFT", BF_START_X + ((i - 1) * BF_STEP_X), 180)
-    f:SetScript("OnClick", function(self, btn)
-        if btn == "RightButton" and TTS.Engine.targeting then
-            TTS.Engine:CancelTargeting()
-            return
-        end
-        if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "LAND") then
-            if self.fieldIndex then TTS.Engine:ResolveTarget("LAND", false, self.fieldIndex) end
-            return
-        end
-        if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
-    end)
+    f:SetScript("OnClick", WithFieldSound(MyLand_OnClick))
     myLandFrames[i] = f
 end
 
@@ -658,24 +890,7 @@ for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = false
     f:SetPoint("BOTTOMLEFT", BF_START_X + ((i - 1) * BF_STEP_X), 315)
-    f:SetScript("OnClick", function(self, btn)
-        if btn == "RightButton" then
-            if TTS.Engine.targeting then TTS.Engine:CancelTargeting(); return end
-            if TTS.Engine.blockingState and TTS.Engine.blockingState.selectedBlocker then
-                TTS.Engine.blockingState.selectedBlocker = nil
-                TTS.Engine:RefreshUI()
-                return
-            end
-        end
-        if TTS.Engine.targeting then
-            local t = TTS.Engine.targeting.targetType
-            if t == "CREATURE" or t == "ANY" or t == "ARTIFACT_ENCHANTMENT" then
-                if self.fieldIndex then TTS.Engine:ResolveTarget("CREATURE", false, self.fieldIndex) end
-                return
-            end
-        end
-        if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
-    end)
+    f:SetScript("OnClick", WithFieldSound(MyNonLand_OnClick))
     myNonLandFrames[i] = f
 end
 
@@ -684,6 +899,7 @@ for i = 1, 12 do
     f.isRemote = true
     f:SetPoint("TOPLEFT", BF_START_X + ((i - 1) * BF_STEP_X), -140)
     f:SetScript("OnClick", function(self, btn)
+        PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
             return
@@ -700,6 +916,7 @@ for i = 1, 12 do
     f.isRemote = true
     f:SetPoint("TOPLEFT", BF_START_X + ((i - 1) * BF_STEP_X), -275)
     f:SetScript("OnClick", function(self, btn)
+        PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
             return
@@ -781,6 +998,9 @@ function B:UpdateDisplay()
 
     B.oppLifeText:SetText(string.format("%s: %d Life (%d cards)", E.opponent or "Opponent", E.remoteState.life, E.remoteState.handCount))
     B.myLifeText:SetText(string.format("Life: %d", E.localState.life))
+
+    UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
+    UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
 
     local m = E.localState.mana
     B.manaText:SetText(string.format("Mana:  %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r",
@@ -941,7 +1161,7 @@ function B:UpdateDisplay()
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(card.name)
-            
+
                 local atts = perm.attachments or {}
                 if f.tuckedFrames then
                     for k = 1, #f.tuckedFrames do
@@ -996,12 +1216,12 @@ function B:UpdateDisplay()
         end
     end
 
-    for i = myLandIdx + 1, #myLandFrames do 
+    for i = myLandIdx + 1, #myLandFrames do
         myLandFrames[i]:Hide()
         myLandFrames[i].fieldIndex = nil
         if myLandFrames[i].tuckedFrames then for k = 1, #myLandFrames[i].tuckedFrames do myLandFrames[i].tuckedFrames[k]:Hide() end end
     end
-    for i = myNonLandIdx + 1, #myNonLandFrames do 
+    for i = myNonLandIdx + 1, #myNonLandFrames do
         myNonLandFrames[i]:Hide()
         myNonLandFrames[i].fieldIndex = nil
         if myNonLandFrames[i].tuckedFrames then for k = 1, #myNonLandFrames[i].tuckedFrames do myNonLandFrames[i].tuckedFrames[k]:Hide() end end
@@ -1027,7 +1247,7 @@ function B:UpdateDisplay()
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(card.name)
-            
+
                 local atts = perm.attachments or {}
                 if f.tuckedFrames then
                     for k = 1, #f.tuckedFrames do
@@ -1077,12 +1297,12 @@ function B:UpdateDisplay()
         end
     end
 
-    for i = oppLandIdx + 1, #oppLandFrames do 
+    for i = oppLandIdx + 1, #oppLandFrames do
         oppLandFrames[i]:Hide()
         oppLandFrames[i].fieldIndex = nil
         if oppLandFrames[i].tuckedFrames then for k = 1, #oppLandFrames[i].tuckedFrames do oppLandFrames[i].tuckedFrames[k]:Hide() end end
     end
-    for i = oppNonLandIdx + 1, #oppNonLandFrames do 
+    for i = oppNonLandIdx + 1, #oppNonLandFrames do
         oppNonLandFrames[i]:Hide()
         oppNonLandFrames[i].fieldIndex = nil
         if oppNonLandFrames[i].tuckedFrames then for k = 1, #oppNonLandFrames[i].tuckedFrames do oppNonLandFrames[i].tuckedFrames[k]:Hide() end end

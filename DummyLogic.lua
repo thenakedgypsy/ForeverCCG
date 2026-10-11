@@ -111,6 +111,7 @@ function E:DummyPlayCreatures()
             table.insert(self.remoteState.field, perm)
             self.remoteState.handCount = #self.remoteState.hand
             self:Log(string.format("Target Dummy cast |cFFFFD200%s|r (%s).", bestCard.name, bestCard.cost or "0"), "ACTION")
+            if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
         else
             canCastMore = false
         end
@@ -136,6 +137,7 @@ function E:DummyAttack()
                 perm.isAttacking = true
                 table.insert(attackerIndices, i)
                 self:Log(string.format("Target Dummy attacks with |cFFFF2222%s|r!", card.name), "COMBAT")
+                if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
 
                 if perm.id == "W09" then self.remoteState.life = self.remoteState.life + 2
                 elseif perm.id == "R20" then self:DamagePlayer(false, 2, "Firemaw") end
