@@ -125,10 +125,15 @@ function E:EndMatch(outcome, reason)
         local emoteText = string.format("has %s a game of Forever: CCG against %s", outcome, opponentName)
         SendChatMessage(emoteText, "EMOTE")
 
+        -- Play the built-in emote a moment later so it does not collide with the emote text above
+        local followUp = nil
         if outcome == "won" then
-            DoEmote("CHEER")
+            followUp = "CHEER"
         elseif outcome == "lost" or outcome == "conceded" then
-            DoEmote("CRY")
+            followUp = "CRY"
+        end
+        if followUp then
+            TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
         end
     end
 
@@ -198,6 +203,15 @@ function E:DamagePlayer(isRemote, amount, reason)
         end
     end
     self:RefreshUI()
+end
+
+-- Damage marked on creatures wears off at the end of every turn (both sides of the board)
+function E:ClearCreatureDamage()
+    for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
+        for _, perm in ipairs(field) do
+            perm.damage = 0
+        end
+    end
 end
 
 -- =========================================================================
@@ -351,8 +365,9 @@ function E:EndTurn()
             perm.hasAttackedThisTurn = nil
         end
     end
+    self:ClearCreatureDamage()
 
-    self:Log("Ended turn. Mana pool emptied.", "SYSTEM")
+    self:Log("Ended turn. Mana pool emptied and damage on creatures removed.", "SYSTEM")
 
     if self.isSolo then
         self:SetPhase("WAITING (Dummy Turn)")
@@ -376,6 +391,9 @@ function E:OnRemoteEndTurn()
     self.cantBlockThisTurn = false
     self.preventCombatDamage = false
     self:CancelTargeting()
+
+    -- The opponent's turn just ended: damage on creatures wears off
+    self:ClearCreatureDamage()
 
     for _, perm in ipairs(self.localState.field) do
         perm.sick = false

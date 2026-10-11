@@ -570,20 +570,30 @@ local function Card_OnEnter(self)
 
     if self.fieldIndex then
         local perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
-        if perm and perm.attachments and #perm.attachments > 0 then
+        local hasAttachments = perm and perm.attachments and #perm.attachments > 0
+        local effectIds = perm and TTS.Engine:GetPermEffectCards(perm) or {}
+        local hasEffects = #effectIds > 0
+
+        if hasAttachments or hasEffects then
             attachTooltip:SetOwner(GameTooltip, "ANCHOR_NONE")
             attachTooltip:ClearAllPoints()
             attachTooltip:SetPoint("TOPLEFT", GameTooltip, "TOPRIGHT", 6, 0)
             attachTooltip:ClearLines()
 
-            for idx, att in ipairs(perm.attachments) do
+            local entryCount = 0
+            local function AddSeparator()
+                entryCount = entryCount + 1
+                if entryCount > 1 then
+                    attachTooltip:AddLine(" ")
+                    attachTooltip:AddLine("--------------------------------", 0.4, 0.4, 0.4)
+                end
+            end
+
+            for _, att in ipairs(perm.attachments or {}) do
                 local attId = type(att) == "table" and att.id or att
                 local aCard = TTS.Cards[attId]
                 if aCard then
-                    if idx > 1 then
-                        attachTooltip:AddLine(" ")
-                        attachTooltip:AddLine("--------------------------------", 0.4, 0.4, 0.4)
-                    end
+                    AddSeparator()
                     local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
                     local labelType = isEquip and "Equipment" or "Enchantment"
                     local labelColor = isEquip and "|cFF66BBFF" or "|cFFFFD200"
@@ -597,9 +607,28 @@ local function Card_OnEnter(self)
                     end
                 end
             end
+
+            for _, effId in ipairs(effectIds) do
+                local eCard = TTS.Cards[effId]
+                AddSeparator()
+                attachTooltip:AddLine(string.format("|cFFB080FF%s|r", eCard.name), 1, 1, 1)
+                local eCost = (eCard.cost and eCard.cost ~= "") and TTS:FormatSymbols(eCard.cost, 18) or "0"
+                attachTooltip:AddLine(string.format("Cost: %s  |  %s", eCost, eCard.type or "Spell"), 0.8, 0.8, 0.8)
+
+                if eCard.text and eCard.text ~= "" then
+                    attachTooltip:AddLine(TTS:FormatSymbols(eCard.text, 16), 0.9, 0.9, 0.6, true)
+                end
+            end
+
             attachTooltip:Show()
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("|cFF00FF00[Attached Cards: see side tooltip]|r", 0.6, 0.9, 0.6)
+            if hasAttachments and hasEffects then
+                GameTooltip:AddLine("|cFF00FF00[Attached Cards & Effects: see side tooltip]|r", 0.6, 0.9, 0.6)
+            elseif hasEffects then
+                GameTooltip:AddLine("|cFF00FF00[Effects: see side tooltip]|r", 0.6, 0.9, 0.6)
+            else
+                GameTooltip:AddLine("|cFF00FF00[Attached Cards: see side tooltip]|r", 0.6, 0.9, 0.6)
+            end
         end
     end
     GameTooltip:Show()
@@ -940,7 +969,7 @@ myDeckFrame.back = myDeckFrame:CreateTexture(nil, "ARTWORK")
 myDeckFrame.back:SetAllPoints(myDeckFrame)
 ApplyBackTexture(myDeckFrame.back)
 myDeckFrame.count = myDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-myDeckFrame.count:SetPoint("CENTER", 0, 0)
+myDeckFrame.count:SetPoint("BOTTOM", myDeckFrame, "TOP", 0, 2)
 
 -- =========================================================================
 -- 3D MODEL VISUAL HELPER
@@ -985,6 +1014,43 @@ RefreshAllModelCameras = function()
                     f.model:SetPosition(cam.x or 0, cam.y or 0, adjZ)
                 end
             end
+        end
+    end
+end
+
+-- =========================================================================
+-- TUCKED CARDS
+-- Attachments first, then the cards whose effects are on the permanent.
+-- =========================================================================
+local function UpdateTuckedFrames(f, perm)
+    if not f.tuckedFrames then return end
+
+    local stack = {}
+    for _, att in ipairs(perm.attachments or {}) do
+        local attId = type(att) == "table" and att.id or att
+        local aCard = TTS.Cards[attId]
+        if aCard then
+            local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
+            if isEquip then
+                table.insert(stack, { card = aCard, r = 0.5, g = 0.8, b = 1.0 })
+            else
+                table.insert(stack, { card = aCard, r = 1.0, g = 0.85, b = 0.3 })
+            end
+        end
+    end
+    for _, effId in ipairs(TTS.Engine:GetPermEffectCards(perm)) do
+        table.insert(stack, { card = TTS.Cards[effId], r = 1.0, g = 1.0, b = 1.0 })
+    end
+
+    for k, tf in ipairs(f.tuckedFrames) do
+        local s = stack[k]
+        if s then
+            ApplyFrameTexture(tf.border, s.card)
+            tf.art:SetTexture(s.card.art or "Interface\\Icons\\INV_Misc_QuestionMark")
+            tf.border:SetVertexColor(s.r, s.g, s.b)
+            tf:Show()
+        else
+            tf:Hide()
         end
     end
 end
@@ -1162,32 +1228,7 @@ function B:UpdateDisplay()
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(card.name)
 
-                local atts = perm.attachments or {}
-                if f.tuckedFrames then
-                    for k = 1, #f.tuckedFrames do
-                        local tf = f.tuckedFrames[k]
-                        if k <= #atts then
-                            local att = atts[k]
-                            local attId = type(att) == "table" and att.id or att
-                            local aCard = TTS.Cards[attId]
-                            if aCard then
-                                ApplyFrameTexture(tf.border, aCard)
-                                tf.art:SetTexture(aCard.art or "Interface\\Icons\\INV_Misc_QuestionMark")
-                                local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
-                                if isEquip then
-                                    tf.border:SetVertexColor(0.5, 0.8, 1.0)
-                                else
-                                    tf.border:SetVertexColor(1.0, 0.85, 0.3)
-                                end
-                                tf:Show()
-                            else
-                                tf:Hide()
-                            end
-                        else
-                            tf:Hide()
-                        end
-                    end
-                end
+                UpdateTuckedFrames(f, perm)
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, false)
@@ -1248,32 +1289,7 @@ function B:UpdateDisplay()
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(card.name)
 
-                local atts = perm.attachments or {}
-                if f.tuckedFrames then
-                    for k = 1, #f.tuckedFrames do
-                        local tf = f.tuckedFrames[k]
-                        if k <= #atts then
-                            local att = atts[k]
-                            local attId = type(att) == "table" and att.id or att
-                            local aCard = TTS.Cards[attId]
-                            if aCard then
-                                ApplyFrameTexture(tf.border, aCard)
-                                tf.art:SetTexture(aCard.art or "Interface\\Icons\\INV_Misc_QuestionMark")
-                                local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
-                                if isEquip then
-                                    tf.border:SetVertexColor(0.5, 0.8, 1.0)
-                                else
-                                    tf.border:SetVertexColor(1.0, 0.85, 0.3)
-                                end
-                                tf:Show()
-                            else
-                                tf:Hide()
-                            end
-                        else
-                            tf:Hide()
-                        end
-                    end
-                end
+                UpdateTuckedFrames(f, perm)
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, true)

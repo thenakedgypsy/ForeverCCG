@@ -293,9 +293,9 @@ p3.rawText = "|cFFFFD2001. Untap & Draw:|r All permanents untap (unless frozen),
     "|cFFFFD2003. Combat Phase:|r\n" ..
     "   • |cFFFFFF00Declare Attackers:|r Click untapped creatures (without summoning sickness) to attack.\n" ..
     "   • |cFFFFFF00Declare Blockers:|r The defending player chooses untapped creatures to block incoming attackers.\n" ..
-    "   • |cFFFFFF00Resolve Combat:|r Damage is dealt simultaneously. Excess damage is absorbed unless the attacker has Trample.\n" ..
+    "   • |cFFFFFF00Resolve Combat:|r Damage is dealt simultaneously. A creature dies when the damage it has taken this turn equals or exceeds its toughness. Excess damage is absorbed unless the attacker has Trample.\n" ..
     "|cFFFFD2004. Main Phase 2:|r Cast remaining spells and play your Prayer if unused.\n" ..
-    "|cFFFFD2005. End Turn:|r Floating mana pool empties and temporary buffs expire."
+    "|cFFFFD2005. End Turn:|r Floating mana pool empties, temporary buffs expire, and all damage on creatures (both players') is removed."
 
 local h4 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 h4:SetText("Keywords & Mechanics")

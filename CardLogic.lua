@@ -181,6 +181,60 @@ function E:GetCreatureStats(perm, isRemote)
 end
 
 -- =========================================================================
+-- SPELL EFFECTS ON CREATURES
+-- Lingering spell effects remember the card that caused them (perm.spellEffects)
+-- so the board can tuck that card under the creature while the effect lasts.
+-- An entry stays only while the state it created is still on the creature.
+-- =========================================================================
+local LINGERING_OPS = { buff = true, shield = true, freeze = true, regen = true }
+
+local function RecordSpellEffect(perm, op, card)
+    local kind
+    if op.op == "buff" then
+        kind = op.perm and "perm" or "temp"
+    elseif op.op == "shield" then
+        kind = "temp"
+    else
+        kind = op.op
+    end
+    local harmful = (op.op == "freeze") or (op.op == "buff" and ((op.p or 0) < 0 or (op.t or 0) < 0))
+    perm.spellEffects = perm.spellEffects or {}
+    table.insert(perm.spellEffects, { id = card.id, kind = kind, harmful = harmful })
+end
+
+local function SpellEffectActive(perm, e)
+    if e.kind == "freeze" then return perm.freezeUntap and true or false end
+    if e.kind == "regen" then return perm.regenerateShield and true or false end
+    local p, t = perm.tempPower or 0, perm.tempToughness or 0
+    if e.kind == "perm" then p, t = perm.permPower or 0, perm.permToughness or 0 end
+    if e.harmful then return p < 0 or t < 0 end
+    return p > 0 or t > 0 or (e.kind == "temp" and perm.tempKw ~= nil)
+end
+
+-- Ids of the cards whose effects are currently on this creature (oldest first, no duplicates)
+function E:GetPermEffectCards(perm)
+    local ids, seen = {}, {}
+    if not perm then return ids end
+    local function add(id)
+        if id and TTS.Cards[id] and not seen[id] then
+            seen[id] = true
+            table.insert(ids, id)
+        end
+    end
+    if perm.spellEffects then
+        for i = #perm.spellEffects, 1, -1 do
+            if not SpellEffectActive(perm, perm.spellEffects[i]) then
+                table.remove(perm.spellEffects, i)
+            end
+        end
+        for _, e in ipairs(perm.spellEffects) do add(e.id) end
+    end
+    for _, e in ipairs(perm.dots or {}) do add(e.srcId) end
+    for _, e in ipairs(perm.hots or {}) do add(e.srcId) end
+    return ids
+end
+
+-- =========================================================================
 -- STATE-BASED ACTIONS & DEATH TRIGGERS
 -- =========================================================================
 function E:HandleCreatureDeath(perm, isRemote)
@@ -581,6 +635,9 @@ function E:ApplySpellOp(op, tgt, card)
     for _, d in ipairs(self:CollectSpellTargets(op.to, tgt)) do
         if not self.inMatch then return end
         handler(self, op, d, card)
+        if d.kind == "CREATURE" and d.perm and LINGERING_OPS[op.op] then
+            RecordSpellEffect(d.perm, op, card)
+        end
     end
 end
 
