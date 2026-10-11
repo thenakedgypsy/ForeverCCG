@@ -10,7 +10,7 @@ local ADDON_NAME = ...
 TTS = TTS or {}
 TTS.Net = TTS.Net or {}
 
-TTS.DOWNLOAD_URL = "TEMPURL"
+TTS.DOWNLOAD_URL = "https://www.curseforge.com/wow/addons/forever-ccg"
 
 -- =========================================================================
 -- ADDON VERSION (read from the .toc "## Version:" line)
