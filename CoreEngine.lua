@@ -116,24 +116,59 @@ end
 -- =========================================================================
 -- MATCH COMPLETION & EMOTES
 -- =========================================================================
+function E:PlayMatchEmote(outcome, opponentName)
+    local emoteText = string.format("has %s a game of Forever: CCG against %s", outcome, opponentName)
+    SendChatMessage(emoteText, "EMOTE")
+
+    -- Play the built-in emote a moment later so it does not collide with the emote text above
+    local followUp = nil
+    if outcome == "won" then
+        followUp = "CHEER"
+    elseif outcome == "lost" or outcome == "conceded" then
+        followUp = "CRY"
+    end
+    if followUp then
+        TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
+    end
+end
+
+-- Post-game popup: your result, then the opponent's ("Thrall wins!" / "Thrall loses!").
+-- The emote is sent from the Accept click: a win often arrives as an
+-- addon message, and the chat emote is blocked when no click is behind it.
+local RESULT_HEADLINES = {
+    won      = "|cFF00FF00You have won!|r",
+    lost     = "|cFFFF4444You have lost!|r",
+    conceded = "|cFFFF4444You have conceded!|r",
+}
+local OPPONENT_RESULT = {
+    won      = "loses!",
+    lost     = "wins!",
+    conceded = "wins!",
+}
+
+StaticPopupDialogs["TTS_MATCH_RESULT"] = {
+    text = "%s\n\n%s",
+    button1 = "Accept",
+    OnAccept = function(self, data)
+        if data then E:PlayMatchEmote(data.outcome, data.opponent) end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = false,
+    preferredIndex = 3,
+}
+
 function E:EndMatch(outcome, reason)
     if not self.inMatch then return end
     local opponentName = self.opponent or "Target Dummy"
     self.inMatch = false
 
     if outcome and opponentName ~= "" then
-        local emoteText = string.format("has %s a game of Forever: CCG against %s", outcome, opponentName)
-        SendChatMessage(emoteText, "EMOTE")
-
-        -- Play the built-in emote a moment later so it does not collide with the emote text above
-        local followUp = nil
-        if outcome == "won" then
-            followUp = "CHEER"
-        elseif outcome == "lost" or outcome == "conceded" then
-            followUp = "CRY"
-        end
-        if followUp then
-            TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
+        local headline = RESULT_HEADLINES[outcome]
+        if headline then
+            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome], { outcome = outcome, opponent = opponentName })
+        else
+            self:PlayMatchEmote(outcome, opponentName)
         end
     end
 
