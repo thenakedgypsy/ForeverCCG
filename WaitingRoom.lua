@@ -140,6 +140,15 @@ refreshBtn:SetSize(100, 22)
 refreshBtn:SetPoint("BOTTOM", 0, 14)
 refreshBtn:SetText("Refresh")
 
+-- Addon version (from the .toc), bottom-right corner
+local versionText = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+versionText:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -16, 18)
+versionText:SetJustifyH("RIGHT")
+
+local function UpdateVersionText()
+    versionText:SetText("v" .. (TTS.VERSION or "unknown"))
+end
+
 -- =========================================================================
 -- UI UPDATE & QUEUE TOGGLE
 -- =========================================================================
@@ -254,6 +263,7 @@ F:SetScript("OnShow", function(self)
         self:Hide()
         return
     end
+    UpdateVersionText()
     if TTS.Net and TTS.Net.BroadcastLFM then
         TTS.Net:BroadcastLFM("LFM_QUERY")
     end
@@ -271,4 +281,4 @@ F:SetScript("OnUpdate", function(self, elapsed)
         end
         WR:UpdateUI()
     end
-end)    
+end)
