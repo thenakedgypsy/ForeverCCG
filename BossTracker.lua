@@ -242,6 +242,19 @@ end
 -- =========================================================================
 -- KILL EVALUATION & REWARD
 -- =========================================================================
+
+-- Raid-warning style announcement in the middle of the screen when a card reaches 4/4
+local function ShowCardCompletePopup(card)
+    if not card then return end
+    local text = string.format("Card Complete: %s (4/4 copies)!", card.name or card.id or "Card")
+    if RaidNotice_AddMessage and RaidWarningFrame then
+        local info = (ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]) or { r = 1, g = 0.82, b = 0 }
+        RaidNotice_AddMessage(RaidWarningFrame, text, info)
+    elseif UIErrorsFrame then
+        UIErrorsFrame:AddMessage(text, 1, 0.82, 0)
+    end
+end
+
 function TTS.BossTracker:RecordMobKill(card)
     if not card or not card.id then return end
     TTS_KilledBosses = TTS_KilledBosses or {}
@@ -557,7 +570,7 @@ tracker:SetScript("OnEvent", function(self, event, ...)
             local guid = SafeCall(UnitGUID, "target")
             local name = SafeCall(UnitName, "target")
             if guid and not IsSecret(guid) then
-                                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, LOOT_DEDUPE_SECONDS)
+                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, LOOT_DEDUPE_SECONDS)
             end
         end
 

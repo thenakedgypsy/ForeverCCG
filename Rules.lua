@@ -80,7 +80,7 @@ closeBtn:SetScript("OnClick", function() R:Hide() end)
 -- Scroll Frame & Content Container
 local scrollFrame = CreateFrame("ScrollFrame", "TTS_RulesScrollFrame", R, "UIPanelScrollFrameTemplate")
 scrollFrame:SetPoint("TOPLEFT", 18, -48)
-scrollFrame:SetPoint("BOTTOMRIGHT", -36, 18)
+scrollFrame:SetPoint("BOTTOMRIGHT", -36, 32)
 
 local content = CreateFrame("Frame", "TTS_RulesContent", scrollFrame)
 content:SetWidth(550)
@@ -257,7 +257,8 @@ pU:SetWidth(540)
 pU:SetJustifyH("LEFT")
 pU:SetWordWrap(true)
 pU.rawText = "You build your collection by playing World of Warcraft. Some cards are free, the rest are earned.\n\n" ..
-    "|cFFFFD200Always available:|r Prayers and Class Spells (10 for each of the nine classes: Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid).\n\n" ..
+    "|cFFFFD200Always available:|r Prayers.\n\n" ..
+    "|cFFFFD200Class Spells unlock as you level.|r Each of the nine classes (Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid) has 10 spells. You unlock |cFFFFFFFF1 spell from every class|r at level 6 and again every |cFFFFFFFF6 levels|r (12, 18, 24 ... 60), so all 90 are available by level 60. Each set of new spells is spread across all five spheres.\n\n" ..
     "|cFFFFD200Creature cards start locked.|r Every zone has 10 creatures to collect. Defeat the creature in the world for a |cFFFFD200chance|r to unlock its card:\n" ..
     "• Each card drop adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
     "• The chance falls with each copy you own: 1st copy |cFF00FF00100%|r, 2nd |cFFFFFFFF25%|r, 3rd |cFFFFFFFF12%|r, 4th |cFFFFFFFF6%|r.\n" ..
@@ -265,7 +266,7 @@ pU.rawText = "You build your collection by playing World of Warcraft. Some cards
     "• A tooltip icon shows if a creature has a card that can drop, the icon currently does not show in dungeons.\n" ..
     "• |cFFFFD200Dungeon bosses|r that aren't the final boss drop their card with the |cFFFFFFFFsame chance|r as normal creatures.\n" ..
     "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
-    "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies.\n\n"
+    "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies. Spell unlocks follow the level of the character you are playing.\n\n"
 
 local h2 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 h2:SetText("Spheres of Mana")
@@ -314,7 +315,9 @@ p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the b
     "• |cFFFFD200Vigilance:|r Attacking does not cause the creature to tap.\n" ..
     "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
 
-local footer = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+-- Footer is pinned to the bottom of the window (outside the scroll area), like the title at the top
+local footer = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+footer:SetPoint("BOTTOM", R, "BOTTOM", 0, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 -- Card Frame containers
@@ -420,11 +423,6 @@ local function LayoutRules()
         kwFrames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", kwX[i], y)
     end
     y = y - (102 + 16)
-
-    -- Footer
-    footer:ClearAllPoints()
-    footer:SetPoint("TOP", content, "TOP", 0, y)
-    y = y - (footer:GetStringHeight() + 18)
 
     content:SetHeight(math.abs(y))
 end

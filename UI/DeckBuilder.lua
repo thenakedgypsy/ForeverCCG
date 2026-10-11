@@ -16,6 +16,51 @@ TTS.MAX_DECK_SLOTS = 3
 -- Maximum number of spells (non-Prayer, non-Creature cards) allowed in a deck
 TTS.MAX_DECK_SPELLS = 12
 
+-- =========================================================================
+-- CLASS SPELL UNLOCKS (by character level)
+-- One spell per class unlocks at level 1 and every 6 levels after (1, 7, 13 ... 55),
+-- so all 10 spells of every class are available by level 55. Each tier is picked so
+-- the nine new spells cover all five spheres as evenly as the card pool allows.
+-- =========================================================================
+TTS.SPELL_UNLOCK_FIRST_LEVEL = 6
+TTS.SPELL_UNLOCK_LEVEL_STEP  = 6
+
+TTS.SPELL_UNLOCK_TIER = {
+    -- Level 1
+    WAR07 = 1, PAL04 = 1, HUN01 = 1, ROG04 = 1, PRI01 = 1, SHA09 = 1, MAG02 = 1, WLK03 = 1, DRU09 = 1,
+    -- Level 7
+    WAR02 = 2, PAL03 = 2, HUN08 = 2, ROG01 = 2, PRI02 = 2, SHA07 = 2, MAG09 = 2, WLK09 = 2, DRU04 = 2,
+    -- Level 13
+    WAR04 = 3, PAL02 = 3, HUN09 = 3, ROG09 = 3, PRI07 = 3, SHA02 = 3, MAG08 = 3, WLK07 = 3, DRU02 = 3,
+    -- Level 19
+    WAR01 = 4, PAL06 = 4, HUN02 = 4, ROG06 = 4, PRI05 = 4, SHA03 = 4, MAG10 = 4, WLK02 = 4, DRU08 = 4,
+    -- Level 25
+    WAR08 = 5, PAL01 = 5, HUN05 = 5, ROG07 = 5, PRI08 = 5, SHA04 = 5, MAG01 = 5, WLK01 = 5, DRU06 = 5,
+    -- Level 31
+    WAR06 = 6, PAL07 = 6, HUN07 = 6, ROG05 = 6, PRI03 = 6, SHA01 = 6, MAG05 = 6, WLK06 = 6, DRU07 = 6,
+    -- Level 37
+    WAR03 = 7, PAL05 = 7, HUN06 = 7, ROG02 = 7, PRI06 = 7, SHA08 = 7, MAG03 = 7, WLK04 = 7, DRU05 = 7,
+    -- Level 43
+    WAR05 = 8, PAL08 = 8, HUN03 = 8, ROG08 = 8, PRI10 = 8, SHA06 = 8, MAG06 = 8, WLK08 = 8, DRU01 = 8,
+    -- Level 49
+    WAR09 = 9, PAL10 = 9, HUN04 = 9, ROG10 = 9, PRI04 = 9, SHA05 = 9, MAG04 = 9, WLK05 = 9, DRU10 = 9,
+    -- Level 55
+    WAR10 = 10, PAL09 = 10, HUN10 = 10, ROG03 = 10, PRI09 = 10, SHA10 = 10, MAG07 = 10, WLK10 = 10, DRU03 = 10,
+}
+
+-- Character level a class spell unlocks at (nil for cards that are not level-gated)
+function TTS:GetSpellUnlockLevel(cardId)
+    local tier = TTS.SPELL_UNLOCK_TIER[cardId]
+    if not tier then return nil end
+    return TTS.SPELL_UNLOCK_FIRST_LEVEL + (tier - 1) * TTS.SPELL_UNLOCK_LEVEL_STEP
+end
+
+function TTS:IsSpellUnlocked(cardId)
+    local level = TTS:GetSpellUnlockLevel(cardId)
+    if not level then return true end
+    return (UnitLevel("player") or 1) >= level
+end
+
 local function DefaultDeckName(i)
     return (i == 1) and "Default Deck" or ("Deck " .. i)
 end
@@ -92,7 +137,8 @@ local function GetKillCount(cardId, card)
 end
 
 local function IsCardUnlocked(cardId, card)
-    return (not card.isBoss) or GetKillCount(cardId, card) > 0
+    if card.isBoss then return GetKillCount(cardId, card) > 0 end
+    return TTS:IsSpellUnlocked(cardId)
 end
 
 -- Land = Prayer, Creature = Creature, everything else (Sorcery, ...) = Spell
@@ -301,6 +347,8 @@ local function CardTooltip_OnEnter(self)
             local maxAllowed = math.min(4, kills)
             GameTooltip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
         end
+    elseif not TTS:IsSpellUnlocked(self.cardId) then
+        GameTooltip:AddLine(string.format("|cFFFF2222Locked: Unlocks at level %d|r", TTS:GetSpellUnlockLevel(self.cardId)), 1, 0.2, 0.2)
     end
 
     local costStr = (card.cost and card.cost ~= "") and (TTS.FormatSymbols and TTS:FormatSymbols(card.cost, 18) or card.cost) or "0"
@@ -839,6 +887,29 @@ clearBtn:SetScript("OnClick", function()
 end)
 
 -- =========================================================================
+-- COLLECTION PROGRESS (bottom-left)
+-- Collected = at least 1 copy of a creature card, Mastered = all 4 copies.
+-- =========================================================================
+local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 24, 34)
+collectionLabel:SetJustifyH("LEFT")
+
+local function UpdateCollectionProgress()
+    local total, collected, mastered = 0, 0, 0
+    for cardId, card in pairs(TTS.Cards or {}) do
+        if card.type == "Creature" and card.isBoss then
+            total = total + 1
+            local kills = GetKillCount(cardId, card)
+            if kills >= 1 then collected = collected + 1 end
+            if kills >= 4 then mastered = mastered + 1 end
+        end
+    end
+    collectionLabel:SetText(string.format(
+        "|cFFFFFFFF%d/%d|r Creatures Collected     |cFFFFFFFF%d/%d|r Creatures Mastered",
+        collected, total, mastered, total))
+end
+
+-- =========================================================================
 -- MANA CURVE WINDOW (docked to the left of the deckbuilder)
 -- Counts every non-Prayer card in the active deck by mana value (7 = 7+).
 -- =========================================================================
@@ -1042,6 +1113,8 @@ function D:RefreshAll()
 end
 
 function D:RefreshPool()
+    UpdateCollectionProgress()
+
     cardPoolKeys = {}
     for id, card in pairs(TTS.Cards or {}) do
         local matches = CardPassesFilters(id, card)
@@ -1186,6 +1259,10 @@ function D:AddCardToDeck(cardId)
             return
         end
     else
+        if not TTS:IsSpellUnlocked(cardId) then
+            DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFFFF2222[TTS]|r %s unlocks at level %d.", card.name, TTS:GetSpellUnlockLevel(cardId)))
+            return
+        end
         if card.type ~= "Land" and current >= 4 then
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Maximum 4 copies allowed for " .. card.name)
             return
@@ -1273,6 +1350,37 @@ D:SetScript("OnShow", function()
     end
     D:RefreshPool()
     D:RefreshDeck()
+end)
+
+-- Chat notice for every class spell that unlocks at the level just reached
+local function AnnounceSpellUnlocks(newLevel)
+    local unlocked = {}
+    for cardId in pairs(TTS.SPELL_UNLOCK_TIER) do
+        if TTS:GetSpellUnlockLevel(cardId) == newLevel and TTS.Cards and TTS.Cards[cardId] then
+            table.insert(unlocked, cardId)
+        end
+    end
+    table.sort(unlocked)
+    for _, cardId in ipairs(unlocked) do
+        local card = TTS.Cards[cardId]
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Level %d reached! Spell Unlocked: |cFFFFD200%s|r (%s).",
+            newLevel, card.name, card.class and ClassColored(card.class) or "Spell"))
+    end
+end
+
+-- Levelling up: announce new spells, and show them if the Deckbuilder is open
+local levelWatcher = CreateFrame("Frame")
+levelWatcher:RegisterEvent("PLAYER_LEVEL_UP")
+levelWatcher:SetScript("OnEvent", function(self, event, newLevel)
+    if type(newLevel) == "number" then
+        AnnounceSpellUnlocks(newLevel)
+    end
+    -- UnitLevel can still report the old level during the event, so refresh a moment later
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0.5, function() if D:IsShown() then D:RefreshAll() end end)
+    elseif D:IsShown() then
+        D:RefreshAll()
+    end
 end)
 
 D:SetScript("OnHide", function()
