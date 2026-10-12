@@ -133,7 +133,7 @@ local function SetupRuleCard(f, cardId)
     -- 4. Cost String
     if f.cost then
         if card.cost and card.cost ~= "" then
-            f.cost:SetText(FormatTextWithSymbols(card.cost, 11))
+            f.cost:SetText(FormatTextWithSymbols(card.cost, 16))
             f.cost:Show()
         else
             f.cost:Hide()

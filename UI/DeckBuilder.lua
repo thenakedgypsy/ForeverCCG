@@ -307,7 +307,7 @@ local function UpdateCardPreview(cardId)
     f.title:SetText(card.name or "")
 
     if card.cost and card.cost ~= "" then
-        f.cost:SetText(TTS.FormatSymbols and TTS:FormatSymbols(card.cost, 14) or card.cost)
+        f.cost:SetText(TTS.FormatSymbols and TTS:FormatSymbols(card.cost, 18) or card.cost)
         f.cost:Show()
     else
         f.cost:Hide()

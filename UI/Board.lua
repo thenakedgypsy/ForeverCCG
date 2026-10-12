@@ -1190,7 +1190,7 @@ function B:UpdateDisplay()
             f.title:SetText(card.name)
 
             if card.cost and card.cost ~= "" then
-                f.cost:SetText(TTS:FormatSymbols(card.cost, 12))
+                f.cost:SetText(TTS:FormatSymbols(card.cost, 16))
                 f.cost:Show()
             else
                 f.cost:Hide()
