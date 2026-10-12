@@ -430,6 +430,7 @@ function TTS.Net:OnReceive(msg, sender)
                 uid = time() + #E.remoteState.field
             })
             E:Log(string.format("%s played land: |cFFFFD200%s|r.", sender, card and card.name or cardId), "ACTION")
+            E:PlayNonCreatureCardSound()
             E:RefreshUI()
 
         elseif actionType == "PLAY_PERM" then
@@ -456,6 +457,7 @@ function TTS.Net:OnReceive(msg, sender)
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Spell", card and card.name or cardId), "ACTION")
+            E:PlaySpellCastSound()
             E:RefreshUI()
 
         elseif actionType == "ATTACH" then
@@ -479,6 +481,7 @@ function TTS.Net:OnReceive(msg, sender)
                 end
                 E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
                 E:Log(string.format("%s attached |cFFFFD200%s|r to %s.", sender, card and card.name or cardId, TTS.Cards[perm.id] and TTS.Cards[perm.id].name or "card"), "ACTION")
+                E:PlayNonCreatureCardSound()
                 E:RefreshUI()
             end
 
@@ -499,6 +502,7 @@ function TTS.Net:OnReceive(msg, sender)
                 E.remoteState.field[idx].tapped = true
                 local card = TTS.Cards[E.remoteState.field[idx].id]
                 E:Log(string.format("%s tapped |cFFFFD200%s|r.", sender, card and card.name or "Permanent"), "MANA")
+                if TTS.Sound then TTS.Sound:PlayUI("tap") end
                 E:RefreshUI()
             end
 
@@ -545,6 +549,14 @@ function TTS.Net:OnReceive(msg, sender)
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
                 E:Log(string.format("%s assigned %s to block %s.", sender, blockerCard and blockerCard.name or "Creature", attackerCard and attackerCard.name or "Creature"), "COMBAT")
+                E:RefreshUI()
+            end
+
+        elseif actionType == "BLOCKS_DECLARED" then
+            -- The defender is done: control comes back to us to review the blocks and resolve
+            if E.blockingState then
+                E.blockingState.blocksDeclared = true
+                E:Log(string.format("%s declared blockers. Review the blocks, then click Resolve Combat.", sender), "COMBAT")
                 E:RefreshUI()
             end
 

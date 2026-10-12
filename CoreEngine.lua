@@ -303,6 +303,18 @@ end
 -- =========================================================================
 -- TURN & PHASE MANAGEMENT
 -- =========================================================================
+
+-- "Your turn" alert. Uses the ready-check chime on the Master channel so it is
+-- heard even with effects turned down; respects the board's Sounds checkbox.
+local function PlayTurnSound()
+    if not (TTS.Sound and TTS.Sound.enabled) then return end
+    if SOUNDKIT then
+        pcall(PlaySound, 31584, "Master")
+    else
+        pcall(PlaySound, 31584)
+    end
+end
+
 function E:CancelTargeting()
     if self.targeting then
         self:Log("Targeting cancelled.", "SYSTEM")
@@ -313,7 +325,27 @@ end
 
 function E:NextPhase()
     if self.phase == "COMBAT_BLOCK" and self.blockingState then
-        self:ResolveCombatDamage()
+        local bs = self.blockingState
+        if bs.isRemoteAttacking then
+            if self.isSolo then
+                -- The Target Dummy has no button to click: resolve right away
+                self:ResolveCombatDamage()
+            elseif not bs.blocksDeclared then
+                -- Defending: send our blocks and hand control back to the attacker
+                bs.selectedBlocker = nil
+                for blockerIdx, attackerIdx in pairs(bs.blocks) do
+                    TTS.Net:Send(self.opponent, string.format("ACTION:ASSIGN_BLOCK:%d:%d", blockerIdx, attackerIdx))
+                end
+                TTS.Net:Send(self.opponent, "ACTION:BLOCKS_DECLARED")
+                bs.blocksDeclared = true
+                self:Log("Blocks declared. Waiting for the attacker to resolve combat...", "SYSTEM")
+                self:RefreshUI()
+            end
+        elseif bs.blocksDeclared then
+            -- Attacking: blocks are in and reviewed, resolve combat on both clients
+            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT") end
+            self:ResolveCombatDamage()
+        end
         return
     end
 
@@ -336,10 +368,8 @@ function E:NextPhase()
             self:SetPhase("COMBAT_BLOCK")
             if self.isSolo then
                 self:DummyAssignBlocksAgainstPlayer()
-                self:Log("Target Dummy declared blockers.", "SYSTEM")
-                -- The dummy has no button to click: resolve combat right away
-                self:ResolveCombatDamage()
-                return
+                self.blockingState.blocksDeclared = true
+                self:Log("Target Dummy declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
             else
                 self:Log("Waiting for opponent to declare blockers...", "SYSTEM")
             end
@@ -448,6 +478,7 @@ function E:OnRemoteEndTurn()
     if not self.inMatch then return end
     self:DrawCard()
     self:SetPhase("MAIN1")
+    PlayTurnSound()
     self:RefreshUI()
 end
 
@@ -558,6 +589,8 @@ function E:StartMatch(opponentName, isHost, isSolo)
     else
         self:SetPhase("WAITING")
     end
+    -- Ready check at the start of every game, whoever goes first
+    PlayTurnSound()
     self:RefreshUI()
 end
 

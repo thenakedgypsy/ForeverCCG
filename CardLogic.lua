@@ -767,6 +767,23 @@ end
 -- =========================================================================
 -- PLAYING CARDS
 -- =========================================================================
+
+-- Sound for a prayer or attachment being played by either side.
+-- Creatures play their own aggro sound instead. Respects the board's Sounds checkbox.
+function E:PlayNonCreatureCardSound()
+    if TTS.Sound and TTS.Sound.enabled then
+        pcall(PlaySound, 829, "SFX")
+    end
+end
+
+-- Sound for a spell being cast by either side: a holy "heal landing" impact.
+-- Tries each file in turn (the first one the client has plays); falls back to 829.
+
+function E:PlaySpellCastSound()
+    if not (TTS.Sound and TTS.Sound.enabled) then return end
+    pcall(PlaySound, 1430, "SFX")
+end
+
 function E:PlayCard(handIndex)
     if not self.isMyTurn then
         self:Log("Cannot play cards outside of your turn.", "ERROR")
@@ -791,6 +808,7 @@ function E:PlayCard(handIndex)
         table.insert(self.localState.field, { id = cardId, tapped = false, uid = time() + handIndex })
         self.landPlayedThisTurn = true
         self:Log(string.format("Played prayer: |cFFFFD200%s|r.", card.name), "ACTION")
+        self:PlayNonCreatureCardSound()
 
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId) end
         self:RefreshUI()
@@ -878,6 +896,7 @@ function E:PlayCard(handIndex)
 
         table.remove(self.localState.hand, handIndex)
         table.insert(self.localState.graveyard, cardId)
+        self:PlaySpellCastSound()
         self:ResolveSpell(card, nil)
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
     end
@@ -1004,6 +1023,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     self.targeting = nil
     table.remove(self.localState.hand, handIndex)
     table.insert(self.localState.graveyard, cardId)
+    self:PlaySpellCastSound()
     self:ResolveSpell(card, tgt)
     if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
     self:RefreshUI()
@@ -1019,6 +1039,8 @@ function E:TapCard(fieldIndex)
     if not card then return end
 
     if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking then
+        -- Blocks are locked in once they have been declared to the attacker
+        if self.blockingState.blocksDeclared then return end
         if card.type ~= "Creature" then return end
         if perm.tapped then
             self:Log("Tapped creatures cannot block.", "ERROR")
@@ -1193,7 +1215,8 @@ function E:ClickOpponentCard(fieldIndex)
         end
     end
 
-    if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking then
+    if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking
+        and not self.blockingState.blocksDeclared then
         local attackerPerm = self.remoteState.field[fieldIndex]
         if not attackerPerm or not attackerPerm.isAttacking then
             self:Log("Click an attacking creature to block it.", "ERROR")
@@ -1238,6 +1261,13 @@ function E:ResolveCombatDamage()
 
     local atkField = isRemoteAttacking and self.remoteState.field or self.localState.field
     local defField = isRemoteAttacking and self.localState.field or self.remoteState.field
+
+    -- In a 2-player match both clients resolve combat. Damage to the defending player is
+    -- applied once: the attacker's client sends it (through the defender's damage shield).
+    local function DamageDefender(amount, reason)
+        if isRemoteAttacking and not self.isSolo then return end
+        self:DamagePlayer(not isRemoteAttacking, amount, reason)
+    end
 
     for _, atkIdx in ipairs(bs.attackers) do
         local atkPerm = atkField[atkIdx]
@@ -1296,7 +1326,7 @@ function E:ResolveCombatDamage()
                     if self:HasKeyword(atkPerm, isRemoteAttacking, "trample") then
                         local excess = math.max(0, atkPower - defToughness)
                         if excess > 0 then
-                            self:DamagePlayer(not isRemoteAttacking, excess, atkCard.name .. " Trample")
+                            DamageDefender(excess, atkCard.name .. " Trample")
                         end
                     end
 
@@ -1311,7 +1341,7 @@ function E:ResolveCombatDamage()
                 end
             else
                 if not self.preventCombatDamage then
-                    self:DamagePlayer(not isRemoteAttacking, atkPower, atkCard.name .. " Attack")
+                    DamageDefender(atkPower, atkCard.name .. " Attack")
 
                     if atkPerm.id == "BOSS16" and atkPower > 0 then
                         local pLands = isRemoteAttacking and self.localState.field or self.remoteState.field

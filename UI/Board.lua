@@ -890,8 +890,16 @@ end
 local function MyNonLand_OnClick(self, btn)
     if btn == "RightButton" then
         if TTS.Engine.targeting then TTS.Engine:CancelTargeting(); return end
-        if TTS.Engine.blockingState and TTS.Engine.blockingState.selectedBlocker then
-            TTS.Engine.blockingState.selectedBlocker = nil
+        local bs = TTS.Engine.blockingState
+        if bs and bs.selectedBlocker then
+            local idx = bs.selectedBlocker
+            bs.selectedBlocker = nil
+            if bs.blocks[idx] then
+                bs.blocks[idx] = nil
+                local perm = TTS.Engine.localState.field[idx]
+                local card = perm and TTS.Cards[perm.id]
+                TTS.Engine:Log(string.format("Removed |cFFFFD200%s|r from blocking.", card and card.name or "Creature"), "COMBAT")
+            end
             TTS.Engine:RefreshUI()
             return
         end
@@ -1106,17 +1114,27 @@ function B:UpdateDisplay()
     if E.phase == "COMBAT_BLOCK" and E.blockingState then
         B.endTurnBtn:Disable()
         if E.blockingState.isRemoteAttacking then
-            -- Local player is defending: enabled to confirm blocks and resolve
-            B.nextPhaseBtn:Enable()
-            local numBlocks = 0
-            for _ in pairs(E.blockingState.blocks) do numBlocks = numBlocks + 1 end
-            if numBlocks > 0 then
-                B.nextPhaseBtn:SetText("Confirm Blocks")
+            if E.blockingState.blocksDeclared then
+                -- Local player is defending and has declared: the attacker resolves
+                B.nextPhaseBtn:SetText("Waiting for Attacker...")
+                B.nextPhaseBtn:Disable()
             else
-                B.nextPhaseBtn:SetText("No Blocks (Pass)")
+                -- Local player is defending: enabled to confirm blocks
+                B.nextPhaseBtn:Enable()
+                local numBlocks = 0
+                for _ in pairs(E.blockingState.blocks) do numBlocks = numBlocks + 1 end
+                if numBlocks > 0 then
+                    B.nextPhaseBtn:SetText("Confirm Blocks")
+                else
+                    B.nextPhaseBtn:SetText("No Blocks (Pass)")
+                end
             end
+        elseif E.blockingState.blocksDeclared then
+            -- Local player is attacking and blocks are in: review them, then resolve
+            B.nextPhaseBtn:SetText("Resolve Combat")
+            B.nextPhaseBtn:Enable()
         else
-            -- Local player is attacking: cannot resolve combat; defender must do it
+            -- Local player is attacking: waiting for the defender to declare blocks
             B.nextPhaseBtn:SetText("Waiting for Defender...")
             B.nextPhaseBtn:Disable()
         end
@@ -1153,7 +1171,13 @@ function B:UpdateDisplay()
         B.phaseText:SetText(string.format("|cFFFFD200TARGETING: Select %s for %s (Right-click to cancel)|r", E.targeting.targetType, E.targeting.cardName))
     elseif E.phase == "COMBAT_BLOCK" and E.blockingState then
         if E.blockingState.isRemoteAttacking then
-            B.phaseText:SetText("|cFFFF4444COMBAT: Assign Blockers, then click Confirm Blocks|r")
+            if E.blockingState.blocksDeclared then
+                B.phaseText:SetText("|cFFFFD200COMBAT: Blocks declared. Waiting for attacker to resolve...|r")
+            else
+                B.phaseText:SetText("|cFFFF4444COMBAT: Assign Blockers, then click Confirm Blocks|r")
+            end
+        elseif E.blockingState.blocksDeclared then
+            B.phaseText:SetText("|cFFFF4444COMBAT: Review the blocks, then click Resolve Combat|r")
         else
             B.phaseText:SetText("|cFFFFD200COMBAT: Opponent is declaring blockers...|r")
         end
