@@ -31,6 +31,9 @@ elseif RegisterAddonMessagePrefix then
     RegisterAddonMessagePrefix(PREFIX)
 end
 
+-- Custom chat channel used for waiting-room broadcasts
+local LFM_CHANNEL = "FCCGTTSE"
+
 -- Seconds an outgoing challenge stays valid (the receiving popup times out after 30)
 local INVITE_EXPIRY = 45
 
@@ -66,28 +69,49 @@ function TTS:SafeAfter(seconds, callback)
     end
 end
 
+-- Returns the channel number of FCCGTTSE, or nil if we haven't joined it
+local function GetLFMChannelId()
+    local id = GetChannelName(LFM_CHANNEL)
+    if id and id > 0 then return id end
+    return nil
+end
+
+local function JoinLFMChannel()
+    if GetLFMChannelId() then return end
+    if JoinTemporaryChannel then
+        JoinTemporaryChannel(LFM_CHANNEL)
+    else
+        JoinChannelByName(LFM_CHANNEL)
+    end
+end
+
 TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (addon-installed check)
 TTS.Net.outgoingInvites = {}  -- [lowerName] = time() : challenges we sent that may still be accepted
 TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
 
 function TTS.Net:BroadcastLFM(msg)
-    local function SendToChannel(chatType, target)
+    local function SendToChannel(channelId)
         if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-            C_ChatInfo.SendAddonMessage(PREFIX, msg, chatType, target)
+            C_ChatInfo.SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
         else
-            SendAddonMessage(PREFIX, msg, chatType, target)
+            SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
         end
     end
 
-    if IsInGuild() then
-        SendToChannel("GUILD")
+    local id = GetLFMChannelId()
+    if id then
+        SendToChannel(id)
+        return
     end
-    if IsInRaid() then
-        SendToChannel("RAID")
-    elseif IsInGroup() then
-        SendToChannel("PARTY")
-    end
-    SendToChannel("YELL")
+
+    -- Not in the channel yet: join it, then send once it is available
+    JoinLFMChannel()
+    TTS:SafeAfter(1, function()
+        local retryId = GetLFMChannelId()
+        if retryId then
+            SendToChannel(retryId)
+        end
+    end)
 end
 
 -- Challenges can only be issued from the Waiting Room, which calls this.
@@ -131,6 +155,7 @@ end
 local f = CreateFrame("Frame")
 f:RegisterEvent("CHAT_MSG_ADDON")
 f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 f:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
@@ -148,6 +173,9 @@ f:SetScript("OnEvent", function(self, event, ...)
                 TTS.MainFrame:UpdatePlayState()
             end
         end
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        -- Delay so the default channels (General, Trade...) take their usual numbers first
+        TTS:SafeAfter(5, JoinLFMChannel)
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, channel, sender = ...
         if prefix == PREFIX then

@@ -198,6 +198,9 @@ local function CreateExampleCard(parent, cardId)
     end
 
     f:SetFrameLevel(parent:GetFrameLevel() + 2)
+    -- The shared card frame hides its cost whenever the card is hidden (for the board's hand);
+    -- rule example cards keep their cost, so drop that handler here
+    f:SetScript("OnHide", nil)
     f:EnableMouse(true)
     f:RegisterForClicks("LeftButtonUp")
 
@@ -408,7 +411,8 @@ local function LayoutRules()
 
     p4:ClearAllPoints()
     p4:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (p4:GetStringHeight() + 20)
+    -- Extra line of space so the cost/title above these cards clears the keyword text
+    y = y - (p4:GetStringHeight() + 20 + 14)
 
     -- Lazy instantiate Keyword Cards
     local kwCardIds = { "WES04", "WES02", "DSK06", "WES05" }

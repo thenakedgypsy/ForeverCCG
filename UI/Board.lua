@@ -15,6 +15,7 @@ local TEXTURE_ROOT    = "Interface\\AddOns\\ForeverCCG\\Textures\\"
 local CARD_FRAME_DEF  = TEXTURE_ROOT .. "Cards\\card_frame.png"
 local CARD_BACK_TEX   = TEXTURE_ROOT .. "Cards\\card_back.png"
 local SYMBOL_PATH     = TEXTURE_ROOT .. "Symbols\\"
+local TAP_TEX         = SYMBOL_PATH .. "T.png"
 
 local CARD_FRAMES = {
     W       = TEXTURE_ROOT .. "Cards\\card_frame_holy.png",
@@ -59,7 +60,7 @@ function TTS:FormatSymbols(str, size)
 
         -- Tap Symbol
         if upperKey == "T" or upperKey == "TAP" then
-            return "|cFFFFD200(T)|r"
+            return string.format("|T%s:%d:%d:0:0|t", TAP_TEX, s, s)
         end
 
         -- Generic / Numeric / X
@@ -787,6 +788,14 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.pt:SetShadowColor(0, 0, 0, 1)
     f.pt:Hide()
 
+    -- Tap symbol drawn over the middle of the card while the permanent is tapped
+    local tapSize = math.floor(sizeX * 0.5)
+    f.tapIcon = f.overlay:CreateTexture(nil, "OVERLAY", nil, 7)
+    f.tapIcon:SetSize(tapSize, tapSize)
+    f.tapIcon:SetPoint("CENTER", f.overlay, "CENTER", 0, 0)
+    f.tapIcon:SetTexture(TAP_TEX)
+    f.tapIcon:Hide()
+
     f:SetScript("OnEnter", Card_OnEnter)
     f:SetScript("OnLeave", Card_OnLeave)
     f:SetScript("OnHide", function(self)
@@ -1252,6 +1261,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
+                if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 f:Show()
             end
         end
@@ -1308,6 +1318,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
+                if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 f:Show()
             end
         end
