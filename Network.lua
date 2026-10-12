@@ -43,8 +43,9 @@ local MAX_JOIN_ATTEMPTS = 5
 -- =========================================================================
 -- CHANNEL ENVELOPES
 --   "LFM_..."                  broadcast to everyone in the channel
---   "T:<recipient>:<payload>"  addressed to one player (challenges, pre-match)
---   "M:<matchId>:<payload>"    in-match traffic, only the two players know the id
+--   "T:<recipient>:<from>:<payload>"  addressed to one player (challenges, pre-match)
+--   "M:<matchId>:<from>:<payload>"    in-match traffic, only the two players know the id
+-- <from> is the sender's waiting-room name, used as the sender everywhere
 -- =========================================================================
 
 -- Preserves full "Firstname Surname" while stripping any realm tag
@@ -61,6 +62,14 @@ end
 
 local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
+end
+
+-- Our identity on the network: the same name the waiting room advertises
+local function MyName()
+    if TTS.GetPlayerFullName then
+        return TTS.GetPlayerFullName()
+    end
+    return NormalizeName(UnitName("player"))
 end
 
 local function NewMatchId()
@@ -206,14 +215,14 @@ end
 function TTS.Net:OnChannelMessage(message, sender)
     local kind = message:sub(1, 2)
     if kind == "T:" then
-        local recipient, inner = message:match("^T:([^:]+):(.*)$")
-        if recipient and SameName(recipient, UnitName("player")) then
-            self:OnReceive(inner, sender)
+        local recipient, from, inner = message:match("^T:([^:]+):([^:]+):(.*)$")
+        if recipient and not SameName(from, MyName()) and SameName(recipient, MyName()) then
+            self:OnReceive(inner, from)
         end
     elseif kind == "M:" then
-        local matchId, inner = message:match("^M:([^:]+):(.*)$")
-        if matchId and self.matchId and matchId == self.matchId then
-            self:OnReceive(inner, sender)
+        local matchId, from, inner = message:match("^M:([^:]+):([^:]+):(.*)$")
+        if matchId and not SameName(from, MyName()) and self.matchId and matchId == self.matchId then
+            self:OnReceive(inner, from)
         end
     elseif message:match("^LFM_") then
         self:OnReceive(message, sender)
@@ -261,9 +270,9 @@ function TTS.Net:Send(target, msg)
     end
     target = NormalizeName(target)
     if self.matchId and IsMatchOpponent(target) then
-        SendChannel("M:" .. self.matchId .. ":" .. msg)
+        SendChannel("M:" .. self.matchId .. ":" .. MyName() .. ":" .. msg)
     else
-        SendChannel("T:" .. target .. ":" .. msg)
+        SendChannel("T:" .. target .. ":" .. MyName() .. ":" .. msg)
     end
 end
 

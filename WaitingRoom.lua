@@ -59,6 +59,8 @@ local function GetPlayerFullName()
     fullName = fullName:match("^([^%-]+)") or fullName
     return fullName:trim()
 end
+-- Network.lua uses this so match messages are addressed by the same name the waiting room shows
+TTS.GetPlayerFullName = GetPlayerFullName
 
 -- =========================================================================
 -- WAITING ROOM UI WINDOW
