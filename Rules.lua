@@ -318,6 +318,20 @@ p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the b
     "• |cFFFFD200Vigilance:|r Attacking does not cause the creature to tap.\n" ..
     "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
 
+local h5 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+h5:SetText("Challenging Players")
+
+local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+p5:SetWidth(540)
+p5:SetJustifyH("LEFT")
+p5:SetWordWrap(true)
+p5.rawText = "Both players must be on the |cFFFFD200same version|r of Forever: CCG.\n\n" ..
+    "|cFFFFD200Connection:|r Challenges and matches are sent over the |cFFFFFFFFFCCGTTSE|r chat channel, which the addon joins for you a few seconds after you log in. The channel is always tried first.\n\n" ..
+    "|cFFFFD200Fallback:|r If your opponent doesn't respond within |cFFFFFFFF8 seconds|r and you are grouped with them, the challenge is retried over |cFFFFFFFFparty chat|r, then |cFFFFFFFFraid chat|r. Once a party or raid connection works, the rest of that match uses it.\n" ..
+    "• If you are not grouped, you'll be asked to |cFFFFD200invite your opponent to your party|r and challenge them again.\n" ..
+    "• If challenges keep failing, grouping up is the most reliable way to play.\n\n" ..
+    "|cFFFFD200Accepting:|r Your opponent has |cFFFFFFFF60 seconds|r to accept a challenge."
+
 -- Footer is pinned to the bottom of the window (outside the scroll area), like the title at the top
 local footer = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOM", R, "BOTTOM", 0, 14)
@@ -337,6 +351,7 @@ local function LayoutRules()
     p3:SetText(FormatTextWithSymbols(p3.rawText, 16))
     p4:SetText(FormatTextWithSymbols(p4.rawText, 16))
     pU:SetText(FormatTextWithSymbols(pU.rawText, 16))
+    p5:SetText(FormatTextWithSymbols(p5.rawText, 16))
 
     local y = -10
 
@@ -427,6 +442,15 @@ local function LayoutRules()
         kwFrames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", kwX[i], y)
     end
     y = y - (102 + 16)
+
+    -- Section 5: Challenging Players
+    h5:ClearAllPoints()
+    h5:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
+    y = y - (h5:GetStringHeight() + 6)
+
+    p5:ClearAllPoints()
+    p5:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
+    y = y - (p5:GetStringHeight() + 18)
 
     content:SetHeight(math.abs(y))
 end

@@ -34,8 +34,15 @@ end
 -- Custom chat channel used for ALL addon traffic (waiting room, challenges and matches)
 local LFM_CHANNEL = "FCCGTTSE"
 
--- Seconds an outgoing challenge stays valid (the receiving popup times out after 30)
-local INVITE_EXPIRY = 45
+-- Seconds the receiver has to click Accept/Decline on the challenge popup
+local CHALLENGE_POPUP_TIMEOUT = 60
+
+-- Seconds an outgoing challenge stays valid. Longer than the popup so an accept
+-- clicked at the last second still has time to travel back over the channel.
+local INVITE_EXPIRY = 90
+
+-- Seconds to wait for INVITE_ACK before deciding the target doesn't have the addon
+local INVITE_ACK_TIMEOUT = 8
 
 -- How many times (1s apart) to retry joining the channel before dropping queued messages
 local MAX_JOIN_ATTEMPTS = 5
@@ -163,10 +170,47 @@ local function SendChannel(msg)
     end
 end
 
+-- chatType is "PARTY" or "RAID"
+local function SendGroup(msg, chatType)
+    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+        C_ChatInfo.SendAddonMessage(PREFIX, msg, chatType)
+    else
+        SendAddonMessage(PREFIX, msg, chatType)
+    end
+end
+
+local function NameMatchesUnit(name, unit)
+    if not UnitExists(unit) then return false end
+    local want = NormalizeName(name):lower()
+    local n = NormalizeName(UnitName(unit)):lower()
+    -- The waiting-room name may be "Firstname Surname" while UnitName is just "Firstname"
+    return n ~= "" and (want == n or want:sub(1, #n + 1) == n .. " ")
+end
+
+-- True if the named player is in our party (or our subgroup, when in a raid)
+local function InMyParty(name)
+    if not IsInGroup or not IsInGroup(LE_PARTY_CATEGORY_HOME) then return false end
+    for i = 1, 4 do
+        if NameMatchesUnit(name, "party" .. i) then return true end
+    end
+    return false
+end
+
+-- True if we are in a raid and the named player is in it
+local function InMyRaid(name)
+    if not IsInRaid or not IsInRaid(LE_PARTY_CATEGORY_HOME) then return false end
+    for i = 1, 40 do
+        if NameMatchesUnit(name, "raid" .. i) then return true end
+    end
+    return false
+end
+
 TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (addon-installed check)
 TTS.Net.outgoingInvites = {}  -- [lowerName] = { sentAt = time(), matchId = id } : challenges we sent that may still be accepted
 TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
 TTS.Net.matchId = nil         -- id of the current (or most recent) match
+-- [lowerName] = "PARTY" or "RAID" : fallback route to a player. nil means FCCGTTSE (always tried first)
+TTS.Net.routes = {}
 
 function TTS.Net:BroadcastLFM(msg)
     SendChannel(msg)
@@ -195,35 +239,85 @@ function TTS.Net:InvitePlayer(target)
     local matchId = NewMatchId()
     self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId }
     self.pendingInvites[inviteKey] = target
+    self.routes[inviteKey] = nil -- always try FCCGTTSE first
 
     self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
     Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
+    self:AwaitInviteAck(inviteKey, matchId)
+end
 
-    TTS:SafeAfter(2.5, function()
-        if TTS.Net.pendingInvites[inviteKey] then
-            local originalTarget = TTS.Net.pendingInvites[inviteKey]
-            TTS.Net.pendingInvites[inviteKey] = nil
-            TTS.Net.outgoingInvites[inviteKey] = nil
-            local whisperMsg = string.format("I tried to invite you to a game of Forever: CCG, but you dont have it installed! Visit: %s to download!", TTS.DOWNLOAD_URL)
-            SendChatMessage(whisperMsg, "WHISPER", nil, originalTarget)
-            Print(string.format("|cFFFF4444[TTSE]|r %s does not have the addon installed. Whisper sent!", originalTarget))
+-- If the invite gets no INVITE_ACK, retry on the next route: FCCGTTSE -> party -> raid
+function TTS.Net:AwaitInviteAck(inviteKey, matchId)
+    TTS:SafeAfter(INVITE_ACK_TIMEOUT, function()
+        local Net = TTS.Net
+        local target = Net.pendingInvites[inviteKey]
+        local invite = Net.outgoingInvites[inviteKey]
+        -- Acknowledged, cancelled, or replaced by a newer challenge
+        if not target or not invite or invite.matchId ~= matchId then return end
+
+        local current = Net.routes[inviteKey]
+        local nextRoute
+        if not current and InMyParty(target) then
+            nextRoute = "PARTY"
+        elseif current ~= "RAID" and InMyRaid(target) then
+            nextRoute = "RAID"
+        end
+
+        if nextRoute then
+            Net.routes[inviteKey] = nextRoute
+            invite.sentAt = time()
+            Print(string.format("|cFFFFD200[TTSE]|r No response from %s on %s. Retrying over %s chat...",
+                target, current and (current:lower() .. " chat") or LFM_CHANNEL, nextRoute:lower()))
+            Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
+            Net:AwaitInviteAck(inviteKey, matchId)
+            return
+        end
+
+        Net.pendingInvites[inviteKey] = nil
+        Net.outgoingInvites[inviteKey] = nil
+        Net.routes[inviteKey] = nil
+
+        local whisperMsg = string.format("I tried to challenge you to a game of Forever: CCG but couldn't reach you. If you have it installed, join my party and I'll challenge you again. If not, visit: %s to download!", TTS.DOWNLOAD_URL)
+        SendChatMessage(whisperMsg, "WHISPER", nil, target)
+        if current then
+            -- Already tried party/raid chat too
+            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond on %s or %s chat. They may not have Forever: CCG installed. Whisper sent!",
+                target, LFM_CHANNEL, current:lower()))
+        else
+            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond on %s. If they have Forever: CCG, invite them to your party (or raid) and challenge them again. Whisper sent!",
+                target, LFM_CHANNEL))
         end
     end)
 end
 
--- Unwraps a channel message and hands it to OnReceive if it is meant for us
-function TTS.Net:OnChannelMessage(message, sender)
+-- Unwraps a channel message and hands it to OnReceive if it is meant for us.
+-- chatType is how it arrived ("CHANNEL", "PARTY" or "RAID"); replies go back the same way.
+function TTS.Net:OnChannelMessage(message, sender, chatType)
     local kind = message:sub(1, 2)
+    local from, inner
     if kind == "T:" then
-        local recipient, from, inner = message:match("^T:([^:]+):([^:]+):(.*)$")
-        if recipient and not SameName(from, MyName()) and SameName(recipient, MyName()) then
-            self:OnReceive(inner, from)
+        local recipient
+        recipient, from, inner = message:match("^T:([^:]+):([^:]+):(.*)$")
+        if not (recipient and not SameName(from, MyName()) and SameName(recipient, MyName())) then
+            return
         end
     elseif kind == "M:" then
-        local matchId, from, inner = message:match("^M:([^:]+):([^:]+):(.*)$")
-        if matchId and not SameName(from, MyName()) and self.matchId and matchId == self.matchId then
-            self:OnReceive(inner, from)
+        local matchId
+        matchId, from, inner = message:match("^M:([^:]+):([^:]+):(.*)$")
+        if not (matchId and not SameName(from, MyName()) and self.matchId and matchId == self.matchId) then
+            return
         end
+    end
+
+    if from then
+        local key = NormalizeName(from):lower()
+        if chatType == "PARTY" or chatType == "RAID" then
+            self.routes[key] = chatType
+        elseif inner:match("^INVITE:") then
+            -- A fresh challenge over FCCGTTSE: answer over FCCGTTSE too
+            self.routes[key] = nil
+        end
+        self:OnReceive(inner, from)
     elseif message:match("^LFM_") then
         self:OnReceive(message, sender)
     end
@@ -259,7 +353,7 @@ f:SetScript("OnEvent", function(self, event, ...)
             local cleanSender = NormalizeName(Ambiguate(sender, "none"))
             -- The channel echoes our own messages back to us
             if SameName(cleanSender, UnitName("player")) then return end
-            TTS.Net:OnChannelMessage(message, cleanSender)
+            TTS.Net:OnChannelMessage(message, cleanSender, channel)
         end
     end
 end)
@@ -269,10 +363,21 @@ function TTS.Net:Send(target, msg)
         return
     end
     target = NormalizeName(target)
+    local envelope
     if self.matchId and IsMatchOpponent(target) then
-        SendChannel("M:" .. self.matchId .. ":" .. MyName() .. ":" .. msg)
+        envelope = "M:" .. self.matchId .. ":" .. MyName() .. ":" .. msg
     else
-        SendChannel("T:" .. target .. ":" .. MyName() .. ":" .. msg)
+        envelope = "T:" .. target .. ":" .. MyName() .. ":" .. msg
+    end
+    -- One route per message: FCCGTTSE unless a party/raid fallback is set for this player
+    -- and we're still grouped with them
+    local route = self.routes[target:lower()]
+    if route == "PARTY" and InMyParty(target) then
+        SendGroup(envelope, "PARTY")
+    elseif route == "RAID" and InMyRaid(target) then
+        SendGroup(envelope, "RAID")
+    else
+        SendChannel(envelope)
     end
 end
 
@@ -395,7 +500,7 @@ function TTS.Net:OnReceive(msg, sender)
                     TTS.Net.incomingChallenge = nil
                 end
             end,
-            timeout = 30,
+            timeout = CHALLENGE_POPUP_TIMEOUT,
             whileDead = true,
             hideOnEscape = true,
         }
