@@ -12,13 +12,20 @@ local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 TTS.MainFrame = CreateFrame("Frame", "TTS_MainDialog", UIParent, backdropTemplate)
 local M = TTS.MainFrame
 
-M:SetSize(400, 280)
+-- =========================================================================
+-- STYLE (matches the Deckbuilder: dialog window, dark title strip with a gold
+-- line, tooltip-bordered panels with gold section headers, small-font buttons)
+-- =========================================================================
+local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
+local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
+
+M:SetSize(400, 260)
 M:SetPoint("CENTER")
 M:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
     tile = true, tileSize = 32, edgeSize = 32,
-    insets = { left = 8, right = 8, top = 8, bottom = 8 }
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
 M:EnableMouse(true)
 M:SetMovable(true)
@@ -30,61 +37,128 @@ M:Hide()
 -- =========================================================================
 -- TITLE & CLOSE
 -- =========================================================================
-local title = M:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-title:SetPoint("TOP", 0, -18)
+local titleBar = M:CreateTexture(nil, "ARTWORK")
+titleBar:SetPoint("TOPLEFT", 12, -12)
+titleBar:SetPoint("TOPRIGHT", -12, -12)
+titleBar:SetHeight(25)
+titleBar:SetColorTexture(0, 0, 0, 0.35)
+
+local titleLine = M:CreateTexture(nil, "ARTWORK")
+titleLine:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
+titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
+titleLine:SetHeight(1)
+titleLine:SetColorTexture(1, 0.82, 0, 0.55)
+
+local title = M:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", 16, -11)
 title:SetText("Forever: CCG")
 
 local closeBtn = CreateFrame("Button", nil, M, "UIPanelCloseButton")
-closeBtn:SetPoint("TOPRIGHT", -5, -5)
+closeBtn:SetPoint("TOPRIGHT", -2, -2)
 
 local content = CreateFrame("Frame", nil, M)
 content:SetAllPoints(M)
 
+-- Tooltip-bordered panel with a gold section header and divider
+local function CreateSection(label, w, h)
+    local p = CreateFrame("Frame", nil, content, backdropTemplate)
+    p:SetSize(w, h)
+    p:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    p:SetBackdropColor(PANEL_BG[1], PANEL_BG[2], PANEL_BG[3], PANEL_BG[4])
+    p:SetBackdropBorderColor(PANEL_BORDER[1], PANEL_BORDER[2], PANEL_BORDER[3], PANEL_BORDER[4])
+
+    local header = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    header:SetPoint("TOPLEFT", 10, -9)
+    header:SetText(label)
+
+    local line = p:CreateTexture(nil, "ARTWORK")
+    line:SetPoint("TOPLEFT", 8, -24)
+    line:SetPoint("TOPRIGHT", -8, -24)
+    line:SetHeight(1)
+    line:SetColorTexture(1, 0.82, 0, 0.30)
+    return p
+end
+
+-- Red panel button with the Deckbuilder's small fonts
+local function CreatePanelButton(name, parent, w, h, text)
+    local b = CreateFrame("Button", name, parent, "UIPanelButtonTemplate")
+    b:SetSize(w, h)
+    b:SetNormalFontObject("GameFontNormalSmall")
+    b:SetHighlightFontObject("GameFontHighlightSmall")
+    b:SetDisabledFontObject("GameFontDisableSmall")
+    b:SetText(text)
+    return b
+end
+
+-- =========================================================================
+-- OPENING WINDOWS FROM HERE
+-- Picking an option closes this window; closing the window it opened brings
+-- this one back (unless a match has started in the meantime).
+-- =========================================================================
+local function OnChildHidden(child)
+    if not child.ttsOpenedFromMain then return end
+    child.ttsOpenedFromMain = nil
+    -- Wait a frame: a window closed by a match starting should not bring this back
+    TTS:SafeAfter(0, function()
+        if child:IsShown() or M:IsShown() then return end
+        if TTS.Engine and TTS.Engine.inMatch then return end
+        M:Show()
+    end)
+end
+
+local function OpenFromMain(child)
+    if not child:IsShown() then return end   -- it refused to open
+    if not child.ttsMainHooked then
+        child.ttsMainHooked = true
+        child:HookScript("OnHide", OnChildHidden)
+    end
+    child.ttsOpenedFromMain = true
+    M:Hide()
+end
+
 -- =========================================================================
 -- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
 -- =========================================================================
-local deckBtn = CreateFrame("Button", "TTS_DeckBuilderBtn", content, "UIPanelButtonTemplate")
-deckBtn:SetSize(170, 24)
-deckBtn:SetPoint("TOP", 0, -46)
-deckBtn:SetText("Open Deckbuilder")
+local deckSection = CreateSection("Your Deck", 372, 104)
+deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -46)
+
+local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "Open Deckbuilder")
+deckBtn:SetPoint("TOPLEFT", deckSection, "TOPLEFT", 10, -32)
 deckBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame.TryOpen then
         TTS.DeckBuilderFrame:TryOpen()
+        OpenFromMain(TTS.DeckBuilderFrame)
     end
 end)
 
-local rulesBtn = CreateFrame("Button", "TTS_RulesBtn", content, "UIPanelButtonTemplate")
-rulesBtn:SetSize(170, 24)
-rulesBtn:SetPoint("TOP", deckBtn, "BOTTOM", 0, -6)
-rulesBtn:SetText("Official Rules")
+local rulesBtn = CreatePanelButton("TTS_RulesBtn", deckSection, 170, 24, "Official Rules")
+rulesBtn:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -32)
 rulesBtn:SetScript("OnClick", function()
     if TTS.RulesFrame then
-        if TTS.RulesFrame:IsShown() then
-            TTS.RulesFrame:Hide()
-        else
-            TTS.RulesFrame:Show()
-        end
+        TTS.RulesFrame:Show()
+        OpenFromMain(TTS.RulesFrame)
     end
 end)
 
-local statusLabel = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-statusLabel:SetPoint("TOP", rulesBtn, "BOTTOM", 0, -8)
+local statusLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+statusLabel:SetPoint("TOP", deckSection, "TOP", 0, -66)
 statusLabel:SetWidth(340)
 statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
 
-local div1 = content:CreateTexture(nil, "ARTWORK")
-div1:SetSize(340, 1)
-div1:SetPoint("TOP", 0, -145)
-div1:SetColorTexture(1, 1, 1, 0.15)
-
 -- =========================================================================
 -- SECTION 2: SOLO PRACTICE
 -- =========================================================================
-local soloBtn = CreateFrame("Button", "TTS_SoloBtn", content, "UIPanelButtonTemplate")
-soloBtn:SetSize(180, 26)
-soloBtn:SetPoint("TOP", 0, -158)
-soloBtn:SetText("Practice vs Dummy")
+local practiceSection = CreateSection("Practice", 180, 68)
+practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
+
+local soloBtn = CreatePanelButton("TTS_SoloBtn", practiceSection, 160, 24, "Practice vs Dummy")
+soloBtn:SetPoint("TOP", practiceSection, "TOP", 0, -34)
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before starting a match.")
@@ -93,25 +167,18 @@ soloBtn:SetScript("OnClick", function()
     TTS.Engine:StartMatch("Target Dummy", true, true)
 end)
 
-local div2 = content:CreateTexture(nil, "ARTWORK")
-div2:SetSize(340, 1)
-div2:SetPoint("TOP", 0, -196)
-div2:SetColorTexture(1, 1, 1, 0.15)
-
 -- =========================================================================
 -- SECTION 3: PVP WAITING ROOM (the only way to challenge other players)
 -- =========================================================================
-local waitingRoomBtn = CreateFrame("Button", "TTS_WaitingRoomBtn", content, "UIPanelButtonTemplate")
-waitingRoomBtn:SetSize(180, 24)
-waitingRoomBtn:SetPoint("TOP", 0, -210)
-waitingRoomBtn:SetText("Open Waiting Room")
+local pvpSection = CreateSection("Play Others", 180, 68)
+pvpSection:SetPoint("TOPRIGHT", deckSection, "BOTTOMRIGHT", 0, -8)
+
+local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "Open Waiting Room")
+waitingRoomBtn:SetPoint("TOP", pvpSection, "TOP", 0, -34)
 waitingRoomBtn:SetScript("OnClick", function()
     if TTS.WaitingRoom and TTS.WaitingRoom.frame then
-        if TTS.WaitingRoom.frame:IsShown() then
-            TTS.WaitingRoom.frame:Hide()
-        else
-            TTS.WaitingRoom.frame:Show()
-        end
+        TTS.WaitingRoom.frame:Show()
+        OpenFromMain(TTS.WaitingRoom.frame)
     end
 end)
 
@@ -177,7 +244,7 @@ end)
 -- FOOTER
 -- =========================================================================
 local footer = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-footer:SetPoint("BOTTOM", content, "BOTTOM", 0, 12)
+footer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -20, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 -- =========================================================================

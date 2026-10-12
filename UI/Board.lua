@@ -47,6 +47,22 @@ local ART_BOX = {
     shiftUp = 0.01,
 }
 
+-- Rules-text box printed on the card, as fractions of the card's size.
+-- top: down from the card's top edge. bottom: up from the bottom edge
+-- (bottomWithPT leaves the bottom-right corner free for the P/T).
+local TEXT_BOX = {
+    left         = 0.09,
+    right        = 0.09,
+    top          = 0.57,
+    bottom       = 0.07,
+    bottomWithPT = 0.20,
+}
+local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
+local RULES_FONT_MIN = 6
+-- Cards narrower than this on screen (pixels, board zoom included) show no
+-- printed text: their rules are in the tooltip only
+local CARD_TEXT_MIN_WIDTH = 72
+
 local FALLBACK_BORDER = "Interface\\Tooltips\\UI-Tooltip-Border"
 local FALLBACK_BACK   = "Interface\\Buttons\\WHITE8X8"
 
@@ -104,20 +120,81 @@ local function PlayFieldClickSound(perm, wasTapped)
     end
 end
 
--- Forward declaration for camera refresher
+-- Forward declarations for the camera / printed-text refreshers (run when the board is rescaled)
 local RefreshAllModelCameras
+local RefreshCardText
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
+
+-- =========================================================================
+-- STYLE (matches the Deckbuilder: dialog window, dark title strip with a gold
+-- line, tooltip-bordered panels and controls, small-font panel buttons)
+-- =========================================================================
+local STYLE = {
+    panelBg       = { 0.04, 0.04, 0.04, 0.70 },
+    panelBorder   = { 0.60, 0.56, 0.48, 1 },
+    controlBg     = { 0.10, 0.08, 0.06, 0.95 },
+    controlBorder = { 0.55, 0.50, 0.40, 1 },
+}
+
+local BACKDROPS = {
+    dialog = {
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 },
+    },
+    panel = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    },
+    control = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 },
+    },
+}
+
+-- kind: "dialog", "panel" or "control"; bg/border only apply to panel and control
+local function Skin(f, kind, bg, border)
+    f:SetBackdrop(BACKDROPS[kind])
+    if bg then f:SetBackdropColor(bg[1], bg[2], bg[3], bg[4]) end
+    if border then f:SetBackdropBorderColor(border[1], border[2], border[3], border[4]) end
+end
+
+-- Darkened strip across the top of a window with a gold line under it
+local function AddTitleStrip(f, height)
+    local strip = f:CreateTexture(nil, "ARTWORK")
+    strip:SetPoint("TOPLEFT", 12, -12)
+    strip:SetPoint("TOPRIGHT", -12, -12)
+    strip:SetHeight(height or 25)
+    strip:SetColorTexture(0, 0, 0, 0.35)
+
+    local line = f:CreateTexture(nil, "ARTWORK")
+    line:SetPoint("TOPLEFT", strip, "BOTTOMLEFT", 0, 0)
+    line:SetPoint("TOPRIGHT", strip, "BOTTOMRIGHT", 0, 0)
+    line:SetHeight(1)
+    line:SetColorTexture(1, 0.82, 0, 0.55)
+    return strip
+end
+
+-- Red panel button with the Deckbuilder's small fonts
+local function StyleButton(b)
+    b:SetNormalFontObject("GameFontNormalSmall")
+    b:SetHighlightFontObject("GameFontHighlightSmall")
+    b:SetDisabledFontObject("GameFontDisableSmall")
+end
+
 local B = CreateFrame("Frame", "TTS_BoardFrame", UIParent, backdropTemplate)
 TTS.BoardFrame = B
 B:SetSize(1160, 780)
 B:SetPoint("CENTER")
-B:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    tile = true, tileSize = 32, edgeSize = 32,
-    insets = { left = 8, right = 8, top = 8, bottom = 8 }
-})
+Skin(B, "dialog")
+-- The top strip holds the opponent's life, the phase and the window buttons
+AddTitleStrip(B, 33)
 B:EnableMouse(true)
 B:SetMovable(true)
 B:RegisterForDrag("LeftButton")
@@ -141,6 +218,7 @@ B:SetScript("OnMouseWheel", function(self, delta)
         local newScale = math.max(0.60, math.min(1.60, cur + (delta * 0.05)))
         self:SetScale(newScale)
         if RefreshAllModelCameras then RefreshAllModelCameras() end
+        if RefreshCardText then RefreshCardText() end
     end
 end)
 B:Hide()
@@ -182,6 +260,7 @@ resizer:SetScript("OnUpdate", function(self)
         if math.abs(newScale - B:GetScale()) > 0.001 then
             B:SetScale(newScale)
             if RefreshAllModelCameras then RefreshAllModelCameras() end
+            if RefreshCardText then RefreshCardText() end
         end
     end
 end)
@@ -192,20 +271,21 @@ end)
 local sideLog = CreateFrame("Frame", "TTS_SideLogFrame", B, backdropTemplate)
 sideLog:SetSize(250, 780)
 sideLog:SetPoint("TOPLEFT", B, "TOPRIGHT", 6, 0)
-sideLog:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    tile = true, tileSize = 32, edgeSize = 24,
-    insets = { left = 6, right = 6, top = 6, bottom = 6 }
-})
+Skin(sideLog, "dialog")
+AddTitleStrip(sideLog)
 
-local logTitle = sideLog:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-logTitle:SetPoint("TOP", 0, -12)
+local logTitle = sideLog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+logTitle:SetPoint("TOPLEFT", 16, -11)
 logTitle:SetText("Game Log")
 
+local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
+logPanel:SetPoint("TOPLEFT", 14, -46)
+logPanel:SetPoint("BOTTOMRIGHT", -14, 38)
+Skin(logPanel, "panel", STYLE.panelBg, STYLE.panelBorder)
+
 local logMsg = CreateFrame("ScrollingMessageFrame", "TTS_MatchLogFrame", sideLog)
-logMsg:SetPoint("TOPLEFT", 14, -36)
-logMsg:SetPoint("BOTTOMRIGHT", -14, 38)
+logMsg:SetPoint("TOPLEFT", logPanel, "TOPLEFT", 8, -8)
+logMsg:SetPoint("BOTTOMRIGHT", logPanel, "BOTTOMRIGHT", -8, 8)
 logMsg:SetFontObject(GameFontHighlightSmall)
 logMsg:SetJustifyH("LEFT")
 logMsg:SetFading(false)
@@ -222,13 +302,15 @@ TTS.MatchLog = logMsg
 
 local clearLogBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
 clearLogBtn:SetSize(60, 20)
-clearLogBtn:SetPoint("BOTTOMLEFT", 12, 10)
+clearLogBtn:SetPoint("BOTTOMLEFT", 14, 12)
+StyleButton(clearLogBtn)
 clearLogBtn:SetText("Clear")
 clearLogBtn:SetScript("OnClick", function() logMsg:Clear() end)
 
 local bottomLogBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
 bottomLogBtn:SetSize(60, 20)
-bottomLogBtn:SetPoint("BOTTOMRIGHT", -12, 10)
+bottomLogBtn:SetPoint("BOTTOMRIGHT", -14, 12)
+StyleButton(bottomLogBtn)
 bottomLogBtn:SetText("Bottom")
 bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 
@@ -240,12 +322,7 @@ local restoreBar = CreateFrame("Frame", "TTS_BoardRestoreFrame", UIParent, backd
 TTS.BoardRestoreFrame = restoreBar
 restoreBar:SetSize(250, 40)
 restoreBar:SetPoint("TOP", UIParent, "TOP", 0, -120)
-restoreBar:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 32, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-})
+Skin(restoreBar, "panel", { 0.04, 0.04, 0.04, 0.92 }, STYLE.panelBorder)
 restoreBar:EnableMouse(true)
 restoreBar:SetMovable(true)
 restoreBar:RegisterForDrag("LeftButton")
@@ -260,6 +337,7 @@ restoreText:SetText("Forever: CCG (minimized)")
 local restoreBtn = CreateFrame("Button", nil, restoreBar, "UIPanelButtonTemplate")
 restoreBtn:SetSize(70, 22)
 restoreBtn:SetPoint("RIGHT", -10, 0)
+StyleButton(restoreBtn)
 restoreBtn:SetText("Restore")
 restoreBtn:SetScript("OnClick", function() B:Show() end)
 
@@ -277,7 +355,7 @@ end)
 
 local minimizeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 minimizeBtn:SetSize(24, 24)
-minimizeBtn:SetPoint("TOPRIGHT", -16, -14)
+minimizeBtn:SetPoint("TOPRIGHT", -16, -17)
 minimizeBtn:SetText("-")
 minimizeBtn:SetScript("OnClick", function() B:Minimize() end)
 minimizeBtn:SetScript("OnEnter", function(self)
@@ -294,6 +372,7 @@ local concedeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 concedeBtn:SetSize(80, 24)
 concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
 concedeBtn:SetText("Concede")
+StyleButton(concedeBtn)
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConcedeMatch() end)
 
 local soundCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
@@ -313,32 +392,51 @@ B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.endTurnBtn:SetSize(90, 24)
 B.endTurnBtn:SetPoint("BOTTOMRIGHT", -30, 16)
 B.endTurnBtn:SetText("End Turn")
+StyleButton(B.endTurnBtn)
 B.endTurnBtn:SetScript("OnClick", function() TTS.Engine:EndTurn() end)
 
 B.nextPhaseBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.nextPhaseBtn:SetSize(160, 24)
 B.nextPhaseBtn:SetPoint("RIGHT", B.endTurnBtn, "LEFT", -8, 0)
 B.nextPhaseBtn:SetText("To Combat")
+StyleButton(B.nextPhaseBtn)
 B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
 
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-B.phaseText:SetPoint("TOP", 0, -16)
+B.phaseText:SetPoint("TOP", 0, -22)
 B.phaseText:SetText("Phase: SETUP")
+
+-- =========================================================================
+-- MATCH OVER
+-- The board stays up on the final state until the result popup is accepted.
+-- =========================================================================
+function B:ShowMatchResult(headline)
+    self.phaseText:SetText(headline .. "  |cFFFFFFFF(click Accept to leave the board)|r")
+    self.nextPhaseBtn:SetText("Match Over")
+    self.nextPhaseBtn:Disable()
+    self.endTurnBtn:Disable()
+    concedeBtn:Disable()
+end
+
+function B:CloseAfterMatch()
+    GameTooltip:Hide()
+    self:Hide()
+    restoreBar:Hide()
+    if TTS.MainFrame then
+        TTS.MainFrame:Show()
+        if TTS.MainFrame.UpdatePlayState then
+            TTS.MainFrame:UpdatePlayState()
+        end
+    end
+end
 
 -- =========================================================================
 -- INTERACTIVE PLAYER LIFE PLATES
 -- =========================================================================
 B.oppLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
-B.oppLifeBtn:SetSize(270, 30)
-B.oppLifeBtn:SetPoint("TOPLEFT", 30, -12)
-B.oppLifeBtn:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 12,
-    insets = { left = 3, right = 3, top = 3, bottom = 3 }
-})
-B.oppLifeBtn:SetBackdropColor(0, 0, 0, 0.6)
-B.oppLifeBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 0.8)
+B.oppLifeBtn:SetSize(270, 28)
+B.oppLifeBtn:SetPoint("TOPLEFT", 24, -15)
+Skin(B.oppLifeBtn, "control", STYLE.controlBg, STYLE.controlBorder)
 B.oppLifeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
 B.oppLifeText = B.oppLifeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -346,6 +444,7 @@ B.oppLifeText:SetPoint("LEFT", B.oppLifeBtn, "LEFT", 8, 0)
 B.oppLifeText:SetJustifyH("LEFT")
 
 B.oppLifeBtn:SetScript("OnClick", function(self, btn)
+    if not TTS.Engine.inMatch then return end
     if btn == "RightButton" and TTS.Engine.targeting then
         TTS.Engine:CancelTargeting()
         return
@@ -369,14 +468,7 @@ B.oppLifeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 B.myLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.myLifeBtn:SetSize(160, 30)
 B.myLifeBtn:SetPoint("BOTTOMLEFT", 30, 14)
-B.myLifeBtn:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 12,
-    insets = { left = 3, right = 3, top = 3, bottom = 3 }
-})
-B.myLifeBtn:SetBackdropColor(0, 0, 0, 0.6)
-B.myLifeBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 0.8)
+Skin(B.myLifeBtn, "control", STYLE.controlBg, STYLE.controlBorder)
 B.myLifeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
 B.myLifeText = B.myLifeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -384,6 +476,7 @@ B.myLifeText:SetPoint("LEFT", B.myLifeBtn, "LEFT", 8, 0)
 B.myLifeText:SetJustifyH("LEFT")
 
 B.myLifeBtn:SetScript("OnClick", function(self, btn)
+    if not TTS.Engine.inMatch then return end
     if btn == "RightButton" and TTS.Engine.targeting then
         TTS.Engine:CancelTargeting()
         return
@@ -534,10 +627,21 @@ local oppNonLandFrames = {}
 local attachTooltip = CreateFrame("GameTooltip", "TTS_AttachmentTooltip", UIParent, "GameTooltipTemplate")
 attachTooltip:Hide()
 
+-- P/T text for a creature on the battlefield. Damage taken this turn lowers the
+-- toughness shown (in red) until it wears off at end of turn.
+local function FormatPT(power, toughness, damage, colorCode)
+    damage = damage or 0
+    if damage > 0 then
+        return string.format("%s%d/|r|cFFFF4444%d|r", colorCode, power, toughness - damage)
+    end
+    return string.format("%s%d/%d|r", colorCode, power, toughness)
+end
+
 local function Card_OnEnter(self)
     if not self.cardId then return end
     if self.isHand then
-        self:SetScale(1.18)
+        self.hovered = true
+        self:SetScale((self.baseScale or 1) * 1.18)
         self:SetFrameLevel((self.origFrameLevel or 10) + 15)
     end
 
@@ -558,11 +662,13 @@ local function Card_OnEnter(self)
     end
 
     if card.power and card.toughness then
-        local effP, effT = card.power, card.toughness
+        local effP, effT, damage = card.power, card.toughness, 0
         if self.fieldIndex then
-            effP, effT = TTS.Engine:GetCreatureStats((self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex], self.isRemote)
+            local perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
+            effP, effT = TTS.Engine:GetCreatureStats(perm, self.isRemote)
+            damage = perm and perm.damage or 0
         end
-        GameTooltip:AddLine(string.format("P/T: %d/%d", effP, effT), 1, 0.8, 0)
+        GameTooltip:AddLine("P/T: " .. FormatPT(effP, effT, damage, "|cFFFFCC00"), 1, 0.8, 0)
     end
 
     if card.text and card.text ~= "" then
@@ -637,7 +743,8 @@ end
 
 local function Card_OnLeave(self)
     if self.isHand then
-        self:SetScale(1.0)
+        self.hovered = nil
+        self:SetScale(self.baseScale or 1)
         if self.origFrameLevel then self:SetFrameLevel(self.origFrameLevel) end
     end
     GameTooltip:Hide()
@@ -787,6 +894,16 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.pt:SetShadowOffset(1.5, -1.5)
     f.pt:SetShadowColor(0, 0, 0, 1)
     f.pt:Hide()
+    f.ptOffsetY = ptOffsetY
+
+    -- Rules text printed on the card (shown only while the card is big enough on screen)
+    f.rules = f.overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.rules:SetJustifyH("LEFT")
+    f.rules:SetJustifyV("TOP")
+    f.rules:SetWordWrap(true)
+    f.rules:SetTextColor(0, 0, 0, 1)
+    f.rules:SetShadowOffset(0, 0)
+    f.rules:Hide()
 
     -- Tap symbol drawn over the middle of the card while the permanent is tapped
     local tapSize = math.floor(sizeX * 0.5)
@@ -801,7 +918,8 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f:SetScript("OnHide", function(self)
         if self.cost then self.cost:Hide() end
         if self.isHand then
-            self:SetScale(1.0)
+            self.hovered = nil
+            self:SetScale(self.baseScale or 1)
             if self.origFrameLevel then self:SetFrameLevel(self.origFrameLevel) end
         end
     end)
@@ -810,18 +928,114 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 end
 
 -- =========================================================================
+-- CARD SCALING & PRINTED TEXT
+-- Each row scales its cards by how many it holds: fewer cards, bigger cards,
+-- down to the base size when the row is full. A card is centred on an
+-- unscaled "slot" so scaling it never moves it.
+-- =========================================================================
+local HAND_W, HAND_H, HAND_STEP = 72, 102, 96
+local HAND_LEFT, HAND_RIGHT, HAND_BOTTOM = 35, 1060, 52   -- right edge stops short of your deck
+local HAND_MAX_SCALE = 1.2
+
+local BF_CARD_W  = 64
+local BF_CARD_H  = 84
+local BF_STEP_X  = 86
+local BF_START_X = 35
+local BF_RIGHT   = 1045   -- right edge stops short of your effects bar
+local LAND_MAX_SCALE     = 1.0
+local CREATURE_MAX_SCALE = 1.2
+
+-- Vertical centre of each battlefield row, measured up from the board's bottom edge
+local ROW_Y = {
+    myLand     = 256,
+    myNonLand  = 367,
+    oppNonLand = 490,
+    oppLand    = 604,
+}
+
+local function AttachSlot(f)
+    f.slot = CreateFrame("Frame", nil, B)
+    f.slot:SetSize(1, 1)
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", f.slot, "CENTER", 0, 0)
+end
+
+-- Largest scale (up to maxScale) at which n cards fit between left and right
+local function FitScale(n, cardW, step, left, right, maxScale)
+    if n <= 0 then return maxScale end
+    local need = (n - 1) * step + cardW
+    return math.max(0.5, math.min(maxScale, (right - left) / need))
+end
+
+local function PlaceCard(f, i, s, left, centerY, cardW, step)
+    f.baseScale = s
+    f:SetScale(f.hovered and s * 1.18 or s)
+    f.slot:ClearAllPoints()
+    f.slot:SetPoint("CENTER", B, "BOTTOMLEFT", left + (i - 1) * step * s + cardW * s / 2, centerY)
+end
+
+-- Prints the card's rules on it when the card is wide enough on screen; otherwise
+-- hides them (tooltip only). P/T moves to the corner while text is printed.
+local function UpdateCardRules(f)
+    if not f.rules then return end
+    local card = f.currentCard
+    local hasPT = f.pt:IsShown()
+    local w, h = f:GetSize()
+    -- Width on screen, from the card's real scale (works on the board and in other windows);
+    -- a hovered hand card's zoom is left out so hovering never toggles the text
+    local onScreen = w * f:GetEffectiveScale() / UIParent:GetEffectiveScale() / (f.hovered and 1.18 or 1)
+
+    f.pt:ClearAllPoints()
+    if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
+        -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
+        if f.rulesCard ~= card or f.rulesPT ~= hasPT then
+            f.rulesCard, f.rulesPT = card, hasPT
+            f.rules:ClearAllPoints()
+            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1, -h * TEXT_BOX.top - 1)
+            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right,
+                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom))
+            f.rules:SetJustifyH("LEFT")
+            local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
+            for size = RULES_FONT_MAX, RULES_FONT_MIN, -1 do
+                f.rules:SetFont(fontPath, size, "")
+                f.rules:SetText(TTS:FormatSymbols(card.text, size + 2))
+                if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
+            end
+            -- Short text that fits on one line is centred
+            if f.rules.GetNumLines and f.rules:GetNumLines() <= 1 then
+                f.rules:SetJustifyH("CENTER")
+            end
+        end
+        f.rules:Show()
+        f.pt:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * 0.08, h * 0.05)
+    else
+        f.rules:Hide()
+        f.pt:SetPoint("BOTTOM", f.overlay, "BOTTOM", 0, f.ptOffsetY or 0)
+    end
+end
+
+-- Battlefield panel behind both sides' rows, with a faint gold line between them
+local battlefield = CreateFrame("Frame", nil, B, backdropTemplate)
+battlefield:SetPoint("BOTTOMLEFT", B, "BOTTOMLEFT", 24, 209)
+battlefield:SetSize(1028, 456)
+Skin(battlefield, "panel", STYLE.panelBg, STYLE.panelBorder)
+
+local midLine = battlefield:CreateTexture(nil, "ARTWORK")
+midLine:SetPoint("LEFT", battlefield, "BOTTOMLEFT", 8, 437 - 209)
+midLine:SetPoint("RIGHT", battlefield, "BOTTOMRIGHT", -8, 437 - 209)
+midLine:SetHeight(1)
+midLine:SetColorTexture(1, 0.82, 0, 0.25)
+
+-- =========================================================================
 -- BOARD LAYOUT GRIDS
 -- =========================================================================
 for i = 1, 10 do
-    local slot = CreateFrame("Frame", nil, B)
-    slot:SetSize(72, 102)
-    slot:SetPoint("BOTTOMLEFT", 35 + ((i - 1) * 96), 52)
-
-    local f = CreateCardFrame(B, 72, 102)
+    local f = CreateCardFrame(B, HAND_W, HAND_H)
     f.isHand = true
     f.origFrameLevel = f:GetFrameLevel()
-    f:SetPoint("CENTER", slot, "CENTER", 0, 0)
+    AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
+        if not TTS.Engine.inMatch then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -848,6 +1062,7 @@ for i = 1, 10 do
 
     f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     f:SetScript("OnClick", function(self, btn)
+        if not TTS.Engine.inMatch then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -869,11 +1084,6 @@ for i = 1, 10 do
     f:Hide()
     oppHandFrames[i] = f
 end
-
-local BF_CARD_W  = 64
-local BF_CARD_H  = 84
-local BF_STEP_X  = 86
-local BF_START_X = 35
 
 local function MyLand_OnClick(self, btn)
     if btn == "RightButton" and TTS.Engine.targeting then
@@ -917,6 +1127,7 @@ end
 -- Wraps a click handler for your own permanents with the click / tap sound
 local function WithFieldSound(handler)
     return function(self, btn)
+        if not TTS.Engine.inMatch then return end
         local perm = self.fieldIndex and TTS.Engine.localState.field[self.fieldIndex]
         local wasTapped = perm and perm.tapped
         handler(self, btn)
@@ -927,7 +1138,7 @@ end
 for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = false
-    f:SetPoint("BOTTOMLEFT", BF_START_X + ((i - 1) * BF_STEP_X), 180)
+    AttachSlot(f)
     f:SetScript("OnClick", WithFieldSound(MyLand_OnClick))
     myLandFrames[i] = f
 end
@@ -935,7 +1146,7 @@ end
 for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = false
-    f:SetPoint("BOTTOMLEFT", BF_START_X + ((i - 1) * BF_STEP_X), 315)
+    AttachSlot(f)
     f:SetScript("OnClick", WithFieldSound(MyNonLand_OnClick))
     myNonLandFrames[i] = f
 end
@@ -943,8 +1154,9 @@ end
 for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = true
-    f:SetPoint("TOPLEFT", BF_START_X + ((i - 1) * BF_STEP_X), -140)
+    AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
+        if not TTS.Engine.inMatch then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -960,8 +1172,9 @@ end
 for i = 1, 12 do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = true
-    f:SetPoint("TOPLEFT", BF_START_X + ((i - 1) * BF_STEP_X), -275)
+    AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
+        if not TTS.Engine.inMatch then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1035,6 +1248,15 @@ RefreshAllModelCameras = function()
     end
 end
 
+RefreshCardText = function()
+    local groups = { myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }
+    for _, group in ipairs(groups) do
+        for _, f in ipairs(group) do
+            if f:IsShown() then UpdateCardRules(f) end
+        end
+    end
+end
+
 -- =========================================================================
 -- TUCKED CARDS
 -- Attachments first, then the cards whose effects are on the permanent.
@@ -1078,6 +1300,7 @@ end
 function B:UpdateDisplay()
     local E = TTS.Engine
     if not E.inMatch then return end
+    concedeBtn:Enable()
 
     B.oppLifeText:SetText(string.format("%s: %d Life (%d cards)", E.opponent or "Opponent", E.remoteState.life, E.remoteState.handCount))
     B.myLifeText:SetText(string.format("Life: %d", E.localState.life))
@@ -1102,10 +1325,11 @@ function B:UpdateDisplay()
         B.myLifeBtn:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
         B.myLifeBtn:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
     else
-        B.oppLifeBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 0.8)
-        B.oppLifeBtn:SetBackdropColor(0, 0, 0, 0.6)
-        B.myLifeBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 0.8)
-        B.myLifeBtn:SetBackdropColor(0, 0, 0, 0.6)
+        local bg, bd = STYLE.controlBg, STYLE.controlBorder
+        B.oppLifeBtn:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
+        B.oppLifeBtn:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+        B.myLifeBtn:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
+        B.myLifeBtn:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
     end
 
     -- =====================================================================
@@ -1203,6 +1427,7 @@ function B:UpdateDisplay()
         end
     end
 
+    local handScale = FitScale(math.min(10, #E.localState.hand), HAND_W, HAND_STEP, HAND_LEFT, HAND_RIGHT, HAND_MAX_SCALE)
     for i = 1, 10 do
         local cardId = E.localState.hand[i]
         if cardId then
@@ -1234,7 +1459,9 @@ function B:UpdateDisplay()
             else
                 f.border:SetVertexColor(1.0, 1.0, 1.0)
             end
+            PlaceCard(f, i, handScale, HAND_LEFT, HAND_BOTTOM + HAND_H * handScale / 2, HAND_W, HAND_STEP)
             f:Show()
+            UpdateCardRules(f)
         else
             myHandFrames[i]:Hide()
         end
@@ -1266,7 +1493,7 @@ function B:UpdateDisplay()
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, false)
                     local colorCode = (effP > card.power or effT > card.toughness) and "|cFF00FF00" or "|cFFFFD200"
-                    f.pt:SetText(string.format("%s%d/%d|r", colorCode, effP, effT))
+                    f.pt:SetText(FormatPT(effP, effT, perm.damage, colorCode))
                     f.pt:Show()
                 else
                     f.pt:Hide()
@@ -1290,6 +1517,17 @@ function B:UpdateDisplay()
             end
         end
     end
+
+    local function LayoutRow(frames, count, centerY, maxScale)
+        count = math.min(count, #frames)
+        local s = FitScale(count, BF_CARD_W, BF_STEP_X, BF_START_X, BF_RIGHT, maxScale)
+        for k = 1, count do
+            PlaceCard(frames[k], k, s, BF_START_X, centerY, BF_CARD_W, BF_STEP_X)
+            UpdateCardRules(frames[k])
+        end
+    end
+    LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAND_MAX_SCALE)
+    LayoutRow(myNonLandFrames, myNonLandIdx, ROW_Y.myNonLand, CREATURE_MAX_SCALE)
 
     for i = myLandIdx + 1, #myLandFrames do
         myLandFrames[i]:Hide()
@@ -1327,7 +1565,7 @@ function B:UpdateDisplay()
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, true)
-                    f.pt:SetText(string.format("|cFFFFD200%d/%d|r", effP, effT))
+                    f.pt:SetText(FormatPT(effP, effT, perm.damage, "|cFFFFD200"))
                     f.pt:Show()
                 else
                     f.pt:Hide()
@@ -1347,6 +1585,9 @@ function B:UpdateDisplay()
             end
         end
     end
+
+    LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAND_MAX_SCALE)
+    LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, CREATURE_MAX_SCALE)
 
     for i = oppLandIdx + 1, #oppLandFrames do
         oppLandFrames[i]:Hide()
@@ -1375,3 +1616,5 @@ TTS.SetupCardVisual     = SetupCardVisual
 TTS.ApplyFrameTexture   = ApplyFrameTexture
 TTS.GetCardFrameTexture = GetCardFrameTexture
 TTS.CARD_FRAME_DEF      = CARD_FRAME_DEF
+TTS.UpdateCardRules     = UpdateCardRules  -- prints rules text on any card made by CreateCardFrame
+B.myHandFrames          = myHandFrames  -- read by TargetFX.lua (targeting arrow source)

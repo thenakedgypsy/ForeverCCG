@@ -151,6 +151,8 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     button1 = "Accept",
     OnAccept = function(self, data)
         if data then E:PlayMatchEmote(data.outcome, data.opponent) end
+        -- Leave the final board (unless a new match has already started on it)
+        if not E.inMatch then E:CloseMatchBoard() end
     end,
     timeout = 0,
     whileDead = true,
@@ -158,13 +160,36 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     preferredIndex = 3,
 }
 
+-- Closes the post-match board and returns to the main window
+function E:CloseMatchBoard()
+    if TTS.BoardFrame and TTS.BoardFrame.CloseAfterMatch then
+        TTS.BoardFrame:CloseAfterMatch()
+        return
+    end
+    if TTS.BoardFrame then TTS.BoardFrame:Hide() end
+    if TTS.BoardRestoreFrame then TTS.BoardRestoreFrame:Hide() end
+    if TTS.MainFrame then
+        TTS.MainFrame:Show()
+        if TTS.MainFrame.UpdatePlayState then
+            TTS.MainFrame:UpdatePlayState()
+        end
+    end
+end
+
 function E:EndMatch(outcome, reason)
     if not self.inMatch then return end
     local opponentName = self.opponent or "Target Dummy"
+
+    -- Draw the final board state while still in the match (the board may be minimized),
+    -- then freeze it there until the result popup is accepted
+    local B = TTS.BoardFrame
+    if B then
+        if B:IsShown() then self:RefreshUI() else B:Show() end
+    end
     self.inMatch = false
 
+    local headline = outcome and RESULT_HEADLINES[outcome]
     if outcome and opponentName ~= "" then
-        local headline = RESULT_HEADLINES[outcome]
         if headline then
             StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome], { outcome = outcome, opponent = opponentName })
         else
@@ -174,13 +199,11 @@ function E:EndMatch(outcome, reason)
 
     self:Log(string.format("Match ended (%s): %s", outcome:upper(), reason or ""), "SYSTEM")
 
-    if TTS.BoardFrame then TTS.BoardFrame:Hide() end
-    if TTS.BoardRestoreFrame then TTS.BoardRestoreFrame:Hide() end
-    if TTS.MainFrame then
-        TTS.MainFrame:Show()
-        if TTS.MainFrame.UpdatePlayState then
-            TTS.MainFrame:UpdatePlayState()
-        end
+    if headline and opponentName ~= "" and B and B.ShowMatchResult then
+        B:ShowMatchResult(headline)
+    else
+        -- No result popup to accept (e.g. a cancelled setup): leave the board straight away
+        self:CloseMatchBoard()
     end
 end
 

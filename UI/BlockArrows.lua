@@ -81,16 +81,24 @@ local function FindFieldFrame(isRemote, fieldIndex)
 end
 
 -- Arrow from the blocker's edge to the attacker's edge (the edges that face each other)
+-- Cards are scaled individually, so their positions and sizes are converted into the layer's scale
+local function FramePos(f)
+    local cx, cy = f:GetCenter()
+    if not cx then return end
+    local r = f:GetEffectiveScale() / layer:GetEffectiveScale()
+    return cx * r, cy * r, f:GetHeight() * r
+end
+
 local function DrawArrow(n, fromFrame, toFrame)
     local left, bottom = layer:GetLeft(), layer:GetBottom()
-    local fx, fy = fromFrame:GetCenter()
-    local tx, ty = toFrame:GetCenter()
+    local fx, fy, fh = FramePos(fromFrame)
+    local tx, ty, th = FramePos(toFrame)
     if not (left and bottom and fx and tx) then return false end
 
     fx, fy, tx, ty = fx - left, fy - bottom, tx - left, ty - bottom
     local dir = (ty > fy) and 1 or -1
-    local sx, sy = fx, fy + dir * fromFrame:GetHeight() / 2
-    local ex, ey = tx, ty - dir * toFrame:GetHeight() / 2
+    local sx, sy = fx, fy + dir * fh / 2
+    local ex, ey = tx, ty - dir * th / 2
 
     local a = GetArrow(n)
     SetLine(a[1], sx, sy, ex, ey)

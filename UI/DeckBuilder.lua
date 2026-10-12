@@ -84,21 +84,45 @@ end
 
 -- =========================================================================
 -- STYLE
--- Flat dark panels with 1px borders. Sphere colours drive card borders,
--- filter toggles and the distribution chart.
+-- Classic Blizzard look: dialog-box window, tooltip-bordered panels and
+-- controls, red panel buttons. Sphere colours drive the filter toggles and
+-- the distribution chart.
 -- =========================================================================
 local STYLE = {
-    windowBg      = { 0.055, 0.055, 0.065, 0.97 },
-    windowBorder  = { 0.42, 0.35, 0.18, 1 },
-    titleBg       = { 0.090, 0.080, 0.060, 1 },
-    panelBg       = { 0.085, 0.085, 0.095, 0.95 },
-    panelBorder   = { 0.20, 0.20, 0.23, 1 },
-    controlBg     = { 0.13, 0.13, 0.145, 1 },
-    controlBorder = { 0.28, 0.28, 0.31, 1 },
-    menuBg        = { 0.06, 0.06, 0.07, 0.98 },
-    tileBg        = { 0.10, 0.10, 0.11, 1 },
+    windowBg      = { 1, 1, 1, 1 },             -- dialog texture at its natural colour
+    windowBorder  = { 1, 1, 1, 1 },
+    panelBg       = { 0.04, 0.04, 0.04, 0.70 },
+    panelBorder   = { 0.60, 0.56, 0.48, 1 },
+    controlBg     = { 0.10, 0.08, 0.06, 0.95 },
+    controlBorder = { 0.55, 0.50, 0.40, 1 },
+    menuBg        = { 0.02, 0.02, 0.02, 0.95 },
+    menuBorder    = { 0.85, 0.75, 0.45, 1 },
     accent        = { 1.00, 0.82, 0.00, 1 },
 }
+
+local BACKDROPS = {
+    dialog = {
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 },
+    },
+    panel = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    },
+    control = {
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 },
+    },
+}
+
+local HIGHLIGHT_TEX = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
+local BAR_TEX       = "Interface\\TargetingFrame\\UI-StatusBar"
 
 local GOLD  = "|cFFFFD200"
 local GREY  = "|cFF8A8A8A"
@@ -128,48 +152,35 @@ local function Sym(str, size)
     return str
 end
 
-local function SetBg(f, r, g, b, a)
-    if not f.tts_bg then
-        f.tts_bg = f:CreateTexture(nil, "BACKGROUND")
-        f.tts_bg:SetAllPoints(f)
+-- Gives any frame SetBackdrop (built in on old clients, a mixin on newer ones)
+local function EnsureBackdrop(f)
+    if f.SetBackdrop then return true end
+    if BackdropTemplateMixin and Mixin then
+        Mixin(f, BackdropTemplateMixin)
+        if f.OnBackdropSizeChanged then
+            f:HookScript("OnSizeChanged", f.OnBackdropSizeChanged)
+        end
     end
-    f.tts_bg:SetColorTexture(r, g, b, a or 1)
+    return f.SetBackdrop ~= nil
+end
+
+local function SetBg(f, r, g, b, a)
+    if f.SetBackdropColor then f:SetBackdropColor(r, g, b, a or 1) end
 end
 
 local function SetBorder(f, r, g, b, a)
-    local e = f.tts_edges
-    if not e then
-        e = {}
-        e[1] = f:CreateTexture(nil, "BORDER"); e[1]:SetPoint("TOPLEFT"); e[1]:SetPoint("TOPRIGHT"); e[1]:SetHeight(1)
-        e[2] = f:CreateTexture(nil, "BORDER"); e[2]:SetPoint("BOTTOMLEFT"); e[2]:SetPoint("BOTTOMRIGHT"); e[2]:SetHeight(1)
-        e[3] = f:CreateTexture(nil, "BORDER"); e[3]:SetPoint("TOPLEFT"); e[3]:SetPoint("BOTTOMLEFT"); e[3]:SetWidth(1)
-        e[4] = f:CreateTexture(nil, "BORDER"); e[4]:SetPoint("TOPRIGHT"); e[4]:SetPoint("BOTTOMRIGHT"); e[4]:SetWidth(1)
-        f.tts_edges = e
-    end
-    for i = 1, 4 do e[i]:SetColorTexture(r, g, b, a or 1) end
+    if f.SetBackdropBorderColor then f:SetBackdropBorderColor(r, g, b, a or 1) end
 end
 
-local function Skin(f, bg, border)
+-- kind: "dialog", "panel" (default) or "control"
+local function Skin(f, bg, border, kind)
+    if not EnsureBackdrop(f) then return end
+    f:SetBackdrop(BACKDROPS[kind or "panel"])
     SetBg(f, bg[1], bg[2], bg[3], bg[4])
     SetBorder(f, border[1], border[2], border[3], border[4])
 end
 
-local function CreateFlatButton(parent, w, h, text)
-    local b = CreateFrame("Button", nil, parent)
-    b:SetSize(w, h)
-    Skin(b, STYLE.controlBg, STYLE.controlBorder)
-
-    local hl = b:CreateTexture(nil, "HIGHLIGHT")
-    hl:SetPoint("TOPLEFT", 1, -1)
-    hl:SetPoint("BOTTOMRIGHT", -1, 1)
-    hl:SetColorTexture(1, 1, 1, 0.07)
-
-    b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    b.label:SetPoint("LEFT", 6, 0)
-    b.label:SetPoint("RIGHT", -6, 0)
-    b.label:SetWordWrap(false)
-    b.label:SetText(text or "")
-
+local function AddTooltipScripts(b)
     b:SetScript("OnEnter", function(self)
         if self.tooltipTitle then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -179,6 +190,40 @@ local function CreateFlatButton(parent, w, h, text)
         end
     end)
     b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+-- Tooltip-bordered control (dropdowns, toggles)
+local function CreateFlatButton(parent, w, h, text)
+    local b = CreateFrame("Button", nil, parent)
+    b:SetSize(w, h)
+    Skin(b, STYLE.controlBg, STYLE.controlBorder, "control")
+
+    local hl = b:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetPoint("TOPLEFT", 3, -3)
+    hl:SetPoint("BOTTOMRIGHT", -3, 3)
+    hl:SetTexture(HIGHLIGHT_TEX)
+    hl:SetBlendMode("ADD")
+
+    b.label = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    b.label:SetPoint("LEFT", 6, 0)
+    b.label:SetPoint("RIGHT", -6, 0)
+    b.label:SetWordWrap(false)
+    b.label:SetText(text or "")
+
+    AddTooltipScripts(b)
+    return b
+end
+
+-- Classic red panel button (actions and deck tabs)
+local function CreatePanelButton(parent, w, h, text)
+    local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+    b:SetSize(w, h)
+    b:SetNormalFontObject("GameFontNormalSmall")
+    b:SetHighlightFontObject("GameFontHighlightSmall")
+    b:SetDisabledFontObject("GameFontDisableSmall")
+    b:SetText(text or "")
+    b.label = b:GetFontString()
+    AddTooltipScripts(b)
     return b
 end
 
@@ -188,7 +233,7 @@ local function SetButtonEnabled(b, enabled)
         b.label:SetAlpha(1)
     else
         b:Disable()
-        b.label:SetAlpha(0.3)
+        b.label:SetAlpha(0.5)
     end
 end
 
@@ -222,7 +267,7 @@ TTS.DeckBuilderFrame = D
 D:SetSize(WIN_W, WIN_H)
 D:SetPoint("CENTER")
 D:SetClampedToScreen(true)
-Skin(D, STYLE.windowBg, STYLE.windowBorder)
+Skin(D, STYLE.windowBg, STYLE.windowBorder, "dialog")
 D:EnableMouse(true)
 D:SetMovable(true)
 D:RegisterForDrag("LeftButton")
@@ -231,24 +276,21 @@ D:SetScript("OnDragStop", D.StopMovingOrSizing)
 D:Hide()
 
 local titleBar = D:CreateTexture(nil, "ARTWORK")
-titleBar:SetPoint("TOPLEFT", 1, -1)
-titleBar:SetPoint("TOPRIGHT", -1, -1)
-titleBar:SetHeight(36)
-titleBar:SetColorTexture(STYLE.titleBg[1], STYLE.titleBg[2], STYLE.titleBg[3], 1)
+-- Darkened strip inside the dialog border; its bottom edge stays where it was
+titleBar:SetPoint("TOPLEFT", 12, -12)
+titleBar:SetPoint("TOPRIGHT", -12, -12)
+titleBar:SetHeight(25)
+titleBar:SetColorTexture(0, 0, 0, 0.35)
 
 local titleLine = D:CreateTexture(nil, "ARTWORK")
 titleLine:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
 titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
-titleLine:SetColorTexture(1, 0.82, 0, 0.35)
+titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
 title:SetText("Deckbuilder")
-
-local subtitle = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-subtitle:SetPoint("LEFT", title, "RIGHT", 10, -1)
-subtitle:SetText("Tragic: The Saddening Engine")
 
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -2, -2)
@@ -292,6 +334,8 @@ scaleGrip:SetScript("OnMouseDown", function(self, button)
 end)
 scaleGrip:SetScript("OnMouseUp", function(self)
     self:SetScript("OnUpdate", nil)
+    -- Cards that got too small (or big enough) for printed rules text
+    if D.RefreshCardText then D:RefreshCardText() end
 end)
 scaleGrip:SetScript("OnHide", function(self)
     self:SetScript("OnUpdate", nil)
@@ -583,8 +627,8 @@ end
 -- =========================================================================
 local previewCard = nil
 
-local function BuildStandaloneCardPreview(parent, sizeX, sizeY)
-    local f = CreateFrame("Frame", "TTS_DeckBuilder_PreviewCard", parent)
+local function BuildStandaloneCardPreview(parent, sizeX, sizeY, name)
+    local f = CreateFrame("Frame", name, parent)
     f:SetSize(sizeX, sizeY)
     f:SetFrameStrata("DIALOG")
     f:SetFrameLevel((parent:GetFrameLevel() or 10) + 10)
@@ -641,14 +685,110 @@ end
 
 local PREVIEW_W, PREVIEW_H = 150, 212
 
+-- A card in Board.lua's design (or the identical standalone copy if Board.lua isn't loaded)
+local function CreateCardDesign(parent, w, h, name)
+    if TTS.CreateCardFrame then
+        return TTS.CreateCardFrame(parent, w, h)
+    end
+    return BuildStandaloneCardPreview(parent, w, h, name)
+end
+
+-- Fills a card frame with a card's art, frame, name, cost and stats
+local function PaintCardFrame(f, card, costSize)
+    if TTS.SetupCardVisual then
+        TTS.SetupCardVisual(f, card)
+    else
+        if card.displayId and f.model then
+            f.art:Hide()
+            f.model:Show()
+            f.model:ClearModel()
+            f.model:SetDisplayInfo(card.displayId)
+        else
+            if f.model then f.model:Hide() end
+            f.art:Show()
+            f.art:SetTexture(card.art or QUESTION_ICON)
+        end
+    end
+
+    if TTS.ApplyFrameTexture then
+        TTS.ApplyFrameTexture(f.border, card)
+    else
+        f.border:SetTexture("Interface\\Tooltips\\UI-Tooltip-Border")
+    end
+
+    f.title:SetText(card.name or "")
+
+    if card.cost and card.cost ~= "" then
+        f.cost:SetText(Sym(card.cost, costSize))
+        f.cost:Show()
+    else
+        f.cost:Hide()
+    end
+
+    if card.type == "Creature" and card.power and card.toughness then
+        f.pt:SetText(string.format("|cFFFFD200%s/%s|r", tostring(card.power), tostring(card.toughness)))
+        f.pt:Show()
+    else
+        f.pt:Hide()
+    end
+end
+
+-- Rules text printed on the card, matching Board.lua's UpdateCardRules: same
+-- text box, font range and P/T placement. Board.lua keeps that function local,
+-- so its numbers are mirrored here.
+local TEXT_BOX = {
+    left         = 0.09,
+    right        = 0.09,
+    top          = 0.57,
+    bottom       = 0.07,
+    bottomWithPT = 0.20,
+}
+local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
+local RULES_FONT_MIN = 6
+-- Cards narrower than this on screen (pixels, Deckbuilder scale included) show
+-- no printed text: their rules are in the tooltip only
+local CARD_TEXT_MIN_WIDTH = 72
+
+-- Call after the card is shown (fitting needs the text laid out)
+local function PrintCardRules(f, card)
+    if not f.rules or not f.pt then return end
+    local hasPT = f.pt:IsShown()
+    local w, h = f:GetSize()
+    local onScreen = w * (D:GetScale() or 1)
+
+    f.pt:ClearAllPoints()
+    if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
+        -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
+        if f.rulesCard ~= card or f.rulesPT ~= hasPT then
+            f.rulesCard, f.rulesPT = card, hasPT
+            f.rules:ClearAllPoints()
+            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1, -h * TEXT_BOX.top - 1)
+            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right,
+                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom))
+            f.rules:SetJustifyH("LEFT")
+            local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
+            for size = RULES_FONT_MAX, RULES_FONT_MIN, -1 do
+                f.rules:SetFont(fontPath, size, "")
+                f.rules:SetText(Sym(card.text, size + 2))
+                if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
+            end
+            -- Short text that fits on one line is centred
+            if f.rules.GetNumLines and f.rules:GetNumLines() <= 1 then
+                f.rules:SetJustifyH("CENTER")
+            end
+        end
+        f.rules:Show()
+        f.pt:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * 0.08, h * 0.05)
+    else
+        f.rules:Hide()
+        f.pt:SetPoint("BOTTOM", f.overlay, "BOTTOM", 0, f.ptOffsetY or math.floor(h * 0.18))
+    end
+end
+
 local function EnsurePreviewFrame()
     if previewCard then return previewCard end
 
-    if TTS.CreateCardFrame then
-        previewCard = TTS.CreateCardFrame(D, PREVIEW_W, PREVIEW_H)
-    else
-        previewCard = BuildStandaloneCardPreview(D, PREVIEW_W, PREVIEW_H)
-    end
+    previewCard = CreateCardDesign(D, PREVIEW_W, PREVIEW_H, "TTS_DeckBuilder_PreviewCard")
 
     previewCard:SetSize(PREVIEW_W, PREVIEW_H)
     previewCard:SetFrameStrata("DIALOG")
@@ -676,44 +816,10 @@ local function UpdateCardPreview(cardId)
     f:ClearAllPoints()
     f:SetPoint("TOPRIGHT", D, "TOPLEFT", -12, PANEL_TOP - 30)
 
-    if TTS.SetupCardVisual then
-        TTS.SetupCardVisual(f, card)
-    else
-        if card.displayId and f.model then
-            f.art:Hide()
-            f.model:Show()
-            f.model:ClearModel()
-            f.model:SetDisplayInfo(card.displayId)
-        else
-            if f.model then f.model:Hide() end
-            f.art:Show()
-            f.art:SetTexture(card.art or QUESTION_ICON)
-        end
-    end
-
-    if TTS.ApplyFrameTexture then
-        TTS.ApplyFrameTexture(f.border, card)
-    else
-        f.border:SetTexture("Interface\\Tooltips\\UI-Tooltip-Border")
-    end
-
-    f.title:SetText(card.name or "")
-
-    if card.cost and card.cost ~= "" then
-        f.cost:SetText(Sym(card.cost, 18))
-        f.cost:Show()
-    else
-        f.cost:Hide()
-    end
-
-    if card.type == "Creature" and card.power and card.toughness then
-        f.pt:SetText(string.format("|cFFFFD200%s/%s|r", tostring(card.power), tostring(card.toughness)))
-        f.pt:Show()
-    else
-        f.pt:Hide()
-    end
+    PaintCardFrame(f, card, 18)
 
     f:Show()
+    PrintCardRules(f, card)
     return f
 end
 
@@ -840,7 +946,7 @@ local function CreateDropdown(parent, width, allText, cfg)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetFrameLevel(10)
         menu:EnableMouse(true)
-        Skin(menu, STYLE.menuBg, STYLE.windowBorder)
+        Skin(menu, STYLE.menuBg, STYLE.menuBorder)
         menu:SetPoint("TOPLEFT", dd, "BOTTOMLEFT", 0, -2)
 
         local entries = cfg.noAll and {} or { false }  -- false = "All"
@@ -858,7 +964,8 @@ local function CreateDropdown(parent, width, allText, cfg)
 
             local hl = row:CreateTexture(nil, "HIGHLIGHT")
             hl:SetAllPoints(row)
-            hl:SetColorTexture(1, 1, 1, 0.08)
+            hl:SetTexture(HIGHLIGHT_TEX)
+            hl:SetBlendMode("ADD")
 
             row.check = row:CreateTexture(nil, "OVERLAY")
             row.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
@@ -941,7 +1048,7 @@ end
 local searchBox = CreateFrame("EditBox", nil, poolPanel)
 searchBox:SetSize(170, 24)
 searchBox:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -10)
-Skin(searchBox, STYLE.controlBg, STYLE.controlBorder)
+Skin(searchBox, STYLE.controlBg, STYLE.controlBorder, "control")
 searchBox:SetFontObject(ChatFontNormal)
 searchBox:SetAutoFocus(false)
 searchBox:SetMaxLetters(40)
@@ -1084,7 +1191,7 @@ sortDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 478, -42)
 sortDD.tooltipTitle = "Sort order"
 sortDD.tooltipText = "Groups cards by the chosen field, then by mana cost and name. Applies to the pool and the deck list."
 
-local resetFiltersBtn = CreateFlatButton(poolPanel, 72, 24, "Reset")
+local resetFiltersBtn = CreatePanelButton(poolPanel, 72, 24, "Reset")
 resetFiltersBtn:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 602, -42)
 resetFiltersBtn.tooltipTitle = "Reset Filters"
 resetFiltersBtn.tooltipText = "Clear the search and every filter."
@@ -1133,125 +1240,101 @@ end
 gridFrame:EnableMouseWheel(true)
 gridFrame:SetScript("OnMouseWheel", function(_, delta) ChangePoolPage(-delta) end)
 
-local function TileSubline(card)
-    local g = GetTypeGroup(card)
-    if g == "Prayer" then return "Prayer" end
-    if g == "Spell" then
-        return card.class and ClassColored(card.class) or (card.type or "Spell")
-    end
-    -- Show whatever the creatures are currently grouped by
-    if sortMode == "ZONE" and card.zone then return card.zone end
-    if sortMode == "FACTION" and card.faction then return card.faction end
-    return card.creatureType or card.zone or "Creature"
-end
-
 local tiles = {}
 
+-- Each grid slot shows the card in Board.lua's design, with its name and cost
+-- above it (as on the board) and the copy pips below.
+local CARD_W, CARD_H = 78, 110
+local CARD_TOP = 30          -- room above the card for its cost and name
+
 local function CreateTile(index)
-    local t = CreateFrame("Button", nil, gridFrame)
+    local t = CreateFrame("Frame", nil, gridFrame)
     t:SetSize(TILE_W, TILE_H)
     local col = (index - 1) % GRID_COLS
     local row = math.floor((index - 1) / GRID_COLS)
     t:SetPoint("TOPLEFT", gridFrame, "TOPLEFT", col * (TILE_W + TILE_GAP_X), -row * (TILE_H + TILE_GAP_Y))
-    t.hint = "Click to add to deck"
 
-    SetBg(t, STYLE.tileBg[1], STYLE.tileBg[2], STYLE.tileBg[3], 1)
-    SetBorder(t, NEUTRAL_RGB[1], NEUTRAL_RGB[2], NEUTRAL_RGB[3], 0.8)
+    local card = CreateCardDesign(t, CARD_W, CARD_H, nil)
+    card:SetSize(CARD_W, CARD_H)
+    card:ClearAllPoints()
+    card:SetPoint("TOP", t, "TOP", 0, -CARD_TOP)
+    card:SetFrameStrata(D:GetFrameStrata())
+    card:EnableMouse(false)
+    if card.model then card.model:EnableMouse(false) end
+    if card.overlay then card.overlay:EnableMouse(false) end
+    if card.title then card.title:SetWordWrap(false) end
+    card:Show()
+    t.card = card
 
-    -- Info area tint (below the art), coloured by sphere
-    t.infoBg = t:CreateTexture(nil, "BACKGROUND", nil, 1)
-    t.infoBg:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 1, 57)
-    t.infoBg:SetPoint("BOTTOMRIGHT", t, "BOTTOMRIGHT", -1, 1)
-
-    t.art = t:CreateTexture(nil, "ARTWORK")
-    t.art:SetPoint("TOPLEFT", t, "TOPLEFT", 4, -4)
-    t.art:SetPoint("BOTTOMRIGHT", t, "BOTTOMRIGHT", -4, 58)
-    t.art:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-    t.model = CreateFrame("PlayerModel", nil, t)
-    t.model:SetPoint("TOPLEFT", t, "TOPLEFT", 4, -4)
-    t.model:SetPoint("BOTTOMRIGHT", t, "BOTTOMRIGHT", -4, 58)
-    t.model:EnableMouse(false)
-    t.model:Hide()
-
-    -- Everything drawn over the art lives on a frame above the model
-    local over = CreateFrame("Frame", nil, t)
-    over:SetAllPoints(t)
-    over:SetFrameLevel(t.model:GetFrameLevel() + 2)
-    over:EnableMouse(false)
-    t.over = over
-
-    t.costBg = over:CreateTexture(nil, "BACKGROUND")
-    t.costBg:SetColorTexture(0, 0, 0, 0.75)
-    t.cost = over:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    t.cost:SetPoint("TOPRIGHT", t, "TOPRIGHT", -7, -7)
-    t.costBg:SetPoint("TOPLEFT", t.cost, "TOPLEFT", -3, 3)
-    t.costBg:SetPoint("BOTTOMRIGHT", t.cost, "BOTTOMRIGHT", 3, -3)
-
-    t.ptBg = over:CreateTexture(nil, "BACKGROUND")
-    t.ptBg:SetColorTexture(0, 0, 0, 0.75)
-    t.pt = over:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    t.pt:SetPoint("BOTTOMRIGHT", t, "BOTTOMRIGHT", -7, 62)
-    t.ptBg:SetPoint("TOPLEFT", t.pt, "TOPLEFT", -3, 2)
-    t.ptBg:SetPoint("BOTTOMRIGHT", t.pt, "BOTTOMRIGHT", 3, -2)
-
-    t.name = over:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    t.name:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 6, 52)
-    t.name:SetPoint("TOPRIGHT", t, "BOTTOMRIGHT", -6, 52)
-    t.name:SetJustifyH("LEFT")
-    t.name:SetWordWrap(false)
-
-    t.sub = over:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    t.sub:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 6, 37)
-    t.sub:SetPoint("TOPRIGHT", t, "BOTTOMRIGHT", -6, 37)
-    t.sub:SetJustifyH("LEFT")
-    t.sub:SetWordWrap(false)
-
-    -- Copy pips: gold = in deck, grey = available, dark = not yet collected
-    t.pips = {}
-    for p = 1, 4 do
-        local pip = over:CreateTexture(nil, "OVERLAY")
-        pip:SetSize(16, 5)
-        pip:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", 6 + (p - 1) * 19, 9)
-        t.pips[p] = pip
-    end
-    t.copyText = over:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    t.copyText:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", 6, 6)
+    -- Click target above the card (so the card frame's own mouse handling never interferes)
+    local hit = CreateFrame("Button", nil, t)
+    hit:SetAllPoints(t)
+    hit:SetFrameLevel(card:GetFrameLevel() + 30)
+    hit.hint = "Left-click to add to deck\nRight-click to remove from deck"
+    t.hit = hit
 
     -- Dimmed when the card can't be added right now
-    t.dim = over:CreateTexture(nil, "ARTWORK")
-    t.dim:SetPoint("TOPLEFT", 1, -1)
-    t.dim:SetPoint("BOTTOMRIGHT", -1, 1)
+    t.dim = hit:CreateTexture(nil, "ARTWORK")
+    t.dim:SetAllPoints(card)
     t.dim:SetColorTexture(0, 0, 0, 0.55)
     t.dim:Hide()
 
-    t.hover = over:CreateTexture(nil, "OVERLAY", nil, 2)
-    t.hover:SetPoint("TOPLEFT", 1, -1)
-    t.hover:SetPoint("BOTTOMRIGHT", -1, 1)
-    t.hover:SetColorTexture(1, 1, 1, 0.08)
+    t.hover = hit:CreateTexture(nil, "OVERLAY")
+    t.hover:SetAllPoints(card)
+    t.hover:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+    t.hover:SetBlendMode("ADD")
     t.hover:Hide()
 
-    t:RegisterForClicks("LeftButtonUp")
-    t:SetScript("OnClick", function(self)
-        if self.cardId then D:AddCardToDeck(self.cardId) end
+    -- Copy pips: gold = in deck, grey = available, dark = not yet collected
+    t.pips = {}
+    local pipsW = 4 * 16 + 3 * 3
+    for p = 1, 4 do
+        local pip = hit:CreateTexture(nil, "OVERLAY")
+        pip:SetSize(16, 5)
+        pip:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", math.floor((TILE_W - pipsW) / 2) + (p - 1) * 19, 4)
+        t.pips[p] = pip
+    end
+    t.copyText = hit:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    t.copyText:SetPoint("BOTTOM", t, "BOTTOM", 0, 1)
+
+    hit:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    hit:SetScript("OnClick", function(self, button)
+        if not self.cardId then return end
+        if button == "RightButton" then
+            D:RemoveCardFromDeck(self.cardId)
+        else
+            D:AddCardToDeck(self.cardId)
+        end
     end)
-    t:SetScript("OnEnter", function(self)
-        self.hover:Show()
+    hit:SetScript("OnEnter", function(self)
+        t.hover:Show()
         CardTooltip_OnEnter(self)
     end)
-    t:SetScript("OnLeave", function(self)
-        self.hover:Hide()
+    hit:SetScript("OnLeave", function()
+        t.hover:Hide()
         CardTooltip_OnLeave()
     end)
-    t:EnableMouseWheel(true)
-    t:SetScript("OnMouseWheel", function(_, delta) ChangePoolPage(-delta) end)
+    hit:EnableMouseWheel(true)
+    hit:SetScript("OnMouseWheel", function(_, delta) ChangePoolPage(-delta) end)
 
     t:Hide()
     return t
 end
 
-for i = 1, TILES_PER_PAGE do
-    tiles[i] = CreateTile(i)
+-- Built on first use: Board.lua's card frame doesn't exist yet when this file loads
+local function EnsureTiles()
+    if #tiles > 0 then return end
+    for i = 1, TILES_PER_PAGE do
+        tiles[i] = CreateTile(i)
+    end
+end
+
+function D:RefreshCardText()
+    for _, t in ipairs(tiles) do
+        if t:IsShown() and t.cardId and TTS.Cards and TTS.Cards[t.cardId] then
+            PrintCardRules(t.card, TTS.Cards[t.cardId])
+        end
+    end
 end
 
 local function UpdateTileState(t, deck)
@@ -1285,47 +1368,13 @@ end
 
 local function UpdateTile(t, id, card, deck)
     t.cardId = id
-
-    local rgb = SPHERE_RGB[card.color] or NEUTRAL_RGB
-    SetBorder(t, rgb[1], rgb[2], rgb[3], 0.85)
-    t.infoBg:SetColorTexture(rgb[1], rgb[2], rgb[3], 0.10)
-
-    if card.displayId then
-        t.art:Hide()
-        t.model:Show()
-        if t.modelId ~= card.displayId then
-            t.model:ClearModel()
-            t.model:SetDisplayInfo(card.displayId)
-            t.modelId = card.displayId
-        end
-    else
-        t.model:Hide()
-        t.modelId = nil
-        t.art:SetTexture(card.art or QUESTION_ICON)
-        t.art:Show()
+    t.hit.cardId = id
+    -- Repainting resets creature models, so only do it when the card changes
+    if t.paintedId ~= id then
+        PaintCardFrame(t.card, card, 12)
+        t.paintedId = id
     end
-
-    if card.cost and card.cost ~= "" then
-        t.cost:SetText(Sym(card.cost, 12))
-        t.cost:Show()
-        t.costBg:Show()
-    else
-        t.cost:Hide()
-        t.costBg:Hide()
-    end
-
-    if card.type == "Creature" and card.power and card.toughness then
-        t.pt:SetText(string.format("%s/%s", tostring(card.power), tostring(card.toughness)))
-        t.pt:Show()
-        t.ptBg:Show()
-    else
-        t.pt:Hide()
-        t.ptBg:Hide()
-    end
-
-    t.name:SetText(card.name or id)
-    t.sub:SetText(TileSubline(card))
-
+    PrintCardRules(t.card, card)
     UpdateTileState(t, deck)
 end
 
@@ -1333,7 +1382,7 @@ end
 local poolCountText = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 poolCountText:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 12, -568)
 
-local nextBtn = CreateFlatButton(poolPanel, 28, 24, ">")
+local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
 nextBtn.label:SetJustifyH("CENTER")
 nextBtn:SetScript("OnClick", function() ChangePoolPage(1) end)
@@ -1343,7 +1392,7 @@ pageText:SetPoint("RIGHT", nextBtn, "LEFT", -8, 0)
 pageText:SetWidth(84)
 pageText:SetJustifyH("CENTER")
 
-local prevBtn = CreateFlatButton(poolPanel, 28, 24, "<")
+local prevBtn = CreatePanelButton(poolPanel, 28, 24, "<")
 prevBtn:SetPoint("RIGHT", pageText, "LEFT", -8, 0)
 prevBtn.label:SetJustifyH("CENTER")
 prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
@@ -1386,15 +1435,11 @@ local function UpdateDeckTabs()
         local name = (deck and deck.name) or DefaultDeckName(i)
         tab.countText:SetText(count)
         if i == TTS_ActiveDeckIndex then
-            SetBg(tab, 0.20, 0.16, 0.04, 1)
-            SetBorder(tab, STYLE.accent[1], STYLE.accent[2], STYLE.accent[3], 0.9)
+            tab:LockHighlight()
             tab.label:SetText(GOLD .. name .. "|r")
-            tab.activeBar:Show()
         else
-            SetBg(tab, STYLE.controlBg[1], STYLE.controlBg[2], STYLE.controlBg[3], 1)
-            SetBorder(tab, STYLE.controlBorder[1], STYLE.controlBorder[2], STYLE.controlBorder[3], 1)
+            tab:UnlockHighlight()
             tab.label:SetText("|cFFBBBBBB" .. name .. "|r")
-            tab.activeBar:Hide()
         end
     end
 end
@@ -1445,22 +1490,18 @@ StaticPopupDialogs["TTS_RENAME_DECK"] = {
 local TAB_W = math.floor((LIST_W - (TTS.MAX_DECK_SLOTS - 1) * 7) / TTS.MAX_DECK_SLOTS)
 
 for i = 1, TTS.MAX_DECK_SLOTS do
-    local tab = CreateFlatButton(deckPanel, TAB_W, 26, "")
+    local tab = CreatePanelButton(deckPanel, TAB_W, 26, "")
     tab:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10 + (i - 1) * (TAB_W + 7), -10)
 
     tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     tab.countText:SetPoint("RIGHT", -7, 0)
 
-    tab.label:ClearAllPoints()
-    tab.label:SetPoint("LEFT", 8, 0)
+    -- Own name text: the button template re-anchors its built-in text when pressed
+    tab.label = tab:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    tab.label:SetPoint("LEFT", 9, 0)
     tab.label:SetPoint("RIGHT", tab.countText, "LEFT", -4, 0)
     tab.label:SetJustifyH("LEFT")
-
-    tab.activeBar = tab:CreateTexture(nil, "OVERLAY")
-    tab.activeBar:SetPoint("BOTTOMLEFT", 1, 1)
-    tab.activeBar:SetPoint("BOTTOMRIGHT", -1, 1)
-    tab.activeBar:SetHeight(2)
-    tab.activeBar:SetColorTexture(1, 0.82, 0, 1)
+    tab.label:SetWordWrap(false)
 
     tab.tooltipTitle = "Deck slot " .. i
     tab.tooltipText = "Left-click to switch to this deck.\nRight-click to rename it."
@@ -1493,7 +1534,7 @@ countLabel:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 12, -48)
 local statusHint = deckPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 statusHint:SetPoint("LEFT", countLabel, "RIGHT", 8, -1)
 
-local clearBtn = CreateFlatButton(deckPanel, 84, 22, "Clear Deck")
+local clearBtn = CreatePanelButton(deckPanel, 84, 22, "Clear Deck")
 clearBtn:SetPoint("TOPRIGHT", deckPanel, "TOPRIGHT", -10, -43)
 clearBtn.label:SetJustifyH("CENTER")
 clearBtn:SetScript("OnClick", function()
@@ -1504,7 +1545,7 @@ local listDivider = deckPanel:CreateTexture(nil, "ARTWORK")
 listDivider:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10, -70)
 listDivider:SetPoint("TOPRIGHT", deckPanel, "TOPRIGHT", -10, -70)
 listDivider:SetHeight(1)
-listDivider:SetColorTexture(1, 1, 1, 0.08)
+listDivider:SetColorTexture(1, 0.82, 0, 0.25)
 
 -- =========================================================================
 -- DECK LIST
@@ -1532,7 +1573,8 @@ local function GetDeckRow(i)
 
     r.rowHl = r:CreateTexture(nil, "HIGHLIGHT")
     r.rowHl:SetAllPoints(r)
-    r.rowHl:SetColorTexture(1, 1, 1, 0.08)
+    r.rowHl:SetTexture(HIGHLIGHT_TEX)
+    r.rowHl:SetBlendMode("ADD")
 
     r.stripe = r:CreateTexture(nil, "ARTWORK")
     r.stripe:SetPoint("TOPLEFT", 0, -1)
@@ -1634,13 +1676,13 @@ end
 local statsFrame = CreateFrame("Frame", "TTS_DeckStatsFrame", deckPanel)
 statsFrame:SetPoint("BOTTOMLEFT", deckPanel, "BOTTOMLEFT", 10, 10)
 statsFrame:SetSize(LIST_W, 118)
-Skin(statsFrame, { 0.06, 0.06, 0.07, 0.9 }, STYLE.panelBorder)
+Skin(statsFrame, { 0.02, 0.02, 0.02, 0.6 }, STYLE.panelBorder)
 
 local statsDivider = statsFrame:CreateTexture(nil, "ARTWORK")
 statsDivider:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 200, -8)
 statsDivider:SetPoint("BOTTOMLEFT", statsFrame, "BOTTOMLEFT", 200, 24)
 statsDivider:SetWidth(1)
-statsDivider:SetColorTexture(1, 1, 1, 0.08)
+statsDivider:SetColorTexture(1, 0.82, 0, 0.25)
 
 local deckSummary = statsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 deckSummary:SetPoint("BOTTOMLEFT", statsFrame, "BOTTOMLEFT", 10, 7)
@@ -1673,12 +1715,13 @@ for m = 0, CURVE_COLUMNS - 1 do
     local x = 10 + m * (CURVE_BAR_W + CURVE_BAR_GAP)
 
     local track = curveFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    track:SetColorTexture(1, 1, 1, 0.04)
+    track:SetColorTexture(0, 0, 0, 0.35)
     track:SetSize(CURVE_BAR_W, BAR_MAX_H)
     track:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
 
     local bar = curveFrame:CreateTexture(nil, "ARTWORK")
-    bar:SetColorTexture(0.30, 0.60, 1.00, 0.90)
+    bar:SetTexture(BAR_TEX)
+    bar:SetVertexColor(0.30, 0.60, 1.00, 0.95)
     bar:SetSize(CURVE_BAR_W, 1)
     bar:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
     curveBars[m] = bar
@@ -1760,12 +1803,13 @@ for i, col in ipairs(SPHERE_ORDER) do
     local rgb = SPHERE_RGB[col]
 
     local track = colorFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    track:SetColorTexture(1, 1, 1, 0.04)
+    track:SetColorTexture(0, 0, 0, 0.35)
     track:SetSize(COLOR_BAR_W, BAR_MAX_H)
     track:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
 
     local bar = colorFrame:CreateTexture(nil, "ARTWORK")
-    bar:SetColorTexture(rgb[1], rgb[2], rgb[3], 0.90)
+    bar:SetTexture(BAR_TEX)
+    bar:SetVertexColor(rgb[1], rgb[2], rgb[3], 0.95)
     bar:SetSize(COLOR_BAR_W, 1)
     bar:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
     colorBars[col] = bar
@@ -1842,16 +1886,18 @@ function D:RefreshPool()
     if poolPage > pages then poolPage = pages end
     if poolPage < 1 then poolPage = 1 end
 
+    EnsureTiles()
     local deck = GetActiveDeck()
     for i = 1, TILES_PER_PAGE do
         local t = tiles[i]
         local id = cardPoolKeys[(poolPage - 1) * TILES_PER_PAGE + i]
         if id then
-            UpdateTile(t, id, TTS.Cards[id], deck)
             t:Show()
+            UpdateTile(t, id, TTS.Cards[id], deck)
         else
             t.cardId = nil
-            t.modelId = nil
+            t.hit.cardId = nil
+            t.paintedId = nil
             t:Hide()
         end
     end
@@ -2118,7 +2164,7 @@ D:SetScript("OnHide", function()
     searchBox:ClearFocus()
     StaticPopup_Hide("TTS_RENAME_DECK")
     -- Models may not survive the window being hidden, so force a reload next time
-    for _, t in ipairs(tiles) do t.modelId = nil end
+    for _, t in ipairs(tiles) do t.paintedId = nil end
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end

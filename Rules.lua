@@ -16,11 +16,12 @@ R:SetSize(620, 640)
 R:SetPoint("CENTER")
 R:SetFrameStrata("DIALOG")
 R:SetToplevel(true)
+-- Same look as the Deckbuilder: dialog window, dark title strip, tooltip-bordered panel
 R:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
     tile = true, tileSize = 32, edgeSize = 32,
-    insets = { left = 8, right = 8, top = 8, bottom = 8 }
+    insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
 R:EnableMouse(true)
 R:SetMovable(true)
@@ -67,23 +68,53 @@ local function FormatTextWithSymbols(str, size)
     end)
 end
 
--- Header
-local title = R:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-title:SetPoint("TOP", 0, -16)
-title:SetText("Forever: CCG — Rules & Guide")
+-- Header: darkened strip with a gold line, title on the left
+local titleBar = R:CreateTexture(nil, "ARTWORK")
+titleBar:SetPoint("TOPLEFT", 12, -12)
+titleBar:SetPoint("TOPRIGHT", -12, -12)
+titleBar:SetHeight(25)
+titleBar:SetColorTexture(0, 0, 0, 0.35)
+
+local titleLine = R:CreateTexture(nil, "ARTWORK")
+titleLine:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
+titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
+titleLine:SetHeight(1)
+titleLine:SetColorTexture(1, 0.82, 0, 0.55)
+
+local title = R:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", 16, -11)
+title:SetText("Rules & Guide")
+
+local subtitle = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+subtitle:SetPoint("LEFT", title, "RIGHT", 10, -1)
+subtitle:SetText("Forever: CCG")
 
 -- Close Button
 local closeBtn = CreateFrame("Button", nil, R, "UIPanelCloseButton")
-closeBtn:SetPoint("TOPRIGHT", -5, -5)
+closeBtn:SetPoint("TOPRIGHT", -2, -2)
 closeBtn:SetScript("OnClick", function() R:Hide() end)
 
+-- Panel holding the scrolling rules
+local rulesPanel = CreateFrame("Frame", nil, R, backdropTemplate)
+rulesPanel:SetPoint("TOPLEFT", 14, -46)
+rulesPanel:SetPoint("BOTTOMRIGHT", -14, 34)
+rulesPanel:SetBackdrop({
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+rulesPanel:SetBackdropColor(0.04, 0.04, 0.04, 0.70)
+rulesPanel:SetBackdropBorderColor(0.60, 0.56, 0.48, 1)
+
 -- Scroll Frame & Content Container
-local scrollFrame = CreateFrame("ScrollFrame", "TTS_RulesScrollFrame", R, "UIPanelScrollFrameTemplate")
-scrollFrame:SetPoint("TOPLEFT", 18, -48)
-scrollFrame:SetPoint("BOTTOMRIGHT", -36, 32)
+local scrollFrame = CreateFrame("ScrollFrame", "TTS_RulesScrollFrame", rulesPanel, "UIPanelScrollFrameTemplate")
+scrollFrame:SetPoint("TOPLEFT", rulesPanel, "TOPLEFT", 6, -8)
+scrollFrame:SetPoint("BOTTOMRIGHT", rulesPanel, "BOTTOMRIGHT", -28, 8)
 
 local content = CreateFrame("Frame", "TTS_RulesContent", scrollFrame)
-content:SetWidth(550)
+local CONTENT_W = 550
+content:SetWidth(CONTENT_W)
 content:SetHeight(100)
 scrollFrame:SetScrollChild(content)
 
@@ -95,6 +126,7 @@ local function SetupRuleCard(f, cardId)
     if not card then return end
 
     f.cardId = cardId
+    f.currentCard = card
 
     -- 1. Setup Artwork or 3D Model exactly like Board.lua
     if TTS.SetupCardVisual then
@@ -151,6 +183,11 @@ local function SetupRuleCard(f, cardId)
     end
 
     f:Show()
+
+    -- 6. Rules text printed on the card, same as on the board
+    if f.rules and TTS.UpdateCardRules then
+        TTS.UpdateCardRules(f)
+    end
 end
 
 local function CreateExampleCard(parent, cardId)
@@ -237,8 +274,17 @@ end
 -- =========================================================================
 -- TEXT ELEMENTS
 -- =========================================================================
-local h1 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-h1:SetText("Overview & Deck Building")
+-- Section heading with a thin gold divider underneath
+local function MakeHeading(text)
+    local h = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    h:SetText(text)
+    h.rule = content:CreateTexture(nil, "ARTWORK")
+    h.rule:SetHeight(1)
+    h.rule:SetColorTexture(1, 0.82, 0, 0.30)
+    return h
+end
+
+local h1 = MakeHeading("Overview & Deck Building")
 
 local p1 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p1:SetWidth(540)
@@ -252,8 +298,7 @@ p1.rawText = "Both players begin at |cFFFFD20020 Life|r. Victory is achieved by 
     "• Max spells per deck: |cFFFFFFFF12 spells|r (all non-Prayer, non-Creature cards count).\n" ..
     "• Creature cards must be |cFFFFD200unlocked|r by defeating them (see |cFFFFD200Unlocking Cards|r below)."
 
-local hU = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-hU:SetText("Unlocking Cards")
+local hU = MakeHeading("Unlocking Cards")
 
 local pU = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pU:SetWidth(540)
@@ -271,8 +316,7 @@ pU.rawText = "You build your collection by playing World of Warcraft. Some cards
     "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
     "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies. Spell unlocks follow the level of the character you are playing.\n\n"
 
-local h2 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-h2:SetText("Spheres of Mana")
+local h2 = MakeHeading("Spheres of Mana")
 
 local p2 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p2:SetWidth(540)
@@ -285,8 +329,7 @@ p2.rawText = "Prayers produce mana when tapped {T}. Colored costs demand their r
     "  {R} |cFFFF4444Fire (Red)|r: Aggression, direct burn, haste, burst damage.\n" ..
     "  {G} |cFF44FF44Nature (Green)|r: Mana ramp, reach blockers, massive behemoths."
 
-local h3 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-h3:SetText("Turn Sequence")
+local h3 = MakeHeading("Turn Sequence")
 
 local p3 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p3:SetWidth(540)
@@ -301,8 +344,7 @@ p3.rawText = "|cFFFFD2001. Untap & Draw:|r All permanents untap (unless frozen),
     "|cFFFFD2004. Main Phase 2:|r Cast remaining spells and play your Prayer if unused.\n" ..
     "|cFFFFD2005. End Turn:|r Floating mana pool empties, temporary buffs expire, and all damage on creatures (both players') is removed."
 
-local h4 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-h4:SetText("Keywords & Mechanics")
+local h4 = MakeHeading("Keywords & Mechanics")
 
 local p4 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p4:SetWidth(540)
@@ -318,8 +360,7 @@ p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the b
     "• |cFFFFD200Vigilance:|r Attacking does not cause the creature to tap.\n" ..
     "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
 
-local h5 = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-h5:SetText("Challenging Players")
+local h5 = MakeHeading("Challenging Players")
 
 local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p5:SetWidth(540)
@@ -337,7 +378,7 @@ p5.rawText = "Both players must be on the |cFFFFD200same version|r of Forever: C
 
 -- Footer is pinned to the bottom of the window (outside the scroll area), like the title at the top
 local footer = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-footer:SetPoint("BOTTOM", R, "BOTTOM", 0, 14)
+footer:SetPoint("BOTTOMRIGHT", R, "BOTTOMRIGHT", -20, 15)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 -- Card Frame containers
@@ -348,6 +389,44 @@ local kwFrames = {}
 -- =========================================================================
 -- DYNAMIC LAYOUT & VISUAL REFRESH
 -- =========================================================================
+local CARD_W, CARD_H  = 72, 102
+local CARD_GAP        = 40  -- space between example cards in a row
+local CARD_HEADROOM   = 32  -- room for the name and cost shown above each card
+local SECTION_GAP     = 22  -- space before the next heading
+
+local function PlaceHeading(h, y)
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
+    y = y - (h:GetStringHeight() + 4)
+    h.rule:ClearAllPoints()
+    h.rule:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
+    h.rule:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, y)
+    return y - 8
+end
+
+local function PlaceParagraph(p, y)
+    p:ClearAllPoints()
+    p:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
+    return y - p:GetStringHeight()
+end
+
+-- A row of example cards, centred across the content width
+local function PlaceCardRow(frames, ids, y)
+    y = y - CARD_HEADROOM
+    local n = #ids
+    local x = (CONTENT_W - (n * CARD_W + (n - 1) * CARD_GAP)) / 2
+    for i, id in ipairs(ids) do
+        if not frames[i] then
+            frames[i] = CreateExampleCard(content, id)
+        else
+            SetupRuleCard(frames[i], id)
+        end
+        frames[i]:ClearAllPoints()
+        frames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", x + (i - 1) * (CARD_W + CARD_GAP), y)
+    end
+    return y - CARD_H
+end
+
 local function LayoutRules()
     p1:SetText(FormatTextWithSymbols(p1.rawText, 16))
     p2:SetText(FormatTextWithSymbols(p2.rawText, 16))
@@ -359,101 +438,31 @@ local function LayoutRules()
     local y = -10
 
     -- Section 1: Overview
-    h1:ClearAllPoints()
-    h1:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (h1:GetStringHeight() + 6)
+    y = PlaceHeading(h1, y)
+    y = PlaceParagraph(p1, y) - SECTION_GAP
 
-    p1:ClearAllPoints()
-    p1:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (p1:GetStringHeight() + 18)
+    -- Section 1b: Unlocking Cards, with a zone creature, a dungeon boss and a class spell
+    y = PlaceHeading(hU, y)
+    y = PlaceParagraph(pU, y)
+    y = PlaceCardRow(unlockFrames, { "WES01", "BOSS01", "WAR01" }, y) - SECTION_GAP
 
-    -- Section 1b: Unlocking Cards
-    hU:ClearAllPoints()
-    hU:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (hU:GetStringHeight() + 6)
-
-    pU:ClearAllPoints()
-    pU:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (pU:GetStringHeight() + 12)
-
-    -- Examples: a zone creature, a dungeon boss, a class spell
-    local unlockCardIds = { "WES01", "BOSS01", "WAR01" }
-    local unlockX = { 112, 238, 364 }
-    for i, id in ipairs(unlockCardIds) do
-        if not unlockFrames[i] then
-            unlockFrames[i] = CreateExampleCard(content, id)
-        else
-            SetupRuleCard(unlockFrames[i], id)
-        end
-        unlockFrames[i]:ClearAllPoints()
-        unlockFrames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", unlockX[i], y)
-    end
-    y = y - (102 + 18)
-
-    -- Section 2: Spheres of Mana
-    h2:ClearAllPoints()
-    h2:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (h2:GetStringHeight() + 6)
-
-    p2:ClearAllPoints()
-    p2:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (p2:GetStringHeight() + 12)
-
-    -- Lazy instantiate Land Cards
-    local landCardIds = { "W01", "U01", "B01", "R01", "G01" }
-    local landX = { 12, 118, 224, 330, 436 }
-    for i, id in ipairs(landCardIds) do
-        if not landFrames[i] then
-            landFrames[i] = CreateExampleCard(content, id)
-        else
-            SetupRuleCard(landFrames[i], id)
-        end
-        landFrames[i]:ClearAllPoints()
-        landFrames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", landX[i], y)
-    end
-    y = y - (102 + 18)
+    -- Section 2: Spheres of Mana, with one Prayer of each sphere
+    y = PlaceHeading(h2, y)
+    y = PlaceParagraph(p2, y)
+    y = PlaceCardRow(landFrames, { "W01", "U01", "B01", "R01", "G01" }, y) - SECTION_GAP
 
     -- Section 3: Turn Sequence
-    h3:ClearAllPoints()
-    h3:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (h3:GetStringHeight() + 6)
+    y = PlaceHeading(h3, y)
+    y = PlaceParagraph(p3, y) - SECTION_GAP
 
-    p3:ClearAllPoints()
-    p3:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (p3:GetStringHeight() + 18)
-
-    -- Section 4: Keywords & Mechanics
-    h4:ClearAllPoints()
-    h4:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (h4:GetStringHeight() + 6)
-
-    p4:ClearAllPoints()
-    p4:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    -- Extra line of space so the cost/title above these cards clears the keyword text
-    y = y - (p4:GetStringHeight() + 20 + 14)
-
-    -- Lazy instantiate Keyword Cards
-    local kwCardIds = { "WES04", "WES02", "DSK06", "WES05" }
-    local kwX = { 40, 165, 290, 415 }
-    for i, id in ipairs(kwCardIds) do
-        if not kwFrames[i] then
-            kwFrames[i] = CreateExampleCard(content, id)
-        else
-            SetupRuleCard(kwFrames[i], id)
-        end
-        kwFrames[i]:ClearAllPoints()
-        kwFrames[i]:SetPoint("TOPLEFT", content, "TOPLEFT", kwX[i], y)
-    end
-    y = y - (102 + 16)
+    -- Section 4: Keywords & Mechanics, with keyword creatures
+    y = PlaceHeading(h4, y)
+    y = PlaceParagraph(p4, y)
+    y = PlaceCardRow(kwFrames, { "WES04", "WES02", "DSK06", "WES05" }, y) - SECTION_GAP
 
     -- Section 5: Challenging Players
-    h5:ClearAllPoints()
-    h5:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (h5:GetStringHeight() + 6)
-
-    p5:ClearAllPoints()
-    p5:SetPoint("TOPLEFT", content, "TOPLEFT", 10, y)
-    y = y - (p5:GetStringHeight() + 18)
+    y = PlaceHeading(h5, y)
+    y = PlaceParagraph(p5, y) - 16
 
     content:SetHeight(math.abs(y))
 end
