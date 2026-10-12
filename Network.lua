@@ -170,12 +170,12 @@ local function SendChannel(msg)
     end
 end
 
--- chatType is "PARTY" or "RAID"
-local function SendGroup(msg, chatType)
+-- chatType is one of the fallback routes; target is only used for "WHISPER"
+local function SendDirect(msg, chatType, target)
     if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(PREFIX, msg, chatType)
+        C_ChatInfo.SendAddonMessage(PREFIX, msg, chatType, target)
     else
-        SendAddonMessage(PREFIX, msg, chatType)
+        SendAddonMessage(PREFIX, msg, chatType, target)
     end
 end
 
@@ -205,11 +205,47 @@ local function InMyRaid(name)
     return false
 end
 
+-- Fallback order after FCCGTTSE (which is always tried first)
+local FALLBACK_ROUTES = { "WHISPER", "PARTY", "RAID", "GUILD", "YELL" }
+
+local ROUTE_LABELS = {
+    WHISPER = "whisper",
+    PARTY = "party chat",
+    RAID = "raid chat",
+    GUILD = "guild chat",
+    YELL = "yell",
+}
+
+-- Whether a route can currently reach the named player
+local function RouteAvailable(route, target)
+    if route == "WHISPER" or route == "YELL" then return true end
+    if route == "PARTY" then return InMyParty(target) end
+    if route == "RAID" then return InMyRaid(target) end
+    if route == "GUILD" then return IsInGuild and IsInGuild() or false end
+    return false
+end
+
+-- The next usable route after `current` (nil = FCCGTTSE), or nil when none are left
+local function NextRoute(current, target)
+    local start = 1
+    if current then
+        for i, r in ipairs(FALLBACK_ROUTES) do
+            if r == current then start = i + 1 end
+        end
+    end
+    for i = start, #FALLBACK_ROUTES do
+        if RouteAvailable(FALLBACK_ROUTES[i], target) then
+            return FALLBACK_ROUTES[i]
+        end
+    end
+    return nil
+end
+
 TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (addon-installed check)
 TTS.Net.outgoingInvites = {}  -- [lowerName] = { sentAt = time(), matchId = id } : challenges we sent that may still be accepted
 TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
 TTS.Net.matchId = nil         -- id of the current (or most recent) match
--- [lowerName] = "PARTY" or "RAID" : fallback route to a player. nil means FCCGTTSE (always tried first)
+-- [lowerName] = one of FALLBACK_ROUTES : fallback route to a player. nil means FCCGTTSE (always tried first)
 TTS.Net.routes = {}
 
 function TTS.Net:BroadcastLFM(msg)
@@ -237,7 +273,7 @@ function TTS.Net:InvitePlayer(target)
 
     local inviteKey = target:lower()
     local matchId = NewMatchId()
-    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId }
+    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, tried = { LFM_CHANNEL } }
     self.pendingInvites[inviteKey] = target
     self.routes[inviteKey] = nil -- always try FCCGTTSE first
 
@@ -246,7 +282,9 @@ function TTS.Net:InvitePlayer(target)
     self:AwaitInviteAck(inviteKey, matchId)
 end
 
--- If the invite gets no INVITE_ACK, retry on the next route: FCCGTTSE -> party -> raid
+-- If the invite gets no INVITE_ACK, retry on the next route:
+-- FCCGTTSE -> whisper -> party -> raid -> guild -> yell -> give up
+-- Routes that can't reach the player (not grouped, no guild) are skipped.
 function TTS.Net:AwaitInviteAck(inviteKey, matchId)
     TTS:SafeAfter(INVITE_ACK_TIMEOUT, function()
         local Net = TTS.Net
@@ -256,18 +294,14 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
         if not target or not invite or invite.matchId ~= matchId then return end
 
         local current = Net.routes[inviteKey]
-        local nextRoute
-        if not current and InMyParty(target) then
-            nextRoute = "PARTY"
-        elseif current ~= "RAID" and InMyRaid(target) then
-            nextRoute = "RAID"
-        end
+        local nextRoute = NextRoute(current, target)
 
         if nextRoute then
             Net.routes[inviteKey] = nextRoute
             invite.sentAt = time()
-            Print(string.format("|cFFFFD200[TTSE]|r No response from %s on %s. Retrying over %s chat...",
-                target, current and (current:lower() .. " chat") or LFM_CHANNEL, nextRoute:lower()))
+            table.insert(invite.tried, ROUTE_LABELS[nextRoute])
+            Print(string.format("|cFFFFD200[TTSE]|r No response from %s on %s. Retrying over %s...",
+                target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
             Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
             Net:AwaitInviteAck(inviteKey, matchId)
             return
@@ -277,21 +311,26 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
         Net.outgoingInvites[inviteKey] = nil
         Net.routes[inviteKey] = nil
 
+        local triedGroup = false
+        for _, label in ipairs(invite.tried) do
+            if label == ROUTE_LABELS.PARTY or label == ROUTE_LABELS.RAID then triedGroup = true end
+        end
+
         local whisperMsg = string.format("I tried to challenge you to a game of Forever: CCG but couldn't reach you. If you have it installed, join my party and I'll challenge you again. If not, visit: %s to download!", TTS.DOWNLOAD_URL)
         SendChatMessage(whisperMsg, "WHISPER", nil, target)
-        if current then
-            -- Already tried party/raid chat too
-            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond on %s or %s chat. They may not have Forever: CCG installed. Whisper sent!",
-                target, LFM_CHANNEL, current:lower()))
+        local tried = table.concat(invite.tried, ", ")
+        if triedGroup then
+            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond (tried: %s). They may not have Forever: CCG installed. Whisper sent!",
+                target, tried))
         else
-            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond on %s. If they have Forever: CCG, invite them to your party (or raid) and challenge them again. Whisper sent!",
-                target, LFM_CHANNEL))
+            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond (tried: %s). If they have Forever: CCG, invite them to your party (or raid) and challenge them again. Whisper sent!",
+                target, tried))
         end
     end)
 end
 
 -- Unwraps a channel message and hands it to OnReceive if it is meant for us.
--- chatType is how it arrived ("CHANNEL", "PARTY" or "RAID"); replies go back the same way.
+-- chatType is how it arrived ("CHANNEL" or a fallback route); replies go back the same way.
 function TTS.Net:OnChannelMessage(message, sender, chatType)
     local kind = message:sub(1, 2)
     local from, inner
@@ -311,7 +350,7 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
 
     if from then
         local key = NormalizeName(from):lower()
-        if chatType == "PARTY" or chatType == "RAID" then
+        if ROUTE_LABELS[chatType] then
             self.routes[key] = chatType
         elseif inner:match("^INVITE:") then
             -- A fresh challenge over FCCGTTSE: answer over FCCGTTSE too
@@ -369,13 +408,11 @@ function TTS.Net:Send(target, msg)
     else
         envelope = "T:" .. target .. ":" .. MyName() .. ":" .. msg
     end
-    -- One route per message: FCCGTTSE unless a party/raid fallback is set for this player
-    -- and we're still grouped with them
+    -- One route per message: FCCGTTSE unless a fallback route is set for this player
+    -- and it can still reach them
     local route = self.routes[target:lower()]
-    if route == "PARTY" and InMyParty(target) then
-        SendGroup(envelope, "PARTY")
-    elseif route == "RAID" and InMyRaid(target) then
-        SendGroup(envelope, "RAID")
+    if route and RouteAvailable(route, target) then
+        SendDirect(envelope, route, route == "WHISPER" and target or nil)
     else
         SendChannel(envelope)
     end
