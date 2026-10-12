@@ -14,27 +14,27 @@ TTS.Cards = {
     ["W01"] = {
         id = "W01", name = "Prayer of Light", cost = "", cmc = 0, color = "W", type = "Land",
         text = "{T}: Add {W}.",
-        art = "Interface\\Icons\\Spell_Holy_Aspiration"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\W.png"
     },
     ["U01"] = {
         id = "U01", name = "Prayer of Arcane", cost = "", cmc = 0, color = "U", type = "Land",
         text = "{T}: Add {U}.",
-        art = "Interface\\Icons\\Spell_Frost_FrostArmor"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\U.png"
     },
     ["B01"] = {
         id = "B01", name = "Prayer of Shadow", cost = "", cmc = 0, color = "B", type = "Land",
         text = "{T}: Add {B}.",
-        art = "Interface\\Icons\\Spell_Shadow_AntiShadow"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\B.png"
     },
     ["R01"] = {
         id = "R01", name = "Prayer of Fire", cost = "", cmc = 0, color = "R", type = "Land",
         text = "{T}: Add {R}.",
-        art = "Interface\\Icons\\Spell_Fire_Incinerate"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\R.png"
     },
     ["G01"] = {
         id = "G01", name = "Prayer of Nature", cost = "", cmc = 0, color = "G", type = "Land",
         text = "{T}: Add {G}.",
-        art = "Interface\\Icons\\Spell_Nature_HealingTouch"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\G.png"
     },
 
     -- =========================================================================

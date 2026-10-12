@@ -47,11 +47,11 @@ local function FormatTextWithSymbols(str, size)
     end
 
     local defaultIcons = {
-        W = "Interface\\Icons\\Spell_Holy_Aspiration",
-        U = "Interface\\Icons\\Spell_Frost_FrostArmor",
-        B = "Interface\\Icons\\Spell_Shadow_AntiShadow",
-        R = "Interface\\Icons\\Spell_Fire_Incinerate",
-        G = "Interface\\Icons\\Spell_Nature_HealingTouch",
+        W = SYMBOL_PATH .. "W.png",
+        U = SYMBOL_PATH .. "U.png",
+        B = SYMBOL_PATH .. "B.png",
+        R = SYMBOL_PATH .. "R.png",
+        G = SYMBOL_PATH .. "G.png",
     }
 
     return str:gsub("{(%w+)}", function(key)

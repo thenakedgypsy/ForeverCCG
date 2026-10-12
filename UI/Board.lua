@@ -30,13 +30,13 @@ local CARD_FRAMES = {
     NATURE  = TEXTURE_ROOT .. "Cards\\card_frame_nature.png",
 }
 
--- Native Blizzard spell icons matching each sphere
+-- Sphere icons (Textures\Symbols)
 TTS.MANA_ICONS = {
-    W = "Interface\\Icons\\Spell_Holy_Aspiration",     -- White (Holy)
-    U = "Interface\\Icons\\Spell_Frost_FrostArmor",     -- Blue  (Arcane)
-    B = "Interface\\Icons\\Spell_Shadow_AntiShadow",    -- Black (Shadow)
-    R = "Interface\\Icons\\Spell_Fire_Incinerate",      -- Red   (Fire)
-    G = "Interface\\Icons\\Spell_Nature_HealingTouch",  -- Green (Nature)
+    W = SYMBOL_PATH .. "W.png",  -- White (Holy)
+    U = SYMBOL_PATH .. "U.png",  -- Blue  (Arcane)
+    B = SYMBOL_PATH .. "B.png",  -- Black (Shadow)
+    R = SYMBOL_PATH .. "R.png",  -- Red   (Fire)
+    G = SYMBOL_PATH .. "G.png",  -- Green (Nature)
 }
 
 local ART_BOX = {
