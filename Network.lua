@@ -31,11 +31,21 @@ elseif RegisterAddonMessagePrefix then
     RegisterAddonMessagePrefix(PREFIX)
 end
 
--- Custom chat channel used for waiting-room broadcasts
+-- Custom chat channel used for ALL addon traffic (waiting room, challenges and matches)
 local LFM_CHANNEL = "FCCGTTSE"
 
 -- Seconds an outgoing challenge stays valid (the receiving popup times out after 30)
 local INVITE_EXPIRY = 45
+
+-- How many times (1s apart) to retry joining the channel before dropping queued messages
+local MAX_JOIN_ATTEMPTS = 5
+
+-- =========================================================================
+-- CHANNEL ENVELOPES
+--   "LFM_..."                  broadcast to everyone in the channel
+--   "T:<recipient>:<payload>"  addressed to one player (challenges, pre-match)
+--   "M:<matchId>:<payload>"    in-match traffic, only the two players know the id
+-- =========================================================================
 
 -- Preserves full "Firstname Surname" while stripping any realm tag
 local function NormalizeName(name)
@@ -51,6 +61,15 @@ end
 
 local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
+end
+
+local function NewMatchId()
+    return string.format("%08x%04x%04x", time(), math.random(0, 0xFFFF), math.random(0, 0xFFFF))
+end
+
+local function IsMatchOpponent(sender)
+    local E = TTS.Engine
+    return E and E.inMatch and not E.isSolo and SameName(E.opponent, sender)
 end
 
 function TTS:SafeAfter(seconds, callback)
@@ -85,33 +104,63 @@ local function JoinLFMChannel()
     end
 end
 
-TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (addon-installed check)
-TTS.Net.outgoingInvites = {}  -- [lowerName] = time() : challenges we sent that may still be accepted
-TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
-
-function TTS.Net:BroadcastLFM(msg)
-    local function SendToChannel(channelId)
-        if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-            C_ChatInfo.SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
-        else
-            SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
-        end
+local function RawChannelSend(channelId, msg)
+    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+        C_ChatInfo.SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
+    else
+        SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
     end
+end
 
+-- Messages sent before the channel is joined are queued so they go out in order
+local channelQueue = {}
+local flushScheduled = false
+local joinAttempts = 0
+
+local function FlushChannelQueue()
+    flushScheduled = false
     local id = GetLFMChannelId()
-    if id then
-        SendToChannel(id)
+    if not id then
+        joinAttempts = joinAttempts + 1
+        if joinAttempts >= MAX_JOIN_ATTEMPTS then
+            joinAttempts = 0
+            wipe(channelQueue)
+            Print("|cFFFF2222[TTSE]|r Could not join the " .. LFM_CHANNEL .. " channel; messages were not sent.")
+            return
+        end
+        JoinLFMChannel()
+        flushScheduled = true
+        TTS:SafeAfter(1, FlushChannelQueue)
         return
     end
+    joinAttempts = 0
+    for i = 1, #channelQueue do
+        RawChannelSend(id, channelQueue[i])
+    end
+    wipe(channelQueue)
+end
 
-    -- Not in the channel yet: join it, then send once it is available
-    JoinLFMChannel()
-    TTS:SafeAfter(1, function()
-        local retryId = GetLFMChannelId()
-        if retryId then
-            SendToChannel(retryId)
-        end
-    end)
+local function SendChannel(msg)
+    local id = GetLFMChannelId()
+    if id and #channelQueue == 0 then
+        RawChannelSend(id, msg)
+        return
+    end
+    table.insert(channelQueue, msg)
+    if not flushScheduled then
+        flushScheduled = true
+        JoinLFMChannel()
+        TTS:SafeAfter(1, FlushChannelQueue)
+    end
+end
+
+TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (addon-installed check)
+TTS.Net.outgoingInvites = {}  -- [lowerName] = { sentAt = time(), matchId = id } : challenges we sent that may still be accepted
+TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
+TTS.Net.matchId = nil         -- id of the current (or most recent) match
+
+function TTS.Net:BroadcastLFM(msg)
+    SendChannel(msg)
 end
 
 -- Challenges can only be issued from the Waiting Room, which calls this.
@@ -134,10 +183,11 @@ function TTS.Net:InvitePlayer(target)
     end
 
     local inviteKey = target:lower()
-    self.outgoingInvites[inviteKey] = time()
+    local matchId = NewMatchId()
+    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId }
     self.pendingInvites[inviteKey] = target
 
-    self:Send(target, "INVITE:" .. TTS.VERSION)
+    self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
     Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
 
     TTS:SafeAfter(2.5, function()
@@ -150,6 +200,24 @@ function TTS.Net:InvitePlayer(target)
             Print(string.format("|cFFFF4444[TTSE]|r %s does not have the addon installed. Whisper sent!", originalTarget))
         end
     end)
+end
+
+-- Unwraps a channel message and hands it to OnReceive if it is meant for us
+function TTS.Net:OnChannelMessage(message, sender)
+    local kind = message:sub(1, 2)
+    if kind == "T:" then
+        local recipient, inner = message:match("^T:([^:]+):(.*)$")
+        if recipient and SameName(recipient, UnitName("player")) then
+            self:OnReceive(inner, sender)
+        end
+    elseif kind == "M:" then
+        local matchId, inner = message:match("^M:([^:]+):(.*)$")
+        if matchId and self.matchId and matchId == self.matchId then
+            self:OnReceive(inner, sender)
+        end
+    elseif message:match("^LFM_") then
+        self:OnReceive(message, sender)
+    end
 end
 
 local f = CreateFrame("Frame")
@@ -180,7 +248,9 @@ f:SetScript("OnEvent", function(self, event, ...)
         local prefix, message, channel, sender = ...
         if prefix == PREFIX then
             local cleanSender = NormalizeName(Ambiguate(sender, "none"))
-            TTS.Net:OnReceive(message, cleanSender)
+            -- The channel echoes our own messages back to us
+            if SameName(cleanSender, UnitName("player")) then return end
+            TTS.Net:OnChannelMessage(message, cleanSender)
         end
     end
 end)
@@ -190,10 +260,10 @@ function TTS.Net:Send(target, msg)
         return
     end
     target = NormalizeName(target)
-    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(PREFIX, msg, "WHISPER", target)
+    if self.matchId and IsMatchOpponent(target) then
+        SendChannel("M:" .. self.matchId .. ":" .. msg)
     else
-        SendAddonMessage(PREFIX, msg, "WHISPER", target)
+        SendChannel("T:" .. target .. ":" .. msg)
     end
 end
 
@@ -205,11 +275,6 @@ end
 local function ReportVersionMismatch(otherName, otherVersion)
     Print(string.format("|cFFFF2222[TTSE]|r Version mismatch: %s is on %s, you are on %s. Both players must use the same version of Forever: CCG.",
         otherName, VersionText(otherVersion), TTS.VERSION))
-end
-
-local function IsMatchOpponent(sender)
-    local E = TTS.Engine
-    return E and E.inMatch and not E.isSolo and SameName(E.opponent, sender)
 end
 
 function TTS.Net:OnReceive(msg, sender)
@@ -260,6 +325,7 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net:Send(sender, "INVITE_ACK")
 
         local theirVersion = parts[2]
+        local theirMatchId = parts[3]
         if theirVersion ~= TTS.VERSION then
             TTS.Net:Send(sender, "DECLINE:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
@@ -302,7 +368,8 @@ function TTS.Net:OnReceive(msg, sender)
                     return
                 end
                 if TTS.Engine and TTS.Engine:ValidateDeck() then
-                    TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION)
+                    TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId)
+                    TTS.Net.matchId = theirMatchId
                     TTS.Engine:StartMatch(sender, false, false)
                     TTS.Engine.remoteState.handCount = 7
                     TTS.Engine:RefreshUI()
@@ -331,12 +398,12 @@ function TTS.Net:OnReceive(msg, sender)
 
     elseif cmd == "ACCEPT" then
         local key = sender:lower()
-        local sentAt = TTS.Net.outgoingInvites[key]
+        local invite = TTS.Net.outgoingInvites[key]
         TTS.Net.pendingInvites[key] = nil
         TTS.Net.outgoingInvites[key] = nil
 
         -- Ignore accepts for challenges we never sent (or that have expired)
-        if not sentAt or (time() - sentAt) > INVITE_EXPIRY then
+        if not invite or (time() - invite.sentAt) > INVITE_EXPIRY then
             TTS.Net:Send(sender, "CANCEL:NOT_INVITED")
             return
         end
@@ -345,6 +412,12 @@ function TTS.Net:OnReceive(msg, sender)
         if theirVersion ~= TTS.VERSION then
             TTS.Net:Send(sender, "CANCEL:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
+            return
+        end
+
+        -- The accept must echo the match id we generated for this challenge
+        if parts[3] ~= invite.matchId then
+            TTS.Net:Send(sender, "CANCEL:NOT_INVITED")
             return
         end
 
@@ -365,6 +438,7 @@ function TTS.Net:OnReceive(msg, sender)
         end
 
         Print("|cFF00FF00[TTSE]|r Challenge accepted by " .. sender .. "!")
+        TTS.Net.matchId = invite.matchId
         if TTS.Engine then
             TTS.Engine:StartMatch(sender, true, false)
             TTS.Engine.remoteState.handCount = 7
