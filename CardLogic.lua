@@ -776,8 +776,6 @@ function E:PlayNonCreatureCardSound()
     end
 end
 
--- Sound for a spell being cast by either side: a holy "heal landing" impact.
--- Tries each file in turn (the first one the client has plays); falls back to 829.
 
 function E:PlaySpellCastSound()
     if not (TTS.Sound and TTS.Sound.enabled) then return end
@@ -785,6 +783,12 @@ function E:PlaySpellCastSound()
 end
 
 function E:PlayCard(handIndex)
+    -- Hand is full and a draw is waiting: clicking a card discards it instead
+    if self.pendingDiscard then
+        self:DiscardForDraw(handIndex)
+        return
+    end
+
     if not self.isMyTurn then
         self:Log("Cannot play cards outside of your turn.", "ERROR")
         return

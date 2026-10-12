@@ -330,6 +330,11 @@ function E:NextPhase()
             if self.isSolo then
                 -- The Target Dummy has no button to click: resolve right away
                 self:ResolveCombatDamage()
+            elseif not bs.blocksDeclared and next(bs.blocks) == nil then
+                -- No blocks to show the attacker: resolve on both clients straight away
+                bs.selectedBlocker = nil
+                TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT")
+                self:ResolveCombatDamage()
             elseif not bs.blocksDeclared then
                 -- Defending: send our blocks and hand control back to the attacker
                 bs.selectedBlocker = nil
@@ -368,6 +373,12 @@ function E:NextPhase()
             self:SetPhase("COMBAT_BLOCK")
             if self.isSolo then
                 self:DummyAssignBlocksAgainstPlayer()
+                if next(self.blockingState.blocks) == nil then
+                    -- Nothing blocked, so there are no blocks to review: resolve right away
+                    self:Log("Target Dummy declared no blockers.", "SYSTEM")
+                    self:ResolveCombatDamage()
+                    return
+                end
                 self.blockingState.blocksDeclared = true
                 self:Log("Target Dummy declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
             else
@@ -509,6 +520,7 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.cantBlockThisTurn = false
     self.targeting = nil
     self.blockingState = nil
+    self.pendingDiscard = nil
     self.stolenCreatures = {}
 
     self.localState.life = 20
@@ -594,9 +606,24 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self:RefreshUI()
 end
 
+-- Most cards a hand can hold. Drawing with a full hand asks for a discard first.
+local MAX_HAND_SIZE = 10
+
 function E:DrawCard(silent)
+    -- Already waiting on a discard: this draw waits its turn behind it
+    if self.pendingDiscard then
+        self.pendingDiscard = self.pendingDiscard + 1
+        return
+    end
     if #self.localState.deck == 0 then
         self:LoseMatch("Deck out: drawn from empty library.")
+        return
+    end
+    if #self.localState.hand >= MAX_HAND_SIZE then
+        self.pendingDiscard = 1
+        self:CancelTargeting()
+        self:Log(string.format("Your hand is full (%d cards). Click a card in your hand to discard before you draw.", MAX_HAND_SIZE), "SYSTEM")
+        self:RefreshUI()
         return
     end
     local cardId = table.remove(self.localState.deck, 1)
@@ -604,6 +631,26 @@ function E:DrawCard(silent)
     local card = TTS.Cards[cardId]
     if not silent and card then
         self:Log("Drew " .. card.name .. ".", "ACTION")
+    end
+    self:RefreshUI()
+end
+
+-- Discards the hand card the player clicked to make room, then makes the waiting draw(s)
+function E:DiscardForDraw(handIndex)
+    if not self.pendingDiscard then return end
+    local cardId = table.remove(self.localState.hand, handIndex)
+    if not cardId then return end
+
+    table.insert(self.localState.graveyard, cardId)
+    local card = TTS.Cards[cardId]
+    self:Log(string.format("Discarded |cFFFFD200%s|r.", card and card.name or cardId), "ACTION")
+    if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
+
+    local waiting = self.pendingDiscard
+    self.pendingDiscard = nil
+    for _ = 1, waiting do
+        if not self.inMatch then break end
+        self:DrawCard()
     end
     self:RefreshUI()
 end
