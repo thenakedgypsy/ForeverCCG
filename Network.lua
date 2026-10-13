@@ -423,6 +423,16 @@ local function VersionText(v)
     return (v and v ~= "") and v or "an older version"
 end
 
+-- Only the first two numbers (major.minor) must match; the patch number is ignored.
+-- Falls back to an exact match if either version isn't in "x.y..." form.
+local function VersionsCompatible(a, b)
+    if not a or not b then return false end
+    local aMaj, aMin = a:match("^(%d+)%.(%d+)")
+    local bMaj, bMin = b:match("^(%d+)%.(%d+)")
+    if not aMaj or not bMaj then return a == b end
+    return tonumber(aMaj) == tonumber(bMaj) and tonumber(aMin) == tonumber(bMin)
+end
+
 local function ReportVersionMismatch(otherName, otherVersion)
     Print(string.format("|cFFFF2222[TTSE]|r Version mismatch: %s is on %s, you are on %s. Both players must use the same version of Forever: CCG.",
         otherName, VersionText(otherVersion), TTS.VERSION))
@@ -477,7 +487,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         local theirVersion = parts[2]
         local theirMatchId = parts[3]
-        if theirVersion ~= TTS.VERSION then
+        if not VersionsCompatible(theirVersion, TTS.VERSION) then
             TTS.Net:Send(sender, "DECLINE:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
             return
@@ -560,7 +570,7 @@ function TTS.Net:OnReceive(msg, sender)
         end
 
         local theirVersion = parts[2]
-        if theirVersion ~= TTS.VERSION then
+        if not VersionsCompatible(theirVersion, TTS.VERSION) then
             TTS.Net:Send(sender, "CANCEL:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
             return

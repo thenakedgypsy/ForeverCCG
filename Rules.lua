@@ -412,7 +412,7 @@ local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p5:SetWidth(540)
 p5:SetJustifyH("LEFT")
 p5:SetWordWrap(true)
-p5.rawText = "Both players must be on the |cFFFFD200same version|r of Forever: CCG.\n\n" ..
+p5.rawText = "Both players must be on the |cFFFFD200same major & minor version|r of Forever: CCG. Only the first two numbers of the version need to match; the last number (the patch) can differ. For example, |cFFFFFFFF1.4.0|r can play |cFFFFFFFF1.4.7|r, but not |cFFFFFFFF1.5.0|r.\n\n" ..
     "|cFFFFD200Connection:|r Challenges and matches are sent over the |cFFFFFFFFFCCGTTSE|r chat channel, which the addon joins for you a few seconds after you log in. The channel is always tried first.\n\n" ..
     "|cFFFFD200Fallback:|r If your opponent doesn't respond within |cFFFFFFFF8 seconds|r, the challenge is retried on the next route in this order:\n" ..
     "   |cFFFFFFFFwhisper|r -> |cFFFFFFFFparty chat|r -> |cFFFFFFFFraid chat|r -> |cFFFFFFFFguild chat|r -> |cFFFFFFFFyell|r\n" ..
