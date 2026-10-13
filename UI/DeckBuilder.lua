@@ -740,7 +740,7 @@ end
 local TEXT_BOX = {
     left         = 0.09,
     right        = 0.12,
-    top          = 0.50,
+    top          = 0.60,
     bottom       = 0.08,
     bottomWithPT = 0.20,
 }

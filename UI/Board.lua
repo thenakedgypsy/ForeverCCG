@@ -53,7 +53,7 @@ local ART_BOX = {
 local TEXT_BOX = {
     left         = 0.09,
     right        = 0.12,
-    top          = 0.50,
+    top          = 0.60,
     bottom       = 0.05,
     bottomWithPT = 0.20,
 }
