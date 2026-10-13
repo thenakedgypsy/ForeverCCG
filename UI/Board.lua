@@ -214,7 +214,7 @@ end
 
 local B = CreateFrame("Frame", "TTS_BoardFrame", UIParent, backdropTemplate)
 TTS.BoardFrame = B
-B:SetSize(1160, 780)
+B:SetSize(1160, 820)
 B:SetPoint("CENTER")
 Skin(B, "dialog")
 -- The top strip holds the opponent's life, the phase and the window buttons
@@ -302,7 +302,7 @@ end)
 -- ATTACHED GAME CHAT / COMBAT LOG (Side Panel)
 -- =========================================================================
 local sideLog = CreateFrame("Frame", "TTS_SideLogFrame", B, backdropTemplate)
-sideLog:SetSize(250, 780)
+sideLog:SetSize(250, 820)
 sideLog:SetPoint("TOPLEFT", B, "TOPRIGHT", 6, 0)
 Skin(sideLog, "dialog")
 AddTitleStrip(sideLog)
@@ -654,7 +654,7 @@ B.oppEffectBar = CreateEffectBar("Opponent Effects")
 B.oppEffectBar:SetPoint("TOPRIGHT", B, "TOPRIGHT", -20, -44)
 
 B.myEffectBar = CreateEffectBar("Your Effects")
-B.myEffectBar:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -20, 148)
+B.myEffectBar:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -20, 174)
 
 local myHandFrames     = {}
 local oppHandFrames    = {}
@@ -899,7 +899,7 @@ end
 -- unscaled "slot" so scaling it never moves it.
 -- =========================================================================
 local HAND_W, HAND_H, HAND_STEP = 72, 102, 96
-local HAND_LEFT, HAND_RIGHT, HAND_BOTTOM = 35, 1060, 52   -- right edge stops short of your deck
+local HAND_LEFT, HAND_RIGHT, HAND_BOTTOM = 35, 1054, 52   -- right edge stops short of your deck
 local HAND_MAX_SCALE = 1.2
 
 local BF_CARD_W  = 64
@@ -913,9 +913,9 @@ local CREATURE_MAX_SCALE = 1.2
 -- Vertical centre of each battlefield row, measured up from the board's bottom edge
 local ROW_Y = {
     myLand     = 256,
-    myNonLand  = 367,
-    oppNonLand = 490,
-    oppLand    = 604,
+    myNonLand  = 380,
+    oppNonLand = 513,
+    oppLand    = 638,
 }
 
 local function AttachSlot(f)
@@ -983,12 +983,12 @@ end
 -- Battlefield panel behind both sides' rows, with a faint gold line between them
 local battlefield = CreateFrame("Frame", nil, B, backdropTemplate)
 battlefield:SetPoint("BOTTOMLEFT", B, "BOTTOMLEFT", 24, 209)
-battlefield:SetSize(1028, 456)
+battlefield:SetSize(1028, 496)
 Skin(battlefield, "panel", STYLE.panelBg, STYLE.panelBorder)
 
 local midLine = battlefield:CreateTexture(nil, "ARTWORK")
-midLine:SetPoint("LEFT", battlefield, "BOTTOMLEFT", 8, 437 - 209)
-midLine:SetPoint("RIGHT", battlefield, "BOTTOMRIGHT", -8, 437 - 209)
+midLine:SetPoint("LEFT", battlefield, "BOTTOMLEFT", 8, 456 - 209)
+midLine:SetPoint("RIGHT", battlefield, "BOTTOMRIGHT", -8, 456 - 209)
 midLine:SetHeight(1)
 midLine:SetColorTexture(1, 0.82, 0, 0.25)
 
@@ -1157,7 +1157,7 @@ for i = 1, 12 do
 end
 
 local myDeckFrame = CreateFrame("Frame", nil, B)
-myDeckFrame:SetSize(62, 88)
+myDeckFrame:SetSize(HAND_W, HAND_H)
 myDeckFrame:SetPoint("BOTTOMRIGHT", -30, 52)
 myDeckFrame.back = myDeckFrame:CreateTexture(nil, "ARTWORK")
 myDeckFrame.back:SetAllPoints(myDeckFrame)
