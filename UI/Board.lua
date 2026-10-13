@@ -52,9 +52,9 @@ local ART_BOX = {
 -- (bottomWithPT leaves the bottom-right corner free for the P/T).
 local TEXT_BOX = {
     left         = 0.09,
-    right        = 0.09,
-    top          = 0.57,
-    bottom       = 0.07,
+    right        = 0.12,
+    top          = 0.50,
+    bottom       = 0.05,
     bottomWithPT = 0.20,
 }
 local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
@@ -62,21 +62,35 @@ local RULES_FONT_MIN = 6
 -- Cards narrower than this on screen (pixels, board zoom included) show no
 -- printed text: their rules are in the tooltip only
 local CARD_TEXT_MIN_WIDTH = 72
+-- Symbols in printed rules text (tap and mana alike) are drawn this many pixels
+-- larger than the text's base symbol size
+local RULES_TAP_EXTRA = 3
+
+-- Large preview of the hovered card, docked outside the left edge of the board
+local PREVIEW_W, PREVIEW_H = 150, 212
+local PREVIEW_RULES = {
+    fontMax = 11,
+    fontMin = 8,
+    offsetX = 3,   -- pixels right
+    offsetY = 3,   -- pixels down
+}
 
 local FALLBACK_BORDER = "Interface\\Tooltips\\UI-Tooltip-Border"
 local FALLBACK_BACK   = "Interface\\Buttons\\WHITE8X8"
 
 -- Bulletproof Symbol Formatter
-function TTS:FormatSymbols(str, size)
+-- tapSize (optional): size of the tap symbol {T}; defaults to size
+function TTS:FormatSymbols(str, size, tapSize)
     if not str or str == "" then return "" end
     local s = size or 16
+    local ts = tapSize or s
 
     local formatted = str:gsub("{(%w+)}", function(key)
         local upperKey = string.upper(key)
 
         -- Tap Symbol
         if upperKey == "T" or upperKey == "TAP" then
-            return string.format("|T%s:%d:%d:0:0|t", TAP_TEX, s, s)
+            return string.format("|T%s:%d:%d:0:0|t", TAP_TEX, ts, ts)
         end
 
         -- Generic / Numeric / X
@@ -84,7 +98,7 @@ function TTS:FormatSymbols(str, size)
             return string.format("|cFF8E939B(|r|cFFFFFFFF%s|r|cFF8E939B)|r", upperKey)
         end
 
-        -- Colored Mana Spheres
+        -- Colored Mana Colours
         local icon = TTS.MANA_ICONS and TTS.MANA_ICONS[upperKey]
         if icon then
             return string.format("|T%s:%d:%d:0:0|t", icon, s, s)
@@ -123,8 +137,18 @@ end
 -- Forward declarations for the camera / printed-text refreshers (run when the board is rescaled)
 local RefreshAllModelCameras
 local RefreshCardText
+-- Forward declarations for the hover preview (built once CreateCardFrame exists)
+local ShowBoardPreview, HideBoardPreview
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
+
+-- Tooltips go through the manager in UI\Tooltips.lua
+local TT = TTS.Tooltip
+
+local function IsTargetingPlayer()
+    local t = TTS.Engine.targeting
+    return t and (t.targetType == "PLAYER" or t.targetType == "ANY")
+end
 
 -- =========================================================================
 -- STYLE (matches the Deckbuilder: dialog window, dark title strip with a gold
@@ -211,12 +235,20 @@ B:SetScript("OnMouseDown", function(self, button)
     end
 end)
 
+-- Board size (scale) is saved so the board always reopens at the size it was left at
+local BOARD_MIN_SCALE, BOARD_MAX_SCALE = 0.60, 1.60
+
+local function SaveBoardScale()
+    if TTS.Options then TTS.Options:Set("boardScale", B:GetScale()) end
+end
+
 B:EnableMouseWheel(true)
 B:SetScript("OnMouseWheel", function(self, delta)
     if IsControlKeyDown() then
         local cur = self:GetScale() or 1.0
-        local newScale = math.max(0.60, math.min(1.60, cur + (delta * 0.05)))
+        local newScale = math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, cur + (delta * 0.05)))
         self:SetScale(newScale)
+        SaveBoardScale()
         if RefreshAllModelCameras then RefreshAllModelCameras() end
         if RefreshCardText then RefreshCardText() end
     end
@@ -256,9 +288,10 @@ resizer:SetScript("OnUpdate", function(self)
         local dx = (cx - startCursorX) / uiScale
         local dy = (startCursorY - cy) / uiScale
         local delta = (dx + dy) * 0.5 * 0.0015
-        local newScale = math.max(0.60, math.min(1.60, startScale + delta))
+        local newScale = math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, startScale + delta))
         if math.abs(newScale - B:GetScale()) > 0.001 then
             B:SetScale(newScale)
+            SaveBoardScale()
             if RefreshAllModelCameras then RefreshAllModelCameras() end
             if RefreshCardText then RefreshCardText() end
         end
@@ -342,7 +375,7 @@ restoreBtn:SetText("Restore")
 restoreBtn:SetScript("OnClick", function() B:Show() end)
 
 function B:Minimize()
-    GameTooltip:Hide()
+    TT:Hide()
     self:Hide()
     restoreBar:Show()
 end
@@ -350,6 +383,7 @@ end
 -- Any way the board comes back (Restore, /tragic board, a new match) removes the restore bar
 B:SetScript("OnShow", function(self)
     restoreBar:Hide()
+    if self.soundCheck and TTS.Sound then self.soundCheck:SetChecked(TTS.Sound.enabled) end
     self:UpdateDisplay()
 end)
 
@@ -358,12 +392,8 @@ minimizeBtn:SetSize(24, 24)
 minimizeBtn:SetPoint("TOPRIGHT", -16, -17)
 minimizeBtn:SetText("-")
 minimizeBtn:SetScript("OnClick", function() B:Minimize() end)
-minimizeBtn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:AddLine("Minimize")
-    GameTooltip:Show()
-end)
-minimizeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+minimizeBtn:SetScript("OnEnter", function(self) TT:ShowText(self, "ANCHOR_TOP", "Minimize") end)
+minimizeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 -- =========================================================================
 -- TOP & BOTTOM ACTION BUTTONS
@@ -382,6 +412,7 @@ soundCheck:SetChecked(true)
 soundCheck:SetScript("OnClick", function(self)
     if TTS.Sound then TTS.Sound:SetEnabled(self:GetChecked()) end
 end)
+B.soundCheck = soundCheck   -- kept in step with the options menu
 
 local soundLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 soundLabel:SetPoint("RIGHT", soundCheck, "LEFT", 0, 1)
@@ -419,7 +450,7 @@ function B:ShowMatchResult(headline)
 end
 
 function B:CloseAfterMatch()
-    GameTooltip:Hide()
+    TT:Hide()
     self:Hide()
     restoreBar:Hide()
     if TTS.MainFrame then
@@ -454,16 +485,16 @@ B.oppLifeBtn:SetScript("OnClick", function(self, btn)
     end
 end)
 B.oppLifeBtn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
-    GameTooltip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
-    GameTooltip:AddLine(string.format("Life: %d  |  Cards in Hand: %d", TTS.Engine.remoteState.life, TTS.Engine.remoteState.handCount), 1, 1, 1)
-    if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "PLAYER" or TTS.Engine.targeting.targetType == "ANY") then
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("|cFF00FF00[Left-Click to target this player]|r", 0.2, 1.0, 0.2)
-    end
-    GameTooltip:Show()
+    TT:Show(self, "ANCHOR_BOTTOMLEFT", { main = function(tip)
+        tip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
+        tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d", TTS.Engine.remoteState.life, TTS.Engine.remoteState.handCount), 1, 1, 1)
+        if IsTargetingPlayer() then
+            tip:AddLine(" ")
+            tip:AddLine("|cFF00FF00[Left-Click to target this player]|r", 0.2, 1.0, 0.2)
+        end
+    end })
 end)
-B.oppLifeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+B.oppLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 B.myLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.myLifeBtn:SetSize(160, 30)
@@ -486,19 +517,46 @@ B.myLifeBtn:SetScript("OnClick", function(self, btn)
     end
 end)
 B.myLifeBtn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-    GameTooltip:AddLine("You", 1, 0.82, 0)
-    GameTooltip:AddLine(string.format("Life: %d", TTS.Engine.localState.life), 1, 1, 1)
-    if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "PLAYER" or TTS.Engine.targeting.targetType == "ANY") then
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("|cFF00FF00[Left-Click to target yourself]|r", 0.2, 1.0, 0.2)
-    end
-    GameTooltip:Show()
+    TT:Show(self, "ANCHOR_TOPLEFT", { main = function(tip)
+        tip:AddLine("You", 1, 0.82, 0)
+        tip:AddLine(string.format("Life: %d", TTS.Engine.localState.life), 1, 1, 1)
+        if IsTargetingPlayer() then
+            tip:AddLine(" ")
+            tip:AddLine("|cFF00FF00[Left-Click to target yourself]|r", 0.2, 1.0, 0.2)
+        end
+    end })
 end)
-B.myLifeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+B.myLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
+-- =========================================================================
+-- MANA COUNTER
+-- "Mana:" then one hoverable slot per sphere, so each symbol has its tooltip
+-- =========================================================================
+local MANA_ORDER = { "W", "U", "B", "R", "G" }
 
 B.manaText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 B.manaText:SetPoint("BOTTOMLEFT", 205, 20)
+B.manaText:SetText("Mana: ")
+
+B.manaSlots = {}
+do
+    local prev = B.manaText
+    for i, key in ipairs(MANA_ORDER) do
+        local slot = CreateFrame("Frame", nil, B)
+        slot:SetSize(40, 24)
+        slot:SetPoint("LEFT", prev, "RIGHT", (i == 1) and 4 or 10, 0)
+        slot.text = slot:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+        slot.text:SetPoint("LEFT", slot, "LEFT", 0, 0)
+        slot:EnableMouse(true)
+        slot:SetScript("OnEnter", function(self)
+            local mana = TTS.Engine.localState.mana or {}
+            TT:ShowManaSymbol(self, "ANCHOR_TOP", key, mana[key] or 0)
+        end)
+        slot:SetScript("OnLeave", function(self) TT:Hide(self) end)
+        B.manaSlots[key] = slot
+        prev = slot
+    end
+end
 
 -- =========================================================================
 -- PLAYER EFFECT BARS (damage / healing over time, damage shields)
@@ -522,23 +580,7 @@ local EFFECT_COLORS = {
 }
 
 local function EffectIcon_OnEnter(self)
-    local e = self.effect
-    if not e then return end
-    local c = EFFECT_COLORS[e.kind]
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    if e.kind == "shield" then
-        GameTooltip:AddLine("Damage Shield", c[1], c[2], c[3])
-        GameTooltip:AddLine(string.format("Prevents the next %d damage.", e.n), 1, 1, 1, true)
-    else
-        GameTooltip:AddLine(e.src or "Effect", c[1], c[2], c[3])
-        if e.kind == "dot" then
-            GameTooltip:AddLine(string.format("Takes %d damage each turn.", e.n), 1, 1, 1, true)
-        else
-            GameTooltip:AddLine(string.format("Restores %d life each turn.", e.n), 1, 1, 1, true)
-        end
-        GameTooltip:AddLine(string.format("%d turn%s remaining", e.turns, e.turns == 1 and "" or "s"), 0.8, 0.8, 0.8)
-    end
-    GameTooltip:Show()
+    if self.effect then TT:ShowPlayerEffect(self, "ANCHOR_LEFT", self.effect) end
 end
 
 local function CreateEffectBar(labelText)
@@ -577,7 +619,7 @@ local function CreateEffectBar(labelText)
 
         icon:EnableMouse(true)
         icon:SetScript("OnEnter", EffectIcon_OnEnter)
-        icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        icon:SetScript("OnLeave", function(self) TT:Hide(self) end)
         icon:Hide()
         bar.icons[i] = icon
     end
@@ -622,11 +664,8 @@ local oppLandFrames    = {}
 local oppNonLandFrames = {}
 
 -- =========================================================================
--- DUAL TOOLTIP SYSTEM
+-- CARD TOOLTIPS (UI\Tooltips.lua stacks keywords, effects and symbols on them)
 -- =========================================================================
-local attachTooltip = CreateFrame("GameTooltip", "TTS_AttachmentTooltip", UIParent, "GameTooltipTemplate")
-attachTooltip:Hide()
-
 -- P/T text for a creature on the battlefield. Damage taken this turn lowers the
 -- toughness shown (in red) until it wears off at end of turn.
 local function FormatPT(power, toughness, damage, colorCode)
@@ -647,98 +686,15 @@ local function Card_OnEnter(self)
 
     local card = TTS.Cards[self.cardId]
     if not card then return end
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:AddLine(card.name, 1, 1, 1)
+    if ShowBoardPreview then ShowBoardPreview(self, card) end
 
-    local costStr = (card.cost and card.cost ~= "") and TTS:FormatSymbols(card.cost, 20) or "0"
-    local displayType = card.type
-    if displayType == "Land" then
-        displayType = "Prayer"
-    end
-    GameTooltip:AddLine("Cost: " .. costStr .. "  |  " .. displayType, 0.8, 0.8, 0.8)
-    local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
-    if tagLine then
-        GameTooltip:AddLine(tagLine, 1, 1, 1)
-    end
-
-    if card.power and card.toughness then
-        local effP, effT, damage = card.power, card.toughness, 0
-        if self.fieldIndex then
-            local perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
-            effP, effT = TTS.Engine:GetCreatureStats(perm, self.isRemote)
-            damage = perm and perm.damage or 0
-        end
-        GameTooltip:AddLine("P/T: " .. FormatPT(effP, effT, damage, "|cFFFFCC00"), 1, 0.8, 0)
-    end
-
-    if card.text and card.text ~= "" then
-        GameTooltip:AddLine(TTS:FormatSymbols(card.text, 16), 0.9, 0.9, 0.5, true)
-    end
-
+    local ctx = {}
     if self.fieldIndex then
-        local perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
-        local hasAttachments = perm and perm.attachments and #perm.attachments > 0
-        local effectIds = perm and TTS.Engine:GetPermEffectCards(perm) or {}
-        local hasEffects = #effectIds > 0
-
-        if hasAttachments or hasEffects then
-            attachTooltip:SetOwner(GameTooltip, "ANCHOR_NONE")
-            attachTooltip:ClearAllPoints()
-            attachTooltip:SetPoint("TOPLEFT", GameTooltip, "TOPRIGHT", 6, 0)
-            attachTooltip:ClearLines()
-
-            local entryCount = 0
-            local function AddSeparator()
-                entryCount = entryCount + 1
-                if entryCount > 1 then
-                    attachTooltip:AddLine(" ")
-                    attachTooltip:AddLine("--------------------------------", 0.4, 0.4, 0.4)
-                end
-            end
-
-            for _, att in ipairs(perm.attachments or {}) do
-                local attId = type(att) == "table" and att.id or att
-                local aCard = TTS.Cards[attId]
-                if aCard then
-                    AddSeparator()
-                    local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
-                    local labelType = isEquip and "Equipment" or "Enchantment"
-                    local labelColor = isEquip and "|cFF66BBFF" or "|cFFFFD200"
-
-                    attachTooltip:AddLine(string.format("%s%s|r", labelColor, aCard.name), 1, 1, 1)
-                    local aCost = (aCard.cost and aCard.cost ~= "") and TTS:FormatSymbols(aCard.cost, 18) or "0"
-                    attachTooltip:AddLine(string.format("Cost: %s  |  %s", aCost, labelType), 0.8, 0.8, 0.8)
-
-                    if aCard.text and aCard.text ~= "" then
-                        attachTooltip:AddLine(TTS:FormatSymbols(aCard.text, 16), 0.9, 0.9, 0.6, true)
-                    end
-                end
-            end
-
-            for _, effId in ipairs(effectIds) do
-                local eCard = TTS.Cards[effId]
-                AddSeparator()
-                attachTooltip:AddLine(string.format("|cFFB080FF%s|r", eCard.name), 1, 1, 1)
-                local eCost = (eCard.cost and eCard.cost ~= "") and TTS:FormatSymbols(eCard.cost, 18) or "0"
-                attachTooltip:AddLine(string.format("Cost: %s  |  %s", eCost, eCard.type or "Spell"), 0.8, 0.8, 0.8)
-
-                if eCard.text and eCard.text ~= "" then
-                    attachTooltip:AddLine(TTS:FormatSymbols(eCard.text, 16), 0.9, 0.9, 0.6, true)
-                end
-            end
-
-            attachTooltip:Show()
-            GameTooltip:AddLine(" ")
-            if hasAttachments and hasEffects then
-                GameTooltip:AddLine("|cFF00FF00[Attached Cards & Effects: see side tooltip]|r", 0.6, 0.9, 0.6)
-            elseif hasEffects then
-                GameTooltip:AddLine("|cFF00FF00[Effects: see side tooltip]|r", 0.6, 0.9, 0.6)
-            else
-                GameTooltip:AddLine("|cFF00FF00[Attached Cards: see side tooltip]|r", 0.6, 0.9, 0.6)
-            end
-        end
+        ctx.perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
+        ctx.isRemote = self.isRemote
+        ctx.fieldIndex = self.fieldIndex
     end
-    GameTooltip:Show()
+    TT:ShowCard(self, "ANCHOR_TOP", self.cardId, ctx)
 end
 
 local function Card_OnLeave(self)
@@ -747,8 +703,8 @@ local function Card_OnLeave(self)
         self:SetScale(self.baseScale or 1)
         if self.origFrameLevel then self:SetFrameLevel(self.origFrameLevel) end
     end
-    GameTooltip:Hide()
-    if attachTooltip then attachTooltip:Hide() end
+    TT:Hide(self)
+    if HideBoardPreview then HideBoardPreview() end
 end
 
 local function GetCardFrameTexture(card)
@@ -860,6 +816,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
         end
         if f.model then f.model:SetFrameLevel(base + 1) end
         if f.overlay then f.overlay:SetFrameLevel(base + 2) end
+        if f.tapLayer then f.tapLayer:SetFrameLevel(base + 3) end
     end
 
     f:SetFrameLevel(10)
@@ -898,7 +855,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     -- Rules text printed on the card (shown only while the card is big enough on screen)
     f.rules = f.overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    f.rules:SetJustifyH("LEFT")
+    f.rules:SetJustifyH("CENTER")
     f.rules:SetJustifyV("TOP")
     f.rules:SetWordWrap(true)
     f.rules:SetTextColor(0, 0, 0, 1)
@@ -907,9 +864,15 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     -- Tap symbol drawn over the middle of the card while the permanent is tapped
     local tapSize = math.floor(sizeX * 0.5)
-    f.tapIcon = f.overlay:CreateTexture(nil, "OVERLAY", nil, 7)
+    -- On its own layer above the overlay: within one frame WoW draws text over
+    -- textures, so on the overlay the symbol would sit under the printed rules
+    f.tapLayer = CreateFrame("Frame", nil, f)
+    f.tapLayer:SetAllPoints(f)
+    f.tapLayer:EnableMouse(false)
+    f.tapLayer:SetFrameLevel(f:GetFrameLevel() + 3)
+    f.tapIcon = f.tapLayer:CreateTexture(nil, "OVERLAY", nil, 7)
     f.tapIcon:SetSize(tapSize, tapSize)
-    f.tapIcon:SetPoint("CENTER", f.overlay, "CENTER", 0, 0)
+    f.tapIcon:SetPoint("CENTER", f.tapLayer, "CENTER", 0, 0)
     f.tapIcon:SetTexture(TAP_TEX)
     f.tapIcon:Hide()
 
@@ -917,6 +880,8 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f:SetScript("OnLeave", Card_OnLeave)
     f:SetScript("OnHide", function(self)
         if self.cost then self.cost:Hide() end
+        -- A hovered card that disappears takes its preview with it
+        if HideBoardPreview then HideBoardPreview(self) end
         if self.isHand then
             self.hovered = nil
             self:SetScale(self.baseScale or 1)
@@ -976,9 +941,14 @@ end
 
 -- Prints the card's rules on it when the card is wide enough on screen; otherwise
 -- hides them (tooltip only). P/T moves to the corner while text is printed.
-local function UpdateCardRules(f)
+-- opts (optional): fontMax, fontMin, offsetX (pixels right), offsetY (pixels down)
+local function UpdateCardRules(f, opts)
     if not f.rules then return end
     local card = f.currentCard
+    local fontMax = (opts and opts.fontMax) or RULES_FONT_MAX
+    local fontMin = (opts and opts.fontMin) or RULES_FONT_MIN
+    local dx = (opts and opts.offsetX) or 0
+    local dy = (opts and opts.offsetY) or 0
     local hasPT = f.pt:IsShown()
     local w, h = f:GetSize()
     -- Width on screen, from the card's real scale (works on the board and in other windows);
@@ -991,19 +961,15 @@ local function UpdateCardRules(f)
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
             f.rulesCard, f.rulesPT = card, hasPT
             f.rules:ClearAllPoints()
-            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1, -h * TEXT_BOX.top - 1)
-            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right,
-                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom))
-            f.rules:SetJustifyH("LEFT")
+            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1 + dx, -h * TEXT_BOX.top - 1 - dy)
+            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right + dx,
+                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom) - dy)
+            f.rules:SetJustifyH("CENTER")
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
-            for size = RULES_FONT_MAX, RULES_FONT_MIN, -1 do
+            for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(card.text, size + 2))
+                f.rules:SetText(TTS:FormatSymbols(card.text, size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
-            end
-            -- Short text that fits on one line is centred
-            if f.rules.GetNumLines and f.rules:GetNumLines() <= 1 then
-                f.rules:SetJustifyH("CENTER")
             end
         end
         f.rules:Show()
@@ -1073,14 +1039,12 @@ for i = 1, 10 do
         end
     end)
     f:SetScript("OnEnter", function(self)
-        if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "PLAYER" or TTS.Engine.targeting.targetType == "ANY") then
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
-            GameTooltip:AddLine("|cFF00FF00Click to target enemy player|r", 0.2, 1.0, 0.2)
-            GameTooltip:Show()
+        if IsTargetingPlayer() then
+            TT:ShowText(self, "ANCHOR_TOP", TTS.Engine.opponent or "Opponent", nil,
+                { r = 1, g = 0.82, b = 0, lines = { { "|cFF00FF00Click to target enemy player|r", 0.2, 1.0, 0.2 } } })
         end
     end)
-    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    f:SetScript("OnLeave", function(self) TT:Hide(self) end)
     f:Hide()
     oppHandFrames[i] = f
 end
@@ -1258,6 +1222,66 @@ RefreshCardText = function()
 end
 
 -- =========================================================================
+-- CARD PREVIEW
+-- Full-size copy of the hovered card, docked outside the left edge of the
+-- board (same as the Deckbuilder's preview).
+-- =========================================================================
+local boardPreview, previewOwner
+
+local function EnsureBoardPreview()
+    if boardPreview then return boardPreview end
+    local f = CreateCardFrame(B, PREVIEW_W, PREVIEW_H)
+    f:SetFrameStrata("DIALOG")
+    f:SetFrameLevel((B:GetFrameLevel() or 10) + 40)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(false)
+    f:SetScript("OnEnter", nil)
+    f:SetScript("OnLeave", nil)
+    boardPreview = f
+    return f
+end
+
+ShowBoardPreview = function(owner, card)
+    local f = EnsureBoardPreview()
+    previewOwner = owner
+
+    -- Card name and cost sit above the frame, so leave room for them
+    f:ClearAllPoints()
+    f:SetPoint("TOPRIGHT", B, "TOPLEFT", -12, -76)
+
+    SetupCardVisual(f, card)
+    ApplyFrameTexture(f.border, card)
+    f.border:SetVertexColor(1, 1, 1)
+    f.art:SetVertexColor(1, 1, 1)
+    f.title:SetText(card.name or "")
+
+    if card.cost and card.cost ~= "" then
+        f.cost:SetText(TTS:FormatSymbols(card.cost, 18))
+        f.cost:Show()
+    else
+        f.cost:Hide()
+    end
+
+    if card.type == "Creature" and card.power and card.toughness then
+        f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
+        f.pt:Show()
+    else
+        f.pt:Hide()
+    end
+
+    f:Show()
+    UpdateCardRules(f, PREVIEW_RULES)
+end
+
+-- owner (optional): only hide if this card is the one being previewed
+HideBoardPreview = function(owner)
+    if not boardPreview then return end
+    if owner and owner ~= previewOwner then return end
+    previewOwner = nil
+    boardPreview:Hide()
+end
+
+-- =========================================================================
 -- TUCKED CARDS
 -- Attachments first, then the cards whose effects are on the permanent.
 -- =========================================================================
@@ -1309,15 +1333,13 @@ function B:UpdateDisplay()
     UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
 
     local m = E.localState.mana
-    B.manaText:SetText(string.format("Mana:  %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r   %s |cFFFFFFFF%d|r",
-        TTS:FormatSymbols("{W}", 22), m.W or 0,
-        TTS:FormatSymbols("{U}", 22), m.U or 0,
-        TTS:FormatSymbols("{B}", 22), m.B or 0,
-        TTS:FormatSymbols("{R}", 22), m.R or 0,
-        TTS:FormatSymbols("{G}", 22), m.G or 0
-    ))
+    for _, key in ipairs(MANA_ORDER) do
+        local slot = B.manaSlots[key]
+        slot.text:SetText(string.format("%s |cFFFFFFFF%d|r", TTS:FormatSymbols("{" .. key .. "}", 22), m[key] or 0))
+        slot:SetWidth(math.max(1, slot.text:GetStringWidth()))
+    end
 
-    local isTargetingPlayer = E.targeting and (E.targeting.targetType == "PLAYER" or E.targeting.targetType == "ANY")
+    local isTargetingPlayer = IsTargetingPlayer()
 
     if isTargetingPlayer then
         B.oppLifeBtn:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
@@ -1617,4 +1639,19 @@ TTS.ApplyFrameTexture   = ApplyFrameTexture
 TTS.GetCardFrameTexture = GetCardFrameTexture
 TTS.CARD_FRAME_DEF      = CARD_FRAME_DEF
 TTS.UpdateCardRules     = UpdateCardRules  -- prints rules text on any card made by CreateCardFrame
+TTS.FormatPT            = FormatPT         -- P/T with damage shown, used by the card tooltips
 B.myHandFrames          = myHandFrames  -- read by TargetFX.lua (targeting arrow source)
+
+-- =========================================================================
+-- SAVED SIZE (applied once the saved settings have loaded)
+-- =========================================================================
+local scaleLoader = CreateFrame("Frame")
+scaleLoader:RegisterEvent("ADDON_LOADED")
+scaleLoader:SetScript("OnEvent", function(self, event, addon)
+    if addon ~= "ForeverCCG" then return end
+    self:UnregisterAllEvents()
+    local saved = TTS.Options and tonumber(TTS.Options:Get("boardScale"))
+    if saved then
+        B:SetScale(math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, saved)))
+    end
+end)

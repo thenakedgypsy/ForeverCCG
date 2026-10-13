@@ -122,6 +122,18 @@ local function OpenFromMain(child)
 end
 
 -- =========================================================================
+-- OPTIONS (title bar, left of the close button)
+-- =========================================================================
+local optionsBtn = CreatePanelButton("TTS_OptionsBtn", M, 64, 20, "Options")
+optionsBtn:SetPoint("TOPRIGHT", M, "TOPRIGHT", -32, -15)
+optionsBtn:SetScript("OnClick", function()
+    if TTS.OptionsFrame then
+        TTS.OptionsFrame:Show()
+        OpenFromMain(TTS.OptionsFrame)
+    end
+end)
+
+-- =========================================================================
 -- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
 -- =========================================================================
 local deckSection = CreateSection("Your Deck", 372, 104)

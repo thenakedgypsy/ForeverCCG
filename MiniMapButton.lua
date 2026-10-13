@@ -46,7 +46,7 @@ local isDragging = false
 btn:RegisterForDrag("LeftButton")
 btn:SetScript("OnDragStart", function(self)
     isDragging = true
-    GameTooltip:Hide()
+    if TTS.Tooltip then TTS.Tooltip:Hide() end
     self:SetScript("OnUpdate", function()
         local mx, my = Minimap:GetCenter()
         local cx, cy = GetCursorPosition()
@@ -140,12 +140,9 @@ btn:SetScript("OnClick", function()
     end
 end)
 
-btn:SetScript("OnEnter", function(self)
-    if isDragging then return end
-
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Forever: CCG", 1, 0.82, 0)
-    GameTooltip:AddLine(" ")
+local function BuildMinimapTooltip(tip)
+    tip:AddLine("Forever: CCG", 1, 0.82, 0)
+    tip:AddLine(" ")
 
     local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]
     local count = 0
@@ -156,8 +153,8 @@ btn:SetScript("OnEnter", function(self)
     end
     local deckName = (activeDeck and activeDeck.name) or "Default Deck"
 
-    GameTooltip:AddDoubleLine("Active Deck:", deckName, 1, 1, 1, 0.9, 0.9, 0.6)
-    GameTooltip:AddDoubleLine(
+    tip:AddDoubleLine("Active Deck:", deckName, 1, 1, 1, 0.9, 0.9, 0.6)
+    tip:AddDoubleLine(
         "Card Count:",
         string.format("%d / 40", count),
         1, 1, 1,
@@ -167,21 +164,26 @@ btn:SetScript("OnEnter", function(self)
     )
 
     if TTS.Engine and TTS.Engine.inMatch then
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("|cFF00FF00Match in Progress!|r")
+        tip:AddLine(" ")
+        tip:AddLine("|cFF00FF00Match in Progress!|r")
     end
 
-    GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("|cFF808080Left-Click: Toggle Main Window|r")
-    GameTooltip:AddLine("|cFF808080Shift + Left-Click: Toggle Deckbuilder|r")
-    GameTooltip:AddLine("|cFF808080Alt + Left-Click: Toggle Rules|r")
-    GameTooltip:AddLine("|cFF808080Ctrl + Left-Click: Toggle Waiting Room|r")
-    GameTooltip:AddLine("|cFF808080Left-Click & Drag: Move Button|r")
-    GameTooltip:Show()
+    tip:AddLine(" ")
+    tip:AddLine("|cFF808080Left-Click: Toggle Main Window|r")
+    tip:AddLine("|cFF808080Shift + Left-Click: Toggle Deckbuilder|r")
+    tip:AddLine("|cFF808080Alt + Left-Click: Toggle Rules|r")
+    tip:AddLine("|cFF808080Ctrl + Left-Click: Toggle Waiting Room|r")
+    tip:AddLine("|cFF808080Left-Click & Drag: Move Button|r")
+end
+
+-- Shown through the tooltip manager (UI\Tooltips.lua)
+btn:SetScript("OnEnter", function(self)
+    if isDragging then return end
+    if TTS.Tooltip then TTS.Tooltip:Show(self, "ANCHOR_LEFT", { main = BuildMinimapTooltip }) end
 end)
 
-btn:SetScript("OnLeave", function()
-    GameTooltip:Hide()
+btn:SetScript("OnLeave", function(self)
+    if TTS.Tooltip then TTS.Tooltip:Hide(self) end
 end)
 
 -- =========================================================================

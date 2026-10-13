@@ -190,6 +190,66 @@ local function SetupRuleCard(f, cardId)
     end
 end
 
+-- =========================================================================
+-- CARD PREVIEW
+-- Full-size copy of the hovered example card, docked outside the left edge
+-- of the window (same as the Deckbuilder and the board).
+-- =========================================================================
+local PREVIEW_W, PREVIEW_H = 150, 212
+local PREVIEW_RULES = {
+    fontMax = 11,
+    fontMin = 8,
+    offsetX = 3,   -- pixels right
+    offsetY = 3,   -- pixels down
+}
+
+local previewCard
+
+local function ShowRulesPreview(card)
+    if not TTS.CreateCardFrame then return end
+    if not previewCard then
+        previewCard = TTS.CreateCardFrame(R, PREVIEW_W, PREVIEW_H)
+        previewCard:SetFrameStrata("DIALOG")
+        previewCard:SetFrameLevel((R:GetFrameLevel() or 10) + 40)
+        previewCard:SetClampedToScreen(true)
+        previewCard:EnableMouse(false)
+        previewCard:SetScript("OnEnter", nil)
+        previewCard:SetScript("OnLeave", nil)
+    end
+    local f = previewCard
+
+    -- Card name and cost sit above the frame, so leave room for them
+    f:ClearAllPoints()
+    f:SetPoint("TOPRIGHT", R, "TOPLEFT", -12, -76)
+
+    if TTS.SetupCardVisual then TTS.SetupCardVisual(f, card) end
+    f.currentCard = card
+    if TTS.ApplyFrameTexture then TTS.ApplyFrameTexture(f.border, card) end
+    f.border:SetVertexColor(1, 1, 1, 1)
+    f.title:SetText(card.name or "")
+
+    if card.cost and card.cost ~= "" then
+        f.cost:SetText(FormatTextWithSymbols(card.cost, 18))
+        f.cost:Show()
+    else
+        f.cost:Hide()
+    end
+
+    if card.type == "Creature" and card.power and card.toughness then
+        f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
+        f.pt:Show()
+    else
+        f.pt:Hide()
+    end
+
+    f:Show()
+    if TTS.UpdateCardRules then TTS.UpdateCardRules(f, PREVIEW_RULES) end
+end
+
+local function HideRulesPreview()
+    if previewCard then previewCard:Hide() end
+end
+
 local function CreateExampleCard(parent, cardId)
     local cardW, cardH = 72, 102
     local f = nil
@@ -241,31 +301,17 @@ local function CreateExampleCard(parent, cardId)
     f:EnableMouse(true)
     f:RegisterForClicks("LeftButtonUp")
 
-    -- Tooltip preview when hovering over rule examples
+    -- Preview and tooltip (UI\Tooltips.lua) when hovering over rule examples
     f:SetScript("OnEnter", function(self)
         local card = TTS.Cards and TTS.Cards[self.cardId]
         if not card then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine(card.name, 1, 1, 1)
-        local cStr = (card.cost and card.cost ~= "") and FormatTextWithSymbols(card.cost, 18) or "0"
-        local displayType = card.type
-        if displayType == "Land" then
-            displayType = "Prayer"
-        end
-        GameTooltip:AddLine("Cost: " .. cStr .. "  |  " .. displayType, 0.8, 0.8, 0.8)
-        local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
-        if tagLine then
-            GameTooltip:AddLine(tagLine, 1, 1, 1)
-        end
-        if card.power and card.toughness then
-            GameTooltip:AddLine(string.format("P/T: %d/%d", card.power, card.toughness), 1, 0.8, 0)
-        end
-        if card.text and card.text ~= "" then
-            GameTooltip:AddLine(FormatTextWithSymbols(card.text, 16), 0.9, 0.9, 0.5, true)
-        end
-        GameTooltip:Show()
+        ShowRulesPreview(card)
+        if TTS.Tooltip then TTS.Tooltip:ShowCard(self, "ANCHOR_TOP", self.cardId) end
     end)
-    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    f:SetScript("OnLeave", function(self)
+        if TTS.Tooltip then TTS.Tooltip:Hide(self) end
+        HideRulesPreview()
+    end)
 
     SetupRuleCard(f, cardId)
     return f
@@ -306,7 +352,7 @@ pU:SetJustifyH("LEFT")
 pU:SetWordWrap(true)
 pU.rawText = "You build your collection by playing World of Warcraft. Some cards are free, the rest are earned.\n\n" ..
     "|cFFFFD200Always available:|r Prayers.\n\n" ..
-    "|cFFFFD200Class Spells unlock as you level.|r Each of the nine classes (Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid) has 10 spells. You unlock |cFFFFFFFF1 spell from every class|r at level 6 and again every |cFFFFFFFF6 levels|r (12, 18, 24 ... 60), so all 90 are available by level 60. Each set of new spells is spread across all five spheres.\n\n" ..
+    "|cFFFFD200Class Spells unlock as you level.|r Each of the nine classes (Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid) has 10 spells. You unlock |cFFFFFFFF1 spell from every class|r at level 6 and again every |cFFFFFFFF6 levels|r (12, 18, 24 ... 60), so all 90 are available by level 60. Each set of new spells is spread across all five colours.\n\n" ..
     "|cFFFFD200Creature cards start locked.|r Every zone has 10 creatures to collect. Defeat the creature in the world for a |cFFFFD200chance|r to unlock its card:\n" ..
     "• Each card drop adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
     "• The chance falls with each copy you own: 1st copy |cFF00FF00100%|r, 2nd |cFFFFFFFF25%|r, 3rd |cFFFFFFFF12%|r, 4th |cFFFFFFFF6%|r.\n" ..
@@ -316,13 +362,13 @@ pU.rawText = "You build your collection by playing World of Warcraft. Some cards
     "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
     "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies. Spell unlocks follow the level of the character you are playing.\n\n"
 
-local h2 = MakeHeading("Spheres of Mana")
+local h2 = MakeHeading("Colours of Mana")
 
 local p2 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p2:SetWidth(540)
 p2:SetJustifyH("LEFT")
 p2:SetWordWrap(true)
-p2.rawText = "Prayers produce mana when tapped {T}. Colored costs demand their respective sphere:\n\n" ..
+p2.rawText = "Prayers produce mana when tapped {T}. Colored costs demand their respective colour:\n\n" ..
     "  {W} |cFFFFD200Holy (White)|r: Life gain, shielding, vigilant guards, board wipes.\n" ..
     "  {U} |cFF66BBFFArcane (Blue)|r: Card draw, tempo manipulation, freezing {T}, bounce.\n" ..
     "  {B} |cFF9966FFShadow (Black)|r: Targeted removal, sacrifice, hand disruption, drain.\n" ..
@@ -369,7 +415,7 @@ p5:SetWordWrap(true)
 p5.rawText = "Both players must be on the |cFFFFD200same version|r of Forever: CCG.\n\n" ..
     "|cFFFFD200Connection:|r Challenges and matches are sent over the |cFFFFFFFFFCCGTTSE|r chat channel, which the addon joins for you a few seconds after you log in. The channel is always tried first.\n\n" ..
     "|cFFFFD200Fallback:|r If your opponent doesn't respond within |cFFFFFFFF8 seconds|r, the challenge is retried on the next route in this order:\n" ..
-    "   |cFFFFFFFFwhisper|r → |cFFFFFFFFparty chat|r → |cFFFFFFFFraid chat|r → |cFFFFFFFFguild chat|r → |cFFFFFFFFyell|r\n" ..
+    "   |cFFFFFFFFwhisper|r -> |cFFFFFFFFparty chat|r -> |cFFFFFFFFraid chat|r -> |cFFFFFFFFguild chat|r -> |cFFFFFFFFyell|r\n" ..
     "• Routes that can't reach your opponent are skipped (party and raid only if you're grouped with them, guild only if you're in one).\n" ..
     "• Yell only reaches players |cFFFFD200near you|r.\n" ..
     "• Once a route works, the rest of that match uses it.\n" ..
@@ -446,7 +492,7 @@ local function LayoutRules()
     y = PlaceParagraph(pU, y)
     y = PlaceCardRow(unlockFrames, { "WES01", "BOSS01", "WAR01" }, y) - SECTION_GAP
 
-    -- Section 2: Spheres of Mana, with one Prayer of each sphere
+    -- Section 2: Colours of Mana, with one Prayer of each colour
     y = PlaceHeading(h2, y)
     y = PlaceParagraph(p2, y)
     y = PlaceCardRow(landFrames, { "W01", "U01", "B01", "R01", "G01" }, y) - SECTION_GAP

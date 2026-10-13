@@ -177,6 +177,7 @@ local function UpdateBlockArrows()
     local E = TTS.Engine
     local n, s = 0, 0
     local bs = E and E.inMatch and E.blockingState
+    B.predictedDeaths = nil   -- read by the card tooltips (skull symbol)
 
     if bs and bs.blocks then
         -- Defending: blockers are ours, attackers theirs. Attacking: the reverse.
@@ -193,6 +194,7 @@ local function UpdateBlockArrows()
 
         -- Skull over every creature that dies if these blocks are accepted
         local dies = PredictDeaths(E, bs)
+        B.predictedDeaths = dies
         for _, isRemote in ipairs({ false, true }) do
             local field = isRemote and E.remoteState.field or E.localState.field
             for i, perm in ipairs(field) do

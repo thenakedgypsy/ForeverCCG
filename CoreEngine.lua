@@ -328,9 +328,10 @@ end
 -- =========================================================================
 
 -- "Your turn" alert. Uses the ready-check chime on the Master channel so it is
--- heard even with effects turned down; respects the board's Sounds checkbox.
+-- heard even with effects turned down; respects the Sounds checkbox and the
+-- "Your-turn alert" option.
 local function PlayTurnSound()
-    if not (TTS.Sound and TTS.Sound.enabled) then return end
+    if not (TTS.Sound and TTS.Sound:IsOn("turn")) then return end
     if SOUNDKIT then
         pcall(PlaySound, 31584, "Master")
     else

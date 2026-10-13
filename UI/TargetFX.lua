@@ -15,7 +15,8 @@ TTS = TTS or {}
 --  * When a player takes damage, their life plate flashes red, the amount
 --    floats up off it, and a hit sound plays. Unblocked attackers flash an
 --    arrow to the player they hit.
--- Sounds respect the board's Sounds checkbox. Load after UI\Board.lua.
+-- Sounds respect the Sounds checkbox and the "Targeting & hit sounds" option.
+-- Load after UI\Board.lua.
 -- =========================================================================
 local B = TTS.BoardFrame
 if not B then return end
@@ -44,7 +45,7 @@ local canDrawLines = layer.CreateLine ~= nil
 local atan2 = math.atan2 or math.atan
 
 local function PlayFX(soundId)
-    if not (TTS.Sound and TTS.Sound.enabled) then return end
+    if not (TTS.Sound and TTS.Sound:IsOn("combat")) then return end
     pcall(PlaySound, soundId, "SFX")
 end
 

@@ -147,8 +147,8 @@ local function RGBHex(rgb)
 end
 
 -- Sphere/cost symbols come from Board.lua, which loads after this file
-local function Sym(str, size)
-    if TTS.FormatSymbols then return TTS:FormatSymbols(str, size) end
+local function Sym(str, size, tapSize)
+    if TTS.FormatSymbols then return TTS:FormatSymbols(str, size, tapSize) end
     return str
 end
 
@@ -180,16 +180,17 @@ local function Skin(f, bg, border, kind)
     SetBorder(f, border[1], border[2], border[3], border[4])
 end
 
+-- Tooltips go through the manager in UI\Tooltips.lua.
+-- tooltipSymbol (optional): stacks that symbol's explanation (the sphere toggles)
+local TT = TTS.Tooltip
+
 local function AddTooltipScripts(b)
     b:SetScript("OnEnter", function(self)
         if self.tooltipTitle then
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine(self.tooltipTitle, 1, 1, 1)
-            if self.tooltipText then GameTooltip:AddLine(self.tooltipText, 0.7, 0.7, 0.7, true) end
-            GameTooltip:Show()
+            TT:ShowText(self, "ANCHOR_TOP", self.tooltipTitle, self.tooltipText, { symbol = self.tooltipSymbol })
         end
     end)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b:SetScript("OnLeave", function(self) TT:Hide(self) end)
 end
 
 -- Tooltip-bordered control (dropdowns, toggles)
@@ -316,6 +317,8 @@ local function ScaleGrip_OnUpdate(self)
     local grow = ((cx - self.startX) / self.startW + (self.startY - cy) / self.startH) / 2
     local scale = math.max(MIN_SCALE, math.min(MAX_SCALE, self.startScale * (1 + grow)))
     D:SetScale(scale)
+    -- Saved so the Deckbuilder always reopens at this size
+    if TTS.Options then TTS.Options:Set("deckBuilderScale", scale) end
     local eff = D:GetEffectiveScale()
     D:ClearAllPoints()
     D:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", self.leftPx / eff, self.topPx / eff)
@@ -341,11 +344,9 @@ scaleGrip:SetScript("OnHide", function(self)
     self:SetScript("OnUpdate", nil)
 end)
 scaleGrip:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:AddLine("Drag to scale the window", 1, 1, 1)
-    GameTooltip:Show()
+    TT:ShowText(self, "ANCHOR_TOP", "Drag to scale the window")
 end)
-scaleGrip:SetScript("OnLeave", function() GameTooltip:Hide() end)
+scaleGrip:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 local footer = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", D, "BOTTOMRIGHT", -26, 13)
@@ -444,7 +445,7 @@ local TYPE_RANK   = { Creature = 1, Spell = 2, Prayer = 3 }
 local SORT_ORDER = { "COST", "COLOR", "TYPE", "CLASS", "FACTION", "ZONE", "CREATURETYPE" }
 local SORT_LABEL = {
     COST         = "Cost",
-    COLOR        = "Sphere",
+    COLOR        = "Colour",
     TYPE         = "Card Type",
     CLASS        = "Class",
     FACTION      = "Faction",
@@ -738,9 +739,9 @@ end
 -- so its numbers are mirrored here.
 local TEXT_BOX = {
     left         = 0.09,
-    right        = 0.09,
-    top          = 0.57,
-    bottom       = 0.07,
+    right        = 0.12,
+    top          = 0.50,
+    bottom       = 0.08,
     bottomWithPT = 0.20,
 }
 local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
@@ -748,10 +749,26 @@ local RULES_FONT_MIN = 6
 -- Cards narrower than this on screen (pixels, Deckbuilder scale included) show
 -- no printed text: their rules are in the tooltip only
 local CARD_TEXT_MIN_WIDTH = 72
+-- Symbols in printed rules text (tap and mana alike) are drawn this many pixels
+-- larger than the text's base symbol size (mirrors Board.lua)
+local RULES_TAP_EXTRA = 3
+
+-- Rules text settings for the large preview card on the left
+local PREVIEW_RULES = {
+    fontMax = 11,
+    fontMin = 8,
+    offsetX = 3,   -- pixels right
+    offsetY = 3,   -- pixels down
+}
 
 -- Call after the card is shown (fitting needs the text laid out)
-local function PrintCardRules(f, card)
+-- opts (optional): fontMax, fontMin, offsetX (pixels right), offsetY (pixels down)
+local function PrintCardRules(f, card, opts)
     if not f.rules or not f.pt then return end
+    local fontMax = (opts and opts.fontMax) or RULES_FONT_MAX
+    local fontMin = (opts and opts.fontMin) or RULES_FONT_MIN
+    local dx = (opts and opts.offsetX) or 0
+    local dy = (opts and opts.offsetY) or 0
     local hasPT = f.pt:IsShown()
     local w, h = f:GetSize()
     local onScreen = w * (D:GetScale() or 1)
@@ -762,19 +779,15 @@ local function PrintCardRules(f, card)
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
             f.rulesCard, f.rulesPT = card, hasPT
             f.rules:ClearAllPoints()
-            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1, -h * TEXT_BOX.top - 1)
-            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right,
-                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom))
-            f.rules:SetJustifyH("LEFT")
+            f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1 + dx, -h * TEXT_BOX.top - 1 - dy)
+            f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right + dx,
+                h * (hasPT and TEXT_BOX.bottomWithPT or TEXT_BOX.bottom) - dy)
+            f.rules:SetJustifyH("CENTER")
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
-            for size = RULES_FONT_MAX, RULES_FONT_MIN, -1 do
+            for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(Sym(card.text, size + 2))
+                f.rules:SetText(Sym(card.text, size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
-            end
-            -- Short text that fits on one line is centred
-            if f.rules.GetNumLines and f.rules:GetNumLines() <= 1 then
-                f.rules:SetJustifyH("CENTER")
             end
         end
         f.rules:Show()
@@ -819,7 +832,7 @@ local function UpdateCardPreview(cardId)
     PaintCardFrame(f, card, 18)
 
     f:Show()
-    PrintCardRules(f, card)
+    PrintCardRules(f, card, PREVIEW_RULES)
     return f
 end
 
@@ -834,49 +847,28 @@ local function CardTooltip_OnEnter(self)
     -- 1. Full card preview docked to the left of the Deckbuilder
     UpdateCardPreview(self.cardId)
 
-    -- 2. Tooltip at the mouse cursor
-    GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-    GameTooltip:AddLine(card.name, 1, 1, 1)
-
-    if card.isBoss then
-        local kills = GetKillCount(self.cardId, card)
-
-        if kills == 0 then
-            GameTooltip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
-        else
-            local maxAllowed = math.min(4, kills)
-            GameTooltip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
-        end
-    elseif not TTS:IsSpellUnlocked(self.cardId) then
-        GameTooltip:AddLine(string.format("|cFFFF2222Locked: Unlocks at level %d|r", TTS:GetSpellUnlockLevel(self.cardId)), 1, 0.2, 0.2)
-    end
-
-    local costStr = (card.cost and card.cost ~= "") and Sym(card.cost, 18) or "0"
-    local displayType = card.type
-    if displayType == "Land" then
-        displayType = "Prayer"
-    end
-    GameTooltip:AddLine("Cost: " .. costStr .. "  |  Type: " .. displayType, 0.8, 0.8, 0.8)
-    local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
-    if tagLine then
-        GameTooltip:AddLine(tagLine, 1, 1, 1)
-    end
-
-    if card.power and card.toughness then
-        GameTooltip:AddLine("Stats: " .. card.power .. "/" .. card.toughness, 1, 0.8, 0)
-    end
-    if card.text and card.text ~= "" then
-        GameTooltip:AddLine(Sym(card.text, 16), 0.9, 0.9, 0.5, true)
-    end
-    if self.hint then
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(self.hint, 0.5, 0.5, 0.5)
-    end
-    GameTooltip:Show()
+    -- 2. Tooltip at the mouse cursor, with the collection status under the name
+    local cardId = self.cardId
+    TT:ShowCard(self, "ANCHOR_CURSOR", cardId, {
+        hint = self.hint,
+        header = function(tip)
+            if card.isBoss then
+                local kills = GetKillCount(cardId, card)
+                if kills == 0 then
+                    tip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
+                else
+                    local maxAllowed = math.min(4, kills)
+                    tip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
+                end
+            elseif not TTS:IsSpellUnlocked(cardId) then
+                tip:AddLine(string.format("|cFFFF2222Locked: Unlocks at level %d|r", TTS:GetSpellUnlockLevel(cardId)), 1, 0.2, 0.2)
+            end
+        end,
+    })
 end
 
 local function CardTooltip_OnLeave()
-    GameTooltip:Hide()
+    TT:Hide()
     if previewCard then
         previewCard:Hide()
     end
@@ -998,7 +990,7 @@ local function CreateDropdown(parent, width, allText, cfg)
         for _, row in ipairs(rows) do
             row.check:SetShown(row.value == dd.value)
         end
-        GameTooltip:Hide()
+        TT:Hide()
         menu:Show()
         openMenu = menu
         menuBlocker:Show()
@@ -1121,6 +1113,7 @@ for n, key in ipairs(SPHERE_ORDER) do
     b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 434 + (n - 1) * 49, -10)
     b.tooltipTitle = RGBHex(rgb) .. SPHERE_NAME[key] .. "|r"
     b.tooltipText = "Show or hide " .. SPHERE_NAME[key] .. " cards."
+    b.tooltipSymbol = key
     sphereToggles[key] = b
 end
 
@@ -1511,7 +1504,7 @@ for i = 1, TTS.MAX_DECK_SLOTS do
         TTS:EnsureDeckSlots()
         if button == "RightButton" then
             CloseMenus()
-            GameTooltip:Hide()
+            TT:Hide()
             pendingRenameIndex = i
             StaticPopup_Show("TTS_RENAME_DECK")
             return
@@ -1792,7 +1785,7 @@ colorFrame:SetSize(LIST_W - 200, 118)
 
 local colorTitle = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 colorTitle:SetPoint("TOPLEFT", colorFrame, "TOPLEFT", 10, -8)
-colorTitle:SetText("SPHERES")
+colorTitle:SetText("COLOURS")
 
 local colorTotal = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 colorTotal:SetPoint("TOPRIGHT", colorFrame, "TOPRIGHT", -8, -8)
@@ -2155,6 +2148,18 @@ levelWatcher:SetScript("OnEvent", function(self, event, newLevel)
         C_Timer.After(0.5, function() if D:IsShown() then D:RefreshAll() end end)
     elseif D:IsShown() then
         D:RefreshAll()
+    end
+end)
+
+-- Saved size (scale), applied once the saved settings have loaded
+local scaleLoader = CreateFrame("Frame")
+scaleLoader:RegisterEvent("ADDON_LOADED")
+scaleLoader:SetScript("OnEvent", function(self, event, addon)
+    if addon ~= "ForeverCCG" then return end
+    self:UnregisterAllEvents()
+    local saved = TTS.Options and tonumber(TTS.Options:Get("deckBuilderScale"))
+    if saved then
+        D:SetScale(math.max(MIN_SCALE, math.min(MAX_SCALE, saved)))
     end
 end)
 
