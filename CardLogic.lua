@@ -576,10 +576,22 @@ SPELL_OPS.steal = function(self, op, d, card, cr)
     end
 end
 
+-- Mirroring an over-time effect or shield the opponent put on a player: their client ticks
+-- it and sends its effects (ACTION:EFFECTS), which replace st.mirror. Shown here straight
+-- away, so the tracker doesn't depend on that message arriving.
+local function MirrorPlayerEffects(self, d)
+    local st = d.isRemote and self.remoteState or self.localState
+    st.mirror = st.mirror or { shield = 0, dots = {}, hots = {} }
+    return st.mirror
+end
+
 SPELL_OPS.dot = function(self, op, d, card, cr)
     local holder = d.perm
     if d.kind == "PLAYER" then
-        if self.mirroring then return end   -- the caster's client ticks it
+        if self.mirroring then   -- the caster's client ticks it
+            table.insert(MirrorPlayerEffects(self, d).dots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+            return
+        end
         holder = d.isRemote and self.remoteState or self.localState
     end
     holder.dots = holder.dots or {}
@@ -590,7 +602,10 @@ end
 SPELL_OPS.hot = function(self, op, d, card, cr)
     local holder = d.perm
     if d.kind == "PLAYER" then
-        if self.mirroring then return end   -- the caster's client ticks it
+        if self.mirroring then   -- the caster's client ticks it
+            table.insert(MirrorPlayerEffects(self, d).hots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+            return
+        end
         holder = d.isRemote and self.remoteState or self.localState
     end
     holder.hots = holder.hots or {}
@@ -600,7 +615,11 @@ end
 
 SPELL_OPS.shield = function(self, op, d, card, cr)
     if d.kind == "PLAYER" then
-        if self.mirroring then return end   -- the caster's client tracks it
+        if self.mirroring then   -- the caster's client tracks it
+            local m = MirrorPlayerEffects(self, d)
+            m.shield = (m.shield or 0) + op.n
+            return
+        end
         local st = d.isRemote and self.remoteState or self.localState
         st.damageShield = (st.damageShield or 0) + op.n
         self:Log(string.format("%s: the next %d damage to %s will be prevented.", card.name, op.n, self:SideName(d.isRemote)), "ACTION")

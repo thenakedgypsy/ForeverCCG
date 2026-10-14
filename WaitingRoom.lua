@@ -69,7 +69,7 @@ TTS.GetPlayerFullName = GetPlayerFullName
 -- =========================================================================
 local F = CreateFrame("Frame", "TTS_WaitingRoomFrame", UIParent, backdropTemplate)
 WR.frame = F
-F:SetSize(460, 430)
+F:SetSize(460, 580)
 F:SetPoint("CENTER", 50, 0)
 F:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -99,7 +99,8 @@ statusDesc:SetText("Players currently looking for a match:")
 
 local listContainer = CreateFrame("Frame", nil, F, backdropTemplate)
 listContainer:SetPoint("TOPLEFT", 20, -72)
-listContainer:SetPoint("BOTTOMRIGHT", -20, 80)
+listContainer:SetPoint("TOPRIGHT", -20, -72)
+listContainer:SetHeight(232)   -- 8 rows
 listContainer:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -139,6 +140,77 @@ for i = 1, 8 do
 
     row:Hide()
     playerRows[i] = row
+end
+
+-- =========================================================================
+-- ONLINE BUT NOT WAITING (greyed out, display only)
+-- Contacts who answered a ping recently but aren't queued (Network.lua, GetOnlineIdleContacts)
+-- =========================================================================
+local ONLINE_ROWS = 6
+
+local onlineDesc = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+onlineDesc:SetPoint("TOPLEFT", listContainer, "BOTTOMLEFT", 0, -10)
+onlineDesc:SetPoint("TOPRIGHT", listContainer, "BOTTOMRIGHT", 0, -10)
+onlineDesc:SetJustifyH("CENTER")
+
+local onlineContainer = CreateFrame("Frame", nil, F, backdropTemplate)
+onlineContainer:SetPoint("TOPLEFT", listContainer, "BOTTOMLEFT", 0, -26)
+onlineContainer:SetPoint("TOPRIGHT", listContainer, "BOTTOMRIGHT", 0, -26)
+onlineContainer:SetHeight(8 + ONLINE_ROWS * 22)
+onlineContainer:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 12,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 }
+})
+onlineContainer:SetBackdropColor(0, 0, 0, 0.3)
+onlineContainer:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
+
+local onlineRows = {}
+for i = 1, ONLINE_ROWS do
+    local row = CreateFrame("Frame", nil, onlineContainer)
+    row:SetSize(400, 20)
+    row:SetPoint("TOPLEFT", 10, -6 - ((i - 1) * 22))
+
+    -- Lines up with the score column of the list above (its rows end with 158px of buttons)
+    row.scoreText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    row.scoreText:SetPoint("RIGHT", -172, 0)
+    row.scoreText:SetWidth(70)
+    row.scoreText:SetJustifyH("RIGHT")
+
+    row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+    row.nameText:SetPoint("LEFT", 6, 0)
+    row.nameText:SetPoint("RIGHT", row.scoreText, "LEFT", -6, 0)
+    row.nameText:SetJustifyH("LEFT")
+    row.nameText:SetWordWrap(false)
+
+    row:Hide()
+    onlineRows[i] = row
+end
+
+local onlineEmpty = onlineContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+onlineEmpty:SetPoint("CENTER")
+onlineEmpty:SetText("Nobody else found yet. Players you meet are checked on in the background.")
+onlineEmpty:SetWidth(380)
+
+local function UpdateOnlineList()
+    local list = TTS.Net and TTS.Net.GetOnlineIdleContacts and TTS.Net:GetOnlineIdleContacts() or {}
+    onlineDesc:SetText(string.format("Recent players online (%d):", #list))
+    onlineEmpty:SetShown(#list == 0)
+    for i, row in ipairs(onlineRows) do
+        local entry = list[i]
+        if i == ONLINE_ROWS and #list > ONLINE_ROWS then
+            row.nameText:SetText(string.format("+ %d more", #list - ONLINE_ROWS + 1))
+            row.scoreText:SetText("")
+            row:Show()
+        elseif entry then
+            row.nameText:SetText(entry.name)
+            row.scoreText:SetText(entry.score and TTS:FormatScore(entry.score) or "-")
+            row:Show()
+        else
+            row:Hide()
+        end
+    end
 end
 
 -- =========================================================================
@@ -284,6 +356,8 @@ function WR:UpdateUI()
             row:Hide()
         end
     end
+
+    UpdateOnlineList()
 end
 
 function WR:BroadcastPresence()
@@ -346,6 +420,8 @@ F:SetScript("OnShow", function(self)
     end
     -- Saved contacts may be on another backend realm, out of reach of the channel (Network.lua)
     if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
+    -- Everyone else with the addon on our channel, queued or not
+    if TTS.Net and TTS.Net.RunCensus then TTS.Net:RunCensus() end
     WR:UpdateUI()
 end)
 
@@ -371,6 +447,7 @@ F:SetScript("OnUpdate", function(self, elapsed)
             WR:BroadcastPresence()
         end
         if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
+        if TTS.Net and TTS.Net.RunCensus then TTS.Net:RunCensus() end
         WR:UpdateUI()
     end
 end)

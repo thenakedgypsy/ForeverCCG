@@ -479,6 +479,11 @@ local CONTACT_MAX = 50                  -- most recently seen contacts kept, for
 local CONTACT_TTL = 30 * 24 * 60 * 60   -- forgotten after 30 days unseen
 local CONTACT_PING_EVERY = 9            -- seconds between pings to one contact (the waiting room ticks every 10)
 local CONTACT_PINGS_PER_TICK = 4         -- with the heartbeat, stays under the ~1 message/s addon limit
+-- While the waiting room is closed, contacts are still pinged now and then, so contact lists
+-- keep spreading (and players find each other) without anyone opening it
+local BACKGROUND_PING_TICK = 15         -- seconds between background rounds
+local BACKGROUND_PING_EVERY = 300       -- seconds between background pings to one contact
+local BACKGROUND_PINGS_PER_TICK = 2
 local CONTACT_REPLY_WAIT = 6            -- no pong by then: treat them as offline
 local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left alone
 local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
@@ -616,16 +621,18 @@ local function NoteContactWaiting(name, score)
 end
 
 -- Pings the contacts that are due: direct before shared, then most recently seen first
--- (the waiting room calls this)
-function TTS.Net:PingContacts()
+-- (the waiting room calls this; background = the slower rounds while it is closed)
+function TTS.Net:PingContacts(background)
     local E = TTS.Engine
     if E and E.inMatch then return end
+    local every = background and BACKGROUND_PING_EVERY or CONTACT_PING_EVERY
+    local perTick = background and BACKGROUND_PINGS_PER_TICK or CONTACT_PINGS_PER_TICK
     local db, now = ContactDB(), time()
     local due = {}
     for key, c in pairs(db) do
         local s = ContactState(key)
         if type(c) == "table" and c.name and not SameName(c.name, MyName())
-            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= CONTACT_PING_EVERY then
+            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= every then
             due[#due + 1] = c
         end
     end
@@ -635,7 +642,7 @@ function TTS.Net:PingContacts()
     end)
 
     local fields = MyLFMFields()
-    for i = 1, math.min(#due, CONTACT_PINGS_PER_TICK) do
+    for i = 1, math.min(#due, perTick) do
         local name = due[i].name
         local key = name:lower()
         ContactState(key).lastPing = now
@@ -652,6 +659,103 @@ function TTS.Net:PingContacts()
             end)
         end)
     end
+end
+
+-- Contacts known to be online but not in the waiting room: { name, score }, sorted by name.
+-- Online = answered (or sent) a ping within ONLINE_WINDOW, and not silent on a later ping.
+local ONLINE_WINDOW = BACKGROUND_PING_EVERY + 120
+function TTS.Net:GetOnlineIdleContacts()
+    local now, list = time(), {}
+    local WR = TTS.WaitingRoom
+    for key, c in pairs(ContactDB()) do
+        local s = contactState[key]
+        if type(c) == "table" and c.name and s and s.lastReached and not s.queued
+            and (now - s.lastReached) <= ONLINE_WINDOW
+            and not ((s.lastPing or 0) > s.lastReached and (now - s.lastPing) > CONTACT_REPLY_WAIT)
+            and not (WR and WR.players and WR.players[c.name])
+            and not SameName(c.name, MyName()) then
+            list[#list + 1] = { name = c.name, score = s.score }
+        end
+    end
+    table.sort(list, function(a, b) return a.name:lower() < b.name:lower() end)
+    return list
+end
+
+-- =========================================================================
+-- CENSUS
+-- Finds everyone with the addon on our FCCGTTSE channel, queued or not, so they show in the
+-- waiting room (and become contacts, which spreads them to other backend realms).
+--   LFM_CENSUS:<score>:<name>             asked while our waiting room is open and we're not queued
+--   LFM_HERE:<queued 0/1>:<score>:<name>  every client's answer, broadcast so all askers benefit
+-- One census per CENSUS_EVERY across the whole channel (anyone's counts), and each client
+-- answers at most once per CENSUS_REPLY_COOLDOWN after a random delay, so a full channel
+-- doesn't answer in one burst. Older builds ignore both.
+-- =========================================================================
+local CENSUS_EVERY = 60
+local CENSUS_REPLY_COOLDOWN = 30
+local CENSUS_REPLY_JITTER = 5
+local lastCensusSeen = 0
+local lastCensusReply = 0
+
+-- Someone on the channel is online: remember them like an answered ping
+local function NotePresence(name, charName, queued, score)
+    name = NormalizeName(name or "")
+    if name == "" or SameName(name, MyName()) then return end
+    RememberCharName(name, charName)
+    TTS.Net:AddContact(name)
+    local s = ContactState(name:lower())
+    s.lastReached = time()
+    s.offlineUntil = nil
+    s.queued = queued
+    s.score = score or s.score
+    if queued then
+        NoteContactWaiting(name, score)
+    elseif TTS.WaitingRoom and TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
+        TTS.WaitingRoom:UpdateUI()
+    end
+end
+
+-- Called by the waiting room (on open and every tick); only asks when it is our turn to
+function TTS.Net:RunCensus()
+    local E, WR = TTS.Engine, TTS.WaitingRoom
+    if (E and E.inMatch) or not (WR and WR.frame and WR.frame:IsShown()) or WR.isQueued then return end
+    if time() - lastCensusSeen < CENSUS_EVERY then return end
+    lastCensusSeen = time()
+    self:BroadcastLFM("LFM_CENSUS:" .. MyScore() .. ":" .. MyName())
+end
+
+local function OnCensus(msg, sender)
+    lastCensusSeen = time()
+    local score, name = msg:match("^LFM_CENSUS:(%d+):(.+)$")
+    -- The asker has their waiting room open and isn't queued
+    if name then NotePresence(name, sender, false, tonumber(score)) end
+    local E = TTS.Engine
+    if (E and E.inMatch) or time() - lastCensusReply < CENSUS_REPLY_COOLDOWN then return end
+    lastCensusReply = time()
+    TTS:SafeAfter(math.random() * CENSUS_REPLY_JITTER, function()
+        TTS.Net:BroadcastLFM("LFM_HERE:" .. MyLFMFields() .. ":" .. MyName())
+    end)
+end
+
+local function OnHere(msg, sender)
+    local queued, score, name = msg:match("^LFM_HERE:(%d):(%d+):(.+)$")
+    if name then NotePresence(name, sender, queued == "1", tonumber(score)) end
+end
+
+-- Slow background rounds from login on. The waiting room pings faster while it is open,
+-- so these skip then (and during a match, which PingContacts already skips).
+function TTS.Net:StartBackgroundPings()
+    if self.backgroundPings then return end   -- PLAYER_ENTERING_WORLD fires on every loading screen
+    self.backgroundPings = true
+    local function Round()
+        local WR = TTS.WaitingRoom
+        if not (WR and WR.frame and WR.frame:IsShown()) then
+            TTS.Net:PingContacts(true)
+        end
+        TTS:SafeAfter(BACKGROUND_PING_TICK, Round)
+    end
+    -- First round once the login burst (channel join, addon loading) has settled
+    TTS:SafeAfter(20, Round)
 end
 
 -- Hides the "No player named ... is currently playing" error for contacts we just pinged
@@ -740,6 +844,7 @@ f:SetScript("OnEvent", function(self, event, ...)
     elseif event == "PLAYER_ENTERING_WORLD" then
         -- Delay so the default channels (General, Trade...) take their usual numbers first
         TTS:SafeAfter(5, JoinLFMChannel)
+        TTS.Net:StartBackgroundPings()
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, channel, sender = ...
         if prefix == PREFIX then
@@ -810,6 +915,9 @@ function TTS.Net:OnReceive(msg, sender)
         pName = NormalizeName(pName)
         RememberCharName(pName, sender)
         TTS.Net:AddContact(pName)
+        local s = ContactState(pName:lower())
+        s.lastReached = time()
+        s.queued = true
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
             -- The chat sender is the character name, which is what a party invite needs
@@ -834,12 +942,26 @@ function TTS.Net:OnReceive(msg, sender)
     elseif cmd == "LFM_LEAVE" then
         local pName = msg:match("^LFM_LEAVE:(.+)$") or parts[2] or sender
         pName = NormalizeName(pName)
+        -- Still online, just not waiting: they move to the online list
+        if type(ContactDB()[pName:lower()]) == "table" then
+            local s = ContactState(pName:lower())
+            s.lastReached = time()
+            s.queued = false
+        end
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = nil
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
                 TTS.WaitingRoom:UpdateUI()
             end
         end
+        return
+
+    elseif cmd == "LFM_CENSUS" then
+        OnCensus(msg, sender)
+        return
+
+    elseif cmd == "LFM_HERE" then
+        OnHere(msg, sender)
         return
 
     elseif cmd == "LFM_QUERY" then
@@ -854,14 +976,22 @@ function TTS.Net:OnReceive(msg, sender)
         -- Arrives by whisper, so OnChannelMessage has already routed replies to them that way
         local key = sender:lower()
         TTS.Net:AddContact(sender)
+        -- Either way they are online right now: remember it for the waiting room's online list
+        local s = ContactState(key)
+        s.lastReached = time()
+        s.offlineUntil = nil
+        s.queued = (parts[2] == "1")
+        s.score = tonumber(parts[3]) or s.score
         if cmd == "CONTACT_PONG" then
-            ContactState(key).lastReached = time()
-            ContactState(key).offlineUntil = nil
             pendingPings[key] = nil
         else
             TTS.Net:Send(sender, "CONTACT_PONG:" .. MyLFMFields())
         end
-        if parts[2] == "1" then NoteContactWaiting(sender, tonumber(parts[3])) end
+        if parts[2] == "1" then
+            NoteContactWaiting(sender, tonumber(parts[3]))
+        elseif TTS.WaitingRoom and TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
+            TTS.WaitingRoom:UpdateUI()
+        end
         return
 
     elseif cmd == "CONTACT_LIST" then

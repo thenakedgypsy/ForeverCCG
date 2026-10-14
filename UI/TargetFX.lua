@@ -543,17 +543,24 @@ local function InstallHooks()
         E.ResolveCombatDamage = function(self, ...)
             local bs = self.blockingState
             local arrows, state, before, defRemote = {}, nil, nil, nil
+            -- PvP, defending: the attacker's client sends the damage to us afterwards
+            -- (ACTION:DAMAGE), so our life doesn't change here; arrow every unblocked
+            -- attacker that will hit (the hit itself plays when that damage arrives)
+            local damageArrives = false
             if bs then
                 local atkRemote = bs.isRemoteAttacking and true or false
                 defRemote = not atkRemote
+                damageArrives = atkRemote and not self.isSolo and not self.preventCombatDamage
                 state = defRemote and self.remoteState or self.localState
                 before = state.life
 
                 local blocked = {}
                 for _, atkIdx in pairs(bs.blocks or {}) do blocked[atkIdx] = true end
+                local atkField = (atkRemote and self.remoteState or self.localState).field
                 local dst = Pos(defRemote and B.oppLifeBtn or B.myLifeBtn)
                 for _, atkIdx in ipairs(bs.attackers or {}) do
-                    if not blocked[atkIdx] then
+                    local perm = atkField[atkIdx]
+                    if perm and not blocked[atkIdx] and (self:GetCreatureStats(perm, atkRemote) or 0) > 0 then
                         local src = Pos(FindFieldFrame(atkRemote, atkIdx))
                         if src and dst then table.insert(arrows, { src, dst }) end
                     end
@@ -562,7 +569,9 @@ local function InstallHooks()
 
             hitShown = false
             local results = { origCombat(self, ...) }
-            if state and state.life < before then
+            if damageArrives then
+                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
+            elseif state and state.life < before then
                 for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
                 -- Combat that changes life without going through DamagePlayer still gets a hit
                 if not hitShown then ShowHit(defRemote, before - state.life) end
