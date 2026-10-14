@@ -1507,6 +1507,97 @@ end
 -- =========================================================================
 -- BOARD DISPLAY UPDATE
 -- =========================================================================
+-- =========================================================================
+-- LEAVING CREATURES
+-- A creature that leaves the battlefield stays in its slot for a moment before the row
+-- closes up: red with a skull when it died, blue when it went to a hand or library.
+-- =========================================================================
+local LEAVE_TIME = 1.0
+local LEAVE_COLORS = { died = { 1.0, 0.2, 0.2 }, returned = { 0.3, 0.55, 1.0 } }
+local LEAVE_SKULL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull.png"
+
+local leaving = { [false] = {}, [true] = {} }     -- side -> { { perm, kind, untilT, slot } }
+local lastShown = { [false] = {}, [true] = {} }   -- side -> perms in the order they were drawn
+local lastField = {}                               -- side -> the field table last drawn (new match = new table)
+local leavingPerms = setmetatable({}, { __mode = "k" })
+local diedPerms = setmetatable({}, { __mode = "k" })
+
+-- Deaths go through HandleCreatureDeath; any other creature that disappears was returned
+do
+    local E = TTS.Engine
+    local origDeath = E and E.HandleCreatureDeath
+    if origDeath then
+        E.HandleCreatureDeath = function(self, perm, ...)
+            if perm then diedPerms[perm] = true end
+            return origDeath(self, perm, ...)
+        end
+    end
+end
+
+-- The order to draw one side's battlefield: the field, with leaving creatures kept in
+-- the slots they had. Entries: { perm, index } or { perm, leaving = "died"|"returned" }.
+local function BattlefieldList(E, isRemote)
+    local field = isRemote and E.remoteState.field or E.localState.field
+    if lastField[isRemote] ~= field then
+        lastField[isRemote] = field
+        lastShown[isRemote] = {}
+        leaving[isRemote] = {}
+    end
+
+    local present = {}
+    for _, p in ipairs(E.localState.field) do present[p] = true end
+    for _, p in ipairs(E.remoteState.field) do present[p] = true end
+    local now = GetTime()
+
+    for slot, p in ipairs(lastShown[isRemote]) do
+        local card = TTS.Cards[p.id]
+        if not present[p] and not leavingPerms[p] and card and card.type == "Creature" then
+            leavingPerms[p] = true
+            table.insert(leaving[isRemote], { perm = p, kind = diedPerms[p] and "died" or "returned", untilT = now + LEAVE_TIME, slot = slot })
+            TTS:SafeAfter(LEAVE_TIME + 0.05, function() E:RefreshUI() end)
+        end
+    end
+    local list = leaving[isRemote]
+    for i = #list, 1, -1 do
+        if list[i].untilT <= now then table.remove(list, i) end
+    end
+    table.sort(list, function(a, b) return a.slot < b.slot end)
+
+    local out = {}
+    for i, p in ipairs(field) do out[#out + 1] = { perm = p, index = i } end
+    for _, l in ipairs(list) do
+        table.insert(out, math.min(l.slot, #out + 1), { perm = l.perm, leaving = l.kind })
+    end
+    local shown = {}
+    for k, entry in ipairs(out) do shown[k] = entry.perm end
+    lastShown[isRemote] = shown
+    return out
+end
+
+-- Paints (or clears) the leaving look on a battlefield card frame
+local function PaintLeaving(f, kind)
+    if not f.leaveTint then
+        f.leaveTint = f:CreateTexture(nil, "OVERLAY", nil, 6)
+        f.leaveTint:SetAllPoints(f)
+        f.leaveSkull = f:CreateTexture(nil, "OVERLAY", nil, 7)
+        f.leaveSkull:SetTexture(LEAVE_SKULL)
+        f.leaveSkull:SetPoint("CENTER", f, "CENTER", 0, 0)
+    end
+    if not kind then
+        f.leaveTint:Hide()
+        f.leaveSkull:Hide()
+        return
+    end
+    local c = LEAVE_COLORS[kind]
+    f.leaveTint:SetColorTexture(c[1], c[2], c[3], 0.45)
+    f.leaveTint:Show()
+    f.border:SetVertexColor(c[1], c[2], c[3])
+    f.art:SetVertexColor(c[1], c[2], c[3])
+    local w = f:GetWidth() or 64
+    f.leaveSkull:SetSize(w * 0.7, w * 0.7)
+    f.leaveSkull:SetShown(kind == "died")
+end
+
 function B:UpdateDisplay()
     local E = TTS.Engine
     if not E.inMatch then return end
@@ -1681,7 +1772,8 @@ function B:UpdateDisplay()
     end
 
     local myLandIdx, myNonLandIdx = 0, 0
-    for i, perm in ipairs(E.localState.field) do
+    for _, entry in ipairs(BattlefieldList(E, false)) do
+        local perm, i, leavingKind = entry.perm, entry.index, entry.leaving
         local card = TTS.Cards[perm.id]
         if card then
             local isLand = (card.type == "Land")
@@ -1726,6 +1818,7 @@ function B:UpdateDisplay()
                 end
                 f.art:SetVertexColor(shade, shade, shade)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
+                PaintLeaving(f, leavingKind)
                 f:Show()
             end
         end
@@ -1754,7 +1847,8 @@ function B:UpdateDisplay()
     end
 
     local oppLandIdx, oppNonLandIdx = 0, 0
-    for i, perm in ipairs(E.remoteState.field) do
+    for _, entry in ipairs(BattlefieldList(E, true)) do
+        local perm, i, leavingKind = entry.perm, entry.index, entry.leaving
         local card = TTS.Cards[perm.id]
         if card then
             local isLand = (card.type == "Land")
@@ -1794,6 +1888,7 @@ function B:UpdateDisplay()
                 end
                 f.art:SetVertexColor(shade, shade, shade)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
+                PaintLeaving(f, leavingKind)
                 f:Show()
             end
         end
