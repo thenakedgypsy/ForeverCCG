@@ -10,9 +10,8 @@ TTS = TTS or {}
 
 -- =========================================================================
 -- POWER & TOUGHNESS
--- Shown as a number and a sword (power) in a card's bottom-left corner and a number and
--- a shield (toughness) in its bottom-right corner; tooltips use the same two symbols.
--- The symbols are gold and bronze metalwork to match the card frames.
+-- Shown along a card's bottom edge as "3 [sword]  [divider]  [shield] 5", centred on the
+-- divider; tooltips use the same symbols. Sizes grow with the card.
 -- Damage taken this turn lowers the toughness shown (in red) until it wears off.
 -- Card frames keep toughness in f.pt (as before) and gain f.power for the power.
 -- =========================================================================
@@ -22,8 +21,9 @@ TTS.TOUGHNESS_ICON = SYMBOLS .. "Shield.png"
 TTS.STATS_DIVIDER  = SYMBOLS .. "Divider.png"   -- 1:2 gold ornament between the two numbers
 
 local GOLD = "|cFFFFD200"
-local CORNER_X, CORNER_Y = 0.08, 0.05   -- corner inset, as a share of the card's width / height
-local DIVIDER_SCALE = 1.6                -- divider height relative to the stat font size
+local CORNER_Y = 0.05          -- stat line's height above the card's bottom edge, as a share of its height
+local DIVIDER_SCALE = 1.6      -- divider height relative to the stat font size
+local ICON_SCALE = 0.85        -- sword / shield size on cards, relative to the numbers
 
 local function Icon(path, size)
     return string.format("|T%s:%d:%d|t", path, size, size)
@@ -80,18 +80,14 @@ local function DividerTexture(f)
     return d
 end
 
--- Power in the bottom-left corner, toughness in the bottom-right, the divider centred
--- between them on the same line
+-- The divider centred on the card's bottom edge, power just to its left and toughness just
+-- to its right, all on one line
+local DIVIDER_GAP = 0.25   -- space between the divider and each number, as a share of the font size
+
 function TTS.PlaceCardStats(f)
     if not f.pt then return end
     local parent = f.overlay or f
-    local w, h = f:GetWidth() or 0, f:GetHeight() or 0
-    f.pt:ClearAllPoints()
-    f.pt:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -w * CORNER_X, h * CORNER_Y)
-    f.pt:SetJustifyH("RIGHT")
-    local p = PowerString(f)
-    p:ClearAllPoints()
-    p:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", w * CORNER_X, h * CORNER_Y)
+    local h = f:GetHeight() or 0
     local _, size = f.pt:GetFont()
     size = size or 14
     local d = DividerTexture(f)
@@ -99,11 +95,19 @@ function TTS.PlaceCardStats(f)
     d:SetSize(dh / 2, dh)
     d:ClearAllPoints()
     d:SetPoint("CENTER", parent, "BOTTOM", 0, h * CORNER_Y + size / 2)
+    local gap = size * DIVIDER_GAP
+    local p = PowerString(f)
+    p:ClearAllPoints()
+    p:SetPoint("RIGHT", d, "LEFT", -gap, 0)
+    p:SetJustifyH("RIGHT")
+    f.pt:ClearAllPoints()
+    f.pt:SetPoint("LEFT", d, "RIGHT", gap, 0)
+    f.pt:SetJustifyH("LEFT")
 end
 
 -- Stat text size for a card frame: grows with the card (large previews get large numbers,
 -- symbols and divider), never smaller than the size the frame was built with
-local STAT_SIZE_SHARE = 0.18   -- the hand card (72 px) and its 14 pt, kept in proportion
+local STAT_SIZE_SHARE = 0.125
 
 local function StatSize(f)
     if not f.ptBaseSize then
@@ -121,8 +125,9 @@ function TTS.SetCardStats(f, power, toughness, damage, colorCode)
     if font then f.pt:SetFont(font, size, flags or "OUTLINE") end
     local p = PowerString(f)
     if font then p:SetFont(font, size, flags or "OUTLINE") end
-    p:SetText(TTS.PowerText(power, colorCode, size))
-    f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode, size))
+    local iconSize = math.floor(size * ICON_SCALE + 0.5)
+    p:SetText(TTS.PowerText(power, colorCode, iconSize))
+    f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode, iconSize))
     TTS.PlaceCardStats(f)
     p:Show()
     f.pt:Show()
