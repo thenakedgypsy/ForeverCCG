@@ -162,6 +162,9 @@ local function BuildMinimapTooltip(tip)
         (count >= 40 and 1 or 0.2),
         0.2
     )
+    if TTS.GetCollectionScore then
+        tip:AddDoubleLine("Collection Score:", TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
+    end
 
     if TTS.Engine and TTS.Engine.inMatch then
         tip:AddLine(" ")

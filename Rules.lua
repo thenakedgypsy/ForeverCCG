@@ -410,6 +410,18 @@ pS.rawText = "Open |cFFFFD200Solo Encounters|r from the main window (or type |cF
     "|cFFFFD200Rewards:|r each win adds |cFFFFFFFF1 copy|r of the encounter's reward card, up to |cFFFFFFFF4 copies|r. Reward cards follow the normal deck rules and can be played anywhere, including against other players.\n\n" ..
     "|cFFFFD200Opponents:|r early encounters play a simple game; later zones and dungeons cast spells, use their abilities, block well and hold removal for your best creature. |cFFFFD200Practice vs Dummy|r is still there to try a deck out."
 
+local hL = MakeHeading("Card Links")
+
+local pL = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+pL:SetWidth(540)
+pL:SetJustifyH("LEFT")
+pL:SetWordWrap(true)
+pL.rawText = "Show a card to other players in chat. With the chat box open, |cFFFFD200Shift-click|r any card (in the Deckbuilder, on the board, or the examples in this guide) to add it to your message.\n\n" ..
+    "• Players with Forever: CCG see a gold |cFFFFD200[Card Name]|r link. Hover it for the card's tooltip, or click it to open a preview showing the card and how many copies you own (or how to get it).\n" ..
+    "• Shift-click a link with the chat box open to pass it on.\n" ..
+    "• Players without the addon see it as plain text: |cFFFFFFFF[Forever CCG: Card Name]|r.\n" ..
+    "• Links work in every chat: say, party, raid, guild, whispers and channels."
+
 local h5 = MakeHeading("Challenging Players")
 
 local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -486,6 +498,7 @@ local function LayoutRules()
     pU:SetText(FormatTextWithSymbols(pU.rawText, 16))
     p5:SetText(FormatTextWithSymbols(p5.rawText, 16))
     pS:SetText(FormatTextWithSymbols(pS.rawText, 16))
+    pL:SetText(FormatTextWithSymbols(pL.rawText, 16))
 
     local y = -10
 
@@ -516,6 +529,10 @@ local function LayoutRules()
     y = PlaceHeading(hS, y)
     y = PlaceParagraph(pS, y)
     y = PlaceCardRow(soloFrames, { "ELW11", "DMS12" }, y) - SECTION_GAP
+
+    -- Section 5b: Card Links
+    y = PlaceHeading(hL, y)
+    y = PlaceParagraph(pL, y) - SECTION_GAP
 
     -- Section 6: Challenging Players
     y = PlaceHeading(h5, y)

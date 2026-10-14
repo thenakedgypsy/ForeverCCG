@@ -13,11 +13,13 @@ TTS = TTS or {}
 -- Shift-click a card while typing in chat to insert "[Forever CCG: <card name>]".
 -- The server won't pass custom hyperlinks, so it travels as plain text: players
 -- without the addon see exactly that. With the addon, a chat filter turns it into
--- a gold [Card Name] link that shows the card tooltip on hover and opens a card
+-- a gold [Card Name] link (|Hgarrmission:ForeverCCG:card:<id>|h) that shows the card tooltip on hover and opens a card
 -- preview window on click. Card names are unique, so the name alone identifies it.
 -- =========================================================================
 local TAG_PATTERN = "%[Forever CCG: ([^%]]+)%]"
-local LINK_PREFIX = "addon:ForeverCCG:card:"
+-- Borrowed "garrmission" link type (as WeakAuras does): Blizzard's handler finds no valid
+-- mission id in it and quietly does nothing, so we only need to react after it
+local LINK_PREFIX = "garrmission:ForeverCCG:card:"
 local LINK_COLOR = "|cFFFFD200"
 
 local cardIdByName -- [lower name] = card id, built on first use (all card files are loaded by then)
@@ -174,44 +176,23 @@ end
 
 -- =========================================================================
 -- CLICK & HOVER
--- SetItemRef is wrapped so our links never reach Blizzard's handler, which may not
--- know the link type on this client. Every other link passes straight through.
+-- A secure post-hook on SetItemRef: Blizzard's handler runs untouched (no taint for
+-- any other link), then we act on our own links.
 -- =========================================================================
 local function OnLinkClicked(link)
     local id = LinkCardId(link)
-    if not id then return false end
+    if not id then return end
     -- Shift-click a link while typing: pass the card on, like an item link
-    if not TTS:TryLinkCard(id) then
-        if P:IsShown() and previewCard and previewCard.cardId == id then
-            P:Hide()
-        else
-            TTS:ShowCardPreview(id)
-        end
+    if TTS:TryLinkCard(id) then return end
+    if P:IsShown() and previewCard and previewCard.cardId == id then
+        P:Hide()
+    else
+        TTS:ShowCardPreview(id)
     end
-    return true
 end
 
-local lastClick, lastClickTime
-local function HandleOnce(link)
-    -- Newer clients may also report addon links through EventRegistry; act once per click
-    local now = GetTime()
-    if link == lastClick and now == lastClickTime then return true end
-    if OnLinkClicked(link) then
-        lastClick, lastClickTime = link, now
-        return true
-    end
-    return false
-end
-
-if SetItemRef then
-    local origSetItemRef = SetItemRef
-    SetItemRef = function(link, ...)
-        if HandleOnce(link) then return end
-        return origSetItemRef(link, ...)
-    end
-end
-if EventRegistry and EventRegistry.RegisterCallback then
-    EventRegistry:RegisterCallback("SetItemRef", function(_, link) HandleOnce(link) end, P)
+if hooksecurefunc and SetItemRef then
+    hooksecurefunc("SetItemRef", OnLinkClicked)
 end
 
 local function OnHyperlinkEnter(frame, link)

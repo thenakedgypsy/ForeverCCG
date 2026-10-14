@@ -497,10 +497,12 @@ local function BuildCardMain(tip, card, ctx)
         tip:AddLine(Sym(card.text, 16), 0.9, 0.9, 0.5, true)
     end
 
+    tip:AddLine(" ")
     if ctx.hint then
-        tip:AddLine(" ")
         tip:AddLine(ctx.hint, 0.5, 0.5, 0.5)
     end
+    -- Every card tooltip belongs to a card that can be linked (UI\CardLinks.lua)
+    tip:AddLine("Shift-click while typing to link in chat", 0.5, 0.5, 0.5)
 end
 
 -- Cards attached to a permanent and cards whose effects are on it
