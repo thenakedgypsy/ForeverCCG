@@ -33,6 +33,7 @@ local ARROW_THICKNESS = 4
 local ARROW_HEAD_LEN  = 16
 local ARROW_HEAD_ANG  = 0.45   -- radians either side of the shaft
 local FLASH_TIME      = 0.7    -- seconds a resolved-target / hit arrow takes to fade
+local HIT_ARROW_HOLD  = 0.4    -- seconds an attack arrow stays fully visible before it fades
 local HIT_TIME        = 1.0    -- seconds the life-plate flash and damage number last
 local HIT_RISE        = 36     -- pixels the damage number floats up
 
@@ -405,7 +406,7 @@ local function InstallHooks()
             hitShown = false
             local results = { origCombat(self, ...) }
             if state and state.life < before then
-                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR) end
+                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
                 -- Combat that changes life without going through DamagePlayer still gets a hit
                 if not hitShown then ShowHit(defRemote, before - state.life) end
             end
