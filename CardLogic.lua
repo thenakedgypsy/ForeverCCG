@@ -407,6 +407,25 @@ function E:IsHexproofAgainst(perm, isRemote, casterIsRemote)
     return self:HasKeyword(perm, isRemote, "hexproof") and true or false
 end
 
+-- Whether the player's current targeting (or the one given) would accept this target.
+-- kind "PLAYER" or "CREATURE"; perm for creatures. Used to highlight what can be chosen.
+function E:IsValidTargetNow(kind, isRemote, perm, targeting)
+    local t = targeting or self.targeting
+    if not t then return false end
+    isRemote = isRemote and true or false
+    if kind == "CREATURE" and not IsCreaturePerm(perm) then return false end
+    if t.targetMode == "ABILITY" then
+        local source = t.sourcePerm or self.localState.field[t.sourceIndex]
+        if not source then return false end
+        return self:IsValidAbilityTarget(source, false, { kind = kind, isRemote = isRemote, perm = perm })
+    end
+    local card = TTS.Cards[t.cardId]
+    local spec = card and card.effect and card.effect.target
+    if not spec or not self:IsValidSpellTarget(spec, kind, isRemote, false) then return false end
+    if kind == "CREATURE" and self:IsHexproofAgainst(perm, isRemote, false) then return false end
+    return true
+end
+
 -- Builds the list of things an op applies to: {kind="PLAYER"|"CREATURE", isRemote=bool, perm=perm}
 -- filter = { tag, value } keeps only creatures with that tag.
 function E:CollectSpellTargets(to, tgt, casterIsRemote, filter)
@@ -1086,7 +1105,7 @@ function E:PlayCard(handIndex)
             return
         end
 
-        if not self:CanPayMana(card.cost) then
+        if not self:CanPayManaAuto(card.cost) then
             self:Log(string.format("Not enough mana to cast %s (%s).", card.name, card.cost), "ERROR")
             return
         end
@@ -1108,6 +1127,7 @@ function E:PlayCard(handIndex)
             self:Log("Permanents can only be cast during Main Phases.", "ERROR")
             return
         end
+        self:AutoPayMana(card.cost)
         local undoSnap = self:BeginUndoablePlay()
         if not self:PayMana(card.cost) then
             self:Log("Not enough mana in pool.", "ERROR")
@@ -1126,6 +1146,7 @@ function E:PlayCard(handIndex)
             self:Log("Sorceries can only be cast during Main Phases.", "ERROR")
             return
         end
+        self:AutoPayMana(card.cost)
         local undoSnap = self:BeginUndoablePlay()
         if not self:PayMana(card.cost) then
             self:Log("Not enough mana in pool.", "ERROR")
@@ -1183,6 +1204,8 @@ function E:ResolveAbilityTarget(targetKind, isRemote, fieldIndex)
     end
 
     self.targeting = nil
+    local ab = self:GetAbility(sourcePerm.id)
+    if ab and ab.cost then self:AutoPayMana(ab.cost) end
     self:ActivateAbility(sourcePerm, false, tgt)
     self:RefreshUI()
 end
@@ -1231,6 +1254,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
         return
     end
 
+    self:AutoPayMana(card.cost)
     local undoSnap = self:BeginUndoablePlay()
     if not self:PayMana(card.cost) then
         self:Log("Failed to pay mana.", "ERROR")
@@ -1265,8 +1289,14 @@ function E:TapCard(fieldIndex)
 
     if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking then
         -- Blocks are locked in once they have been declared to the attacker
-        if self.blockingState.blocksDeclared then return end
-        if card.type ~= "Creature" then return end
+        if self.blockingState.blocksDeclared then
+            self:Log("Blocks are already declared.", "ERROR")
+            return
+        end
+        if card.type ~= "Creature" then
+            self:Log("Only creatures can block.", "ERROR")
+            return
+        end
         if perm.tapped then
             self:Log("Tapped creatures cannot block.", "ERROR")
             return
@@ -1315,16 +1345,23 @@ function E:TapCard(fieldIndex)
         self:RefreshUI()
         return
     end
+    if card.type == "Land" then
+        self:Log(card.name .. " is already tapped.", "ERROR")
+        return
+    end
 
     local ability = self:GetAbility(perm.id)
     if ability and (self.phase == "MAIN1" or self.phase == "MAIN2") then
         if ability.tap then
-            if perm.tapped then return end
+            if perm.tapped then
+                self:Log(card.name .. " is already tapped.", "ERROR")
+                return
+            end
             if perm.sick and not self:HasKeyword(perm, false, "haste") then
                 self:Log(string.format("%s has summoning sickness.", card.name), "ERROR")
                 return
             end
-        elseif ability.cost and not self:CanPayMana(ability.cost) then
+        elseif ability.cost and not self:CanPayManaAuto(ability.cost) then
             self:Log(string.format("Not enough mana to activate %s (%s).", card.name, ability.cost), "ERROR")
             return
         end
@@ -1343,12 +1380,25 @@ function E:TapCard(fieldIndex)
             return
         end
 
+        if ability.cost then self:AutoPayMana(ability.cost) end
         self:ActivateAbility(perm, false, nil)
         return
     end
 
+    if card.type == "Creature" and self.phase == "MAIN1" and self.Hint then
+        self:Hint("Attack in the combat phase (To Combat).")
+        return
+    end
+
     if card.type == "Creature" and self.phase == "COMBAT_ATTACK" then
-        if perm.tapped then return end
+        if perm.isAttacking then
+            self:Log(card.name .. " is already attacking.", "ERROR")
+            return
+        end
+        if perm.tapped then
+            self:Log(card.name .. " is tapped and cannot attack.", "ERROR")
+            return
+        end
         if perm.sick and not self:HasKeyword(perm, false, "haste") then
             self:Log(card.name .. " has summoning sickness and cannot attack.", "ERROR")
             return
@@ -1383,6 +1433,12 @@ function E:ClickOpponentCard(fieldIndex)
             self:ResolveTarget("CREATURE", true, fieldIndex)
             return
         end
+    end
+
+    if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking
+        and self.blockingState.blocksDeclared then
+        self:Log("Blocks are already declared.", "ERROR")
+        return
     end
 
     if self.phase == "COMBAT_BLOCK" and self.blockingState and self.blockingState.isRemoteAttacking

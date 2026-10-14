@@ -19,6 +19,9 @@ local DEFAULTS = {
     boardScale = 1,         -- game board size (Board.lua)
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
+    cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
+    animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
+    autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -133,7 +136,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 476)
+F:SetSize(340, 550)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -321,7 +324,7 @@ local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "Exte
 -- =========================================================================
 -- BOARD SECTION
 -- =========================================================================
-local boardSection = CreateSection("Board", 58)
+local boardSection = CreateSection("Board", 132)
 boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
 
 local backgroundCheck = CreateCheck(boardSection, 10, -30, "Show zone backgrounds in solo encounters",
@@ -330,6 +333,45 @@ backgroundCheck:SetScript("OnClick", function(self)
     O:Set("boardBackgrounds", self:GetChecked() and true or false)
     if TTS.BoardFrame and TTS.BoardFrame.RefreshBackground then TTS.BoardFrame:RefreshBackground() end
 end)
+
+local animateCheck = CreateCheck(boardSection, 10, -54, "Animate played cards",
+    "Cards played by either player fly from the hand to the battlefield.")
+animateCheck:SetScript("OnClick", function(self)
+    O:Set("animateCards", self:GetChecked() and true or false)
+end)
+
+local controlsText = boardSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -86)
+controlsText:SetText("Card controls")
+
+-- One choice of how cards are played; saved as cardControls
+local CONTROL_MODES = {
+    { key = "click", label = "Click", desc = "Click a card to play it, click your creatures to attack and block, then click a target." },
+    { key = "drag",  label = "Drag",  desc = "Drag cards onto the board to play them, drag a spell onto its target, drag creatures at the opponent to attack and onto attackers to block. Prayers are still tapped by clicking." },
+    { key = "both",  label = "Both",  desc = "Clicking and dragging both work." },
+}
+local controlRadios = {}
+for i, mode in ipairs(CONTROL_MODES) do
+    local rb = CreateFrame("CheckButton", nil, boardSection, "UIRadioButtonTemplate")
+    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -104)
+    rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
+    rb.label:SetText(mode.label)
+    rb:SetHitRectInsets(0, -(rb.label:GetStringWidth() + 6), 0, 0)
+    rb:SetScript("OnClick", function()
+        O:Set("cardControls", mode.key)
+        for _, other in ipairs(controlRadios) do other:SetChecked(other == rb) end
+        if TTS.ApplyCardControls then TTS.ApplyCardControls() end
+    end)
+    rb:SetScript("OnEnter", function(self)
+        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", mode.label, mode.desc) end
+    end)
+    rb:SetScript("OnLeave", function(self)
+        if TTS.Tooltip then TTS.Tooltip:Hide(self) end
+    end)
+    rb.key = mode.key
+    controlRadios[i] = rb
+end
 
 -- =========================================================================
 -- SYNC
@@ -351,6 +393,9 @@ function O:SyncControls()
         TTS.BoardFrame.soundCheck:SetChecked(master)
     end
     backgroundCheck:SetChecked(db.boardBackgrounds ~= false)
+    animateCheck:SetChecked(db.animateCards ~= false)
+    local mode = TTS.CardControls and TTS.CardControls() or "both"
+    for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
 end
 
 F:SetScript("OnShow", function()

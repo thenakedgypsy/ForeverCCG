@@ -129,65 +129,13 @@ end
 -- MANA: the AI counts its untapped prayers as mana it could make and taps just
 -- the ones an action needs at the moment it takes it.
 -- =========================================================================
-local function UntappedLands(self)
-    local lands = { W = {}, U = {}, B = {}, R = {}, G = {} }
-    for _, perm in ipairs(self.remoteState.field) do
-        local card = Card(perm.id)
-        if card and card.type == "Land" and not perm.tapped and lands[card.color] then
-            table.insert(lands[card.color], perm)
-        end
-    end
-    return lands
-end
-
--- True if the mana pool plus untapped prayers could pay costString
+-- (shared with the player's auto-pay: CoreEngine.lua)
 function E:AICanAfford(costString)
-    local req = self:ParseCost(costString)
-    local lands = UntappedLands(self)
-    local spare = 0
-    for _, col in ipairs(COLORS) do
-        local have = (self.remoteState.mana[col] or 0) + #lands[col]
-        if have < req[col] then return false end
-        spare = spare + have - req[col]
-    end
-    return spare >= req.Generic
+    return self:CanAffordWithLands(costString, true)
 end
 
--- Which prayers to tap to pay costString, using mana already in the pool first.
--- Returns them in tap order; nothing is tapped yet.
 function E:AIPlanLandTaps(costString)
-    local req = self:ParseCost(costString)
-    local lands = UntappedLands(self)
-    local pool = {}
-    for _, col in ipairs(COLORS) do pool[col] = self.remoteState.mana[col] or 0 end
-    local plan = {}
-
-    local function Tap(col)
-        table.insert(plan, table.remove(lands[col]))
-        pool[col] = pool[col] + 1
-    end
-
-    -- Coloured pips first
-    for _, col in ipairs(COLORS) do
-        while (pool[col] or 0) < req[col] and #lands[col] > 0 do Tap(col) end
-    end
-
-    -- Then generic: spare pool mana first, then prayers of the colour the AI has most of
-    local spare = 0
-    for _, col in ipairs(COLORS) do
-        spare = spare + math.max(0, (pool[col] or 0) - req[col])
-    end
-    local need = req.Generic - spare
-    while need > 0 do
-        local best
-        for _, col in ipairs(COLORS) do
-            if #lands[col] > 0 and (not best or #lands[col] > #lands[best]) then best = col end
-        end
-        if not best then break end
-        Tap(best)
-        need = need - 1
-    end
-    return plan
+    return self:PlanLandTaps(costString, true)
 end
 
 -- Taps one of the AI's prayers and adds its mana to the AI's pool

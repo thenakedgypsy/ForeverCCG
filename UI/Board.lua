@@ -145,9 +145,27 @@ local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 -- Tooltips go through the manager in UI\Tooltips.lua
 local TT = TTS.Tooltip
 
-local function IsTargetingPlayer()
-    local t = TTS.Engine.targeting
-    return t and (t.targetType == "PLAYER" or t.targetType == "ANY")
+-- The targeting to highlight for: one in progress, or the one a card being dragged would start (UI\CardDrag.lua)
+local function HighlightTargeting()
+    return TTS.Engine.targeting or (TTS.BoardFrame and TTS.BoardFrame.dragTargeting)
+end
+
+-- True if the targeting in progress can choose that player (isRemote: the opponent)
+local function IsTargetingPlayer(isRemote)
+    local t = HighlightTargeting()
+    return t and TTS.Engine:IsValidTargetNow("PLAYER", isRemote, nil, t) or false
+end
+
+-- True if the targeting in progress can choose this creature
+local function IsTargetableCreature(perm, isRemote)
+    local t = HighlightTargeting()
+    return t and TTS.Engine:IsValidTargetNow("CREATURE", isRemote, perm, t) or false
+end
+
+-- How cards are played: "click", "drag" or "both" (Options)
+function TTS.CardControls()
+    local mode = TTS.Options and TTS.Options:Get("cardControls")
+    return (mode == "click" or mode == "drag") and mode or "both"
 end
 
 -- =========================================================================
@@ -384,6 +402,7 @@ end
 B:SetScript("OnShow", function(self)
     restoreBar:Hide()
     if self.soundCheck and TTS.Sound then self.soundCheck:SetChecked(TTS.Sound.enabled) end
+    if self.autoPayCheck and TTS.Options then self.autoPayCheck:SetChecked(TTS.Options:Get("autoPayMana") ~= false) end
     self:UpdateDisplay()
 end)
 
@@ -419,9 +438,28 @@ soundLabel:SetPoint("RIGHT", soundCheck, "LEFT", 0, 1)
 soundLabel:SetText("Sounds")
 soundCheck:SetHitRectInsets(-(soundLabel:GetStringWidth() + 4), 0, 0, 0)
 
+-- Auto-pay: casting taps the prayers the mana pool is short of (CoreEngine.lua)
+local autoPayCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
+autoPayCheck:SetSize(24, 24)
+autoPayCheck:SetPoint("RIGHT", soundLabel, "LEFT", -10, -1)
+autoPayCheck:SetScript("OnClick", function(self)
+    if TTS.Options then TTS.Options:Set("autoPayMana", self:GetChecked() and true or false) end
+end)
+B.autoPayCheck = autoPayCheck   -- set from the saved option when the board opens
+
+local autoPayLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+autoPayLabel:SetPoint("RIGHT", autoPayCheck, "LEFT", 0, 1)
+autoPayLabel:SetText("Auto-pay")
+autoPayCheck:SetHitRectInsets(-(autoPayLabel:GetStringWidth() + 4), 0, 0, 0)
+autoPayCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", "Auto-pay mana",
+        "When your mana pool is short, playing a card or using an ability taps the prayers it needs for you.")
+end)
+autoPayCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 -- Subtitle in the title strip, as on the other Forever: CCG windows
 local subtitle = B:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-subtitle:SetPoint("RIGHT", soundLabel, "LEFT", -14, 0)
+subtitle:SetPoint("RIGHT", autoPayLabel, "LEFT", -14, 0)
 subtitle:SetText("Forever: CCG")
 
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
@@ -552,7 +590,7 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
                 tip:AddLine(rule.text, 1, 1, 1, true)
             end
         end
-        if IsTargetingPlayer() then
+        if IsTargetingPlayer(true) then
             tip:AddLine(" ")
             tip:AddLine("|cFF00FF00[Left-Click to target this player]|r", 0.2, 1.0, 0.2)
         end
@@ -587,7 +625,7 @@ B.myLifeBtn:SetScript("OnEnter", function(self)
         if TTS.GetCollectionScore then
             tip:AddLine("Collection Score: " .. TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1)
         end
-        if IsTargetingPlayer() then
+        if IsTargetingPlayer(false) then
             tip:AddLine(" ")
             tip:AddLine("|cFF00FF00[Left-Click to target yourself]|r", 0.2, 1.0, 0.2)
         end
@@ -1242,14 +1280,21 @@ end
 for i = 1, 10 do
     local f = CreateCardFrame(B, HAND_W, HAND_H)
     f.isHand = true
+    f.handIndex = i
     f.origFrameLevel = f:GetFrameLevel()
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
+        if self.dragEnded == GetTime() then return end   -- the mouse-up that ended a drag
         if TTS:TryLinkCard(self.cardId) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
+            return
+        end
+        -- Drag mode plays cards by dragging; a click still discards when asked to
+        if TTS.CardControls() == "drag" and not TTS.Engine.pendingDiscard then
+            if TTS.FloatText then TTS.FloatText("Drag the card onto the board to play it.", TTS.FLOAT_WARN) end
             return
         end
         TTS.Engine:PlayCard(i)
@@ -1284,7 +1329,7 @@ for i = 1, 10 do
         end
     end)
     f:SetScript("OnEnter", function(self)
-        if IsTargetingPlayer() then
+        if IsTargetingPlayer(true) then
             TT:ShowText(self, "ANCHOR_TOP", TTS.Engine.opponent or "Opponent", nil,
                 { r = 1, g = 0.82, b = 0, lines = { { "|cFF00FF00Click to target enemy player|r", 0.2, 1.0, 0.2 } } })
         end
@@ -1330,6 +1375,18 @@ local function MyNonLand_OnClick(self, btn)
             return
         end
     end
+    -- Drag mode attacks and blocks by dragging
+    local E = TTS.Engine
+    if TTS.CardControls() == "drag" and TTS.FloatText then
+        local bs = E.blockingState
+        if E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking and not bs.blocksDeclared then
+            TTS.FloatText("Drag the creature onto an attacker to block.", TTS.FLOAT_WARN)
+            return
+        elseif E.phase == "COMBAT_ATTACK" and E.isMyTurn then
+            TTS.FloatText("Drag the creature at the opponent to attack.", TTS.FLOAT_WARN)
+            return
+        end
+    end
     if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
 end
 
@@ -1337,6 +1394,7 @@ end
 local function WithFieldSound(handler)
     return function(self, btn)
         if not TTS.Engine.inMatch then return end
+        if self.dragEnded == GetTime() then return end   -- the mouse-up that ended a drag
         local perm = self.fieldIndex and TTS.Engine.localState.field[self.fieldIndex]
         local wasTapped = perm and perm.tapped
         if TTS:TryLinkCard(self.cardId) then return end
@@ -1606,6 +1664,123 @@ local lastField = {}                               -- side -> the field table la
 local leavingPerms = setmetatable({}, { __mode = "k" })
 local diedPerms = setmetatable({}, { __mode = "k" })
 
+-- How dark a creature is drawn: tapped 0.4, summoning-sick in your attack step this
+local SICK_SHADE = 0.7
+-- 3D models ignore vertex colour, so they fade instead (less, or they vanish into the card)
+local function ModelAlpha(shade) return 0.25 + 0.75 * shade end
+
+-- =========================================================================
+-- PLAY ANIMATIONS
+-- A card that comes onto the battlefield out of a hand flies to its slot from where
+-- it was: the card in your hand (or where a drag dropped it), or the opponent's hand row.
+-- Turned off with "Animate played cards" in the options.
+-- =========================================================================
+local FLY_TIME = 0.3
+
+local flights = setmetatable({}, { __mode = "k" })   -- perm -> { x, y, t }: start, in board coordinates
+local seenPerms = setmetatable({}, { __mode = "k" })
+local oldHand, oldOppHandCount = {}, nil
+
+-- A frame's centre in the board's coordinates (cards are scaled individually)
+local function BoardXY(f)
+    local cx, cy = f:GetCenter()
+    local left, bottom = B:GetLeft(), B:GetBottom()
+    if not (cx and left) then return end
+    local r = f:GetEffectiveScale() / B:GetEffectiveScale()
+    return cx * r - left, cy * r - bottom
+end
+B.BoardXY = BoardXY
+
+-- Before a redraw: where each card in your hand is drawn
+local function RememberHand()
+    wipe(oldHand)
+    for i = 1, 10 do
+        local f = myHandFrames[i]
+        if f:IsShown() and f.cardId then
+            local x, y = BoardXY(f)
+            if x then table.insert(oldHand, { id = f.cardId, x = x, y = y }) end
+        end
+    end
+end
+
+-- After a redraw: a flight for each permanent that just came out of a hand. Yours must
+-- have left your hand since the last redraw (so an undo, which puts copies back, never
+-- flies); the opponent's are counted off the cards that left their hand.
+local function StartFlights(E)
+    -- Where a drag dropped a card (kept until that card arrives: auto-pay redraws first)
+    local launch = B.launchFrom
+    local animate = not TTS.Options or TTS.Options:Get("animateCards") ~= false
+
+    local before, now = {}, {}
+    for _, h in ipairs(oldHand) do before[h.id] = (before[h.id] or 0) + 1 end
+    for _, id in ipairs(E.localState.hand) do now[id] = (now[id] or 0) + 1 end
+    local oppSlot = math.min(10, oldOppHandCount or 0)
+    local oppLeft = math.max(0, (oldOppHandCount or 0) - (E.remoteState.handCount or 0))
+
+    for _, isRemote in ipairs({ false, true }) do
+        for _, perm in ipairs(isRemote and E.remoteState.field or E.localState.field) do
+            if not seenPerms[perm] then
+                seenPerms[perm] = true
+                local sx, sy
+                if not isRemote and (before[perm.id] or 0) > (now[perm.id] or 0) then
+                    before[perm.id] = before[perm.id] - 1
+                    if launch and launch.cardId == perm.id then
+                        sx, sy = launch.x, launch.y
+                        launch, B.launchFrom = nil, nil
+                    else
+                        for k, h in ipairs(oldHand) do
+                            if h.id == perm.id then
+                                sx, sy = h.x, h.y
+                                table.remove(oldHand, k)
+                                break
+                            end
+                        end
+                    end
+                elseif isRemote and oppLeft > 0 and oppSlot > 0 then
+                    -- The opponent's hand row: the last card back in it (layout as the oppHandFrames)
+                    sx, sy = 35 + (oppSlot - 1) * 64 + 26, B:GetHeight() - 46 - 35
+                    oppLeft, oppSlot = oppLeft - 1, oppSlot - 1
+                end
+                if sx and animate then flights[perm] = { x = sx, y = sy, t = 0 } end
+            end
+        end
+    end
+    oldOppHandCount = E.remoteState.handCount or 0
+end
+
+-- Offsets each flying card from its slot by what is left of its flight
+local function ApplyFlights()
+    local left, bottom = B:GetLeft(), B:GetBottom()
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+        for _, f in ipairs(group) do
+            local fl = f:IsShown() and f.perm and flights[f.perm]
+            local dx, dy = 0, 0
+            local sx, sy = f.slot:GetCenter()   -- the slot is unscaled: already in board coordinates
+            if fl and sx and left then
+                local rest = (1 - math.min(1, fl.t / FLY_TIME)) ^ 3   -- ease out
+                local s = f:GetScale()
+                dx = (fl.x - (sx - left)) * rest / s
+                dy = (fl.y - (sy - bottom)) * rest / s
+            end
+            if dx ~= (f.flyX or 0) or dy ~= (f.flyY or 0) then
+                f.flyX, f.flyY = dx, dy
+                f:ClearAllPoints()
+                f:SetPoint("CENTER", f.slot, "CENTER", dx, dy)
+            end
+        end
+    end
+end
+
+local flyTicker = CreateFrame("Frame", nil, B)
+flyTicker:SetScript("OnUpdate", function(_, dt)
+    if not next(flights) then return end
+    for perm, fl in pairs(flights) do
+        fl.t = fl.t + dt
+        if fl.t >= FLY_TIME then flights[perm] = nil end
+    end
+    ApplyFlights()
+end)
+
 -- =========================================================================
 -- DAMAGE & HEALING NUMBERS
 -- Each redraw compares a creature's damage with the last one: more shows a red "-N",
@@ -1762,6 +1937,7 @@ end
 function B:UpdateDisplay()
     local E = TTS.Engine
     if not E.inMatch then return end
+    RememberHand()
     concedeBtn:Enable()
 
     B.oppLifeText:SetText(string.format("%s: %d Life (%d cards)", E.opponent or "Opponent", E.remoteState.life, E.remoteState.handCount))
@@ -1787,19 +1963,17 @@ function B:UpdateDisplay()
         slot:SetWidth(math.max(1, slot.text:GetStringWidth()))
     end
 
-    local isTargetingPlayer = IsTargetingPlayer()
-
-    if isTargetingPlayer then
-        B.oppLifeBtn:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
-        B.oppLifeBtn:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
-        B.myLifeBtn:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
-        B.myLifeBtn:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
-    else
-        local bg, bd = STYLE.controlBg, STYLE.controlBorder
-        B.oppLifeBtn:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
-        B.oppLifeBtn:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
-        B.myLifeBtn:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
-        B.myLifeBtn:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+    -- Only the players the targeting can choose light up
+    local isTargetingPlayer = IsTargetingPlayer(true)
+    for plate, lit in pairs({ [B.oppLifeBtn] = isTargetingPlayer, [B.myLifeBtn] = IsTargetingPlayer(false) }) do
+        if lit then
+            plate:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
+            plate:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
+        else
+            local bg, bd = STYLE.controlBg, STYLE.controlBorder
+            plate:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
+            plate:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+        end
     end
 
     -- =====================================================================
@@ -1960,6 +2134,7 @@ function B:UpdateDisplay()
 
             if f then
                 f.fieldIndex = i
+                f.perm = perm
                 f.cardId = perm.id
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
@@ -1976,7 +2151,12 @@ function B:UpdateDisplay()
                 end
 
                 local shade = perm.tapped and 0.4 or 1.0
-                if E.targeting then
+                -- In your attack step, creatures with summoning sickness are dimmed a little
+                if not perm.tapped and card.type == "Creature" and E.isMyTurn and E.phase == "COMBAT_ATTACK"
+                    and perm.sick and not E:HasKeyword(perm, false, "haste") then
+                    shade = SICK_SHADE
+                end
+                if IsTargetableCreature(perm, false) then
                     f.border:SetVertexColor(0.2, 1.0, 0.2)
                 elseif E.blockingState and E.blockingState.selectedBlocker == i then
                     f.border:SetVertexColor(0.0, 1.0, 1.0)
@@ -1988,6 +2168,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
+                f.model:SetAlpha(ModelAlpha(shade))
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
@@ -2035,6 +2216,7 @@ function B:UpdateDisplay()
 
             if f then
                 f.fieldIndex = i
+                f.perm = perm
                 f.cardId = perm.id
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
@@ -2050,7 +2232,7 @@ function B:UpdateDisplay()
                 end
 
                 local shade = perm.tapped and 0.4 or 1.0
-                if E.targeting then
+                if IsTargetableCreature(perm, true) then
                     f.border:SetVertexColor(0.2, 1.0, 0.2)
                 elseif perm.isAttacking then
                     f.border:SetVertexColor(1.0, 0.2, 0.2)
@@ -2058,6 +2240,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
+                f.model:SetAlpha(ModelAlpha(shade))
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
@@ -2084,6 +2267,9 @@ function B:UpdateDisplay()
         oppNonLandFrames[i].fieldIndex = nil
         if oppNonLandFrames[i].tuckedFrames then for k = 1, #oppNonLandFrames[i].tuckedFrames do oppNonLandFrames[i].tuckedFrames[k]:Hide() end end
     end
+
+    StartFlights(E)
+    ApplyFlights()
 end
 
 -- =========================================================================
@@ -2106,6 +2292,15 @@ TTS.FormatPT            = FormatPT         -- P/T with damage shown, used by the
 TTS.PaintPreviewCard    = PaintPreviewCard -- full-size preview card in the board's design
 TTS.PREVIEW_W, TTS.PREVIEW_H = PREVIEW_W, PREVIEW_H
 B.myHandFrames          = myHandFrames  -- read by TargetFX.lua (targeting arrow source)
+-- Read by CardDrag.lua (drag sources and drop targets)
+B.oppHandFrames         = oppHandFrames
+B.myLandFrames          = myLandFrames
+B.myNonLandFrames       = myNonLandFrames
+B.oppLandFrames         = oppLandFrames
+B.oppNonLandFrames      = oppNonLandFrames
+B.HAND_W, B.HAND_H      = HAND_W, HAND_H
+B.HAND_TOP              = HAND_BOTTOM + HAND_H * HAND_MAX_SCALE   -- top of the hand row, in board coordinates
+B.MIDLINE               = (ROW_Y.myNonLand + ROW_Y.oppNonLand) / 2 -- between the two creature rows
 
 -- =========================================================================
 -- SAVED SIZE (applied once the saved settings have loaded)

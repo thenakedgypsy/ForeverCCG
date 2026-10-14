@@ -259,7 +259,14 @@ local function UpdateAim()
     if not canDrawLines then return end
     local E = TTS.Engine
     local color = AIM_COLOR
-    local src = E and E.inMatch and Pos(AimSourceFrame(E.targeting))
+    -- A card being dragged at something (UI\CardDrag.lua) aims from itself
+    local drag = E and E.inMatch and B.dragAim
+    local src = drag and Pos(drag.frame)
+    if src then
+        color = drag.color or AIM_COLOR
+    else
+        src = E and E.inMatch and Pos(AimSourceFrame(E.targeting))
+    end
     if E and E.inMatch and not src and not E.targeting then
         src = Pos(BlockAimSourceFrame(E))
         color = BLOCK_AIM_COLOR
@@ -463,18 +470,23 @@ local function InstallHooks()
         end
     end
 
+    -- A pointer for the player at the cursor, not written to the log (only during their own clicks)
+    function E:Hint(msg)
+        if userDepth > 0 and quietDepth == 0 and self.inMatch then
+            TTS.FloatText(ShortMessage(msg), TTS.FLOAT_WARN, nil)
+        end
+    end
+
     if E.ResolveTarget then
-        -- Its own refusals float "Invalid target" below, so its log lines stay quiet
-        local origResolve = Counted(E.ResolveTarget, true)
+        -- Refusals float their reason at the cursor (from the log line)
+        local origResolve = Counted(E.ResolveTarget)
         E.ResolveTarget = function(self, targetType, isRemote, fieldIndex, ...)
             local targeting = self.targeting
             local results = { origResolve(self, targetType, isRemote, fieldIndex, ...) }
             -- Targeting cleared or replaced: the target was accepted (the spell reveal or
-            -- the ability arrow below draws the arrow). Still targeting: it was refused.
+            -- the ability arrow below draws the arrow)
             if targeting and self.targeting ~= targeting then
                 PlayFX(SOUND_TARGET)
-            elseif targeting and self.targeting == targeting then
-                TTS.FloatText("Invalid target", TTS.FLOAT_WARN, nil)
             end
             return unpack(results)
         end

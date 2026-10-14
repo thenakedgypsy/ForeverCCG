@@ -338,6 +338,99 @@ function E:PayMana(costString, isRemote)
 end
 
 -- =========================================================================
+-- PRAYERS AS MANA
+-- Untapped prayers count as mana a side could make. The AI always pays this way;
+-- the player does when auto-pay is ticked on the board.
+-- =========================================================================
+
+-- One side's untapped prayers by colour: { W = { perm, ... }, ... }
+function E:UntappedLands(isRemote)
+    local lands = { W = {}, U = {}, B = {}, R = {}, G = {} }
+    for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
+        local card = TTS.Cards[perm.id]
+        if card and card.type == "Land" and not perm.tapped and lands[card.color] then
+            table.insert(lands[card.color], perm)
+        end
+    end
+    return lands
+end
+
+-- True if the mana pool plus untapped prayers could pay costString
+function E:CanAffordWithLands(costString, isRemote)
+    local req = self:ParseCost(costString)
+    local pool = (isRemote and self.remoteState or self.localState).mana
+    local lands = self:UntappedLands(isRemote)
+    local spare = 0
+    for _, col in ipairs(MANA_COLORS) do
+        local have = (pool[col] or 0) + #lands[col]
+        if have < req[col] then return false end
+        spare = spare + have - req[col]
+    end
+    return spare >= req.Generic
+end
+
+-- Which prayers to tap to pay costString, using mana already in the pool first.
+-- Returns them in tap order; nothing is tapped yet.
+function E:PlanLandTaps(costString, isRemote)
+    local req = self:ParseCost(costString)
+    local lands = self:UntappedLands(isRemote)
+    local mana = (isRemote and self.remoteState or self.localState).mana
+    local pool = {}
+    for _, col in ipairs(MANA_COLORS) do pool[col] = mana[col] or 0 end
+    local plan = {}
+
+    local function Tap(col)
+        table.insert(plan, table.remove(lands[col]))
+        pool[col] = pool[col] + 1
+    end
+
+    -- Coloured pips first
+    for _, col in ipairs(MANA_COLORS) do
+        while (pool[col] or 0) < req[col] and #lands[col] > 0 do Tap(col) end
+    end
+
+    -- Then generic: spare pool mana first, then prayers of the colour there are most of
+    local spare = 0
+    for _, col in ipairs(MANA_COLORS) do
+        spare = spare + math.max(0, (pool[col] or 0) - req[col])
+    end
+    local need = req.Generic - spare
+    while need > 0 do
+        local best
+        for _, col in ipairs(MANA_COLORS) do
+            if #lands[col] > 0 and (not best or #lands[col] > #lands[best]) then best = col end
+        end
+        if not best then break end
+        Tap(best)
+        need = need - 1
+    end
+    return plan
+end
+
+function E:AutoPayEnabled()
+    return TTS.Options and TTS.Options:Get("autoPayMana") ~= false
+end
+
+-- The player's affordability check: the pool alone, or the pool plus untapped prayers with auto-pay
+function E:CanPayManaAuto(costString)
+    if self:CanPayMana(costString) then return true end
+    return self:AutoPayEnabled() and self:CanAffordWithLands(costString, false)
+end
+
+-- With auto-pay on, taps the player's prayers the pool is short of for costString,
+-- the same way clicking them would (each tap is sent to the opponent).
+-- Called before a play's undo snapshot, so both clients save the prayers tapped.
+function E:AutoPayMana(costString)
+    if not costString or costString == "" or self:CanPayMana(costString) then return end
+    if not (self:AutoPayEnabled() and self:CanAffordWithLands(costString, false)) then return end
+    for _, perm in ipairs(self:PlanLandTaps(costString, false)) do
+        for i, p in ipairs(self.localState.field) do
+            if p == perm then self:TapCard(i); break end
+        end
+    end
+end
+
+-- =========================================================================
 -- TURN & PHASE MANAGEMENT
 -- =========================================================================
 

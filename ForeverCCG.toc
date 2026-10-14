@@ -97,6 +97,7 @@ UI\MapOverlays.lua
 UI\Board.lua
 UI\BlockArrows.lua
 UI\TargetFX.lua
+UI\CardDrag.lua
 UI\SoloMapData.lua
 UI\SoloSelect.lua
 UI\CardLinks.lua
