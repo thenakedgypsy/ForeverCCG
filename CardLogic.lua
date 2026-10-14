@@ -1127,8 +1127,9 @@ function E:PlayCard(handIndex)
         table.remove(self.localState.hand, handIndex)
         table.insert(self.localState.graveyard, cardId)
         self:PlaySpellCastSound()
-        self:ResolveSpell(card, nil)
+        -- Sent before resolving, so the opponent sees the card before the damage it causes
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
+        self:ResolveSpell(card, nil)
     end
 
     self:RefreshUI()
@@ -1236,8 +1237,13 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     table.remove(self.localState.hand, handIndex)
     table.insert(self.localState.graveyard, cardId)
     self:PlaySpellCastSound()
+    -- Sent before resolving, so the opponent sees the card and its target before the damage
+    -- it causes. Target: PLAYER or CREATURE, MINE/THEIRS from our side, and its field index.
+    if not self.isSolo then
+        TTS.Net:Send(self.opponent, string.format("ACTION:CAST_SPELL:%s:%s:%s:%d", cardId, tgt.kind,
+            tgt.isRemote and "THEIRS" or "MINE", tgt.idx or 0))
+    end
     self:ResolveSpell(card, tgt)
-    if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
     self:RefreshUI()
 end
 

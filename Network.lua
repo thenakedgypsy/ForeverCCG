@@ -692,7 +692,19 @@ function TTS.Net:OnReceive(msg, sender)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Spell", card and card.name or cardId), "ACTION")
             E:PlaySpellCastSound()
-            if E.ShowRemoteSpell then E:ShowRemoteSpell(cardId) end
+            -- Optional target: PLAYER|CREATURE, MINE|THEIRS from the caster's side, field index
+            local tgt
+            local kind, side, idx = parts[4], parts[5], tonumber(parts[6])
+            if kind == "PLAYER" or kind == "CREATURE" then
+                local onOurSide = (side == "THEIRS")   -- the caster's "theirs" is us
+                tgt = { kind = kind, isRemote = not onOurSide }
+                if kind == "CREATURE" then
+                    local field = onOurSide and E.localState.field or E.remoteState.field
+                    tgt.perm = idx and field[idx]
+                    if not tgt.perm then tgt = nil end
+                end
+            end
+            if E.ShowRemoteSpell then E:ShowRemoteSpell(cardId, tgt) end
             E:RefreshUI()
 
         elseif actionType == "ATTACH" then

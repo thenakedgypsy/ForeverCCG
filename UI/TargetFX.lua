@@ -202,9 +202,14 @@ local function UpdateReveal(dt)
     end
 end
 
--- A card the opponent cast in PvP (their client doesn't send the target)
-function TTS.Engine:ShowRemoteSpell(cardId)
-    RevealSpell(TTS.Cards[cardId], true, nil)
+-- A card the opponent cast in PvP. tgt is the target their client sent (nil for an
+-- untargeted spell, whose area targets are worked out here from the card).
+function TTS.Engine:ShowRemoteSpell(cardId, tgt)
+    local card = TTS.Cards[cardId]
+    if not card then return end
+    local targets = EffectTargets(card.effect, tgt, true)
+    RevealSpell(card, true, targets)
+    if #targets > 0 then PlayFX(SOUND_TARGET) end
 end
 
 -- The card a pending spell is being cast from
