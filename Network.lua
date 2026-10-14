@@ -177,14 +177,20 @@ local THROTTLE_CODES = {
     [(RESULTS and RESULTS.AddonMessageThrottle) or 3] = true,
     [(RESULTS and RESULTS.ChannelThrottle) or 8] = true,
 }
+-- The client blocks addon messages for a while (e.g. combat / boss encounters): hold the
+-- queue and resend once it lifts instead of dropping game messages
+local LOCKDOWN_CODE = (RESULTS and RESULTS.AddOnMessageLockdown) or 11
+local LOCKDOWN_RETRY = 2    -- seconds between retries while locked down
+local lockdownNoticed = false
 
--- Returns "ok", "throttled" or "failed", plus the client's result code
+-- Returns "ok", "throttled", "lockdown" or "failed", plus the client's result code
 local function RawSend(m)
     local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
     local result = send(PREFIX, m.msg, m.chatType, m.target)
     -- Older clients return nothing or true; newer ones a result code (0 = success)
     if result == nil or result == true or result == 0 then return "ok" end
     if THROTTLE_CODES[result] then return "throttled", result end
+    if result == LOCKDOWN_CODE then return "lockdown", result end
     return "failed", result
 end
 
@@ -201,6 +207,7 @@ local function PumpSendQueue()
     local now = GetTime()
     sendTokens = math.min(SEND_BURST, sendTokens + (now - lastRefill) * SEND_RATE)
     lastRefill = now
+    local delay = 1 / SEND_RATE
     while sendTokens >= 1 do
         local q = (#sendQueues.high > 0) and sendQueues.high or sendQueues.low
         local m = q[1]
@@ -211,13 +218,23 @@ local function PumpSendQueue()
             sendTokens = 0
             break
         end
+        if status == "lockdown" then
+            -- Keep it (and its tokens) until the client allows addon messages again
+            if not lockdownNoticed then
+                lockdownNoticed = true
+                Print("|cFFFFD200[TTSE]|r Addon messages are blocked by the game right now; they will be sent when it allows them again.")
+            end
+            delay = LOCKDOWN_RETRY
+            break
+        end
+        lockdownNoticed = false
         table.remove(q, 1)
         sendTokens = sendTokens - 1
         if status == "failed" then ReportSendFailure(m, code) end
     end
     if #sendQueues.high + #sendQueues.low > 0 then
         pumpScheduled = true
-        TTS:SafeAfter(1 / SEND_RATE, PumpSendQueue)
+        TTS:SafeAfter(delay, PumpSendQueue)
     end
 end
 
