@@ -150,7 +150,8 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     text = "%s\n\n%s",
     button1 = "Accept",
     OnAccept = function(self, data)
-        if data then E:PlayMatchEmote(data.outcome, data.opponent) end
+        -- No public emote for games against the AI
+        if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent) end
         -- Leave the final board (unless a new match has already started on it)
         if not E.inMatch then E:CloseMatchBoard() end
     end,
@@ -178,7 +179,7 @@ end
 
 function E:EndMatch(outcome, reason)
     if not self.inMatch then return end
-    local opponentName = self.opponent or "Target Dummy"
+    local opponentName = self.opponent or "Opponent"
 
     -- Draw the final board state while still in the match (the board may be minimized),
     -- then freeze it there until the result popup is accepted
@@ -191,9 +192,9 @@ function E:EndMatch(outcome, reason)
     local headline = outcome and RESULT_HEADLINES[outcome]
     if outcome and opponentName ~= "" then
         if headline then
-            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome], { outcome = outcome, opponent = opponentName })
+            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome], { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
         else
-            self:PlayMatchEmote(outcome, opponentName)
+            if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
         end
     end
 
@@ -274,49 +275,49 @@ end
 
 -- =========================================================================
 -- MANA SYSTEM
+-- Both functions work for either side's pool (isRemote = the opponent / AI).
 -- =========================================================================
-function E:CanPayMana(costString)
-    if not costString or costString == "" then return true end
+local MANA_COLORS = { "W", "U", "B", "R", "G" }
+
+-- What a cost string asks for: { W, U, B, R, G, Generic }
+function E:ParseCost(costString)
     local req = { W = 0, U = 0, B = 0, R = 0, G = 0, Generic = 0 }
-    for pip in string.gmatch(costString, "{(%w+)}") do
+    for pip in string.gmatch(costString or "", "{(%w+)}") do
         if tonumber(pip) then
             req.Generic = req.Generic + tonumber(pip)
         elseif pip ~= "X" and req[pip] then
             req[pip] = req[pip] + 1
         end
     end
+    return req
+end
 
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        if (self.localState.mana[col] or 0) < req[col] then return false end
-    end
+function E:CanPayMana(costString, isRemote)
+    if not costString or costString == "" then return true end
+    local pool = (isRemote and self.remoteState or self.localState).mana
+    local req = self:ParseCost(costString)
 
     local totalRemaining = 0
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        totalRemaining = totalRemaining + ((self.localState.mana[col] or 0) - req[col])
+    for _, col in ipairs(MANA_COLORS) do
+        if (pool[col] or 0) < req[col] then return false end
+        totalRemaining = totalRemaining + ((pool[col] or 0) - req[col])
     end
     return totalRemaining >= req.Generic
 end
 
-function E:PayMana(costString)
-    if not self:CanPayMana(costString) then return false end
+function E:PayMana(costString, isRemote)
+    if not self:CanPayMana(costString, isRemote) then return false end
     if not costString or costString == "" then return true end
+    local pool = (isRemote and self.remoteState or self.localState).mana
+    local req = self:ParseCost(costString)
 
-    local req = { W = 0, U = 0, B = 0, R = 0, G = 0, Generic = 0 }
-    for pip in string.gmatch(costString, "{(%w+)}") do
-        if tonumber(pip) then
-            req.Generic = req.Generic + tonumber(pip)
-        elseif pip ~= "X" and req[pip] then
-            req[pip] = req[pip] + 1
-        end
-    end
-
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        self.localState.mana[col] = self.localState.mana[col] - req[col]
+    for _, col in ipairs(MANA_COLORS) do
+        pool[col] = (pool[col] or 0) - req[col]
     end
     local genToPay = req.Generic
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        while (self.localState.mana[col] or 0) > 0 and genToPay > 0 do
-            self.localState.mana[col] = self.localState.mana[col] - 1
+    for _, col in ipairs(MANA_COLORS) do
+        while (pool[col] or 0) > 0 and genToPay > 0 do
+            pool[col] = pool[col] - 1
             genToPay = genToPay - 1
         end
     end
@@ -339,6 +340,10 @@ local function PlayTurnSound()
     end
 end
 
+-- Phase shown while the solo opponent takes its turn
+local AI_TURN_PHASE = "WAITING (Opponent's Turn)"
+E.AI_TURN_PHASE = AI_TURN_PHASE
+
 function E:CancelTargeting()
     if self.targeting then
         self:Log("Targeting cancelled.", "SYSTEM")
@@ -352,7 +357,7 @@ function E:NextPhase()
         local bs = self.blockingState
         if bs.isRemoteAttacking then
             if self.isSolo then
-                -- The Target Dummy has no button to click: resolve right away
+                -- The AI has no button to click: resolve right away
                 self:ResolveCombatDamage()
             elseif not bs.blocksDeclared and next(bs.blocks) == nil then
                 -- No blocks to show the attacker: resolve on both clients straight away
@@ -396,15 +401,15 @@ function E:NextPhase()
         if self.blockingState and #self.blockingState.attackers > 0 then
             self:SetPhase("COMBAT_BLOCK")
             if self.isSolo then
-                self:DummyAssignBlocksAgainstPlayer()
+                self:AIAssignBlocks()
                 if next(self.blockingState.blocks) == nil then
                     -- Nothing blocked, so there are no blocks to review: resolve right away
-                    self:Log("Target Dummy declared no blockers.", "SYSTEM")
+                    self:Log(self.opponent .. " declared no blockers.", "SYSTEM")
                     self:ResolveCombatDamage()
                     return
                 end
                 self.blockingState.blocksDeclared = true
-                self:Log("Target Dummy declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
+                self:Log(self.opponent .. " declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
             else
                 self:Log("Waiting for opponent to declare blockers...", "SYSTEM")
             end
@@ -435,21 +440,88 @@ function E:EndTurn()
 
     self.isMyTurn = false
     self:CancelTargeting()
+    self:EndTurnCleanup(false)
+
+    self:Log("Ended turn. Mana pool emptied and damage on creatures removed.", "SYSTEM")
+
+    if self.isSolo then
+        self:SetPhase(AI_TURN_PHASE)
+        self:RefreshUI()
+        TTS:SafeAfter(1.0, function()
+            if not E.inMatch or not E.isSolo then return end
+            E:AITakeTurn()
+        end)
+    else
+        self:SetPhase("WAITING")
+        TTS.Net:Send(self.opponent, "ACTION:END_TURN")
+        self:RefreshUI()
+    end
+end
+
+-- Untaps one side's permanents (a frozen permanent stays tapped once) and clears summoning sickness
+function E:UntapSide(isRemote)
+    for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
+        perm.sick = false
+        perm.isAttacking = nil
+        perm.hasAttackedThisTurn = nil
+        perm.blockedThisCombat = nil
+        if perm.freezeUntap then
+            perm.freezeUntap = false
+        else
+            perm.tapped = false
+        end
+    end
+end
+
+-- Start of a turn for either side: untap, tick that side's over-time effects, draw.
+-- Returns false if the match ended along the way.
+function E:BeginTurn(isRemote)
+    local st = isRemote and self.remoteState or self.localState
+    self.blockingState = nil
+    self.cantBlockThisTurn = false
+    self.preventCombatDamage = false
+    if isRemote then
+        self.remoteLandPlayed = false
+        self.remoteTurns = (self.remoteTurns or 0) + 1
+    else
+        self.landPlayedThisTurn = false
+    end
+
+    self:UntapSide(isRemote)
+    st.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
+
+    self:TickOverTime(isRemote)
+    if not self.inMatch then return false end
+    self:RunEncounterRules(isRemote and "onAITurnStart" or "onPlayerTurnStart")
+    if not self.inMatch then return false end
+    self:DrawCardFor(isRemote)
+    return self.inMatch
+end
+
+-- End of a turn for either side: the mana pool empties, "until end of turn" effects wear off,
+-- creatures this side took control of go back, and damage on creatures is removed.
+function E:EndTurnCleanup(isRemote)
+    local st = isRemote and self.remoteState or self.localState
     self.preventCombatDamage = false
     self.cantBlockThisTurn = false
     self.blockingState = nil
-    self.localState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
+    st.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
 
     for i = #self.stolenCreatures, 1, -1 do
-        local entry = table.remove(self.stolenCreatures, i)
-        for fIdx, perm in ipairs(self.localState.field) do
-            if perm == entry.perm then
-                table.remove(self.localState.field, fIdx)
-                perm.sick = true
-                if entry.isRemoteOwner then table.insert(self.remoteState.field, perm)
-                else table.insert(self.localState.field, perm) end
-                self:Log("Control effect expired: returned creature to owner.", "ACTION")
-                break
+        local entry = self.stolenCreatures[i]
+        if (entry.controllerIsRemote or false) == isRemote then
+            table.remove(self.stolenCreatures, i)
+            local from = isRemote and self.remoteState.field or self.localState.field
+            local to = entry.isRemoteOwner and self.remoteState.field or self.localState.field
+            for fIdx, perm in ipairs(from) do
+                if perm == entry.perm then
+                    table.remove(from, fIdx)
+                    perm.sick = true
+                    perm.isAttacking = nil
+                    table.insert(to, perm)
+                    self:Log("Control effect expired: returned creature to owner.", "ACTION")
+                    break
+                end
             end
         end
     end
@@ -466,52 +538,17 @@ function E:EndTurn()
         end
     end
     self:ClearCreatureDamage()
-
-    self:Log("Ended turn. Mana pool emptied and damage on creatures removed.", "SYSTEM")
-
-    if self.isSolo then
-        self:SetPhase("WAITING (Dummy Turn)")
-        self:RefreshUI()
-        TTS:SafeAfter(1.0, function()
-            if not E.inMatch or not E.isSolo then return end
-            E:DummyTakeTurn()
-        end)
-    else
-        self:SetPhase("WAITING")
-        TTS.Net:Send(self.opponent, "ACTION:END_TURN")
-        self:RefreshUI()
-    end
 end
 
+-- The opponent (or the AI) ended their turn: our turn begins
 function E:OnRemoteEndTurn()
+    self:CancelTargeting()
+    self:EndTurnCleanup(true)
+
     self.isMyTurn = true
     self.turn = self.turn + 1
-    self.landPlayedThisTurn = false
-    self.blockingState = nil
-    self.cantBlockThisTurn = false
-    self.preventCombatDamage = false
-    self:CancelTargeting()
-
-    -- The opponent's turn just ended: damage on creatures wears off
-    self:ClearCreatureDamage()
-
-    for _, perm in ipairs(self.localState.field) do
-        perm.sick = false
-        perm.isAttacking = nil
-        perm.hasAttackedThisTurn = nil
-        local canUntap = true
-        if perm.freezeUntap then
-            canUntap = false
-            perm.freezeUntap = false
-        end
-        if canUntap then perm.tapped = false end
-    end
-    self.localState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
-
     self:Log(string.format("=== Turn %d === Untapped permanents.", self.turn), "SYSTEM")
-    self:TickOverTime()
-    if not self.inMatch then return end
-    self:DrawCard()
+    if not self:BeginTurn(false) then return end
     self:SetPhase("MAIN1")
     PlayTurnSound()
     self:RefreshUI()
@@ -535,7 +572,7 @@ function E:StartMatch(opponentName, isHost, isSolo)
     end
 
     self.inMatch = true
-    self.opponent = opponentName or "Target Dummy"
+    self.opponent = opponentName or "Opponent"
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
     self.turn = 1
@@ -546,6 +583,10 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.blockingState = nil
     self.pendingDiscard = nil
     self.stolenCreatures = {}
+    self.remoteTurns = 0
+    self.remoteLandPlayed = false
+    self.checkingSBA = false
+    self.encounter = nil
 
     self.localState.life = 20
     self.localState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
@@ -630,6 +671,18 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self:RefreshUI()
 end
 
+-- Calls one hook (onStart, onAITurnStart, onPlayerTurnStart, onCreatureDeath) of every
+-- rule the current solo encounter lists. See TTS.EncounterRules in SoloEncounters.lua.
+function E:RunEncounterRules(hook, ...)
+    local enc = self.encounter
+    if not (enc and enc.rules and TTS.EncounterRules) then return end
+    for _, ruleId in ipairs(enc.rules) do
+        local rule = TTS.EncounterRules[ruleId]
+        if rule and rule[hook] then rule[hook](self, enc, ...) end
+        if not self.inMatch then return end
+    end
+end
+
 -- Most cards a hand can hold. Drawing with a full hand asks for a discard first.
 local MAX_HAND_SIZE = 10
 
@@ -657,6 +710,58 @@ function E:DrawCard(silent)
         self:Log("Drew " .. card.name .. ".", "ACTION")
     end
     self:RefreshUI()
+end
+
+-- Draws a card for either side.
+--   Local:          the normal draw (hand limit asks the player to discard).
+--   Remote in solo: the AI draws from its real deck; an empty deck loses it the match,
+--                   and at the hand limit it discards its least useful card first.
+--   Remote in PvP:  the other client draws for itself; we only track the hand size.
+function E:DrawCardFor(isRemote)
+    if not isRemote then
+        self:DrawCard()
+        return
+    end
+    local st = self.remoteState
+    if not self.isSolo then
+        st.handCount = (st.handCount or 0) + 1
+        return
+    end
+
+    if #st.deck == 0 then
+        self:WinMatch(string.format("Victory! %s drew from an empty library.", self.opponent))
+        return
+    end
+    if #st.hand >= MAX_HAND_SIZE then
+        local worstIdx, worstVal
+        for i, id in ipairs(st.hand) do
+            local v = self:AICardValue(id)
+            if not worstVal or v < worstVal then worstIdx, worstVal = i, v end
+        end
+        local discarded = table.remove(st.hand, worstIdx)
+        table.insert(st.graveyard, discarded)
+        local dc = TTS.Cards[discarded]
+        self:Log(string.format("%s discarded |cFFFFD200%s|r (hand full).", self.opponent, dc and dc.name or discarded), "ACTION")
+    end
+    table.insert(st.hand, table.remove(st.deck, 1))
+    st.handCount = #st.hand
+    self:RefreshUI()
+end
+
+-- Removes a random card from a side's hand to its graveyard (forced discards)
+function E:DiscardRandom(isRemote)
+    local st = isRemote and self.remoteState or self.localState
+    if isRemote and not self.isSolo then
+        st.handCount = math.max(0, (st.handCount or 0) - 1)
+        return
+    end
+    if #st.hand == 0 then return end
+    local cardId = table.remove(st.hand, math.random(#st.hand))
+    table.insert(st.graveyard, cardId)
+    if isRemote then st.handCount = #st.hand end
+    local card = TTS.Cards[cardId]
+    self:Log(string.format("%s discarded |cFFFFD200%s|r.", isRemote and self.opponent or "You", card and card.name or cardId), "ACTION")
+    if not isRemote and not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
 end
 
 -- Discards the hand card the player clicked to make room, then makes the waiting draw(s)

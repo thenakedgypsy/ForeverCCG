@@ -19,58 +19,14 @@ local DUMMY_STEP_DELAY = 0.8
 -- Seconds between each prayer it taps for mana
 local DUMMY_TAP_DELAY = 0.4
 
-function E:DummyCanPayMana(costString)
-    if not costString or costString == "" then return true end
-    local req = { W = 0, U = 0, B = 0, R = 0, G = 0, Generic = 0 }
-    for pip in string.gmatch(costString, "{(%w+)}") do
-        if tonumber(pip) then req.Generic = req.Generic + tonumber(pip)
-        elseif pip ~= "X" and req[pip] then req[pip] = req[pip] + 1 end
-    end
-    for _, p in ipairs(self.localState.field) do
-        if p.id == "U15" then req.Generic = req.Generic + 1; break end
-    end
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        if (self.remoteState.mana[col] or 0) < req[col] then return false end
-    end
-    local rem = 0
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        rem = rem + ((self.remoteState.mana[col] or 0) - req[col])
-    end
-    return rem >= req.Generic
-end
-
-function E:DummyPayMana(costString)
-    if not self:DummyCanPayMana(costString) then return false end
-    if not costString or costString == "" then return true end
-    local req = { W = 0, U = 0, B = 0, R = 0, G = 0, Generic = 0 }
-    for pip in string.gmatch(costString, "{(%w+)}") do
-        if tonumber(pip) then req.Generic = req.Generic + tonumber(pip)
-        elseif pip ~= "X" and req[pip] then req[pip] = req[pip] + 1 end
-    end
-    for _, p in ipairs(self.localState.field) do
-        if p.id == "U15" then req.Generic = req.Generic + 1; break end
-    end
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        self.remoteState.mana[col] = (self.remoteState.mana[col] or 0) - req[col]
-    end
-    local gen = req.Generic
-    for col in pairs({ W = true, U = true, B = true, R = true, G = true }) do
-        while gen > 0 and (self.remoteState.mana[col] or 0) > 0 do
-            self.remoteState.mana[col] = self.remoteState.mana[col] - 1
-            gen = gen - 1
-        end
-    end
-    return true
-end
-
 function E:DummyPlayLand()
     for i, cardId in ipairs(self.remoteState.hand) do
         local card = TTS.Cards[cardId]
         if card and card.type == "Land" then
             table.remove(self.remoteState.hand, i)
-            table.insert(self.remoteState.field, { id = cardId, tapped = false, uid = time() + i })
+            table.insert(self.remoteState.field, { id = cardId, tapped = false, uid = self:NewUid() })
             self.remoteState.handCount = #self.remoteState.hand
-            self:Log(string.format("Target Dummy played land: |cFFFFD200%s|r.", card.name), "ACTION")
+            self:Log(string.format("%s played land: |cFFFFD200%s|r.", self.opponent, card.name), "ACTION")
             self:PlayNonCreatureCardSound()
             return true
         end
@@ -85,17 +41,8 @@ end
 -- =========================================================================
 local COLORS = { "W", "U", "B", "R", "G" }
 
--- What a cost asks of the dummy (U15 on the player's side taxes it {1}, as in DummyPayMana)
 local function DummyCostReq(self, costString)
-    local req = { W = 0, U = 0, B = 0, R = 0, G = 0, Generic = 0 }
-    for pip in string.gmatch(costString or "", "{(%w+)}") do
-        if tonumber(pip) then req.Generic = req.Generic + tonumber(pip)
-        elseif pip ~= "X" and req[pip] then req[pip] = req[pip] + 1 end
-    end
-    for _, p in ipairs(self.localState.field) do
-        if p.id == "U15" then req.Generic = req.Generic + 1; break end
-    end
-    return req
+    return self:ParseCost(costString)
 end
 
 -- The dummy's untapped prayers, grouped by color
@@ -187,21 +134,11 @@ end
 
 -- Pays for and casts the creature at hand index bestIdx (its prayers are already tapped)
 function E:DummyCastCreature(bestIdx, bestCard)
-    self:DummyPayMana(bestCard.cost)
+    self:PayMana(bestCard.cost, true)
     local cardId = table.remove(self.remoteState.hand, bestIdx)
-    local perm = {
-        id = cardId,
-        tapped = (cardId == "B10" or cardId == "G09"),
-        sick = not self:HasKeyword({ id = cardId }, true, "haste"),
-        damage = 0,
-        tempPower = 0,
-        tempToughness = 0,
-        uid = time() + bestIdx
-    }
-    table.insert(self.remoteState.field, perm)
     self.remoteState.handCount = #self.remoteState.hand
-    self:Log(string.format("Target Dummy cast |cFFFFD200%s|r (%s).", bestCard.name, bestCard.cost or "0"), "ACTION")
-    if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
+    self:Log(string.format("%s cast |cFFFFD200%s|r (%s).", self.opponent, bestCard.name, bestCard.cost or "0"), "ACTION")
+    self:PutCreatureOntoBattlefield(cardId, true)
     return true
 end
 
@@ -211,23 +148,14 @@ function E:DummyAttack()
     for i, perm in ipairs(self.remoteState.field) do
         local card = TTS.Cards[perm.id]
         if card and card.type == "Creature" and not perm.tapped and not perm.sick and not card.defender then
-            local pacified = false
-            if perm.attachments then
-                for _, att in ipairs(perm.attachments) do
-                    local attId = type(att) == "table" and att.id or att
-                    if attId == "W03" then pacified = true; break end
-                end
-            end
-
-            if not pacified then
+            do
                 if not self:HasKeyword(perm, true, "vigilance") then perm.tapped = true end
                 perm.isAttacking = true
                 table.insert(attackerIndices, i)
-                self:Log(string.format("Target Dummy attacks with |cFFFF2222%s|r!", card.name), "COMBAT")
+                self:Log(string.format("%s attacks with |cFFFF2222%s|r!", self.opponent, card.name), "COMBAT")
                 if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
-
-                if perm.id == "W09" then self.remoteState.life = self.remoteState.life + 2
-                elseif perm.id == "R20" then self:DamagePlayer(false, 2, "Firemaw") end
+                self:OnCreatureAttack(perm, true)
+                if not self.inMatch then return true end
             end
         end
     end
@@ -248,28 +176,8 @@ function E:DummyAttack()
     return false
 end
 
-function E:DummyTakeTurn()
-    for _, perm in ipairs(self.remoteState.field) do
-        perm.blockedThisCombat = nil
-        if perm.freezeUntap then perm.freezeUntap = false
-        else perm.tapped = false end
-        perm.sick = false
-    end
-
-    for _, perm in ipairs(self.remoteState.field) do
-        if perm.attachments then
-            for _, att in ipairs(perm.attachments) do
-                local attId = type(att) == "table" and att.id or att
-                if attId == "B06" then self:DamagePlayer(true, 1, "Curse of Agony") end
-            end
-        end
-    end
-
-    if self.remoteState.deck and #self.remoteState.deck > 0 then
-        local drawnCard = table.remove(self.remoteState.deck, 1)
-        table.insert(self.remoteState.hand, drawnCard)
-        self.remoteState.handCount = #self.remoteState.hand
-    end
+function E:AITakeTurn()
+    if not self:BeginTurn(true) then return end
     self:RefreshUI()
 
     -- The rest of the turn plays out one action at a time with a pause between each.
@@ -283,12 +191,8 @@ function E:DummyTakeTurn()
     end
 
     local function AttackStep()
-        E.remoteState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
-        if not E:DummyAttack() then
-            Next(function()
-                E:Log("Target Dummy passed turn.", "SYSTEM")
-                E:OnRemoteEndTurn()
-            end)
+        if not E:DummyAttack() and E.inMatch then
+            E:AIAfterCombat()
         end
     end
 
@@ -325,22 +229,15 @@ function E:DummyTakeTurn()
     end)
 end
 
-function E:DummyAssignBlocksAgainstPlayer()
+function E:AIAssignBlocks()
     if not self.blockingState or self.blockingState.isRemoteAttacking then return end
     if self.cantBlockThisTurn then return end
 
     local unassignedBlockers = {}
     for i, perm in ipairs(self.remoteState.field) do
         local card = TTS.Cards[perm.id]
-        if card and card.type == "Creature" and not perm.tapped and card.id ~= "R11" then
-            local pacified = false
-            if perm.attachments then
-                for _, att in ipairs(perm.attachments) do
-                    local attId = type(att) == "table" and att.id or att
-                    if attId == "W03" then pacified = true; break end
-                end
-            end
-            if not pacified then table.insert(unassignedBlockers, i) end
+        if card and card.type == "Creature" and not perm.tapped then
+            table.insert(unassignedBlockers, i)
         end
     end
 
@@ -360,11 +257,27 @@ function E:DummyAssignBlocksAgainstPlayer()
 
                 if canBlock then
                     self.blockingState.blocks[blockerIdx] = atkIdx
-                    self:Log(string.format("Target Dummy assigned %s to block %s.", blockerCard.name, atkCard.name), "COMBAT")
+                    self:Log(string.format("%s assigned %s to block %s.", self.opponent, blockerCard.name, atkCard.name), "COMBAT")
                     table.remove(unassignedBlockers, bListIdx)
                     break
                 end
             end
         end
     end
+end
+
+-- After combat (or with nothing to attack with) the AI passes the turn
+function E:AIAfterCombat()
+    TTS:SafeAfter(DUMMY_STEP_DELAY, function()
+        if E.inMatch and E.isSolo then
+            E:Log(E.opponent .. " passed turn.", "SYSTEM")
+            E:OnRemoteEndTurn()
+        end
+    end)
+end
+
+-- How much the AI wants to keep a card in hand (higher = keep)
+function E:AICardValue(cardId)
+    local card = TTS.Cards[cardId]
+    return card and (card.cmc or 0) or 0
 end

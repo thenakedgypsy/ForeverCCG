@@ -1392,7 +1392,7 @@ function B:UpdateDisplay()
         B.nextPhaseBtn:Enable()
         B.nextPhaseBtn:SetText("Declare Blocks")
         B.endTurnBtn:Disable()
-    elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == "WAITING (Dummy Turn)" or E.phase == "PREGAME" then
+    elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
         B.nextPhaseBtn:SetText("Opponent Turn")
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()

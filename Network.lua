@@ -672,10 +672,9 @@ function TTS.Net:OnReceive(msg, sender)
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
-            local entersTapped = (cardId == "B10" or cardId == "G09")
             table.insert(E.remoteState.field, {
                 id = cardId,
-                tapped = entersTapped,
+                tapped = false,
                 sick = not E:HasKeyword({ id = cardId }, true, "haste"),
                 damage = 0,
                 tempPower = 0,
@@ -711,9 +710,6 @@ function TTS.Net:OnReceive(msg, sender)
                     isEquipment = isEquip,
                     controllerIsRemote = true
                 })
-                if cardId == "G03" then
-                    perm.wildOvergrowth = true
-                end
                 E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
                 E:Log(string.format("%s attached |cFFFFD200%s|r to %s.", sender, card and card.name or cardId, TTS.Cards[perm.id] and TTS.Cards[perm.id].name or "card"), "ACTION")
                 E:PlayNonCreatureCardSound()
@@ -801,23 +797,7 @@ function TTS.Net:OnReceive(msg, sender)
             end
 
         elseif actionType == "END_TURN" then
-            for _, perm in ipairs(E.remoteState.field) do
-                perm.sick = false
-                perm.isAttacking = nil
-                perm.hasAttackedThisTurn = nil
-                local canUntap = true
-                if perm.freezeUntap then
-                    canUntap = false
-                    perm.freezeUntap = false
-                end
-                if perm.attachments then
-                    for _, att in ipairs(perm.attachments) do
-                        local attId = type(att) == "table" and att.id or att
-                        if attId == "U10" then canUntap = false end
-                    end
-                end
-                if canUntap then perm.tapped = false end
-            end
+            E:UntapSide(true)
 
             E:Log(sender .. " ended their turn.", "SYSTEM")
             E:OnRemoteEndTurn()

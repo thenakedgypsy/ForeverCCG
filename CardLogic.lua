@@ -77,11 +77,15 @@ end
 -- Tribal abilities on a creature card:
 --   anthem = { tag, value, p, t, kw } : other creatures you control with the tag get +p/+t (and keywords)
 --   rally  = { tag, value, p, t }     : this creature gets +p/+t for each other creature you control with the tag
+-- tag = "any" matches every creature ("other creatures you control get ...").
+-- Spell ops accept filter = { tag, value } to hit only matching creatures ("each enemy Undead").
 -- =========================================================================
 local TAG_FIELDS = { faction = "faction", zone = "zone", type = "creatureType" }
 
 function E:CardHasTag(card, tag, value)
-    local field = card and TAG_FIELDS[tag]
+    if not card then return false end
+    if tag == "any" then return true end
+    local field = TAG_FIELDS[tag]
     return field ~= nil and card[field] == value
 end
 
@@ -246,31 +250,18 @@ function E:HandleCreatureDeath(perm, isRemote)
     self:DetachAttachments(perm, isRemote)
 
     if perm.id == "BOSS09" then
-        if isRemote then
-            self.remoteState.handCount = self.remoteState.handCount + 1
-        else
-            self:DrawCard()
-        end
+        self:DrawCardFor(isRemote)
         self:Log(card.name .. " died: controller drew a card.", "ACTION")
     end
 
     if perm.id == "BOSS12" then
         local gy = isRemote and self.remoteState.graveyard or self.localState.graveyard
-        local field = isRemote and self.remoteState.field or self.localState.field
         for idx = #gy, 1, -1 do
             local resCardId = gy[idx]
             local resCard = TTS.Cards[resCardId]
             if resCard and resCard.type == "Creature" and resCardId ~= "BOSS12" then
                 table.remove(gy, idx)
-                table.insert(field, {
-                    id = resCardId,
-                    tapped = false,
-                    sick = not resCard.haste,
-                    damage = 0,
-                    tempPower = 0,
-                    tempToughness = 0,
-                    uid = time() + idx
-                })
+                self:PutCreatureOntoBattlefield(resCardId, isRemote)
                 self:Log(string.format("Whitemane resurrected |cFFFFD200%s|r onto the battlefield!", resCard.name), "ACTION")
                 break
             end
@@ -285,58 +276,69 @@ function E:HandleCreatureDeath(perm, isRemote)
 
     for _, other in ipairs(isRemote and self.remoteState.field or self.localState.field) do
         if other.id == "BOSS24" and other ~= perm then
-            if isRemote then
-                self.remoteState.handCount = self.remoteState.handCount + 1
-            else
-                self:DrawCard()
-            end
+            self:DrawCardFor(isRemote)
             self:Log("Darkmaster Gandling siphon: drew a card from a creature's death.", "ACTION")
+        end
+    end
+
+    -- Data-driven death trigger, resolved by the creature's controller
+    if card.onDeath and self.inMatch then
+        self:ResolveEffect(card.onDeath, card, isRemote)
+    end
+
+    if self.inMatch then
+        self:RunEncounterRules("onCreatureDeath", perm, isRemote)
+    end
+end
+
+-- Returns the first creature (isRemote, index, perm) with lethal damage, or nil
+local function FindLethalCreature(self)
+    for _, isRemote in ipairs({ false, true }) do
+        local field = isRemote and self.remoteState.field or self.localState.field
+        for i = #field, 1, -1 do
+            local perm = field[i]
+            if IsCreaturePerm(perm) then
+                local _, effT = self:GetCreatureStats(perm, isRemote)
+                if (perm.damage or 0) >= effT or effT <= 0 then
+                    return isRemote, i, perm
+                end
+            end
         end
     end
 end
 
+-- Puts every creature with lethal damage into its graveyard, one at a time, until none are
+-- left. Death triggers can kill more creatures; a call made while a check is already running
+-- is picked up by the running loop instead of re-entering it.
 function E:CheckStateBasedActions()
-    for i = #self.localState.field, 1, -1 do
-        local perm = self.localState.field[i]
+    if self.checkingSBA then return end
+    self.checkingSBA = true
+    while self.inMatch do
+        local isRemote, i, perm = FindLethalCreature(self)
+        if not perm then break end
         local card = TTS.Cards[perm.id]
-        if card and card.type == "Creature" then
-            local _, effT = self:GetCreatureStats(perm, false)
-            if (perm.damage or 0) >= effT or effT <= 0 then
-                if perm.regenerateShield then
-                    perm.damage = 0
-                    perm.tapped = true
-                    perm.regenerateShield = false
-                    self:Log(string.format("|cFFFFD200%s|r regenerated from lethal damage!", card.name), "ACTION")
-                else
-                    table.remove(self.localState.field, i)
-                    table.insert(self.localState.graveyard, perm.id)
-                    self:Log(string.format("|cFFFFD200%s|r died and was put into the graveyard.", card.name), "COMBAT")
-                    self:HandleCreatureDeath(perm, false)
-                end
+        local st = isRemote and self.remoteState or self.localState
+        if perm.regenerateShield then
+            perm.damage = 0
+            perm.tapped = true
+            perm.regenerateShield = false
+            if isRemote then
+                self:Log(string.format("%s's |cFFFFD200%s|r regenerated!", self.opponent, card.name), "ACTION")
+            else
+                self:Log(string.format("|cFFFFD200%s|r regenerated from lethal damage!", card.name), "ACTION")
             end
+        else
+            table.remove(st.field, i)
+            table.insert(st.graveyard, perm.id)
+            if isRemote then
+                self:Log(string.format("%s's |cFFFFD200%s|r was destroyed.", self.opponent, card.name), "COMBAT")
+            else
+                self:Log(string.format("|cFFFFD200%s|r died and was put into the graveyard.", card.name), "COMBAT")
+            end
+            self:HandleCreatureDeath(perm, isRemote)
         end
     end
-
-    for i = #self.remoteState.field, 1, -1 do
-        local perm = self.remoteState.field[i]
-        local card = TTS.Cards[perm.id]
-        if card and card.type == "Creature" then
-            local _, effT = self:GetCreatureStats(perm, true)
-            if (perm.damage or 0) >= effT or effT <= 0 then
-                if perm.regenerateShield then
-                    perm.damage = 0
-                    perm.tapped = true
-                    perm.regenerateShield = false
-                    self:Log(string.format("%s's |cFFFFD200%s|r regenerated!", self.opponent, card.name), "ACTION")
-                else
-                    table.remove(self.remoteState.field, i)
-                    table.insert(self.remoteState.graveyard, perm.id)
-                    self:Log(string.format("%s's |cFFFFD200%s|r was destroyed.", self.opponent, card.name), "COMBAT")
-                    self:HandleCreatureDeath(perm, true)
-                end
-            end
-        end
-    end
+    self.checkingSBA = false
 
     self:RefreshUI()
 end
@@ -355,7 +357,10 @@ end
 
 -- =========================================================================
 -- SPELL EFFECT ENGINE
--- Every class spell in the Cards files carries an `effect = { target = <spec>, ops = { ... } }` table.
+-- Every class spell carries an `effect = { target = <spec>, ops = { ... } }` table, and creature
+-- cards may carry `etb`, `onAttack` and `onDeath` tables of the same shape.
+-- Everything resolves from the caster's point of view (casterIsRemote): "enemy" and "friendly"
+-- are relative to the caster, so the same card works for the player and for the AI.
 -- =========================================================================
 local SPELL_TARGET_UI = {
     enemy_creature    = "CREATURE",
@@ -376,38 +381,48 @@ function E:GetSpellTargetType(card)
     return nil
 end
 
-function E:IsValidSpellTarget(spec, kind, isRemote)
-    isRemote = isRemote and true or false
-    if spec == "enemy_creature" then return kind == "CREATURE" and isRemote end
-    if spec == "friendly_creature" then return kind == "CREATURE" and not isRemote end
+-- isRemote is the side the target is on; casterIsRemote the side casting
+function E:IsValidSpellTarget(spec, kind, isRemote, casterIsRemote)
+    local isEnemy = (isRemote and true or false) ~= (casterIsRemote and true or false)
+    if spec == "enemy_creature" then return kind == "CREATURE" and isEnemy end
+    if spec == "friendly_creature" then return kind == "CREATURE" and not isEnemy end
     if spec == "creature" then return kind == "CREATURE" end
-    if spec == "enemy_any" then return isRemote end
-    if spec == "friendly_any" then return not isRemote end
+    if spec == "enemy_any" then return isEnemy end
+    if spec == "friendly_any" then return not isEnemy end
     if spec == "any" then return true end
-    if spec == "enemy_player" then return kind == "PLAYER" and isRemote end
+    if spec == "enemy_player" then return kind == "PLAYER" and isEnemy end
     if spec == "player" then return kind == "PLAYER" end
     return false
 end
 
+-- True if the caster may not target this creature (an opponent's Hexproof creature)
+function E:IsHexproofAgainst(perm, isRemote, casterIsRemote)
+    if (isRemote and true or false) == (casterIsRemote and true or false) then return false end
+    return self:HasKeyword(perm, isRemote, "hexproof") and true or false
+end
+
 -- Builds the list of things an op applies to: {kind="PLAYER"|"CREATURE", isRemote=bool, perm=perm}
-function E:CollectSpellTargets(to, tgt)
+-- filter = { tag, value } keeps only creatures with that tag.
+function E:CollectSpellTargets(to, tgt, casterIsRemote, filter)
+    local cr = casterIsRemote and true or false
     local list = {}
     if to == "target" then
         if tgt then list[1] = tgt end
     elseif to == "self_player" then
-        list[1] = { kind = "PLAYER", isRemote = false }
+        list[1] = { kind = "PLAYER", isRemote = cr }
     elseif to == "enemy_player" then
-        list[1] = { kind = "PLAYER", isRemote = true }
+        list[1] = { kind = "PLAYER", isRemote = not cr }
     else
-        local function add(field, isRemote)
+        local function add(isRemote)
+            local field = isRemote and self.remoteState.field or self.localState.field
             for _, perm in ipairs(field) do
-                if IsCreaturePerm(perm) then
+                if IsCreaturePerm(perm) and (not filter or self:CardHasTag(TTS.Cards[perm.id], filter.tag, filter.value)) then
                     table.insert(list, { kind = "CREATURE", isRemote = isRemote, perm = perm })
                 end
             end
         end
-        if to == "enemy_creatures" or to == "all_creatures" then add(self.remoteState.field, true) end
-        if to == "friendly_creatures" or to == "all_creatures" then add(self.localState.field, false) end
+        if to == "enemy_creatures" or to == "all_creatures" then add(not cr) end
+        if to == "friendly_creatures" or to == "all_creatures" then add(cr) end
     end
     return list
 end
@@ -417,17 +432,22 @@ local function CreatureName(perm)
     return c and c.name or perm.id
 end
 
+-- "you" for the player, the opponent's name for the other side
+function E:SideName(isRemote)
+    return isRemote and (self.opponent or "the opponent") or "you"
+end
+
 -- Display name for the target of an over-time effect
 local function TargetName(self, d)
     if d.kind == "PLAYER" then
-        return d.isRemote and (self.opponent or "the opponent") or "you"
+        return self:SideName(d.isRemote)
     end
     return "|cFFFFD200" .. CreatureName(d.perm) .. "|r"
 end
 
 local SPELL_OPS = {}
 
-SPELL_OPS.damage = function(self, op, d, card)
+SPELL_OPS.damage = function(self, op, d, card, cr)
     local n = op.n
     if d.kind == "PLAYER" then
         self:DamagePlayer(d.isRemote, n, card.name)
@@ -438,18 +458,18 @@ SPELL_OPS.damage = function(self, op, d, card)
     end
 end
 
-SPELL_OPS.heal = function(self, op, d, card)
+SPELL_OPS.heal = function(self, op, d, card, cr)
     if d.kind == "PLAYER" then
         local st = d.isRemote and self.remoteState or self.localState
         st.life = st.life + op.n
-        self:Log(string.format("%s restored %d life to %s.", card.name, op.n, d.isRemote and (self.opponent or "the opponent") or "you"), "ACTION")
+        self:Log(string.format("%s restored %d life to %s.", card.name, op.n, self:SideName(d.isRemote)), "ACTION")
     else
         d.perm.damage = math.max(0, (d.perm.damage or 0) - op.n)
         self:Log(string.format("%s healed |cFFFFD200%s|r for %d.", card.name, CreatureName(d.perm), op.n), "ACTION")
     end
 end
 
-SPELL_OPS.buff = function(self, op, d, card)
+SPELL_OPS.buff = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local perm = d.perm
     if op.perm then
@@ -466,20 +486,20 @@ SPELL_OPS.buff = function(self, op, d, card)
     self:Log(string.format("%s affected |cFFFFD200%s|r.", card.name, CreatureName(d.perm)), "ACTION")
 end
 
-SPELL_OPS.tap = function(self, op, d, card)
+SPELL_OPS.tap = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     d.perm.tapped = true
     self:Log(string.format("|cFFFFD200%s|r was tapped.", CreatureName(d.perm)), "ACTION")
 end
 
-SPELL_OPS.freeze = function(self, op, d, card)
+SPELL_OPS.freeze = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     d.perm.tapped = true
     d.perm.freezeUntap = true
     self:Log(string.format("|cFFFFD200%s|r was tapped and will not untap next untap step.", CreatureName(d.perm)), "ACTION")
 end
 
-SPELL_OPS.destroy = function(self, op, d, card)
+SPELL_OPS.destroy = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local c = TTS.Cards[d.perm.id]
     if op.damaged and (d.perm.damage or 0) <= 0 then
@@ -493,7 +513,7 @@ SPELL_OPS.destroy = function(self, op, d, card)
     self:DestroyCreature(d.perm)
 end
 
-SPELL_OPS.tuck = function(self, op, d, card)
+SPELL_OPS.tuck = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local isRemote, idx = self:FindPerm(d.perm)
     if not idx then return end
@@ -504,66 +524,62 @@ SPELL_OPS.tuck = function(self, op, d, card)
     self:Log(string.format("%s put |cFFFFD200%s|r on top of its owner's library.", card.name, CreatureName(d.perm)), "ACTION")
 end
 
-SPELL_OPS.steal = function(self, op, d, card)
+-- Takes an enemy creature for the caster (until end of turn with untilEnd)
+SPELL_OPS.steal = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local isRemote, idx = self:FindPerm(d.perm)
-    if not idx or not isRemote then return end
+    if not idx or isRemote == cr then return end
     if op.maxPower then
-        local effP = self:GetCreatureStats(d.perm, true)
+        local effP = self:GetCreatureStats(d.perm, isRemote)
         if effP > op.maxPower then
             self:Log(string.format("%s fizzled: %s is too powerful.", card.name, CreatureName(d.perm)), "ERROR")
             return
         end
     end
-    table.remove(self.remoteState.field, idx)
-    d.perm.tapped = false
+    self:GainControl(d.perm, cr, op.untilEnd)
     if op.untilEnd then
-        d.perm.sick = false
-        table.insert(self.stolenCreatures, { perm = d.perm, isRemoteOwner = true })
-        self:Log(string.format("%s: gained control of |cFFFFD200%s|r until end of turn.", card.name, CreatureName(d.perm)), "ACTION")
+        self:Log(string.format("%s: %s gained control of |cFFFFD200%s|r until end of turn.", card.name, self:SideName(cr), CreatureName(d.perm)), "ACTION")
     else
-        d.perm.sick = true
-        self:Log(string.format("%s: gained control of |cFFFFD200%s|r!", card.name, CreatureName(d.perm)), "ACTION")
+        self:Log(string.format("%s: %s gained control of |cFFFFD200%s|r!", card.name, self:SideName(cr), CreatureName(d.perm)), "ACTION")
     end
-    table.insert(self.localState.field, d.perm)
 end
 
-SPELL_OPS.dot = function(self, op, d, card)
+SPELL_OPS.dot = function(self, op, d, card, cr)
     local holder = d.perm
     if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
     holder.dots = holder.dots or {}
-    table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+    table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id, byRemote = cr })
     self:Log(string.format("%s: %s will take %d damage each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
 end
 
-SPELL_OPS.hot = function(self, op, d, card)
+SPELL_OPS.hot = function(self, op, d, card, cr)
     local holder = d.perm
     if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
     holder.hots = holder.hots or {}
-    table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id })
+    table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id, byRemote = cr })
     self:Log(string.format("%s: %s will restore %d each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
 end
 
-SPELL_OPS.shield = function(self, op, d, card)
+SPELL_OPS.shield = function(self, op, d, card, cr)
     if d.kind == "PLAYER" then
         local st = d.isRemote and self.remoteState or self.localState
         st.damageShield = (st.damageShield or 0) + op.n
-        self:Log(string.format("%s: the next %d damage to %s will be prevented.", card.name, op.n, d.isRemote and (self.opponent or "the opponent") or "you"), "ACTION")
+        self:Log(string.format("%s: the next %d damage to %s will be prevented.", card.name, op.n, self:SideName(d.isRemote)), "ACTION")
     else
         d.perm.tempToughness = (d.perm.tempToughness or 0) + op.n
         self:Log(string.format("%s shielded |cFFFFD200%s|r (+0/+%d).", card.name, CreatureName(d.perm), op.n), "ACTION")
     end
 end
 
-SPELL_OPS.regen = function(self, op, d, card)
+SPELL_OPS.regen = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     d.perm.regenerateShield = true
 end
 
-SPELL_OPS.dispel = function(self, op, d, card)
+SPELL_OPS.dispel = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local perm = d.perm
-    if d.isRemote then
+    if d.isRemote ~= cr then
         -- strip beneficial effects from an enemy
         if (perm.tempPower or 0) > 0 then perm.tempPower = 0 end
         if (perm.tempToughness or 0) > 0 then perm.tempToughness = 0 end
@@ -584,39 +600,32 @@ SPELL_OPS.dispel = function(self, op, d, card)
     self:Log(string.format("%s dispelled |cFFFFD200%s|r.", card.name, CreatureName(perm)), "ACTION")
 end
 
--- Effects that do not iterate over targets
+-- Effects that do not iterate over targets; they act for the caster
 local SPELL_GLOBAL_OPS = {}
 
-SPELL_GLOBAL_OPS.draw = function(self, op, card)
+SPELL_GLOBAL_OPS.draw = function(self, op, card, cr)
     for _ = 1, op.n do
         if not self.inMatch then break end
-        self:DrawCard()
+        self:DrawCardFor(cr)
     end
 end
 
-SPELL_GLOBAL_OPS.mana = function(self, op, card)
-    self.localState.mana[op.color] = (self.localState.mana[op.color] or 0) + op.n
-    self:Log(string.format("%s added %d {%s} to your mana pool.", card.name, op.n, op.color), "MANA")
+SPELL_GLOBAL_OPS.mana = function(self, op, card, cr)
+    local pool = (cr and self.remoteState or self.localState).mana
+    pool[op.color] = (pool[op.color] or 0) + op.n
+    self:Log(string.format("%s added %d {%s} to %s mana pool.", card.name, op.n, op.color, cr and ((self.opponent or "the opponent") .. "'s") or "your"), "MANA")
 end
 
-SPELL_GLOBAL_OPS.raise = function(self, op, card)
-    local sources = { self.localState.graveyard }
-    if op.src == "any" then table.insert(sources, self.remoteState.graveyard) end
+SPELL_GLOBAL_OPS.raise = function(self, op, card, cr)
+    local sources = { cr and self.remoteState.graveyard or self.localState.graveyard }
+    if op.src == "any" then table.insert(sources, cr and self.localState.graveyard or self.remoteState.graveyard) end
     for _, gy in ipairs(sources) do
         for idx = #gy, 1, -1 do
             local c = TTS.Cards[gy[idx]]
             if c and c.type == "Creature" then
                 local cId = table.remove(gy, idx)
-                table.insert(self.localState.field, {
-                    id = cId,
-                    tapped = false,
-                    sick = not self:HasKeyword({ id = cId }, false, "haste"),
-                    damage = 0,
-                    tempPower = 0,
-                    tempToughness = 0,
-                    uid = time() + idx
-                })
-                self:Log(string.format("%s returned |cFFFFD200%s|r to the battlefield under your control!", card.name, c.name), "ACTION")
+                self:Log(string.format("%s returned |cFFFFD200%s|r to the battlefield under %s control!", card.name, c.name, cr and ((self.opponent or "the opponent") .. "'s") or "your"), "ACTION")
+                self:PutCreatureOntoBattlefield(cId, cr)
                 return
             end
         end
@@ -624,63 +633,77 @@ SPELL_GLOBAL_OPS.raise = function(self, op, card)
     self:Log(card.name .. " found no creature card to return.", "ERROR")
 end
 
-function E:ApplySpellOp(op, tgt, card)
+function E:ApplySpellOp(op, tgt, card, casterIsRemote)
+    local cr = casterIsRemote and true or false
     local global = SPELL_GLOBAL_OPS[op.op]
     if global then
-        global(self, op, card)
+        global(self, op, card, cr)
         return
     end
     local handler = SPELL_OPS[op.op]
     if not handler then return end
-    for _, d in ipairs(self:CollectSpellTargets(op.to, tgt)) do
+    for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, cr, op.filter)) do
         if not self.inMatch then return end
-        handler(self, op, d, card)
+        handler(self, op, d, card, cr)
         if d.kind == "CREATURE" and d.perm and LINGERING_OPS[op.op] then
             RecordSpellEffect(d.perm, op, card)
         end
     end
 end
 
-function E:ResolveSpell(card, tgt)
-    local eff = card.effect
-    self:Log(string.format("Resolved %s: |cFFFFD200%s|r.", card.type, card.name), "ACTION")
+-- Resolves an effect table ({ target, ops }) for the caster, then checks for deaths
+function E:ResolveEffect(eff, card, casterIsRemote, tgt)
     if eff and eff.ops then
         for _, op in ipairs(eff.ops) do
             if not self.inMatch then break end
-            self:ApplySpellOp(op, tgt, card)
+            self:ApplySpellOp(op, tgt, card, casterIsRemote)
         end
     end
+    if not self.inMatch then return end
     self:SyncEffects()
     self:CheckStateBasedActions()
 end
 
--- Damage / healing over time. Runs at the start of the local player's turn for every effect on the board.
-local function TickList(list, apply)
+function E:ResolveSpell(card, tgt, casterIsRemote)
+    if casterIsRemote then
+        self:Log(string.format("%s resolved %s: |cFFFFD200%s|r.", self.opponent or "Opponent", card.type, card.name), "ACTION")
+    else
+        self:Log(string.format("Resolved %s: |cFFFFD200%s|r.", card.type, card.name), "ACTION")
+    end
+    self:ResolveEffect(card.effect, card, casterIsRemote, tgt)
+end
+
+-- Damage / healing over time. Each effect ticks at the start of its caster's turn
+-- (byRemote = cast by the opponent / AI).
+local function TickList(list, isRemoteTurn, apply)
     if not list then return end
     for i = #list, 1, -1 do
         local e = list[i]
-        apply(e)
-        e.turns = e.turns - 1
-        if e.turns <= 0 then table.remove(list, i) end
+        if (e.byRemote or false) == isRemoteTurn then
+            apply(e)
+            e.turns = e.turns - 1
+            if e.turns <= 0 then table.remove(list, i) end
+        end
     end
 end
 
-function E:TickOverTime()
+function E:TickOverTime(isRemoteTurn)
+    isRemoteTurn = isRemoteTurn and true or false
     for _, isRemote in ipairs({ false, true }) do
         local st = isRemote and self.remoteState or self.localState
-        TickList(st.hots, function(e)
+        TickList(st.hots, isRemoteTurn, function(e)
             st.life = st.life + e.n
-            self:Log(string.format("%s restored %d life to %s.", e.src, e.n, isRemote and (self.opponent or "the opponent") or "you"), "ACTION")
+            self:Log(string.format("%s restored %d life to %s.", e.src, e.n, self:SideName(isRemote)), "ACTION")
         end)
-        TickList(st.dots, function(e)
+        TickList(st.dots, isRemoteTurn, function(e)
             if self.inMatch then self:DamagePlayer(isRemote, e.n, e.src) end
         end)
         for _, perm in ipairs(st.field) do
             if IsCreaturePerm(perm) then
-                TickList(perm.hots, function(e)
+                TickList(perm.hots, isRemoteTurn, function(e)
                     perm.damage = math.max(0, (perm.damage or 0) - e.n)
                 end)
-                TickList(perm.dots, function(e)
+                TickList(perm.dots, isRemoteTurn, function(e)
                     perm.damage = (perm.damage or 0) + e.n
                     self:Log(string.format("%s dealt %d damage to |cFFFFD200%s|r.", e.src, e.n, CreatureName(perm)), "COMBAT")
                 end)
@@ -691,6 +714,232 @@ function E:TickOverTime()
         self:SyncEffects()
         self:CheckStateBasedActions()
     end
+end
+
+-- =========================================================================
+-- CREATURES ENTERING, CHANGING CONTROL, ATTACKING
+-- =========================================================================
+function E:NewUid()
+    self.uidCounter = (self.uidCounter or (time() * 100)) + 1
+    return self.uidCounter
+end
+
+-- A fresh battlefield entry for a creature card
+function E:NewCreaturePerm(cardId, isRemote)
+    return {
+        id = cardId,
+        tapped = false,
+        sick = not self:HasKeyword({ id = cardId }, isRemote, "haste"),
+        damage = 0,
+        tempPower = 0,
+        tempToughness = 0,
+        uid = self:NewUid()
+    }
+end
+
+-- Puts a creature card onto a side's battlefield (not cast: no mana, no network message)
+-- and fires its enter trigger. Returns the new permanent.
+function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
+    local perm = self:NewCreaturePerm(cardId, isRemote)
+    if opts and opts.ready then perm.sick = false end
+    table.insert((isRemote and self.remoteState or self.localState).field, perm)
+    if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
+    self:OnCreatureEnter(perm, isRemote)
+    return perm
+end
+
+-- Moves a creature to newControllerIsRemote's battlefield. untilEnd returns it at the end
+-- of that controller's turn (see EndTurnCleanup).
+function E:GainControl(perm, newControllerIsRemote, untilEnd)
+    local fromRemote, idx = self:FindPerm(perm)
+    if not idx then return end
+    local from = fromRemote and self.remoteState.field or self.localState.field
+    table.remove(from, idx)
+    perm.tapped = false
+    perm.isAttacking = nil
+    if untilEnd then
+        perm.sick = false
+        table.insert(self.stolenCreatures, { perm = perm, isRemoteOwner = fromRemote, controllerIsRemote = newControllerIsRemote })
+    else
+        perm.sick = true
+    end
+    table.insert((newControllerIsRemote and self.remoteState or self.localState).field, perm)
+end
+
+-- The opposing creature an automatic trigger picks: the highest power one that passes `ok`
+local function BestEnemyCreature(self, isRemote, ok)
+    local best, bestP
+    for _, p in ipairs(isRemote and self.localState.field or self.remoteState.field) do
+        if IsCreaturePerm(p) and not self:IsHexproofAgainst(p, not isRemote, isRemote) and (not ok or ok(p)) then
+            local pw = self:GetCreatureStats(p, not isRemote)
+            if not bestP or pw > bestP then best, bestP = p, pw end
+        end
+    end
+    return best
+end
+
+-- Enter-the-battlefield triggers for either side
+function E:OnCreatureEnter(perm, isRemote)
+    local card = TTS.Cards[perm.id]
+    if not card then return end
+
+    if perm.id == "BOSS19" then
+        for _, oppPerm in ipairs(isRemote and self.localState.field or self.remoteState.field) do
+            if IsCreaturePerm(oppPerm) then
+                oppPerm.damage = (oppPerm.damage or 0) + 3
+            end
+        end
+        self:Log("Wyrmthalak dealt 3 damage to all opposing creatures!", "COMBAT")
+        self:CheckStateBasedActions()
+    elseif perm.id == "BOSS26" then
+        local target = BestEnemyCreature(self, isRemote, function(p)
+            return (self:GetCreatureStats(p, not isRemote)) <= 4
+        end)
+        if target then
+            self:GainControl(target, isRemote, false)
+            self:Log("Balnazzar stole control of " .. CreatureName(target) .. "!", "ACTION")
+        end
+    end
+
+    if card.etb and self.inMatch then
+        self:ResolveEffect(card.etb, card, isRemote)
+    end
+end
+
+-- Attack triggers for either side (the creature has just been declared as an attacker)
+function E:OnCreatureAttack(perm, isRemote)
+    local card = TTS.Cards[perm.id]
+    if not card then return end
+
+    if perm.id == "BOSS03" then
+        self:DiscardRandom(not isRemote)
+        self:DamagePlayer(not isRemote, 1, "Mutanus the Devourer")
+        self:Log("Mutanus attacked: opponent discards a card and loses 1 life.", "ACTION")
+    elseif perm.id == "BOSS13" then
+        local target = BestEnemyCreature(self, isRemote, function(p) return not p.tapped end)
+        if target then
+            target.tapped = true
+            target.freezeUntap = true
+            self:Log(string.format("Amnennar attacked and froze |cFFFFD200%s|r.", CreatureName(target)), "ACTION")
+        end
+    elseif perm.id == "BOSS23" then
+        perm.tempPower = (perm.tempPower or 0) + 2
+        self:Log("King Gordok gained +2/+0 upon attacking.", "ACTION")
+    end
+
+    if card.onAttack and self.inMatch then
+        self:ResolveEffect(card.onAttack, card, isRemote)
+    end
+end
+
+-- =========================================================================
+-- ACTIVATED ABILITIES
+-- target: what the ability needs ("enemy_player", "creature"); tapped = target must be tapped;
+-- tap = costs {T}; cost = mana paid from the controller's pool.
+-- =========================================================================
+local ABILITIES = {
+    BOSS01 = { tap = true, target = "enemy_player" },
+    BOSS04 = { tap = true, target = "creature", tapped = true },
+    BOSS07 = { tap = true },
+    BOSS08 = { tap = true, target = "creature" },
+    BOSS10 = { tap = true },
+    BOSS21 = { tap = true },
+    BOSS22 = { cost = "{2}{U}" },
+}
+
+function E:GetAbility(cardId)
+    return ABILITIES[cardId]
+end
+
+-- True if the permanent's controller may use its ability right now (ignores mana for cost abilities)
+function E:CanActivateAbility(perm, isRemote)
+    local ab = perm and ABILITIES[perm.id]
+    if not ab then return false end
+    if ab.tap then
+        if perm.tapped then return false end
+        if perm.sick and not self:HasKeyword(perm, isRemote, "haste") then return false end
+    end
+    return true
+end
+
+-- Whether tgt ({ kind, isRemote, perm }) is a legal target for the ability
+function E:IsValidAbilityTarget(perm, isRemote, tgt)
+    local ab = ABILITIES[perm.id]
+    if not ab or not ab.target then return tgt == nil end
+    if not tgt then return false end
+    if not self:IsValidSpellTarget(ab.target, tgt.kind, tgt.isRemote, isRemote) then return false end
+    if tgt.kind == "CREATURE" then
+        if not IsCreaturePerm(tgt.perm) then return false end
+        if self:IsHexproofAgainst(tgt.perm, tgt.isRemote, isRemote) then return false end
+        if ab.tapped and not tgt.perm.tapped then return false end
+    end
+    return true
+end
+
+-- Uses a creature's activated ability for either side. Returns true if it resolved.
+function E:ActivateAbility(perm, isRemote, tgt)
+    local ab = ABILITIES[perm.id]
+    if not ab or not self:CanActivateAbility(perm, isRemote) then return false end
+    if not self:IsValidAbilityTarget(perm, isRemote, tgt) then return false end
+    if ab.cost and not self:PayMana(ab.cost, isRemote) then return false end
+    if ab.tap then perm.tapped = true end
+
+    local st = isRemote and self.remoteState or self.localState
+    local id = perm.id
+    if id == "BOSS01" then
+        self:DamagePlayer(tgt.isRemote, 2, "Bazzalan")
+        st.life = st.life + 2
+        self:Log("Bazzalan drained 2 life.", "ACTION")
+
+    elseif id == "BOSS04" then
+        local targetRemote, idx = self:FindPerm(tgt.perm)
+        if idx then
+            self:DetachAttachments(tgt.perm, targetRemote)
+            table.remove((targetRemote and self.remoteState or self.localState).field, idx)
+            table.insert((targetRemote and self.remoteState or self.localState).deck, 1, tgt.perm.id)
+            self:Log("Archmage Arugal placed tapped creature on top of library!", "ACTION")
+        end
+
+    elseif id == "BOSS07" or id == "BOSS10" then
+        for _, p in ipairs(isRemote and self.localState.field or self.remoteState.field) do
+            if IsCreaturePerm(p) then
+                p.damage = (p.damage or 0) + 2
+            end
+        end
+        self:Log(string.format("%s dealt 2 damage to each opposing creature.", CreatureName(perm)), "COMBAT")
+        self:CheckStateBasedActions()
+
+    elseif id == "BOSS08" then
+        tgt.perm.tapped = true
+        tgt.perm.freezeUntap = true
+        self:Log("Charlga Razorflank tapped and froze creature.", "ACTION")
+
+    elseif id == "BOSS21" then
+        st.life = st.life + 4
+        self:Log("Alzzin the Wildshaper restored 4 life.", "ACTION")
+
+    elseif id == "BOSS22" then
+        self:DrawCardFor(isRemote)
+        if isRemote then
+            if self.isSolo and #st.hand > 0 then
+                local worstIdx, worstVal
+                for i, cid in ipairs(st.hand) do
+                    local v = self:AICardValue(cid)
+                    if not worstVal or v < worstVal then worstIdx, worstVal = i, v end
+                end
+                table.insert(st.graveyard, table.remove(st.hand, worstIdx))
+                st.handCount = #st.hand
+            end
+        elseif #st.hand > 0 then
+            table.insert(st.graveyard, table.remove(st.hand, 1))
+        end
+        perm.tempPower = (perm.tempPower or 0) + 1
+        perm.tempToughness = (perm.tempToughness or 0) + 1
+        self:Log("Tortheldrin activated: drew, discarded, gained +1/+1.", "ACTION")
+    end
+
+    self:RefreshUI()
+    return true
 end
 
 -- =========================================================================
@@ -854,39 +1103,10 @@ function E:PlayCard(handIndex)
         end
 
         table.remove(self.localState.hand, handIndex)
-        local perm = {
-            id = cardId,
-            tapped = false,
-            sick = not self:HasKeyword({ id = cardId }, false, "haste"),
-            damage = 0,
-            tempPower = 0,
-            tempToughness = 0,
-            uid = time() + handIndex
-        }
-        table.insert(self.localState.field, perm)
         self:Log(string.format("Cast %s: |cFFFFD200%s|r.", card.type, card.name), "ACTION")
-        if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
-
-        if cardId == "BOSS19" then
-            for _, oppPerm in ipairs(self.remoteState.field) do
-                oppPerm.damage = (oppPerm.damage or 0) + 3
-            end
-            self:Log("Wyrmthalak dealt 3 damage to all opposing creatures!", "COMBAT")
-            self:CheckStateBasedActions()
-        elseif cardId == "BOSS26" then
-            for i, oppPerm in ipairs(self.remoteState.field) do
-                local effP, _ = self:GetCreatureStats(oppPerm, true)
-                if effP <= 4 then
-                    table.remove(self.remoteState.field, i)
-                    oppPerm.sick = true
-                    table.insert(self.localState.field, oppPerm)
-                    self:Log("Balnazzar stole control of " .. TTS.Cards[oppPerm.id].name .. "!", "ACTION")
-                    break
-                end
-            end
-        end
-
+        -- Tell the opponent before enter triggers run, so the creature is on their board first
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_PERM:" .. cardId) end
+        self:PutCreatureOntoBattlefield(cardId, false)
 
     elseif card.type == "Sorcery" then
         if self.phase ~= "MAIN1" and self.phase ~= "MAIN2" then
@@ -918,56 +1138,38 @@ function E:ResolveAbilityTarget(targetKind, isRemote, fieldIndex)
         return
     end
 
-    local cardId = sourcePerm.id
-
-    if isRemote and fieldIndex and fieldIndex > 0 then
-        local targetPerm = self.remoteState.field[fieldIndex]
-        if targetPerm then
-            local targetCard = TTS.Cards[targetPerm.id]
-            if targetCard and self:HasKeyword(targetPerm, true, "hexproof") then
-                self:Log(targetCard.name .. " has Hexproof and cannot be targeted!", "ERROR")
-                self.targeting = nil
-                self:RefreshUI()
-                return
-            end
+    isRemote = isRemote and true or false
+    local tgt
+    if targetKind == "PLAYER" then
+        tgt = { kind = "PLAYER", isRemote = isRemote }
+    else
+        local perm = fieldIndex and (isRemote and self.remoteState.field or self.localState.field)[fieldIndex]
+        if not perm or not IsCreaturePerm(perm) then
+            self:Log("That is not a valid target.", "ERROR")
+            return
         end
+        tgt = { kind = "CREATURE", isRemote = isRemote, perm = perm, idx = fieldIndex }
     end
 
-    if cardId == "BOSS01" then
-        sourcePerm.tapped = true
-        self:DamagePlayer(isRemote, 2, "Bazzalan")
-        self.localState.life = self.localState.life + 2
-        self:Log("Bazzalan drained 2 life.", "ACTION")
+    if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
+        self:Log(CreatureName(tgt.perm) .. " has Hexproof and cannot be targeted!", "ERROR")
+        self.targeting = nil
+        self:RefreshUI()
+        return
+    end
 
-    elseif cardId == "BOSS04" then
-        local targetField = isRemote and self.remoteState.field or self.localState.field
-        local targetPerm = targetField[fieldIndex]
-        if targetPerm and targetPerm.tapped and TTS.Cards[targetPerm.id] and TTS.Cards[targetPerm.id].type == "Creature" then
-            sourcePerm.tapped = true
-            self:DetachAttachments(targetPerm, isRemote)
-            table.remove(targetField, fieldIndex)
-            local targetDeck = isRemote and self.remoteState.deck or self.localState.deck
-            table.insert(targetDeck, 1, targetPerm.id)
-            self:Log("Archmage Arugal placed tapped creature on top of library!", "ACTION")
+    if not self:IsValidAbilityTarget(sourcePerm, false, tgt) then
+        local ab = self:GetAbility(sourcePerm.id)
+        if ab and ab.tapped then
+            self:Log(string.format("%s can only target tapped creatures.", CreatureName(sourcePerm)), "ERROR")
         else
-            self:Log("Archmage Arugal can only target tapped creatures.", "ERROR")
-            return
+            self:Log(string.format("%s cannot target that. Choose another target (Right-click to cancel).", CreatureName(sourcePerm)), "ERROR")
         end
-
-    elseif cardId == "BOSS08" then
-        local targetPerm = (isRemote and self.remoteState.field or self.localState.field)[fieldIndex]
-        if targetPerm and TTS.Cards[targetPerm.id] and TTS.Cards[targetPerm.id].type == "Creature" then
-            sourcePerm.tapped = true
-            targetPerm.tapped = true
-            targetPerm.freezeUntap = true
-            self:Log("Charlga Razorflank tapped and froze creature.", "ACTION")
-        else
-            self:Log("Charlga Razorflank can only target creatures.", "ERROR")
-            return
-        end
+        return
     end
 
     self.targeting = nil
+    self:ActivateAbility(sourcePerm, false, tgt)
     self:RefreshUI()
 end
 
@@ -1005,12 +1207,12 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
         tgt = { kind = "CREATURE", isRemote = isRemote, perm = perm, idx = fieldIndex }
     end
 
-    if not self:IsValidSpellTarget(eff.target, tgt.kind, tgt.isRemote) then
+    if not self:IsValidSpellTarget(eff.target, tgt.kind, tgt.isRemote, false) then
         self:Log(string.format("%s cannot target that. Choose another target (Right-click to cancel).", card.name), "ERROR")
         return
     end
 
-    if tgt.kind == "CREATURE" and tgt.isRemote and self:HasKeyword(tgt.perm, true, "hexproof") then
+    if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
         self:Log(TTS.Cards[tgt.perm.id].name .. " has Hexproof and cannot be targeted!", "ERROR")
         self.targeting = nil
         self:RefreshUI()
@@ -1082,87 +1284,35 @@ function E:TapCard(fieldIndex)
         return
     end
 
-    if self.phase == "MAIN1" or self.phase == "MAIN2" then
-        if perm.id == "BOSS22" then
-            if self:PayMana("{2}{U}") then
-                self:DrawCard()
-                if #self.localState.hand > 0 then
-                    local disc = table.remove(self.localState.hand, 1)
-                    table.insert(self.localState.graveyard, disc)
-                end
-                perm.tempPower = (perm.tempPower or 0) + 1
-                perm.tempToughness = (perm.tempToughness or 0) + 1
-                self:Log("Tortheldrin activated: drew, discarded, gained +1/+1.", "ACTION")
-                self:RefreshUI()
+    local ability = self:GetAbility(perm.id)
+    if ability and (self.phase == "MAIN1" or self.phase == "MAIN2") then
+        if ability.tap then
+            if perm.tapped then return end
+            if perm.sick and not self:HasKeyword(perm, false, "haste") then
+                self:Log(string.format("%s has summoning sickness.", card.name), "ERROR")
+                return
             end
+        elseif ability.cost and not self:CanPayMana(ability.cost) then
+            self:Log(string.format("Not enough mana to activate %s (%s).", card.name, ability.cost), "ERROR")
             return
         end
 
-        if perm.tapped then return end
-        if card.type == "Creature" and perm.sick and not self:HasKeyword(perm, false, "haste") then
-            self:Log(string.format("%s has summoning sickness.", card.name), "ERROR")
-            return
-        end
-
-        -- Targeted tap abilities
-        if perm.id == "BOSS01" then
+        if ability.target then
+            local prompt = (ability.target == "enemy_player" and "target opponent")
+                or (ability.tapped and "target tapped creature") or "target creature"
             self.targeting = {
                 targetMode = "ABILITY",
                 sourceIndex = fieldIndex,
-                targetType = "PLAYER",
+                targetType = (ability.target == "enemy_player") and "PLAYER" or "CREATURE",
                 cardName = card.name
             }
-            self:Log(string.format("Select target opponent for |cFFFFD200%s|r (Right-click to cancel).", card.name), "SYSTEM")
-            self:RefreshUI()
-            return
-        elseif perm.id == "BOSS04" then
-            self.targeting = {
-                targetMode = "ABILITY",
-                sourceIndex = fieldIndex,
-                targetType = "CREATURE",
-                cardName = card.name
-            }
-            self:Log(string.format("Select target tapped creature for |cFFFFD200%s|r (Right-click to cancel).", card.name), "SYSTEM")
-            self:RefreshUI()
-            return
-        elseif perm.id == "BOSS08" then
-            self.targeting = {
-                targetMode = "ABILITY",
-                sourceIndex = fieldIndex,
-                targetType = "CREATURE",
-                cardName = card.name
-            }
-            self:Log(string.format("Select target creature for |cFFFFD200%s|r (Right-click to cancel).", card.name), "SYSTEM")
+            self:Log(string.format("Select %s for |cFFFFD200%s|r (Right-click to cancel).", prompt, card.name), "SYSTEM")
             self:RefreshUI()
             return
         end
 
-        -- Untargeted tap abilities
-        if perm.id == "BOSS07" then
-            perm.tapped = true
-            for _, p in ipairs(self.remoteState.field) do
-                if TTS.Cards[p.id].type == "Creature" then
-                    p.damage = (p.damage or 0) + 2
-                end
-            end
-            self:CheckStateBasedActions()
-            return
-        elseif perm.id == "BOSS10" then
-            perm.tapped = true
-            for _, p in ipairs(self.remoteState.field) do
-                if TTS.Cards[p.id].type == "Creature" then
-                    p.damage = (p.damage or 0) + 2
-                end
-            end
-            self:CheckStateBasedActions()
-            return
-        elseif perm.id == "BOSS21" then
-            perm.tapped = true
-            self.localState.life = self.localState.life + 4
-            self:Log("Alzzin the Wildshaper restored 4 life.", "ACTION")
-            self:RefreshUI()
-            return
-        end
+        self:ActivateAbility(perm, false, nil)
+        return
     end
 
     if card.type == "Creature" and self.phase == "COMBAT_ATTACK" then
@@ -1186,23 +1336,7 @@ function E:TapCard(fieldIndex)
         table.insert(self.blockingState.attackers, fieldIndex)
         if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
 
-        if perm.id == "BOSS03" then
-            self.remoteState.handCount = math.max(0, self.remoteState.handCount - 1)
-            self:DamagePlayer(true, 1, "Mutanus the Devourer")
-            self:Log("Mutanus attacked: opponent discards a card and loses 1 life.", "ACTION")
-        elseif perm.id == "BOSS13" then
-            for _, oppPerm in ipairs(self.remoteState.field) do
-                if not oppPerm.tapped then
-                    oppPerm.tapped = true
-                    oppPerm.freezeUntap = true
-                    self:Log("Amnennar attacked and froze an enemy creature.", "ACTION")
-                    break
-                end
-            end
-        elseif perm.id == "BOSS23" then
-            perm.tempPower = (perm.tempPower or 0) + 2
-            self:Log("King Gordok gained +2/+0 upon attacking.", "ACTION")
-        end
+        self:OnCreatureAttack(perm, false)
 
         self:Log(string.format("Declared attacker: |cFFFFD200%s|r.", card.name), "COMBAT")
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:ATTACK:" .. fieldIndex) end
@@ -1376,13 +1510,9 @@ function E:ResolveCombatDamage()
 
     if isRemoteAttacking then
         if self.isSolo then
-            self:SetPhase("WAITING (Dummy Turn)")
-            TTS:SafeAfter(0.8, function()
-                if E.inMatch and E.isSolo then
-                    E:Log("Target Dummy passed turn.", "SYSTEM")
-                    E:OnRemoteEndTurn()
-                end
-            end)
+            -- The AI's combat is over: it carries on with its second main phase
+            self:SetPhase(self.AI_TURN_PHASE)
+            self:AIAfterCombat()
         end
     else
         self:SetPhase("MAIN2")
