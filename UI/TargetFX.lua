@@ -114,12 +114,97 @@ end
 
 local flashes, freeArrows = {}, {}
 
-local function FlashArrow(s, t, color)
+-- hold (optional): seconds the arrow stays fully visible before it fades
+local function FlashArrow(s, t, color, hold)
     if not (canDrawLines and s and t) then return end
     local a = table.remove(freeArrows) or NewArrow()
     local sx, sy, ex, ey = EdgeToEdge(s, t)
     DrawArrow(a, sx, sy, ex, ey, color)
-    table.insert(flashes, { arrow = a, t = 0 })
+    table.insert(flashes, { arrow = a, t = 0, hold = hold or 0 })
+end
+
+-- =========================================================================
+-- SPELL REVEAL
+-- A cast spell (either player's) is shown face up over the battlefield for a moment,
+-- on the caster's side, with an arrow to everything it affects.
+-- =========================================================================
+local REVEAL_HOLD = 0.5    -- seconds the card stays fully visible
+local REVEAL_FADE = 0.25   -- then fades out over this long
+local REVEAL_COLOR = { 1.0, 0.82, 0.0, 1.0 }
+local REVEAL_Y = { [true] = 150, [false] = -40 }   -- card centre above the board's centre, by caster
+
+local reveal
+local function RevealFrame()
+    if reveal then return reveal end
+    if not (TTS.CreateCardFrame and TTS.PREVIEW_W) then return end
+    reveal = TTS.CreateCardFrame(layer, TTS.PREVIEW_W, TTS.PREVIEW_H)
+    reveal:SetFrameLevel(layer:GetFrameLevel() + 5)
+    reveal:EnableMouse(false)
+    reveal:SetScript("OnEnter", nil)
+    reveal:SetScript("OnLeave", nil)
+    reveal:SetScript("OnClick", nil)
+    reveal:Hide()
+    return reveal
+end
+
+-- The frame a target descriptor ({ kind, isRemote, perm }) is drawn on, right now
+local function TargetFrame(d)
+    if d.kind == "PLAYER" then return d.isRemote and B.oppLifeBtn or B.myLifeBtn end
+    local E = TTS.Engine
+    local isRemote, idx = E:FindPerm(d.perm)
+    if idx then return FindFieldFrame(isRemote and true or false, idx) end
+end
+
+-- Positions of everything an effect will touch (taken before it resolves: creatures may die)
+local function EffectTargets(eff, tgt, casterIsRemote)
+    local E = TTS.Engine
+    local list, seen = {}, {}
+    local function Add(d)
+        local f = d and TargetFrame(d)
+        if f and not seen[f] then
+            seen[f] = true
+            local p = Pos(f)
+            if p then table.insert(list, p) end
+        end
+    end
+    if tgt then Add(tgt) end
+    for _, op in ipairs(eff and eff.ops or {}) do
+        if op.to and op.to ~= "target" then
+            for _, d in ipairs(E:CollectSpellTargets(op.to, nil, casterIsRemote, op.filter)) do Add(d) end
+        end
+    end
+    return list
+end
+
+-- Shows a cast card (and arrows to its targets' positions) on the caster's side
+local function RevealSpell(card, casterIsRemote, targets)
+    local f = RevealFrame()
+    if not (f and card and TTS.PaintPreviewCard) then return end
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", B, "CENTER", 0, REVEAL_Y[casterIsRemote and true or false])
+    TTS.PaintPreviewCard(f, card)
+    f:SetAlpha(1)
+    f.t = 0
+    local src = Pos(f)
+    for _, dst in ipairs(targets or {}) do
+        FlashArrow(src, dst, REVEAL_COLOR, REVEAL_HOLD)
+    end
+end
+
+local function UpdateReveal(dt)
+    if not (reveal and reveal.t) then return end
+    reveal.t = reveal.t + dt
+    if reveal.t >= REVEAL_HOLD + REVEAL_FADE then
+        reveal.t = nil
+        reveal:Hide()
+    elseif reveal.t > REVEAL_HOLD then
+        reveal:SetAlpha(1 - (reveal.t - REVEAL_HOLD) / REVEAL_FADE)
+    end
+end
+
+-- A card the opponent cast in PvP (their client doesn't send the target)
+function TTS.Engine:ShowRemoteSpell(cardId)
+    RevealSpell(TTS.Cards[cardId], true, nil)
 end
 
 -- The card a pending spell is being cast from
@@ -211,10 +296,11 @@ end
 
 layer:SetScript("OnUpdate", function(_, dt)
     UpdateAim()
+    UpdateReveal(dt)
     for i = #flashes, 1, -1 do
         local fl = flashes[i]
         fl.t = fl.t + dt
-        local alpha = 1 - fl.t / FLASH_TIME
+        local alpha = math.min(1, 1 - (fl.t - (fl.hold or 0)) / FLASH_TIME)
         if alpha <= 0 then
             HideArrow(fl.arrow)
             table.insert(freeArrows, fl.arrow)
@@ -239,22 +325,42 @@ local function InstallHooks()
         local origResolve = E.ResolveTarget
         E.ResolveTarget = function(self, targetType, isRemote, fieldIndex, ...)
             local targeting = self.targeting
-            local src, dst
-            if targeting then
-                src = Pos(AimSourceFrame(targeting))
-                if targetType == "PLAYER" then
-                    dst = Pos(isRemote and B.oppLifeBtn or B.myLifeBtn)
-                else
-                    dst = Pos(FindFieldFrame(isRemote and true or false, fieldIndex))
-                end
-            end
             local results = { origResolve(self, targetType, isRemote, fieldIndex, ...) }
-            -- Targeting cleared or replaced: the target was accepted
+            -- Targeting cleared or replaced: the target was accepted (the spell reveal or
+            -- the ability arrow below draws the arrow)
             if targeting and self.targeting ~= targeting then
-                FlashArrow(src, dst, TARGET_COLOR)
                 PlayFX(SOUND_TARGET)
             end
             return unpack(results)
+        end
+    end
+
+    -- Every spell, from either side: the card shows for a moment with arrows to its targets
+    if E.ResolveSpell then
+        local origSpell = E.ResolveSpell
+        E.ResolveSpell = function(self, card, tgt, casterIsRemote, ...)
+            local targets = EffectTargets(card and card.effect, tgt, casterIsRemote)
+            RevealSpell(card, casterIsRemote, targets)
+            if casterIsRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
+            return origSpell(self, card, tgt, casterIsRemote, ...)
+        end
+    end
+
+    -- Activated abilities: an arrow from the creature to what it hits
+    if E.ActivateAbility then
+        local ABILITY_AREA = { BOSS07 = "enemy_creatures", BOSS10 = "enemy_creatures" }
+        local origAbility = E.ActivateAbility
+        E.ActivateAbility = function(self, perm, isRemote, tgt, ...)
+            local srcRemote, srcIdx = self:FindPerm(perm)
+            local src = srcIdx and Pos(FindFieldFrame(srcRemote and true or false, srcIdx))
+            local area = ABILITY_AREA[perm.id]
+            local targets = EffectTargets(area and { ops = { { to = area } } }, tgt, isRemote)
+            local ok = origAbility(self, perm, isRemote, tgt, ...)
+            if ok then
+                for _, dst in ipairs(targets) do FlashArrow(src, dst, TARGET_COLOR, REVEAL_HOLD) end
+                if isRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
+            end
+            return ok
         end
     end
 

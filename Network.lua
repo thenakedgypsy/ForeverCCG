@@ -692,6 +692,7 @@ function TTS.Net:OnReceive(msg, sender)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Spell", card and card.name or cardId), "ACTION")
             E:PlaySpellCastSound()
+            if E.ShowRemoteSpell then E:ShowRemoteSpell(cardId) end
             E:RefreshUI()
 
         elseif actionType == "ATTACH" then
