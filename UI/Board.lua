@@ -1032,8 +1032,9 @@ local BG_OVERLAY_ALPHA = 0.55
 local PANEL_BG_DIMMED = 0.25
 
 local bgTiles = {}
+local overlayPool = {}   -- explored-area overlay textures, created as needed
 for i = 1, 12 do
-    local t = battlefield:CreateTexture(nil, "BACKGROUND", nil, 1)
+    local t = battlefield:CreateTexture(nil, "BACKGROUND", nil, 0)
     t:Hide()
     bgTiles[i] = t
 end
@@ -1051,6 +1052,7 @@ local function HideBackground()
     for _, t in ipairs(bgTiles) do t:Hide() end
     bgArt:Hide()
     bgOverlay:Hide()
+    for _, t in ipairs(overlayPool) do t:Hide() end
     battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], STYLE.panelBg[4])
 end
 
@@ -1066,7 +1068,42 @@ local function ShowArt(file)
     return true
 end
 
--- A world map, tile by tile. Each tile is cut to the part that falls inside the panel.
+-- Explored-area overlays (UI\MapOverlays.lua) drawn above the base tiles, from the pool
+local function OverlayTexture(i)
+    if not overlayPool[i] then
+        overlayPool[i] = battlefield:CreateTexture(nil, "BACKGROUND", nil, 1)
+    end
+    return overlayPool[i]
+end
+
+-- Places one piece of the map: it covers map pixels px0..px0+pw, py0..py0+ph and its texture
+-- file is fw x fh pixels. Only the part inside the visible window is drawn.
+-- Returns false if none of it is visible.
+local function PlaceMapPiece(t, px0, py0, pw, ph, fw, fh, s, winTop, winBottom, tint)
+    local ix0, ix1 = math.max(px0, 0), math.min(px0 + pw, MAP_W)
+    local iy0, iy1 = math.max(py0, winTop), math.min(py0 + ph, winBottom, MAP_H)
+    if ix1 <= ix0 or iy1 <= iy0 then
+        t:Hide()
+        return false
+    end
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET + ix0 * s, -(BG_INSET + (iy0 - winTop) * s))
+    t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
+    t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
+    if tint then t:SetVertexColor(tint[1], tint[2], tint[3]) else t:SetVertexColor(1, 1, 1) end
+    t:Show()
+    return true
+end
+
+-- Smallest power of two holding n pixels (overlay edge tiles are stored that way)
+local function TextureFileSize(n)
+    local size = 16
+    while size < n do size = size * 2 end
+    return size
+end
+
+-- A world map, tile by tile, with every explored-area overlay on top so the whole zone
+-- shows whether or not this character has explored it.
 local function ShowMap(map, tint)
     local s = BG_W / MAP_W
     local winTop = ((MAP_H * s - BG_H) / 2) / s     -- map rows above the visible window
@@ -1076,27 +1113,39 @@ local function ShowMap(map, tint)
         for col = 0, 3 do
             local i = row * 4 + col + 1
             local t = bgTiles[i]
-            local x0, y0 = col * MAP_TILE, row * MAP_TILE
-            local ix0, ix1 = x0, math.min(x0 + MAP_TILE, MAP_W)
-            local iy0, iy1 = math.max(y0, winTop), math.min(y0 + MAP_TILE, winBottom, MAP_H)
-            if ix1 > ix0 and iy1 > iy0 then
-                t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i))
-                if not t:GetTexture() then
-                    for _, other in ipairs(bgTiles) do other:Hide() end
-                    return false
-                end
-                t:ClearAllPoints()
-                t:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET + ix0 * s, -(BG_INSET + (iy0 - winTop) * s))
-                t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
-                t:SetTexCoord((ix0 - x0) / MAP_TILE, (ix1 - x0) / MAP_TILE, (iy0 - y0) / MAP_TILE, (iy1 - y0) / MAP_TILE)
-                if tint then t:SetVertexColor(tint[1], tint[2], tint[3]) else t:SetVertexColor(1, 1, 1) end
-                t:Show()
+            t:SetTexture(string.format("Interface\WorldMap\%s\%s%d", map, map, i))
+            if not t:GetTexture() then
+                for _, other in ipairs(bgTiles) do other:Hide() end
+                return false
+            end
+            if PlaceMapPiece(t, col * MAP_TILE, row * MAP_TILE, MAP_TILE, MAP_TILE, MAP_TILE, MAP_TILE, s, winTop, winBottom, tint) then
                 shown = shown + 1
-            else
-                t:Hide()
             end
         end
     end
+
+    local used = 0
+    for _, o in ipairs((TTS.MapOverlays and TTS.MapOverlays[map]) or {}) do
+        local ox, oy, w, h, files = o[1], o[2], o[3], o[4], o[5]
+        local across = math.ceil(w / MAP_TILE)
+        local down = math.ceil(h / MAP_TILE)
+        for r = 0, down - 1 do
+            for c = 0, across - 1 do
+                local fileId = files[r * across + c + 1]
+                if fileId then
+                    local pw = (c < across - 1) and MAP_TILE or (w - c * MAP_TILE)
+                    local ph = (r < down - 1) and MAP_TILE or (h - r * MAP_TILE)
+                    local t = OverlayTexture(used + 1)
+                    t:SetTexture(fileId)
+                    if t:GetTexture() and PlaceMapPiece(t, ox + c * MAP_TILE, oy + r * MAP_TILE, pw, ph,
+                            TextureFileSize(pw), TextureFileSize(ph), s, winTop, winBottom, tint) then
+                        used = used + 1
+                    end
+                end
+            end
+        end
+    end
+    for i = used + 1, #overlayPool do overlayPool[i]:Hide() end
     return shown > 0
 end
 

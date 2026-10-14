@@ -91,6 +91,7 @@ UI\Tooltips.lua
 UI\MainFrame.lua
 UI\Options.lua
 UI\DeckBuilder.lua
+UI\MapOverlays.lua
 UI\Board.lua
 UI\BlockArrows.lua
 UI\TargetFX.lua
