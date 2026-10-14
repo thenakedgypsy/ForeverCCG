@@ -521,6 +521,11 @@ B.oppRulesText:SetWidth(220)
 B.oppRulesText:SetJustifyH("LEFT")
 B.oppRulesText:SetTextColor(1, 0.5, 0.25)
 
+-- PvP opponent's collection score, in the same spot (solo games have rules there instead)
+B.oppScoreText = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+B.oppScoreText:SetPoint("LEFT", B.oppLifeBtn, "RIGHT", 8, 0)
+B.oppScoreText:SetJustifyH("LEFT")
+
 B.oppLifeBtn:SetScript("OnClick", function(self, btn)
     if not TTS.Engine.inMatch then return end
     if btn == "RightButton" and TTS.Engine.targeting then
@@ -536,6 +541,9 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
         tip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
         tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d  |  Cards in Deck: %s", TTS.Engine.remoteState.life,
             TTS.Engine.remoteState.handCount, TTS.Engine:RemoteDeckCount() or "?"), 1, 1, 1)
+        if TTS.Engine.opponentScore then
+            tip:AddLine("Collection Score: " .. TTS:FormatScore(TTS.Engine.opponentScore), 1, 1, 1)
+        end
         local enc = TTS.Engine.isSolo and TTS.Engine.encounter
         if enc and TTS.GetEncounterRuleLines then
             for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
@@ -576,6 +584,9 @@ B.myLifeBtn:SetScript("OnEnter", function(self)
     TT:Show(self, "ANCHOR_TOPLEFT", { main = function(tip)
         tip:AddLine("You", 1, 0.82, 0)
         tip:AddLine(string.format("Life: %d", TTS.Engine.localState.life), 1, 1, 1)
+        if TTS.GetCollectionScore then
+            tip:AddLine("Collection Score: " .. TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1)
+        end
         if IsTargetingPlayer() then
             tip:AddLine(" ")
             tip:AddLine("|cFF00FF00[Left-Click to target yourself]|r", 0.2, 1.0, 0.2)
@@ -1755,6 +1766,11 @@ function B:UpdateDisplay()
         for _, rule in ipairs(TTS:GetEncounterRuleLines(E.encounter)) do table.insert(ruleNames, rule.name) end
     end
     B.oppRulesText:SetText(#ruleNames > 0 and ("Rules: " .. table.concat(ruleNames, ", ")) or "")
+    if not E.isSolo and E.opponentScore then
+        B.oppScoreText:SetText("Collection Score: |cFFFFFFFF" .. TTS:FormatScore(E.opponentScore) .. "|r")
+    else
+        B.oppScoreText:SetText("")
+    end
     B.myLifeText:SetText(string.format("Life: %d", E.localState.life))
 
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))

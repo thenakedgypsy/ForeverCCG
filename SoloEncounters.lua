@@ -428,6 +428,27 @@ function TTS:GetOwnedCopies(card)
     return nil
 end
 
+-- Collection score: creature cards collected (1+ copies) x (creature cards mastered (all 4) + 1).
+-- Returns score, collected, mastered, total.
+function TTS:GetCollectionScore()
+    local total, collected, mastered = 0, 0, 0
+    for _, card in pairs(TTS.Cards or {}) do
+        if card.type == "Creature" and (card.isBoss or card.isReward) then
+            total = total + 1
+            local copies = self:GetOwnedCopies(card) or 0
+            if copies >= 1 then collected = collected + 1 end
+            if copies >= 4 then mastered = mastered + 1 end
+        end
+    end
+    return collected * (mastered + 1), collected, mastered, total
+end
+
+-- "1,234,567" (falls back to plain digits if the client lacks BreakUpLargeNumbers)
+function TTS:FormatScore(n)
+    if not n then return "?" end
+    return BreakUpLargeNumbers and BreakUpLargeNumbers(n) or tostring(n)
+end
+
 -- Returns unlocked, reason (the reason says what is still needed)
 function TTS:IsEncounterUnlocked(enc)
     local req = enc and enc.requires

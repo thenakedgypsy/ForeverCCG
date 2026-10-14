@@ -79,6 +79,13 @@ local function MyName()
     return NormalizeName(UnitName("player"))
 end
 
+-- Our collection score. Sent as an optional trailing field (INVITE/ACCEPT) or in its own
+-- LFM_SCORE message, so builds that don't know about it simply ignore it.
+local function MyScore()
+    return TTS.GetCollectionScore and (TTS:GetCollectionScore()) or 0
+end
+TTS.Net.MyScore = MyScore
+
 local function NewMatchId()
     return string.format("%08x%04x%04x", time(), math.random(0, 0xFFFF), math.random(0, 0xFFFF))
 end
@@ -277,7 +284,7 @@ function TTS.Net:InvitePlayer(target)
     self.pendingInvites[inviteKey] = target
     self.routes[inviteKey] = nil -- always try FCCGTTSE first
 
-    self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
+    self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
     Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
     self:AwaitInviteAck(inviteKey, matchId)
 end
@@ -302,7 +309,7 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
             table.insert(invite.tried, ROUTE_LABELS[nextRoute])
             Print(string.format("|cFFFFD200[TTSE]|r No response from %s on %s. Retrying over %s...",
                 target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
-            Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId)
+            Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
             Net:AwaitInviteAck(inviteKey, matchId)
             return
         end
@@ -452,6 +459,19 @@ function TTS.Net:OnReceive(msg, sender)
         pName = NormalizeName(pName)
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
+            -- The chat sender is the character name, which is what a party invite needs
+            TTS.WaitingRoom.unitNames[pName:lower()] = sender
+            if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
+                TTS.WaitingRoom:UpdateUI()
+            end
+        end
+        return
+
+    elseif cmd == "LFM_SCORE" then
+        -- LFM_SCORE:<score>:<name>, sent alongside LFM_ANNOUNCE (older builds don't send it)
+        local score, pName = msg:match("^LFM_SCORE:(%d+):(.+)$")
+        if score and TTS.WaitingRoom then
+            TTS.WaitingRoom.scores[NormalizeName(pName):lower()] = tonumber(score)
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
                 TTS.WaitingRoom:UpdateUI()
             end
@@ -487,6 +507,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         local theirVersion = parts[2]
         local theirMatchId = parts[3]
+        local theirScore = tonumber(parts[4])   -- nil from builds without collection scores
         if not VersionsCompatible(theirVersion, TTS.VERSION) then
             TTS.Net:Send(sender, "DECLINE:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
@@ -529,9 +550,10 @@ function TTS.Net:OnReceive(msg, sender)
                     return
                 end
                 if TTS.Engine and TTS.Engine:ValidateDeck() then
-                    TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId)
+                    TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore())
                     TTS.Net.matchId = theirMatchId
                     TTS.Engine:StartMatch(sender, false, false)
+                    TTS.Engine.opponentScore = theirScore
                     TTS.Engine.remoteState.handCount = 7
                     TTS.Engine:RefreshUI()
                 else
@@ -602,6 +624,7 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net.matchId = invite.matchId
         if TTS.Engine then
             TTS.Engine:StartMatch(sender, true, false)
+            TTS.Engine.opponentScore = tonumber(parts[4])   -- nil from builds without collection scores
             TTS.Engine.remoteState.handCount = 7
             TTS.Engine:RefreshUI()
         end

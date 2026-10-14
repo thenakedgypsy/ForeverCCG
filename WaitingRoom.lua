@@ -13,6 +13,8 @@ TTS.WaitingRoom = TTS.WaitingRoom or {
 }
 
 local WR = TTS.WaitingRoom
+WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_SCORE; older builds don't send one)
+WR.unitNames = WR.unitNames or {} -- [lowerName] = character name the announce came from, for party invites
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
 -- =========================================================================
@@ -67,7 +69,7 @@ TTS.GetPlayerFullName = GetPlayerFullName
 -- =========================================================================
 local F = CreateFrame("Frame", "TTS_WaitingRoomFrame", UIParent, backdropTemplate)
 WR.frame = F
-F:SetSize(380, 430)
+F:SetSize(460, 430)
 F:SetPoint("CENTER", 50, 0)
 F:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -90,8 +92,8 @@ local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -5, -5)
 
 local statusDesc = F:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-statusDesc:SetPoint("TOPLEFT", 20, -48)
-statusDesc:SetPoint("TOPRIGHT", -20, -48)
+statusDesc:SetPoint("TOPLEFT", 20, -42)
+statusDesc:SetPoint("TOPRIGHT", -20, -42)
 statusDesc:SetJustifyH("CENTER")
 statusDesc:SetText("Players currently looking for a match:")
 
@@ -110,20 +112,30 @@ listContainer:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
 local playerRows = {}
 for i = 1, 8 do
     local row = CreateFrame("Frame", nil, listContainer)
-    row:SetSize(320, 26)
+    row:SetSize(400, 26)
     row:SetPoint("TOPLEFT", 10, -8 - ((i - 1) * 28))
+
+    row.inviteBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.inviteBtn:SetSize(70, 20)
+    row.inviteBtn:SetPoint("RIGHT", -6, 0)
+    row.inviteBtn:SetText("Invite")
+
+    row.partyBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.partyBtn:SetSize(84, 20)
+    row.partyBtn:SetPoint("RIGHT", row.inviteBtn, "LEFT", -4, 0)
+    row.partyBtn:SetText("Party Invite")
+
+    row.scoreText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.scoreText:SetPoint("RIGHT", row.partyBtn, "LEFT", -8, 0)
+    row.scoreText:SetWidth(70)
+    row.scoreText:SetJustifyH("RIGHT")
 
     row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     row.nameText:SetPoint("LEFT", 6, 0)
-    row.nameText:SetWidth(230)
+    row.nameText:SetPoint("RIGHT", row.scoreText, "LEFT", -6, 0)
     row.nameText:SetJustifyH("LEFT")
     row.nameText:SetWordWrap(false)
     row.nameText:SetText("")
-
-    row.inviteBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-    row.inviteBtn:SetSize(75, 20)
-    row.inviteBtn:SetPoint("RIGHT", -6, 0)
-    row.inviteBtn:SetText("Invite")
 
     row:Hide()
     playerRows[i] = row
@@ -149,6 +161,34 @@ versionText:SetJustifyH("RIGHT")
 
 local function UpdateVersionText()
     versionText:SetText("v" .. (TTS.VERSION or "unknown"))
+end
+
+-- Score column header, above the list
+local scoreHeader = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+scoreHeader:SetPoint("BOTTOMRIGHT", listContainer, "TOPRIGHT", -182, 2)
+scoreHeader:SetText("Collection Score")
+
+-- =========================================================================
+-- PARTY INVITES
+-- =========================================================================
+-- The character name to invite: the one their announce came from, else the first word
+-- of their waiting-room name ("Firstname Surname" -> "Firstname")
+local function PartyName(name)
+    return WR.unitNames[name:lower()] or name:match("^(%S+)") or name
+end
+
+local function InGroupWith(unitName)
+    if UnitInParty and UnitInParty(unitName) then return true end
+    if UnitInRaid and UnitInRaid(unitName) then return true end
+    return false
+end
+
+local function InviteToParty(name)
+    local unitName = PartyName(name)
+    local invite = (C_PartyInfo and C_PartyInfo.InviteUnit) or InviteUnit
+    if not invite then return end
+    invite(unitName)
+    DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r Party invite sent to " .. unitName .. ".")
 end
 
 -- =========================================================================
@@ -194,16 +234,31 @@ function WR:UpdateUI()
         if entry then
             if entry.isSelf then
                 row.nameText:SetText(string.format("|cFF00FF00%s (You)|r", entry.name))
+                row.scoreText:SetText("|cFFFFFFFF" .. TTS:FormatScore(TTS.Net.MyScore()) .. "|r")
                 row.inviteBtn:SetText("Queued")
                 row.inviteBtn:Disable()
+                row.partyBtn:Hide()
             else
                 row.nameText:SetText(entry.name)
+                local score = WR.scores[entry.name:lower()]
+                row.scoreText:SetText(score and ("|cFFFFFFFF" .. TTS:FormatScore(score) .. "|r") or "|cFF888888-|r")
                 row.inviteBtn:SetText("Invite")
                 row.inviteBtn:Enable()
                 row.inviteBtn:SetScript("OnClick", function()
                     if TTS.Net and TTS.Net.InvitePlayer then
                         TTS.Net:InvitePlayer(entry.name)
                     end
+                end)
+                row.partyBtn:Show()
+                if InGroupWith(PartyName(entry.name)) then
+                    row.partyBtn:SetText("In Party")
+                    row.partyBtn:Disable()
+                else
+                    row.partyBtn:SetText("Party Invite")
+                    row.partyBtn:Enable()
+                end
+                row.partyBtn:SetScript("OnClick", function()
+                    InviteToParty(entry.name)
                 end)
             end
             row:Show()
@@ -217,6 +272,8 @@ function WR:BroadcastPresence()
     if TTS.Net and TTS.Net.BroadcastLFM then
         local myName = GetPlayerFullName()
         TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName)
+        -- Separate message so older builds, which read everything after LFM_ANNOUNCE: as the name, are unaffected
+        TTS.Net:BroadcastLFM("LFM_SCORE:" .. TTS.Net.MyScore() .. ":" .. myName)
     end
 end
 

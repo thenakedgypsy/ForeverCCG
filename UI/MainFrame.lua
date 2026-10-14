@@ -157,6 +157,11 @@ rulesBtn:SetScript("OnClick", function()
     end
 end)
 
+-- Collection score, right side of the section header
+local scoreLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+scoreLabel:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -9)
+scoreLabel:SetJustifyH("RIGHT")
+
 local statusLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 statusLabel:SetPoint("TOP", deckSection, "TOP", 0, -66)
 statusLabel:SetWidth(340)
@@ -207,6 +212,10 @@ end)
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)
 -- =========================================================================
 function M:UpdatePlayState()
+    if TTS.GetCollectionScore then
+        scoreLabel:SetText("Collection Score: |cFFFFFFFF" .. TTS:FormatScore((TTS:GetCollectionScore())) .. "|r")
+    end
+
     -- The Deckbuilder cannot be opened while a game is in progress or while queued in the waiting room
     local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
     if (TTS.Engine and TTS.Engine.inMatch) or isQueued then

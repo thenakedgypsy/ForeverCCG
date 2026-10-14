@@ -594,6 +594,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
 
     self.inMatch = true
     self.opponent = opponentName or "Opponent"
+    self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT, if their build sends it
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
     self.turn = 1

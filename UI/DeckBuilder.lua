@@ -1447,18 +1447,10 @@ collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 13)
 collectionLabel:SetJustifyH("LEFT")
 
 local function UpdateCollectionProgress()
-    local total, collected, mastered = 0, 0, 0
-    for cardId, card in pairs(TTS.Cards or {}) do
-        if card.type == "Creature" and IsCollectible(card) then
-            total = total + 1
-            local kills = GetKillCount(cardId, card)
-            if kills >= 1 then collected = collected + 1 end
-            if kills >= 4 then mastered = mastered + 1 end
-        end
-    end
+    local score, collected, mastered, total = TTS:GetCollectionScore()
     collectionLabel:SetText(string.format(
-        "|cFFFFFFFF%d/%d|r Creatures Collected     |cFFFFFFFF%d/%d|r Creatures Mastered",
-        collected, total, mastered, total))
+        "|cFFFFFFFF%d/%d|r Creatures Collected     |cFFFFFFFF%d/%d|r Creatures Mastered     Score |cFFFFFFFF%s|r",
+        collected, total, mastered, total, TTS:FormatScore(score)))
 end
 
 -- =========================================================================
