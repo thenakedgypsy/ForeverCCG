@@ -219,7 +219,9 @@ local function PumpSendQueue()
             break
         end
         if status == "lockdown" then
-            -- Keep it (and its tokens) until the client allows addon messages again
+            -- Keep it until the client allows addon messages again. Tokens restart from
+            -- empty so the backlog trickles out at SEND_RATE rather than as one burst
+            sendTokens = 0
             if not lockdownNoticed then
                 lockdownNoticed = true
                 Print("|cFFFFD200[TTSE]|r Addon messages are blocked by the game right now; they will be sent when it allows them again.")
