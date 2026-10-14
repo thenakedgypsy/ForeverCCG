@@ -1276,6 +1276,18 @@ function E:TapCard(fieldIndex)
             return
         end
 
+        -- Clicking a creature that is already blocking takes the block back
+        local blocking = self.blockingState.blocks[fieldIndex]
+        if blocking then
+            self.blockingState.blocks[fieldIndex] = nil
+            self.blockingState.selectedBlocker = nil
+            local attacker = self.remoteState.field[blocking]
+            self:Log(string.format("|cFFFFD200%s|r is no longer blocking %s.", card.name,
+                attacker and TTS.Cards[attacker.id] and TTS.Cards[attacker.id].name or "the attacker"), "SYSTEM")
+            self:RefreshUI()
+            return
+        end
+
         self.blockingState.selectedBlocker = fieldIndex
         self:Log(string.format("Selected |cFFFFD200%s|r to block. Click an attacking creature to assign.", card.name), "SYSTEM")
         self:RefreshUI()
