@@ -20,6 +20,8 @@ local E = TTS.Engine
 
 -- Seconds the AI pauses after each action on its turn
 local STEP_DELAY = 0.8
+-- Seconds the AI pauses after casting a spell (the spell is shown for about 1.25 s)
+local SPELL_DELAY = 1.3
 -- Seconds between each prayer it taps for mana
 local TAP_DELAY = 0.4
 
@@ -963,7 +965,8 @@ function E:AITakeTurn()
                 end
                 E:RefreshUI()
                 if not E.inMatch then return end
-                Next(function() MainStep(phase, after, skip) end)
+                -- A cast spell is shown on the board for a moment: wait until it has gone
+                Next(function() MainStep(phase, after, skip) end, action.kind == "spell" and SPELL_DELAY or nil)
                 return
             end
             E:AITapLand(taps[i])

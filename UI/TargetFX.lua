@@ -129,7 +129,8 @@ end
 -- A cast spell (either player's) is shown face up over the battlefield for a moment,
 -- on the caster's side, with an arrow to everything it affects.
 -- =========================================================================
-local REVEAL_HOLD = 0.5    -- seconds the card stays fully visible
+local REVEAL_HOLD = 1.0    -- seconds the card stays fully visible
+local REVEAL_SCALE = 0.75  -- size of the shown card relative to the full preview card
 local REVEAL_FADE = 0.25   -- then fades out over this long
 local REVEAL_COLOR = { 1.0, 0.82, 0.0, 1.0 }
 local REVEAL_Y = { [true] = 150, [false] = -40 }   -- card centre above the board's centre, by caster
@@ -182,7 +183,9 @@ local function RevealSpell(card, casterIsRemote, targets)
     local f = RevealFrame()
     if not (f and card and TTS.PaintPreviewCard) then return end
     f:ClearAllPoints()
-    f:SetPoint("CENTER", B, "CENTER", 0, REVEAL_Y[casterIsRemote and true or false])
+    -- Scaled as a whole so the printed rules keep their layout; offsets are in the card's scale
+    f:SetScale(REVEAL_SCALE)
+    f:SetPoint("CENTER", B, "CENTER", 0, REVEAL_Y[casterIsRemote and true or false] / REVEAL_SCALE)
     TTS.PaintPreviewCard(f, card)
     f:SetAlpha(1)
     f.t = 0
