@@ -22,7 +22,7 @@ end
 -- [cardId] = { aggro = <sound>, death = <sound> }
 --   <sound> = SoundKit ID (number)               -> PlaySound
 --           = game sound file path (string)      -> PlaySoundFile
--- A creature card in Database.lua may also carry its own aggroSound / deathSound
+-- A creature card in the Cards files may also carry its own aggroSound / deathSound
 -- field, which takes priority over this table.
 --
 -- Generated from the client tables (build 1.60.1.70338):

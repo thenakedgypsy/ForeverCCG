@@ -58,7 +58,7 @@ end
 
 -- =========================================================================
 -- KEYWORDS
--- Keys are the card fields Database.lua and CardLogic.lua use.
+-- Keys are the card fields the Cards files and CardLogic.lua use.
 -- =========================================================================
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",

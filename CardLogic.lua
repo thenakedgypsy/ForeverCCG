@@ -70,7 +70,7 @@ end
 
 -- =========================================================================
 -- TAGS (faction / zone / creature type) & TRIBAL EFFECTS
--- Database.lua creature fields used as tags:
+-- the Cards files creature fields used as tags:
 --   faction = "Defias"           -> tag "faction"
 --   zone = "Westfall"            -> tag "zone"
 --   creatureType = "Beast"       -> tag "type"
@@ -355,7 +355,7 @@ end
 
 -- =========================================================================
 -- SPELL EFFECT ENGINE
--- Every class spell in Database.lua carries an `effect = { target = <spec>, ops = { ... } }` table.
+-- Every class spell in the Cards files carries an `effect = { target = <spec>, ops = { ... } }` table.
 -- =========================================================================
 local SPELL_TARGET_UI = {
     enemy_creature    = "CREATURE",
