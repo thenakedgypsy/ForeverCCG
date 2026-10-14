@@ -18,7 +18,7 @@ TTS = TTS or {}
 local B = TTS.BoardFrame
 if not B then return end
 
-local ARROW_COLOR     = { 0.2, 0.9, 0.2, 0.9 }  -- same green as an assigned blocker's border
+local ARROW_COLOR     = { 0.25, 0.55, 1.0, 0.9 }  -- blue, apart from the red/green/yellow spell arrows
 local ARROW_THICKNESS = 3
 local ARROW_HEAD_LEN  = 14
 local ARROW_HEAD_ANG  = 0.45  -- radians either side of the shaft

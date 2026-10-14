@@ -1393,6 +1393,16 @@ function E:ClickOpponentCard(fieldIndex)
             return
         end
 
+        -- One blocker per attacker
+        for otherBlocker, blockedAttacker in pairs(self.blockingState.blocks) do
+            if blockedAttacker == fieldIndex and otherBlocker ~= blockerIdx then
+                local other = self.localState.field[otherBlocker]
+                self:Log(string.format("%s is already blocked by %s. Each attacker can only be blocked by one creature.",
+                    attackerCard.name, other and TTS.Cards[other.id] and TTS.Cards[other.id].name or "another creature"), "ERROR")
+                return
+            end
+        end
+
         self.blockingState.blocks[blockerIdx] = fieldIndex
         self.blockingState.selectedBlocker = nil
         self:Log(string.format("|cFF00FF00%s|r is assigned to block |cFFFF2222%s|r.", blockerCard.name, attackerCard.name), "COMBAT")

@@ -788,7 +788,12 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "ASSIGN_BLOCK" then
             local blockerIdx = tonumber(parts[3])
             local attackerIdx = tonumber(parts[4])
-            if E.blockingState and blockerIdx and attackerIdx then
+            -- One blocker per attacker: a second block on the same attacker is ignored
+            local alreadyBlocked = false
+            for _, a in pairs(E.blockingState and E.blockingState.blocks or {}) do
+                if a == attackerIdx then alreadyBlocked = true end
+            end
+            if E.blockingState and blockerIdx and attackerIdx and not alreadyBlocked then
                 E.blockingState.blocks[blockerIdx] = attackerIdx
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
