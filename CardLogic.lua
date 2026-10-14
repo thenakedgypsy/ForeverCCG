@@ -248,6 +248,12 @@ end
 -- STATE-BASED ACTIONS & DEATH TRIGGERS
 -- =========================================================================
 function E:HandleCreatureDeath(perm, isRemote)
+    -- Both clients see every death and handle it by its own rules, even when the
+    -- opponent's (mirrored) spell caused it
+    if self.mirroring then
+        self:RunMirrored(function() self:HandleCreatureDeath(perm, isRemote) end, false)
+        return
+    end
     local card = TTS.Cards[perm.id]
     if not card then return end
 
@@ -275,7 +281,8 @@ function E:HandleCreatureDeath(perm, isRemote)
     end
 
     for _, other in ipairs(isRemote and self.localState.field or self.remoteState.field) do
-        if other.id == "BOSS25" then
+        -- PvP: both clients see the death; the Baron's controller sends the damage to us
+        if other.id == "BOSS25" and (isRemote or self.isSolo) then
             self:DamagePlayer(isRemote, 2, "Baron Rivendare")
         end
     end
@@ -1049,7 +1056,11 @@ end
 
 function E:SyncEffects()
     if self.isSolo or not self.inMatch or not self.opponent then return end
-    TTS.Net:Send(self.opponent, "ACTION:EFFECTS:" .. EncodeEffects(self.localState) .. ":" .. EncodeEffects(self.remoteState))
+    local payload = EncodeEffects(self.localState) .. ":" .. EncodeEffects(self.remoteState)
+    -- Only when something changed (StartMatch clears it), to save the addon-message budget
+    if payload == self.sentEffects then return end
+    self.sentEffects = payload
+    TTS.Net:Send(self.opponent, "ACTION:EFFECTS:" .. payload)
 end
 
 -- theirSide = effects the opponent tracks on themselves, mySide = effects they track on us

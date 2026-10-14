@@ -1986,6 +1986,10 @@ function B:UpdateDisplay()
                 -- Local player is defending and has declared: the attacker resolves
                 B.nextPhaseBtn:SetText("Waiting for Attacker...")
                 B.nextPhaseBtn:Disable()
+            elseif not E.isSolo and not E.blockingState.attacksDone then
+                -- More attackers may still be coming (Network.lua, ATTACKS_DONE)
+                B.nextPhaseBtn:SetText("Attackers Incoming...")
+                B.nextPhaseBtn:Disable()
             else
                 -- Local player is defending: enabled to confirm blocks
                 B.nextPhaseBtn:Enable()
@@ -2051,6 +2055,8 @@ function B:UpdateDisplay()
         if E.blockingState.isRemoteAttacking then
             if E.blockingState.blocksDeclared then
                 B.phaseText:SetText("|cFFFFD200COMBAT: Blocks declared. Waiting for attacker to resolve...|r")
+            elseif not E.isSolo and not E.blockingState.attacksDone then
+                B.phaseText:SetText("|cFFFFD200COMBAT: Opponent is declaring attackers...|r")
             else
                 B.phaseText:SetText("|cFFFF4444COMBAT: Assign Blockers, then click Confirm Blocks|r")
             end

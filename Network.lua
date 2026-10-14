@@ -74,6 +74,29 @@ local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
 end
 
+-- Waiting-room names can be "Firstname Surname" (or carry a PvP rank title), but whispers
+-- and group checks need the character name. Learned from every message that arrives, and
+-- kept with saved contacts. [lower waiting-room name] = character name
+local charNames = {}
+
+local function RememberCharName(fullName, charName)
+    if not fullName or not charName or charName == "" then return end
+    local key = NormalizeName(fullName):lower()
+    charNames[key] = charName
+    local c = type(TTS_Contacts) == "table" and TTS_Contacts[key]
+    if type(c) == "table" then c.unit = charName end
+end
+
+local function CharName(name)
+    local key = NormalizeName(name):lower()
+    local c = type(TTS_Contacts) == "table" and TTS_Contacts[key]
+    return charNames[key]
+        or (TTS.WaitingRoom and TTS.WaitingRoom.unitNames and TTS.WaitingRoom.unitNames[key])
+        or (type(c) == "table" and c.unit)
+        or NormalizeName(name):match("^(%S+)") or name
+end
+TTS.Net.CharName = CharName
+
 -- Our identity on the network: the same name the waiting room advertises
 local function MyName()
     if TTS.GetPlayerFullName then
@@ -246,9 +269,9 @@ local function SendChannel(msg, low)
     end
 end
 
--- chatType is one of the fallback routes; target is only used for "WHISPER"
+-- chatType is one of the fallback routes; target (a waiting-room name) is only used for "WHISPER"
 local function SendDirect(msg, chatType, target, low)
-    QueueSend(msg, chatType, target, low)
+    QueueSend(msg, chatType, target and CharName(target), low)
 end
 
 local function NameMatchesUnit(name, unit)
@@ -256,7 +279,7 @@ local function NameMatchesUnit(name, unit)
     local want = NormalizeName(name):lower()
     local n = NormalizeName(UnitName(unit)):lower()
     -- The waiting-room name may be "Firstname Surname" while UnitName is just "Firstname"
-    return n ~= "" and (want == n or want:sub(1, #n + 1) == n .. " ")
+    return n ~= "" and (want == n or want:sub(1, #n + 1) == n .. " " or CharName(name):lower() == n)
 end
 
 -- True if the named player is in our party (or our subgroup, when in a raid)
@@ -417,7 +440,7 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
         end
 
         local whisperMsg = string.format("I tried to challenge you to a game of Forever: CCG but couldn't reach you. If you have it installed, join my party and I'll challenge you again. If not, visit: %s to download!", TTS.DOWNLOAD_URL)
-        SendChatMessage(whisperMsg, "WHISPER", nil, target)
+        SendChatMessage(whisperMsg, "WHISPER", nil, CharName(target))
         local tried = table.concat(invite.tried, ", ")
         if triedGroup then
             Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond (tried: %s). They may not have Forever: CCG installed. Whisper sent!",
@@ -557,7 +580,7 @@ function TTS.Net:AddContact(name)
     local key = name:lower()
     local before = db[key]
     local becameDirect = type(before) ~= "table" or before.shared
-    db[key] = { name = name, seen = time() }
+    db[key] = { name = name, seen = time(), unit = charNames[key] or (type(before) == "table" and before.unit or nil) }
     PruneContacts()
 
     local s = ContactState(key)
@@ -637,7 +660,11 @@ local function OfflinePingFilter(_, _, msg, ...)
     local lower = msg:lower()
     local named = notFoundPattern and msg:match(notFoundPattern)
     for key, expires in pairs(pendingPings) do
-        if expires >= time() and ((named and NormalizeName(named):lower() == key) or (not named and lower:find(key, 1, true))) then
+        -- The error names the character we whispered, which may differ from the waiting-room name
+        local char = CharName(key):lower()
+        local namedKey = named and NormalizeName(named):lower()
+        if expires >= time() and ((namedKey and (namedKey == key or namedKey == char))
+            or (not named and (lower:find(key, 1, true) or lower:find(char, 1, true)))) then
             pendingPings[key] = nil
             ContactState(key).offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
             return true
@@ -669,6 +696,7 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
     end
 
     if from then
+        RememberCharName(from, sender)
         local key = NormalizeName(from):lower()
         if ROUTE_LABELS[chatType] then
             self.routes[key] = chatType
@@ -774,6 +802,7 @@ function TTS.Net:OnReceive(msg, sender)
         -- Extract full text after "LFM_ANNOUNCE:" without splitting internal spaces
         local pName = msg:match("^LFM_ANNOUNCE:(.+)$") or parts[2] or sender
         pName = NormalizeName(pName)
+        RememberCharName(pName, sender)
         TTS.Net:AddContact(pName)
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
@@ -1197,6 +1226,14 @@ function TTS.Net:OnReceive(msg, sender)
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
                 E:Log(string.format("%s assigned %s to block %s.", sender, blockerCard and blockerCard.name or "Creature", attackerCard and attackerCard.name or "Creature"), "COMBAT")
+                E:RefreshUI()
+            end
+
+        elseif actionType == "ATTACKS_DONE" then
+            -- The attacker has declared every attacker: blocks can be declared now
+            if E.blockingState and E.blockingState.isRemoteAttacking then
+                E.blockingState.attacksDone = true
+                E:Log(string.format("%s finished declaring attackers. Assign blockers, then continue.", sender), "COMBAT")
                 E:RefreshUI()
             end
 

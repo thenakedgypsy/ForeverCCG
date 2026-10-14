@@ -477,6 +477,9 @@ function E:NextPhase()
             if self.isSolo then
                 -- The AI has no button to click: resolve right away
                 self:ResolveCombatDamage()
+            elseif not bs.attacksDone then
+                -- More ATTACK messages may still be on their way
+                self:Log(string.format("%s is still declaring attackers.", self.opponent), "ERROR")
             elseif not bs.blocksDeclared and next(bs.blocks) == nil then
                 -- No blocks to show the attacker: resolve on both clients straight away
                 bs.selectedBlocker = nil
@@ -530,6 +533,8 @@ function E:NextPhase()
                 self.blockingState.blocksDeclared = true
                 self:Log(self.opponent .. " declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
             else
+                -- Every ATTACK has gone out: the defender may now block
+                TTS.Net:Send(self.opponent, "ACTION:ATTACKS_DONE")
                 self:Log("Waiting for opponent to declare blockers...", "SYSTEM")
             end
         else
@@ -721,6 +726,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.bossIndex = nil
     self:ResetUndo()
     self.sentDeckCount = nil
+    self.sentEffects = nil
     self.remoteState.deckCount = nil
     -- Deck size goes to the opponent once setup is done, not once per opening draw
     self.startingMatch = true
