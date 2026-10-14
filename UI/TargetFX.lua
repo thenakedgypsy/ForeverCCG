@@ -245,11 +245,25 @@ local function AimSourceFrame(targeting)
     end
 end
 
+-- While choosing what to block: the selected blocker (ours, while we defend)
+local BLOCK_AIM_COLOR = { 0.25, 0.55, 1.0, 0.85 }   -- the block arrows' blue
+local function BlockAimSourceFrame(E)
+    local bs = E.blockingState
+    if E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking and not bs.blocksDeclared and bs.selectedBlocker then
+        return FindFieldFrame(false, bs.selectedBlocker)
+    end
+end
+
 local aimArrow
 local function UpdateAim()
     if not canDrawLines then return end
     local E = TTS.Engine
+    local color = AIM_COLOR
     local src = E and E.inMatch and Pos(AimSourceFrame(E.targeting))
+    if E and E.inMatch and not src and not E.targeting then
+        src = Pos(BlockAimSourceFrame(E))
+        color = BLOCK_AIM_COLOR
+    end
     if not src then
         if aimArrow then HideArrow(aimArrow) end
         return
@@ -266,7 +280,7 @@ local function UpdateAim()
         return
     end
     aimArrow = aimArrow or NewArrow()
-    DrawArrow(aimArrow, sx, sy, cx, cy, AIM_COLOR)
+    DrawArrow(aimArrow, sx, sy, cx, cy, color)
 end
 
 -- =========================================================================
