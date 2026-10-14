@@ -249,8 +249,19 @@ function WR:UpdateUI()
                 row.nameText:SetText(entry.name)
                 local score = WR.scores[entry.name:lower()]
                 row.scoreText:SetText(score and ("|cFFFFFFFF" .. TTS:FormatScore(score) .. "|r") or "|cFF888888-|r")
-                row.inviteBtn:SetText("Invite")
-                row.inviteBtn:Enable()
+                -- A challenge just went out: no spamming (Network.lua, INVITE_COOLDOWN)
+                local Net = TTS.Net
+                local wait = Net and Net.InviteCooldownLeft and Net:InviteCooldownLeft() or 0
+                if Net and Net.IsInvitePending and Net:IsInvitePending(entry.name) then
+                    row.inviteBtn:SetText("Sent...")
+                    row.inviteBtn:Disable()
+                elseif wait > 0 then
+                    row.inviteBtn:SetText(string.format("Invite (%d)", wait))
+                    row.inviteBtn:Disable()
+                else
+                    row.inviteBtn:SetText("Invite")
+                    row.inviteBtn:Enable()
+                end
                 row.inviteBtn:SetScript("OnClick", function()
                     if TTS.Net and TTS.Net.InvitePlayer then
                         TTS.Net:InvitePlayer(entry.name)
@@ -340,8 +351,20 @@ end)
 
 -- Heartbeat broadcast every 10 seconds
 local ticker = 0
+local buttonTicker = 0
 F:SetScript("OnUpdate", function(self, elapsed)
     ticker = ticker + elapsed
+    -- Once a second while an invite cooldown counts down (or a challenge is retrying)
+    buttonTicker = buttonTicker + elapsed
+    if buttonTicker >= 1 then
+        buttonTicker = 0
+        local Net = TTS.Net
+        if Net and Net.InviteCooldownLeft and (Net:InviteCooldownLeft() > 0 or next(Net.pendingInvites) or Net.inviteUIStale) then
+            -- One extra refresh after it all clears, so the buttons re-enable
+            Net.inviteUIStale = (Net:InviteCooldownLeft() > 0 or next(Net.pendingInvites)) and true or nil
+            WR:UpdateUI()
+        end
+    end
     if ticker >= 10 then
         ticker = 0
         if WR.isQueued then

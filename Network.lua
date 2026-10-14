@@ -44,6 +44,9 @@ local INVITE_EXPIRY = 90
 -- Seconds to wait for INVITE_ACK before deciding the target doesn't have the addon
 local INVITE_ACK_TIMEOUT = 8
 
+-- Seconds after sending a challenge before the Invite buttons work again
+local INVITE_COOLDOWN = 45
+
 -- How many times (1s apart) to retry joining the channel before dropping queued messages
 local MAX_JOIN_ATTEMPTS = 5
 
@@ -127,12 +130,78 @@ local function JoinLFMChannel()
     end
 end
 
-local function RawChannelSend(channelId, msg)
-    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
-    else
-        SendAddonMessage(PREFIX, msg, "CHANNEL", channelId)
+-- =========================================================================
+-- PACED SENDING
+-- The server allows each addon prefix a burst of about 10 messages, then about 1 a second,
+-- and silently drops the rest. Waiting-room heartbeats and contact pings alone can use all
+-- of that, so every message goes through this queue: game traffic (challenges, matches)
+-- first, background traffic (announces, pings, contact lists) only with what is left.
+-- =========================================================================
+local SEND_BURST = 8        -- kept under the server's burst so a reply never finds it empty
+local SEND_RATE = 1         -- messages per second once the burst is used
+local LOW_QUEUE_MAX = 15    -- background messages waiting beyond this drop the oldest
+
+local sendQueues = { high = {}, low = {} }
+local sendTokens = SEND_BURST
+local lastRefill = GetTime and GetTime() or 0
+local pumpScheduled = false
+local reportedFailures = {}
+
+local THROTTLED = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.AddonMessageThrottle
+
+-- Returns "ok", "throttled" or "failed", plus the client's result code
+local function RawSend(m)
+    local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+    local result = send(PREFIX, m.msg, m.chatType, m.target)
+    -- Older clients return nothing or true; newer ones a result code (0 = success)
+    if result == nil or result == true or result == 0 then return "ok" end
+    if THROTTLED and result == THROTTLED then return "throttled", result end
+    return "failed", result
+end
+
+local function ReportSendFailure(m, code)
+    local key = tostring(m.chatType) .. ":" .. tostring(code)
+    if reportedFailures[key] then return end
+    reportedFailures[key] = true
+    Print(string.format("|cFFFF2222[TTSE]|r A message over %s could not be sent (error %s).",
+        m.chatType == "CHANNEL" and LFM_CHANNEL or tostring(m.chatType), tostring(code)))
+end
+
+local function PumpSendQueue()
+    pumpScheduled = false
+    local now = GetTime()
+    sendTokens = math.min(SEND_BURST, sendTokens + (now - lastRefill) * SEND_RATE)
+    lastRefill = now
+    while sendTokens >= 1 do
+        local q = (#sendQueues.high > 0) and sendQueues.high or sendQueues.low
+        local m = q[1]
+        if not m then break end
+        local status, code = RawSend(m)
+        if status == "throttled" then
+            -- Still over the server's limit: keep it and try again shortly
+            sendTokens = 0
+            break
+        end
+        table.remove(q, 1)
+        sendTokens = sendTokens - 1
+        if status == "failed" then ReportSendFailure(m, code) end
     end
+    if #sendQueues.high + #sendQueues.low > 0 then
+        pumpScheduled = true
+        TTS:SafeAfter(1 / SEND_RATE, PumpSendQueue)
+    end
+end
+
+-- low = background traffic, sent only when no game message is waiting
+local function QueueSend(msg, chatType, target, low)
+    local q = low and sendQueues.low or sendQueues.high
+    if low and #q >= LOW_QUEUE_MAX then table.remove(q, 1) end
+    table.insert(q, { msg = msg, chatType = chatType, target = target })
+    if not pumpScheduled then PumpSendQueue() end
+end
+
+local function RawChannelSend(channelId, msg, low)
+    QueueSend(msg, "CHANNEL", channelId, low)
 end
 
 -- Messages sent before the channel is joined are queued so they go out in order
@@ -158,18 +227,18 @@ local function FlushChannelQueue()
     end
     joinAttempts = 0
     for i = 1, #channelQueue do
-        RawChannelSend(id, channelQueue[i])
+        RawChannelSend(id, channelQueue[i].msg, channelQueue[i].low)
     end
     wipe(channelQueue)
 end
 
-local function SendChannel(msg)
+local function SendChannel(msg, low)
     local id = GetLFMChannelId()
     if id and #channelQueue == 0 then
-        RawChannelSend(id, msg)
+        RawChannelSend(id, msg, low)
         return
     end
-    table.insert(channelQueue, msg)
+    table.insert(channelQueue, { msg = msg, low = low })
     if not flushScheduled then
         flushScheduled = true
         JoinLFMChannel()
@@ -178,12 +247,8 @@ local function SendChannel(msg)
 end
 
 -- chatType is one of the fallback routes; target is only used for "WHISPER"
-local function SendDirect(msg, chatType, target)
-    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(PREFIX, msg, chatType, target)
-    else
-        SendAddonMessage(PREFIX, msg, chatType, target)
-    end
+local function SendDirect(msg, chatType, target, low)
+    QueueSend(msg, chatType, target, low)
 end
 
 local function NameMatchesUnit(name, unit)
@@ -256,13 +321,33 @@ TTS.Net.matchId = nil         -- id of the current (or most recent) match
 TTS.Net.routes = {}
 
 function TTS.Net:BroadcastLFM(msg)
-    SendChannel(msg)
+    SendChannel(msg, true)
+end
+
+-- Seconds until another challenge can be sent (0 = now)
+function TTS.Net:InviteCooldownLeft()
+    return math.max(0, math.ceil((self.lastInviteAt or -INVITE_COOLDOWN) + INVITE_COOLDOWN - GetTime()))
+end
+
+-- True while a challenge to this player is still looking for them (retrying routes)
+function TTS.Net:IsInvitePending(target)
+    return self.pendingInvites[NormalizeName(target or ""):lower()] ~= nil
 end
 
 -- Challenges can only be issued from the Waiting Room, which calls this.
 function TTS.Net:InvitePlayer(target)
     if not target or target == "" then return end
     target = NormalizeName(target)
+
+    if self:IsInvitePending(target) then
+        Print("|cFFFFD200[TTSE]|r Still trying to reach " .. target .. ". Please wait.")
+        return
+    end
+    local wait = self:InviteCooldownLeft()
+    if wait > 0 then
+        Print(string.format("|cFFFFD200[TTSE]|r You can send another challenge in %d seconds.", wait))
+        return
+    end
 
     local E = TTS.Engine
     if E and E.inMatch then
@@ -283,8 +368,13 @@ function TTS.Net:InvitePlayer(target)
     -- FCCGTTSE first, unless a contact just answered by whisper (likely on another realm's channel)
     local viaWhisper = self.routes[inviteKey] == "WHISPER" and self:ContactRecentlyReached(target)
     if not viaWhisper then self.routes[inviteKey] = nil end
-    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, tried = { viaWhisper and ROUTE_LABELS.WHISPER or LFM_CHANNEL } }
+    -- route: the one this challenge is on now (nil = FCCGTTSE). Kept here rather than read back
+    -- from self.routes, which any message from them (e.g. a contact ping) changes.
+    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, route = viaWhisper and "WHISPER" or nil,
+        tried = { viaWhisper and ROUTE_LABELS.WHISPER or LFM_CHANNEL } }
     self.pendingInvites[inviteKey] = target
+    self.lastInviteAt = GetTime()
+    if TTS.WaitingRoom and TTS.WaitingRoom.UpdateUI then TTS.WaitingRoom:UpdateUI() end
 
     self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
     Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
@@ -302,10 +392,11 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
         -- Acknowledged, cancelled, or replaced by a newer challenge
         if not target or not invite or invite.matchId ~= matchId then return end
 
-        local current = Net.routes[inviteKey]
+        local current = invite.route
         local nextRoute = NextRoute(current, target)
 
         if nextRoute then
+            invite.route = nextRoute
             Net.routes[inviteKey] = nextRoute
             invite.sentAt = time()
             table.insert(invite.tried, ROUTE_LABELS[nextRoute])
@@ -358,7 +449,7 @@ end
 local CONTACT_MAX = 50                  -- most recently seen contacts kept, for direct and shared each
 local CONTACT_TTL = 30 * 24 * 60 * 60   -- forgotten after 30 days unseen
 local CONTACT_PING_EVERY = 9            -- seconds between pings to one contact (the waiting room ticks every 10)
-local CONTACT_PINGS_PER_TICK = 10
+local CONTACT_PINGS_PER_TICK = 4         -- with the heartbeat, stays under the ~1 message/s addon limit
 local CONTACT_REPLY_WAIT = 6            -- no pong by then: treat them as offline
 local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left alone
 local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
@@ -522,7 +613,7 @@ function TTS.Net:PingContacts()
         -- Spaced out so the server doesn't throttle the burst
         TTS:SafeAfter((i - 1) * 0.15, function()
             pendingPings[key] = time() + CONTACT_REPLY_WAIT
-            SendDirect("T:" .. name .. ":" .. MyName() .. ":CONTACT_PING:" .. fields, "WHISPER", name)
+            SendDirect("T:" .. name .. ":" .. MyName() .. ":CONTACT_PING:" .. fields, "WHISPER", name, true)
             TTS:SafeAfter(CONTACT_REPLY_WAIT, function()
                 local s = ContactState(key)
                 if (s.lastReached or 0) < (s.lastPing or 0) then
@@ -627,7 +718,9 @@ f:SetScript("OnEvent", function(self, event, ...)
 end)
 
 function TTS.Net:Send(target, msg)
-    if not target or target == "" or target == "Target Dummy" or (TTS.Engine and TTS.Engine.isSolo) then
+    -- isSolo stays set after a solo game ends, so only a solo game in progress blocks sending
+    local E = TTS.Engine
+    if not target or target == "" or target == "Target Dummy" or (E and E.inMatch and E.isSolo) then
         return
     end
     target = NormalizeName(target)
@@ -639,11 +732,13 @@ function TTS.Net:Send(target, msg)
     end
     -- One route per message: FCCGTTSE unless a fallback route is set for this player
     -- and it can still reach them
+    -- Contact upkeep is background traffic; challenges and matches go first
+    local low = msg:match("^CONTACT_") and true or false
     local route = self.routes[target:lower()]
     if route and RouteAvailable(route, target) then
-        SendDirect(envelope, route, route == "WHISPER" and target or nil)
+        SendDirect(envelope, route, route == "WHISPER" and target or nil, low)
     else
-        SendChannel(envelope)
+        SendChannel(envelope, low)
     end
 end
 
