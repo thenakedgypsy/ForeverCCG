@@ -22,8 +22,8 @@ local EMBLEM_ASPECT = 158 / 64       -- the emblem image's width / height
 
 local GOLD = "|cFFFFD200"
 local CORNER_Y = 0.05                -- stat line's height above the card's bottom edge, as a share of its height
-local EMBLEM_SCALE = 0.95            -- emblem height on cards, relative to the numbers
-local EMBLEM_SCALE_LARGE = 0.75      -- the same on large previews (cards whose stats grew past their frame's size)
+local EMBLEM_SCALE = 1.1             -- emblem height on cards, relative to the numbers
+local EMBLEM_SCALE_LARGE = 0.87      -- the same on large previews (cards whose stats grew past their frame's size)
 local EMBLEM_GAP = 0.12              -- space between the emblem and each number, as a share of the font size
 
 -- The emblem as an inline texture, height h
@@ -47,7 +47,7 @@ end
 -- One line for tooltips and the log: "3 [sword | divider | shield] 5"
 function TTS.FormatStats(power, toughness, damage, colorCode, size)
     size = size or 14
-    return TTS.PowerText(power, colorCode) .. " " .. EmblemIcon(size * 1.1) .. " "
+    return TTS.PowerText(power, colorCode) .. " " .. EmblemIcon(size * 1.25) .. " "
         .. TTS.ToughnessText(toughness, damage, colorCode)
 end
 
