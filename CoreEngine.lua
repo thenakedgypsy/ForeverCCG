@@ -244,6 +244,18 @@ end
 -- =========================================================================
 function E:DamagePlayer(isRemote, amount, reason)
     if amount <= 0 then return end
+    -- Mirroring the PvP opponent's play (CardLogic.lua, E:RunMirrored): their client sends
+    -- damage to us itself, and handles their own shield and defeat; we only track their life.
+    if self.mirroring then
+        if not isRemote then return end
+        local shield = self.remoteState.mirror and self.remoteState.mirror.shield or 0
+        amount = amount - math.min(amount, shield)
+        if amount <= 0 then return end
+        self.remoteState.life = self.remoteState.life - amount
+        self:Log(string.format("%s took |cFFFF2222%d damage|r (%s). (Opponent Life: %d)", self.opponent, amount, reason or "Effect", self.remoteState.life), "COMBAT")
+        self:RefreshUI()
+        return
+    end
     local targetState = isRemote and self.remoteState or self.localState
 
     if (targetState.damageShield or 0) > 0 then
@@ -567,6 +579,9 @@ function E:EndTurn()
     else
         self:SetPhase("WAITING")
         TTS.Net:Send(self.opponent, "ACTION:END_TURN")
+        -- Their turn starts now: untap their side (frozen creatures stay tapped), tick the
+        -- effects we mirrored onto their creatures, and count their draw
+        if not self:BeginTurn(true) then return end
         self:RefreshUI()
     end
 end
@@ -873,10 +888,8 @@ end
 -- Removes a random card from a side's hand to its graveyard (forced discards)
 function E:DiscardRandom(isRemote)
     local st = isRemote and self.remoteState or self.localState
-    if isRemote and not self.isSolo then
-        st.handCount = math.max(0, (st.handCount or 0) - 1)
-        return
-    end
+    -- PvP: their client discards and sends ACTION:DISCARD, which updates their hand count
+    if isRemote and not self.isSolo then return end
     if #st.hand == 0 then return end
     local cardId = table.remove(st.hand, math.random(#st.hand))
     table.insert(st.graveyard, cardId)

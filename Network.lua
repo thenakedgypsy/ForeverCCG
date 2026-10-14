@@ -947,17 +947,9 @@ function TTS.Net:OnReceive(msg, sender)
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
-            table.insert(E.remoteState.field, {
-                id = cardId,
-                tapped = false,
-                sick = not E:HasKeyword({ id = cardId }, true, "haste"),
-                damage = 0,
-                tempPower = 0,
-                tempToughness = 0,
-                uid = time() + #E.remoteState.field
-            })
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Permanent", card and card.name or cardId), "ACTION")
-            if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
+            -- Their client runs its enter trigger too; we mirror it so both boards match
+            E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
             E:RefreshUI()
 
         elseif actionType == "CAST_SPELL" then
@@ -981,7 +973,42 @@ function TTS.Net:OnReceive(msg, sender)
                 end
             end
             if E.ShowRemoteSpell then E:ShowRemoteSpell(cardId, tgt) end
+            -- Resolve it here as well: their client only tells us about damage to us, so
+            -- everything else it does to the board (freeze, tuck, destroy...) is mirrored
+            if card and card.effect then
+                E:RunMirrored(function() E:ResolveSpell(card, tgt, true) end)
+            end
             E:RefreshUI()
+
+        elseif actionType == "ABILITY" then
+            -- ABILITY:<their field index>[:PLAYER|CREATURE:MINE|THEIRS from their side:<field index>]
+            local perm = E.remoteState.field[tonumber(parts[3]) or 0]
+            if perm then
+                local tgt
+                local kind, side, idx = parts[4], parts[5], tonumber(parts[6])
+                if kind == "PLAYER" or kind == "CREATURE" then
+                    local onOurSide = (side == "THEIRS")
+                    tgt = { kind = kind, isRemote = not onOurSide }
+                    if kind == "CREATURE" then
+                        tgt.perm = idx and (onOurSide and E.localState.field or E.remoteState.field)[idx]
+                    end
+                end
+                E.remoteUndo = nil   -- an ability locks in their plays so far
+                E:RunMirrored(function() E:ActivateAbility(perm, true, tgt) end)
+                E:RefreshUI()
+            end
+
+        elseif actionType == "HEAL" then
+            -- HEAL:<amount>:<MINE|THEIRS from their side>:<source> - a healing-over-time tick
+            local amtStr, side, src = msg:match("^ACTION:HEAL:(%d+):(%u+):?(.*)$")
+            local amt = tonumber(amtStr)
+            if amt then
+                local st = (side == "THEIRS") and E.localState or E.remoteState
+                st.life = st.life + amt
+                E:Log(string.format("%s restored %d life to %s.", (src and src ~= "") and src or "Healing", amt,
+                    E:SideName(st == E.remoteState)), "ACTION")
+                E:RefreshUI()
+            end
 
         elseif actionType == "ATTACH" then
             local cardId = parts[3]
@@ -1058,6 +1085,7 @@ function TTS.Net:OnReceive(msg, sender)
                 E:SetPhase("COMBAT_BLOCK")
                 E:Log(string.format("%s declared attacker: |cFFFF2222%s|r.", sender, card and card.name or "Creature"), "COMBAT")
                 if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
+                E:RunMirrored(function() E:OnCreatureAttack(perm, true) end)
                 E:RefreshUI()
             end
 
@@ -1103,8 +1131,7 @@ function TTS.Net:OnReceive(msg, sender)
             if n then E:OnRemoteDeckCount(n, parts[4] == "1") end
 
         elseif actionType == "END_TURN" then
-            E:UntapSide(true)
-
+            -- (their side untapped at the start of their turn, in E:EndTurn)
             E:Log(sender .. " ended their turn.", "SYSTEM")
             E:OnRemoteEndTurn()
         end

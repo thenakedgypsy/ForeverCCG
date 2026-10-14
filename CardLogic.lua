@@ -571,7 +571,10 @@ end
 
 SPELL_OPS.dot = function(self, op, d, card, cr)
     local holder = d.perm
-    if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
+    if d.kind == "PLAYER" then
+        if self.mirroring then return end   -- the caster's client ticks it
+        holder = d.isRemote and self.remoteState or self.localState
+    end
     holder.dots = holder.dots or {}
     table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id, byRemote = cr })
     self:Log(string.format("%s: %s will take %d damage each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
@@ -579,7 +582,10 @@ end
 
 SPELL_OPS.hot = function(self, op, d, card, cr)
     local holder = d.perm
-    if d.kind == "PLAYER" then holder = d.isRemote and self.remoteState or self.localState end
+    if d.kind == "PLAYER" then
+        if self.mirroring then return end   -- the caster's client ticks it
+        holder = d.isRemote and self.remoteState or self.localState
+    end
     holder.hots = holder.hots or {}
     table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.name, srcId = card.id, byRemote = cr })
     self:Log(string.format("%s: %s will restore %d each turn for %d turns.", card.name, TargetName(self, d), op.n, op.turns), "ACTION")
@@ -587,6 +593,7 @@ end
 
 SPELL_OPS.shield = function(self, op, d, card, cr)
     if d.kind == "PLAYER" then
+        if self.mirroring then return end   -- the caster's client tracks it
         local st = d.isRemote and self.remoteState or self.localState
         st.damageShield = (st.damageShield or 0) + op.n
         self:Log(string.format("%s: the next %d damage to %s will be prevented.", card.name, op.n, self:SideName(d.isRemote)), "ACTION")
@@ -676,13 +683,27 @@ function E:ApplySpellOp(op, tgt, card, casterIsRemote)
     end
 end
 
+-- Runs fn while mirroring the PvP opponent's own play. Both clients resolve every effect, but
+-- what the opponent's client already tells us about is skipped here: damage to us (it sends
+-- ACTION:DAMAGE) and the over-time effects and shields on players (it sends ACTION:EFFECTS).
+-- mirror = false runs fn as our own play (an effect of ours triggered inside a mirrored one).
+function E:RunMirrored(fn, mirror)
+    local was = self.mirroring
+    self.mirroring = (mirror ~= false)
+    local ok, err = pcall(fn)
+    self.mirroring = was
+    if not ok then geterrorhandler()(err) end
+end
+
 -- Resolves an effect table ({ target, ops }) for the caster, then checks for deaths
 function E:ResolveEffect(eff, card, casterIsRemote, tgt)
     if eff and eff.ops then
-        for _, op in ipairs(eff.ops) do
-            if not self.inMatch then break end
-            self:ApplySpellOp(op, tgt, card, casterIsRemote)
-        end
+        self:RunMirrored(function()
+            for _, op in ipairs(eff.ops) do
+                if not self.inMatch then break end
+                self:ApplySpellOp(op, tgt, card, casterIsRemote)
+            end
+        end, (casterIsRemote and not self.isSolo) and true or false)
     end
     if not self.inMatch then return end
     self:SyncEffects()
@@ -719,6 +740,10 @@ function E:TickOverTime(isRemoteTurn)
         TickList(st.hots, isRemoteTurn, function(e)
             st.life = st.life + e.n
             self:Log(string.format("%s restored %d life to %s.", e.src, e.n, self:SideName(isRemote)), "ACTION")
+            -- PvP: only the client that cast it ticks it, so tell the other one
+            if not self.isSolo then
+                TTS.Net:Send(self.opponent, string.format("ACTION:HEAL:%d:%s:%s", e.n, isRemote and "THEIRS" or "MINE", e.src or ""))
+            end
         end)
         TickList(st.dots, isRemoteTurn, function(e)
             if self.inMatch then self:DamagePlayer(isRemote, e.n, e.src) end
@@ -906,10 +931,24 @@ function E:ActivateAbility(perm, isRemote, tgt)
     local ab = ABILITIES[perm.id]
     if not ab or not self:CanActivateAbility(perm, isRemote) then return false end
     if not self:IsValidAbilityTarget(perm, isRemote, tgt) then return false end
-    if ab.cost and not self:PayMana(ab.cost, isRemote) then return false end
+    -- A mirrored PvP ability was paid for on their client (we don't track their mana pool)
+    if ab.cost and not (isRemote and self.mirroring) and not self:PayMana(ab.cost, isRemote) then return false end
     if ab.tap then perm.tapped = true end
     -- An ability used after a card was played locks that play in (no undo past it)
     if not isRemote then self:LockInPlays() end
+
+    -- PvP: sent before resolving, like a spell. ABILITY:<source field index>, then
+    -- optionally <PLAYER|CREATURE>:<MINE|THEIRS from our side>:<target field index>
+    if not isRemote and not self.isSolo then
+        local _, srcIdx = self:FindPerm(perm)
+        local msg = "ACTION:ABILITY:" .. (srcIdx or 0)
+        if tgt then
+            local tIdx
+            if tgt.perm then _, tIdx = self:FindPerm(tgt.perm) end
+            msg = msg .. string.format(":%s:%s:%d", tgt.kind, tgt.isRemote and "THEIRS" or "MINE", tIdx or 0)
+        end
+        TTS.Net:Send(self.opponent, msg)
+    end
 
     local st = isRemote and self.remoteState or self.localState
     local id = perm.id
@@ -958,7 +997,9 @@ function E:ActivateAbility(perm, isRemote, tgt)
                 st.handCount = #st.hand
             end
         elseif #st.hand > 0 then
-            table.insert(st.graveyard, table.remove(st.hand, 1))
+            local cardId = table.remove(st.hand, 1)
+            table.insert(st.graveyard, cardId)
+            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
         end
         perm.tempPower = (perm.tempPower or 0) + 1
         perm.tempToughness = (perm.tempToughness or 0) + 1
