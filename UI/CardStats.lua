@@ -82,7 +82,8 @@ end
 
 -- The divider centred on the card's bottom edge, power just to its left and toughness just
 -- to its right, all on one line
-local DIVIDER_GAP = 0.25   -- space between the divider and each number, as a share of the font size
+local DIVIDER_GAP = -0.08  -- space between the divider and each number, as a share of the font size
+                           -- (negative: the divider art has empty margins either side of the ornament)
 
 function TTS.PlaceCardStats(f)
     if not f.pt then return end
@@ -107,7 +108,7 @@ end
 
 -- Stat text size for a card frame: grows with the card (large previews get large numbers,
 -- symbols and divider), never smaller than the size the frame was built with
-local STAT_SIZE_SHARE = 0.125
+local STAT_SIZE_SHARE = 0.155
 
 local function StatSize(f)
     if not f.ptBaseSize then
