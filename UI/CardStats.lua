@@ -40,15 +40,15 @@ function TTS.PowerText(power, colorCode, size)
     return (colorCode or GOLD) .. tostring(power) .. "|r" .. Icon(TTS.POWER_ICON, size or 14)
 end
 
--- "5 [shield]", red when damage has lowered it
+-- "[shield] 5", red when damage has lowered it
 function TTS.ToughnessText(toughness, damage, colorCode, size)
     damage = damage or 0
     local shown = (damage > 0) and ("|cFFFF4444" .. (toughness - damage) .. "|r")
         or ((colorCode or GOLD) .. tostring(toughness) .. "|r")
-    return shown .. Icon(TTS.TOUGHNESS_ICON, size or 14)
+    return Icon(TTS.TOUGHNESS_ICON, size or 14) .. shown
 end
 
--- One line for tooltips: "3 [sword]  [divider]  5 [shield]"
+-- One line for tooltips: "3 [sword]  [divider]  [shield] 5"
 function TTS.FormatStats(power, toughness, damage, colorCode, size)
     size = size or 14
     return TTS.PowerText(power, colorCode, size) .. "  " .. DividerIcon(size) .. "  "
@@ -101,12 +101,26 @@ function TTS.PlaceCardStats(f)
     d:SetPoint("CENTER", parent, "BOTTOM", 0, h * CORNER_Y + size / 2)
 end
 
+-- Stat text size for a card frame: grows with the card (large previews get large numbers,
+-- symbols and divider), never smaller than the size the frame was built with
+local STAT_SIZE_SHARE = 0.18   -- the hand card (72 px) and its 14 pt, kept in proportion
+
+local function StatSize(f)
+    if not f.ptBaseSize then
+        local _, built = f.pt:GetFont()
+        f.ptBaseSize = math.floor((built or 14) * 0.95)
+    end
+    return math.max(f.ptBaseSize, math.floor((f:GetWidth() or 0) * STAT_SIZE_SHARE + 0.5))
+end
+
 -- Shows a creature's stats on a card frame
 function TTS.SetCardStats(f, power, toughness, damage, colorCode)
     if not f.pt then return end
-    local _, size = f.pt:GetFont()
-    size = math.floor((size or 14) * 0.95)
+    local size = StatSize(f)
+    local font, _, flags = f.pt:GetFont()
+    if font then f.pt:SetFont(font, size, flags or "OUTLINE") end
     local p = PowerString(f)
+    if font then p:SetFont(font, size, flags or "OUTLINE") end
     p:SetText(TTS.PowerText(power, colorCode, size))
     f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode, size))
     TTS.PlaceCardStats(f)
