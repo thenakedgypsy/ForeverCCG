@@ -1,0 +1,155 @@
+# Changelog
+
+## 0.13.7
+
+- fix for error-11, messages now wait and resend when the game blocks addon messages
+
+## 0.13.6
+
+- cards now link themselves in their unlock notification
+
+## 0.13.5
+
+- network census in background occasionally
+
+## 0.13.4
+
+- network census
+- added recent players list
+- fix for dot and damage displays in PvP
+
+## 0.13.3
+
+- fix for retry error-08
+
+## 0.13.2
+
+- fix for some network retries
+
+## 0.13.1
+
+- fix for spells from boss cards
+
+## 0.13.0
+
+- breaking networking changes
+- fixed an issue where PvP would no longer work after starting the solo campaign
+
+## 0.12.8
+
+- fix for spells and other effects in PvP
+
+## 0.12.7
+
+- extra network solution
+- hidden contacts
+
+## 0.12.6
+
+- added auto-pay (toggle on board)
+- added animations for click to play mode
+- added drag to play mode (toggleable with click to play in options)
+- fixed some highlighting that wasnt triggering correctly
+- added more error logs to the mouse
+
+## 0.12.5
+
+- updated keyword names to be less.... tragic
+
+## 0.12.4
+
+- added card linking
+
+## 0.12.3
+
+- added collection score that was missed in earlier build
+
+## 0.12.2
+
+- added undo
+
+## 0.12.1
+
+- spells are now revealed on screen with arrows to their targets, red for damage, green for healing
+- opponents in pvp now see your spell targets too
+- floating damage and heal numbers on creatures and players
+- errors from your own actions show in red at the cursor
+- removed creatures stay in their slot for a second before leaving
+- attack arrows stay up a little longer
+- blocking rework
+- newly acquired cards glow and show NEW at the top of the deckbuilder
+- new power and toughness emblem on cards
+- dual-colour card frames for cards with two colours in their cost
+- colour pips in the deck list
+
+## 0.12.0
+
+- added solo mode
+- dungeon boss rules
+- 57 new cards
+- smarter ai opponents
+- zone and dungeon backgrounds on the board in solo (toggle in options)
+- deck selector on the solo map
+
+## 0.11.4
+
+- fix to prevent small updates from breaking matchmaking between versions, explained in more detail in rules.
+- added card preview to mob tacker tooltips
+
+## 0.11.3
+
+- added new card frames
+- added options menu
+- added expanding popups
+- fixed window sizes not saving
+- fixed some text readability
+
+## 0.11.2
+
+- UI update part 1
+
+## 0.11.1
+
+- fallbacks for networking
+
+## 0.11.0
+
+- beta release
+
+## 0.10.6
+
+- party chat fallback
+
+## 0.10.5
+
+- alex is strug
+
+## 0.10.4
+
+- network fix
+
+## 0.10.3
+
+- networking fix for laggy /w channels
+
+## 0.10.2
+
+- maximum hand size fix
+- rules update
+- skip resolve step if no blockers
+
+## 0.10.1
+
+- target dummy fix
+
+## 0.10.0
+
+- added visual blockers
+- updated sounds
+- added timings to target dummy
+- updated network to handle new additions
+
+## 0.9.3
+
+- fIxed icons
+- updated rules text
