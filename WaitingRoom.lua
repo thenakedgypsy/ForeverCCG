@@ -333,6 +333,8 @@ F:SetScript("OnShow", function(self)
     if TTS.Net and TTS.Net.BroadcastLFM then
         TTS.Net:BroadcastLFM("LFM_QUERY")
     end
+    -- Saved contacts may be on another backend realm, out of reach of the channel (Network.lua)
+    if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
     WR:UpdateUI()
 end)
 
@@ -345,6 +347,7 @@ F:SetScript("OnUpdate", function(self, elapsed)
         if WR.isQueued then
             WR:BroadcastPresence()
         end
+        if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
         WR:UpdateUI()
     end
 end)

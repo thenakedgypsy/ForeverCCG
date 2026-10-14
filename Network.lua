@@ -280,9 +280,11 @@ function TTS.Net:InvitePlayer(target)
 
     local inviteKey = target:lower()
     local matchId = NewMatchId()
-    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, tried = { LFM_CHANNEL } }
+    -- FCCGTTSE first, unless a contact just answered by whisper (likely on another realm's channel)
+    local viaWhisper = self.routes[inviteKey] == "WHISPER" and self:ContactRecentlyReached(target)
+    if not viaWhisper then self.routes[inviteKey] = nil end
+    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, tried = { viaWhisper and ROUTE_LABELS.WHISPER or LFM_CHANNEL } }
     self.pendingInvites[inviteKey] = target
-    self.routes[inviteKey] = nil -- always try FCCGTTSE first
 
     self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
     Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
@@ -334,6 +336,226 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
                 target, tried))
         end
     end)
+end
+
+-- =========================================================================
+-- CONTACTS
+-- WoW: Forever splits each realm into several hidden backend realms, and a custom
+-- channel only reaches players on your own one; whispers reach all of them. So
+-- everyone you play or see in the waiting room is saved as a contact, and while
+-- the waiting room is open each one gets an addon-whisper CONTACT_PING (invisible
+-- to both players). A contact who is queued shows up in your waiting room.
+--   CONTACT_PING:<queued 0/1>:<score>   answered with   CONTACT_PONG:<queued 0/1>:<score>
+-- When someone becomes a direct contact (seen, played, or answered a ping) the two of
+-- you swap contact lists, so one link across the realm split brings in everyone they
+-- know. Shared entries carry how long ago their owner last saw that player:
+--   CONTACT_LIST:<1 = send me yours>:<name>=<seconds ago>,<name>=<seconds ago>,...
+-- (split over several messages). A shared contact keeps that age instead of being
+-- refreshed, so the same expiry and size limit apply and offline players aren't kept
+-- alive by passing them around. Shared contacts don't start swaps of their own until
+-- they answer a ping. Older builds ignore all of these.
+-- =========================================================================
+local CONTACT_MAX = 50                  -- most recently seen contacts kept, for direct and shared each
+local CONTACT_TTL = 30 * 24 * 60 * 60   -- forgotten after 30 days unseen
+local CONTACT_PING_EVERY = 9            -- seconds between pings to one contact (the waiting room ticks every 10)
+local CONTACT_PINGS_PER_TICK = 10
+local CONTACT_REPLY_WAIT = 6            -- no pong by then: treat them as offline
+local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left alone
+local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
+local CONTACT_SWAP_COOLDOWN = 600       -- seconds before swapping lists with the same player again
+local CONTACT_LIST_CHUNK = 170          -- characters of entries per message (addon messages cap at 255)
+
+-- Runtime state per lower-case name: { lastPing, lastReached, offlineUntil, lastSwap }
+local contactState = {}
+-- Lower-case names pinged a moment ago, so their "No player named" error can be hidden
+local pendingPings = {}
+
+local function ContactDB()
+    if type(TTS_Contacts) ~= "table" then TTS_Contacts = {} end
+    return TTS_Contacts
+end
+
+local function ContactState(key)
+    contactState[key] = contactState[key] or {}
+    return contactState[key]
+end
+
+-- Keeps the lists small: drops anything long unseen, then the oldest past CONTACT_MAX.
+-- Direct and shared contacts are capped separately, so a big shared list never
+-- pushes out players you reached yourself.
+local function PruneContacts()
+    local db = ContactDB()
+    local direct, shared, cutoff = {}, {}, time() - CONTACT_TTL
+    for key, c in pairs(db) do
+        if type(c) ~= "table" or not c.name or (c.seen or 0) < cutoff then
+            db[key] = nil
+        else
+            local group = c.shared and shared or direct
+            group[#group + 1] = key
+        end
+    end
+    for _, keys in ipairs({ direct, shared }) do
+        if #keys > CONTACT_MAX then
+            table.sort(keys, function(a, b) return db[a].seen > db[b].seen end)
+            for i = CONTACT_MAX + 1, #keys do db[keys[i]] = nil end
+        end
+    end
+end
+
+-- Sends our contact list to name, a few entries per message. wantTheirs asks for theirs back.
+local function SendContactList(name, wantTheirs)
+    ContactState(name:lower()).lastSwap = time()
+    local db, now = ContactDB(), time()
+    local list = {}
+    for _, c in pairs(db) do
+        if type(c) == "table" and c.name and not SameName(c.name, name) then list[#list + 1] = c end
+    end
+    table.sort(list, function(a, b) return (a.seen or 0) > (b.seen or 0) end)
+
+    local chunks, current = {}, {}
+    local length = 0
+    for _, c in ipairs(list) do
+        local entry = c.name .. "=" .. math.max(0, now - (c.seen or now))
+        if length + #entry + 1 > CONTACT_LIST_CHUNK and #current > 0 then
+            chunks[#chunks + 1] = table.concat(current, ",")
+            current, length = {}, 0
+        end
+        current[#current + 1] = entry
+        length = length + #entry + 1
+    end
+    -- An empty list still goes out, so a request for theirs is never lost
+    if #current > 0 or #chunks == 0 then chunks[#chunks + 1] = table.concat(current, ",") end
+
+    local flag = wantTheirs and "1" or "0"
+    for i, entries in ipairs(chunks) do
+        -- Only the first message asks for theirs; spaced out so the server doesn't throttle the burst
+        local ask = (i == 1) and flag or "0"
+        TTS:SafeAfter(0.5 + (i - 1) * 0.2, function()
+            TTS.Net:Send(name, "CONTACT_LIST:" .. ask .. ":" .. entries)
+        end)
+    end
+end
+
+-- Adds the players from another contact's list. A newer sighting than ours updates the
+-- age; nothing here counts as seeing them ourselves.
+local function MergeSharedContacts(entries)
+    local db, now = ContactDB(), time()
+    for entry in (entries or ""):gmatch("[^,]+") do
+        local name, age = entry:match("^(.-)=(%d+)$")
+        name = name and NormalizeName(name)
+        if name and name ~= "" and name ~= "Target Dummy" and not SameName(name, MyName()) then
+            local seen = now - tonumber(age)
+            local key = name:lower()
+            local existing = db[key]
+            if type(existing) ~= "table" then
+                db[key] = { name = name, seen = seen, shared = true }
+            elseif seen > (existing.seen or 0) then
+                existing.seen = seen
+            end
+        end
+    end
+    PruneContacts()
+end
+
+-- Saves (or refreshes) a contact we reached ourselves, by their waiting-room name
+-- ("Firstname Surname"). The first time they become a direct contact, we swap lists.
+function TTS.Net:AddContact(name)
+    name = NormalizeName(name)
+    if name == "" or name == "Target Dummy" or SameName(name, MyName()) then return end
+    local db = ContactDB()
+    local key = name:lower()
+    local before = db[key]
+    local becameDirect = type(before) ~= "table" or before.shared
+    db[key] = { name = name, seen = time() }
+    PruneContacts()
+
+    local s = ContactState(key)
+    if becameDirect and (time() - (s.lastSwap or 0)) >= CONTACT_SWAP_COOLDOWN then
+        SendContactList(name, true)
+    end
+end
+
+function TTS.Net:ContactRecentlyReached(name)
+    local s = contactState[NormalizeName(name):lower()]
+    return s and s.lastReached and (time() - s.lastReached) <= CONTACT_REACHED_FRESH or false
+end
+
+-- Our waiting-room state, as sent in pings and pongs
+local function MyLFMFields()
+    local queued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
+    return (queued and "1" or "0") .. ":" .. MyScore()
+end
+
+-- A contact reported they are queued: show them like a channel announce would
+local function NoteContactWaiting(name, score)
+    local WR = TTS.WaitingRoom
+    if not WR then return end
+    WR.players[name] = time()
+    if score then WR.scores[name:lower()] = score end
+    if WR.frame and WR.frame:IsShown() then WR:UpdateUI() end
+end
+
+-- Pings the contacts that are due: direct before shared, then most recently seen first
+-- (the waiting room calls this)
+function TTS.Net:PingContacts()
+    local E = TTS.Engine
+    if E and E.inMatch then return end
+    local db, now = ContactDB(), time()
+    local due = {}
+    for key, c in pairs(db) do
+        local s = ContactState(key)
+        if type(c) == "table" and c.name and not SameName(c.name, MyName())
+            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= CONTACT_PING_EVERY then
+            due[#due + 1] = c
+        end
+    end
+    table.sort(due, function(a, b)
+        if (a.shared or false) ~= (b.shared or false) then return not a.shared end
+        return (a.seen or 0) > (b.seen or 0)
+    end)
+
+    local fields = MyLFMFields()
+    for i = 1, math.min(#due, CONTACT_PINGS_PER_TICK) do
+        local name = due[i].name
+        local key = name:lower()
+        ContactState(key).lastPing = now
+        -- Spaced out so the server doesn't throttle the burst
+        TTS:SafeAfter((i - 1) * 0.15, function()
+            pendingPings[key] = time() + CONTACT_REPLY_WAIT
+            SendDirect("T:" .. name .. ":" .. MyName() .. ":CONTACT_PING:" .. fields, "WHISPER", name)
+            TTS:SafeAfter(CONTACT_REPLY_WAIT, function()
+                local s = ContactState(key)
+                if (s.lastReached or 0) < (s.lastPing or 0) then
+                    s.offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
+                end
+                if pendingPings[key] and pendingPings[key] <= time() then pendingPings[key] = nil end
+            end)
+        end)
+    end
+end
+
+-- Hides the "No player named ... is currently playing" error for contacts we just pinged
+-- (they are offline; nothing the player did). Other such errors still show.
+local notFoundPattern
+if ERR_CHAT_PLAYER_NOT_FOUND_S then
+    notFoundPattern = "^" .. ERR_CHAT_PLAYER_NOT_FOUND_S:gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%s", "(.+)") .. "$"
+end
+
+local function OfflinePingFilter(_, _, msg, ...)
+    if type(msg) ~= "string" or not next(pendingPings) then return false, msg, ... end
+    local lower = msg:lower()
+    local named = notFoundPattern and msg:match(notFoundPattern)
+    for key, expires in pairs(pendingPings) do
+        if expires >= time() and ((named and NormalizeName(named):lower() == key) or (not named and lower:find(key, 1, true))) then
+            pendingPings[key] = nil
+            ContactState(key).offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
+            return true
+        end
+    end
+    return false, msg, ...
+end
+if ChatFrame_AddMessageEventFilter then
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", OfflinePingFilter)
 end
 
 -- Unwraps a channel message and hands it to OnReceive if it is meant for us.
@@ -457,6 +679,7 @@ function TTS.Net:OnReceive(msg, sender)
         -- Extract full text after "LFM_ANNOUNCE:" without splitting internal spaces
         local pName = msg:match("^LFM_ANNOUNCE:(.+)$") or parts[2] or sender
         pName = NormalizeName(pName)
+        TTS.Net:AddContact(pName)
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
             -- The chat sender is the character name, which is what a party invite needs
@@ -495,6 +718,31 @@ function TTS.Net:OnReceive(msg, sender)
                 TTS.WaitingRoom:BroadcastPresence()
             end
         end
+        return
+
+    elseif cmd == "CONTACT_PING" or cmd == "CONTACT_PONG" then
+        -- Arrives by whisper, so OnChannelMessage has already routed replies to them that way
+        local key = sender:lower()
+        TTS.Net:AddContact(sender)
+        if cmd == "CONTACT_PONG" then
+            ContactState(key).lastReached = time()
+            ContactState(key).offlineUntil = nil
+            pendingPings[key] = nil
+        else
+            TTS.Net:Send(sender, "CONTACT_PONG:" .. MyLFMFields())
+        end
+        if parts[2] == "1" then NoteContactWaiting(sender, tonumber(parts[3])) end
+        return
+
+    elseif cmd == "CONTACT_LIST" then
+        local key = sender:lower()
+        local s = ContactState(key)
+        -- Asked for ours: answer once (AddContact below must not start a second swap)
+        local reply = parts[2] == "1" and (time() - (s.lastSwap or 0)) >= CONTACT_SWAP_COOLDOWN
+        if parts[2] == "1" then s.lastSwap = time() end
+        TTS.Net:AddContact(sender)
+        MergeSharedContacts(msg:match("^CONTACT_LIST:%d:(.*)$"))
+        if reply then SendContactList(sender, false) end
         return
     end
 
@@ -552,6 +800,7 @@ function TTS.Net:OnReceive(msg, sender)
                 if TTS.Engine and TTS.Engine:ValidateDeck() then
                     TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore())
                     TTS.Net.matchId = theirMatchId
+                    TTS.Net:AddContact(sender)
                     TTS.Engine:StartMatch(sender, false, false)
                     TTS.Engine.opponentScore = theirScore
                     TTS.Engine.remoteState.handCount = 7
@@ -622,6 +871,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         Print("|cFF00FF00[TTSE]|r Challenge accepted by " .. sender .. "!")
         TTS.Net.matchId = invite.matchId
+        TTS.Net:AddContact(sender)
         if TTS.Engine then
             TTS.Engine:StartMatch(sender, true, false)
             TTS.Engine.opponentScore = tonumber(parts[4])   -- nil from builds without collection scores
