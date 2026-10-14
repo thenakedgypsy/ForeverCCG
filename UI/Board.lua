@@ -1113,8 +1113,8 @@ local function ShowMap(map, tint)
         for col = 0, 3 do
             local i = row * 4 + col + 1
             local t = bgTiles[i]
-            t:SetTexture(string.format("Interface\WorldMap\%s\%s%d", map, map, i))
-            if not t:GetTexture() then
+            local loaded = t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i))
+            if loaded == false or not t:GetTexture() then
                 for _, other in ipairs(bgTiles) do other:Hide() end
                 return false
             end
