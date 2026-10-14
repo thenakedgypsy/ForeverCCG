@@ -419,6 +419,11 @@ soundLabel:SetPoint("RIGHT", soundCheck, "LEFT", 0, 1)
 soundLabel:SetText("Sounds")
 soundCheck:SetHitRectInsets(-(soundLabel:GetStringWidth() + 4), 0, 0, 0)
 
+-- Subtitle in the title strip, as on the other Forever: CCG windows
+local subtitle = B:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+subtitle:SetPoint("RIGHT", soundLabel, "LEFT", -14, 0)
+subtitle:SetText("Forever: CCG")
+
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.endTurnBtn:SetSize(90, 24)
 B.endTurnBtn:SetPoint("BOTTOMRIGHT", -30, 16)
@@ -433,6 +438,33 @@ B.nextPhaseBtn:SetText("To Combat")
 StyleButton(B.nextPhaseBtn)
 B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
 
+-- Takes back the last card played this phase (greyed out when it cannot be used)
+B.undoBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
+B.undoBtn:SetSize(70, 24)
+B.undoBtn:SetPoint("RIGHT", B.nextPhaseBtn, "LEFT", -8, 0)
+B.undoBtn:SetText("Undo")
+StyleButton(B.undoBtn)
+if B.undoBtn.SetMotionScriptsWhileDisabled then B.undoBtn:SetMotionScriptsWhileDisabled(true) end
+B.undoBtn:SetScript("OnClick", function(self)
+    TT:Hide(self)
+    TTS.Engine:RequestUndo()
+end)
+B.undoBtn:SetScript("OnEnter", function(self)
+    local E = TTS.Engine
+    local ok, reason = E:CanUndo()
+    local lines = {}
+    if ok then
+        table.insert(lines, { string.format("Return |cFFFFD200%s|r to your hand and take back everything it did.", E:UndoCardName()), 1, 1, 1, true })
+        if not E.isSolo then
+            table.insert(lines, { string.format("%s must agree, and their answer is final.", E.opponent or "Your opponent"), 0.7, 0.7, 0.7, true })
+        end
+    else
+        table.insert(lines, { reason, 1, 0.4, 0.4, true })
+    end
+    TT:ShowText(self, "ANCHOR_TOP", "Undo", nil, { r = 1, g = 0.82, b = 0, lines = lines })
+end)
+B.undoBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 B.phaseText:SetPoint("TOP", 0, -22)
 B.phaseText:SetText("Phase: SETUP")
@@ -446,6 +478,7 @@ function B:ShowMatchResult(headline)
     self.nextPhaseBtn:SetText("Match Over")
     self.nextPhaseBtn:Disable()
     self.endTurnBtn:Disable()
+    self.undoBtn:Disable()
     concedeBtn:Disable()
 end
 
@@ -501,7 +534,8 @@ end)
 B.oppLifeBtn:SetScript("OnEnter", function(self)
     TT:Show(self, "ANCHOR_BOTTOMLEFT", { main = function(tip)
         tip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
-        tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d", TTS.Engine.remoteState.life, TTS.Engine.remoteState.handCount), 1, 1, 1)
+        tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d  |  Cards in Deck: %s", TTS.Engine.remoteState.life,
+            TTS.Engine.remoteState.handCount, TTS.Engine:RemoteDeckCount() or "?"), 1, 1, 1)
         local enc = TTS.Engine.isSolo and TTS.Engine.encounter
         if enc and TTS.GetEncounterRuleLines then
             for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
@@ -1364,6 +1398,29 @@ ApplyBackTexture(myDeckFrame.back)
 myDeckFrame.count = myDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 myDeckFrame.count:SetPoint("BOTTOM", myDeckFrame, "TOP", 0, 2)
 
+-- Opponent's deck: top-right, at the end of their hand row, with the cards left beside it
+local oppDeckFrame = CreateFrame("Frame", nil, B)
+oppDeckFrame:SetSize(52, 68)
+oppDeckFrame:SetPoint("TOPRIGHT", B, "TOPRIGHT", -108, -46)
+oppDeckFrame.back = oppDeckFrame:CreateTexture(nil, "ARTWORK")
+oppDeckFrame.back:SetAllPoints(oppDeckFrame)
+ApplyBackTexture(oppDeckFrame.back)
+oppDeckFrame.count = oppDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+oppDeckFrame.count:SetPoint("RIGHT", oppDeckFrame, "LEFT", -6, 0)
+
+local function ShowDeckTip(self, owner, count)
+    TT:ShowText(self, "ANCHOR_LEFT", owner .. " Deck", nil, { r = 1, g = 0.82, b = 0,
+        lines = { count and string.format("%d cards left", count) or "Cards left: not known yet" } })
+end
+myDeckFrame:EnableMouse(true)
+myDeckFrame:SetScript("OnEnter", function(self) ShowDeckTip(self, "Your", #TTS.Engine.localState.deck) end)
+myDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
+oppDeckFrame:EnableMouse(true)
+oppDeckFrame:SetScript("OnEnter", function(self)
+    ShowDeckTip(self, (TTS.Engine.opponent or "Opponent") .. "'s", TTS.Engine:RemoteDeckCount())
+end)
+oppDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 -- =========================================================================
 -- 3D MODEL VISUAL HELPER
 -- =========================================================================
@@ -1662,9 +1719,12 @@ end
 -- Paints (or clears) the leaving look on a battlefield card frame
 local function PaintLeaving(f, kind)
     if not f.leaveTint then
-        f.leaveTint = f:CreateTexture(nil, "OVERLAY", nil, 6)
+        -- On the card's top layer (with the tap icon), so the skull covers the
+        -- model, frame and printed text instead of sitting under them
+        local layer = f.tapLayer or f
+        f.leaveTint = layer:CreateTexture(nil, "OVERLAY", nil, 5)
         f.leaveTint:SetAllPoints(f)
-        f.leaveSkull = f:CreateTexture(nil, "OVERLAY", nil, 7)
+        f.leaveSkull = layer:CreateTexture(nil, "OVERLAY", nil, 6)
         f.leaveSkull:SetTexture(LEAVE_SKULL)
         f.leaveSkull:SetPoint("CENTER", f, "CENTER", 0, 0)
     end
@@ -1681,6 +1741,7 @@ local function PaintLeaving(f, kind)
     local w = f:GetWidth() or 64
     f.leaveSkull:SetSize(w * 0.7, w * 0.7)
     f.leaveSkull:SetShown(kind == "died")
+    if kind == "died" and f.tapIcon then f.tapIcon:Hide() end
 end
 
 function B:UpdateDisplay()
@@ -1757,8 +1818,15 @@ function B:UpdateDisplay()
         B.endTurnBtn:Disable()
     elseif E.phase == "COMBAT_ATTACK" then
         B.nextPhaseBtn:Enable()
-        B.nextPhaseBtn:SetText("Declare Blocks")
-        B.endTurnBtn:Disable()
+        -- Until an attacker is declared the turn can still end (or skip on to Main 2)
+        local hasAttackers = E.blockingState and #E.blockingState.attackers > 0
+        if hasAttackers then
+            B.nextPhaseBtn:SetText("Declare Blocks")
+            B.endTurnBtn:Disable()
+        else
+            B.nextPhaseBtn:SetText("To Main 2")
+            B.endTurnBtn:Enable()
+        end
     elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
         B.nextPhaseBtn:SetText("Opponent Turn")
         B.nextPhaseBtn:Disable()
@@ -1774,6 +1842,9 @@ function B:UpdateDisplay()
             B.nextPhaseBtn:SetText("Next Phase")
         end
     end
+
+    if E:CanUndo() then B.undoBtn:Enable() else B.undoBtn:Disable() end
+    B.undoBtn:SetText((E.undo and E.undo.pending) and "Asking..." or "Undo")
 
     -- =====================================================================
     -- TOP PHASE TEXT
@@ -1799,6 +1870,7 @@ function B:UpdateDisplay()
     end
 
     myDeckFrame.count:SetText(#E.localState.deck)
+    oppDeckFrame.count:SetText(E:RemoteDeckCount() or "?")
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
     for i = 1, 10 do

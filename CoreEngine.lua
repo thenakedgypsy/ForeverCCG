@@ -397,6 +397,7 @@ function E:NextPhase()
     end
 
     if not self.isMyTurn then return end
+    if self:UndoBlocksAction() then return end
     self:CancelTargeting()
 
     if self.phase == "MAIN1" then
@@ -440,6 +441,12 @@ end
 
 function E:EndTurn()
     if not self.isMyTurn then return end
+    if self:UndoBlocksAction() then return end
+    -- Declared attackers have to be resolved first
+    if self.phase == "COMBAT_BLOCK" or (self.blockingState and #(self.blockingState.attackers or {}) > 0) then
+        self:Log("Finish combat before ending your turn.", "ERROR")
+        return
+    end
 
     for _, perm in ipairs(self.localState.field) do
         local mustAttack = (perm.id == "BOSS11")
@@ -556,6 +563,7 @@ end
 -- The opponent (or the AI) ended their turn: our turn begins
 function E:OnRemoteEndTurn()
     self:CancelTargeting()
+    self:OnLocalTurnStart()
     self:EndTurnCleanup(true)
 
     self.isMyTurn = true
@@ -602,6 +610,11 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.encounter = nil
     self.matchReward = nil
     self.bossIndex = nil
+    self:ResetUndo()
+    self.sentDeckCount = nil
+    self.remoteState.deckCount = nil
+    -- Deck size goes to the opponent once setup is done, not once per opening draw
+    self.startingMatch = true
 
     self.localState.life = 20
     self.localState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
@@ -634,6 +647,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.remoteState.handCount = 0
     self.remoteState.hand = {}
     self.remoteState.deck = {}
+    self.remoteState.deckCount = nil
     self.remoteState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
     self.remoteState.field = {}
     self.remoteState.graveyard = {}
@@ -679,6 +693,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     else
         self:SetPhase("WAITING")
     end
+    self.startingMatch = false
     -- Ready check at the start of every game, whoever goes first
     PlayTurnSound()
     self:RefreshUI()
@@ -815,6 +830,8 @@ function E:SetPhase(newPhase)
 end
 
 function E:RefreshUI()
+    -- PvP: the opponent's board shows how many cards are left in our deck
+    self:SyncDeckCount()
     if TTS.BoardFrame and TTS.BoardFrame:IsShown() then
         TTS.BoardFrame:UpdateDisplay()
     end

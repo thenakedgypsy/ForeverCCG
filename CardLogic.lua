@@ -889,6 +889,8 @@ function E:ActivateAbility(perm, isRemote, tgt)
     if not self:IsValidAbilityTarget(perm, isRemote, tgt) then return false end
     if ab.cost and not self:PayMana(ab.cost, isRemote) then return false end
     if ab.tap then perm.tapped = true end
+    -- An ability used after a card was played locks that play in (no undo past it)
+    if not isRemote then self:LockInPlays() end
 
     local st = isRemote and self.remoteState or self.localState
     local id = perm.id
@@ -1048,6 +1050,7 @@ function E:PlayCard(handIndex)
         self:Log("Cannot play cards outside of your turn.", "ERROR")
         return
     end
+    if self:UndoBlocksAction() then return end
 
     local cardId = self.localState.hand[handIndex]
     local card = TTS.Cards and TTS.Cards[cardId]
@@ -1063,6 +1066,7 @@ function E:PlayCard(handIndex)
             return
         end
 
+        local undoSnap = self:BeginUndoablePlay()
         table.remove(self.localState.hand, handIndex)
         table.insert(self.localState.field, { id = cardId, tapped = false, uid = time() + handIndex })
         self.landPlayedThisTurn = true
@@ -1070,6 +1074,7 @@ function E:PlayCard(handIndex)
         self:PlayNonCreatureCardSound()
 
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId) end
+        self:CommitUndoablePlay(undoSnap, cardId)
         self:RefreshUI()
         return
     end
@@ -1103,6 +1108,7 @@ function E:PlayCard(handIndex)
             self:Log("Permanents can only be cast during Main Phases.", "ERROR")
             return
         end
+        local undoSnap = self:BeginUndoablePlay()
         if not self:PayMana(card.cost) then
             self:Log("Not enough mana in pool.", "ERROR")
             return
@@ -1113,12 +1119,14 @@ function E:PlayCard(handIndex)
         -- Tell the opponent before enter triggers run, so the creature is on their board first
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_PERM:" .. cardId) end
         self:PutCreatureOntoBattlefield(cardId, false)
+        self:CommitUndoablePlay(undoSnap, cardId)
 
     elseif card.type == "Sorcery" then
         if self.phase ~= "MAIN1" and self.phase ~= "MAIN2" then
             self:Log("Sorceries can only be cast during Main Phases.", "ERROR")
             return
         end
+        local undoSnap = self:BeginUndoablePlay()
         if not self:PayMana(card.cost) then
             self:Log("Not enough mana in pool.", "ERROR")
             return
@@ -1130,6 +1138,7 @@ function E:PlayCard(handIndex)
         -- Sent before resolving, so the opponent sees the card before the damage it causes
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
         self:ResolveSpell(card, nil)
+        self:CommitUndoablePlay(undoSnap, cardId)
     end
 
     self:RefreshUI()
@@ -1222,6 +1231,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
         return
     end
 
+    local undoSnap = self:BeginUndoablePlay()
     if not self:PayMana(card.cost) then
         self:Log("Failed to pay mana.", "ERROR")
         self.targeting = nil
@@ -1240,6 +1250,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
             tgt.isRemote and "THEIRS" or "MINE", tgt.idx or 0))
     end
     self:ResolveSpell(card, tgt)
+    self:CommitUndoablePlay(undoSnap, cardId)
     self:RefreshUI()
 end
 
@@ -1294,6 +1305,7 @@ function E:TapCard(fieldIndex)
         self:Log("Cannot activate cards outside of your turn.", "ERROR")
         return
     end
+    if self:UndoBlocksAction() then return end
 
     if card.type == "Land" and not perm.tapped then
         perm.tapped = true

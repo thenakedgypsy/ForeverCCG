@@ -2,7 +2,7 @@
 ## Title: ForeverCCG
 ## Notes: 2-Player card game engine inspired by MTG.
 ## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards
-## Version: 0.12.1
+## Version: 0.12.2
 ## Author: the_naked_gypsy
 ## X-Engine: Tragic: The Saddening Engine
 ## X-Copyright: Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
@@ -82,6 +82,7 @@ Network.lua
 MinimapButton.lua
 CoreEngine.lua
 CardLogic.lua
+Undo.lua
 AI.lua
 SoloEncounters.lua
 WaitingRoom.lua

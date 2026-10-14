@@ -655,6 +655,7 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "PLAY_LAND" then
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
+            E:OnRemotePlay()   -- saves the board first, in case they ask to undo this card
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.field, {
                 id = cardId,
@@ -671,6 +672,7 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "PLAY_PERM" then
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
+            E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.field, {
                 id = cardId,
@@ -688,6 +690,7 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "CAST_SPELL" then
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
+            E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Spell", card and card.name or cardId), "ACTION")
@@ -813,6 +816,18 @@ function TTS.Net:OnReceive(msg, sender)
             if E.blockingState then
                 E:ResolveCombatDamage()
             end
+
+        elseif actionType == "UNDO_REQUEST" then
+            -- UNDO_REQUEST:<plays this turn>:<cardId>
+            E:OnUndoRequest(tonumber(parts[3]), parts[4])
+
+        elseif actionType == "UNDO_ACCEPT" or actionType == "UNDO_DENY" then
+            E:OnUndoAnswer(tonumber(parts[3]), actionType == "UNDO_ACCEPT")
+
+        elseif actionType == "DECK" then
+            -- DECK:<cards left in their deck>:<1 = they want ours too>
+            local n = tonumber(parts[3])
+            if n then E:OnRemoteDeckCount(n, parts[4] == "1") end
 
         elseif actionType == "END_TURN" then
             E:UntapSide(true)
