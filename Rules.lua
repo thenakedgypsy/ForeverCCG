@@ -173,14 +173,7 @@ local function SetupRuleCard(f, cardId)
     end
 
     -- 5. Power / Toughness
-    if f.pt then
-        if card.type == "Creature" and card.power and card.toughness then
-            f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
-            f.pt:Show()
-        else
-            f.pt:Hide()
-        end
-    end
+    if f.pt then TTS.ShowPrintedStats(f, card) end
 
     f:Show()
 
@@ -235,12 +228,7 @@ local function ShowRulesPreview(card)
         f.cost:Hide()
     end
 
-    if card.type == "Creature" and card.power and card.toughness then
-        f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
-        f.pt:Show()
-    else
-        f.pt:Hide()
-    end
+    TTS.ShowPrintedStats(f, card)
 
     f:Show()
     if TTS.UpdateCardRules then TTS.UpdateCardRules(f, PREVIEW_RULES) end

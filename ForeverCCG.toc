@@ -87,6 +87,7 @@ SoloEncounters.lua
 WaitingRoom.lua
 Rules.lua
 Sound.lua
+UI\CardStats.lua
 UI\Tooltips.lua
 UI\MainFrame.lua
 UI\Options.lua

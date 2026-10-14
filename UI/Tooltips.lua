@@ -472,8 +472,7 @@ local function DisplayType(card)
 end
 
 local function FormatPT(power, toughness, damage, colorCode)
-    if TTS.FormatPT then return TTS.FormatPT(power, toughness, damage, colorCode) end
-    return string.format("%s%d/%d|r", colorCode, power, toughness)
+    return TTS.FormatStats(power, toughness, damage, colorCode)
 end
 
 local function BuildCardMain(tip, card, ctx)
@@ -491,7 +490,7 @@ local function BuildCardMain(tip, card, ctx)
             p, t = TTS.Engine:GetCreatureStats(ctx.perm, ctx.isRemote)
             damage = ctx.perm.damage or 0
         end
-        tip:AddLine("P/T: " .. FormatPT(p, t, damage, "|cFFFFCC00"), 1, 0.8, 0)
+        tip:AddLine(FormatPT(p, t, damage, "|cFFFFCC00"), 1, 0.8, 0)
     end
 
     if card.text and card.text ~= "" then
@@ -623,10 +622,11 @@ local function StatusPanels(card, ctx)
         local pp, pt = perm.permPower or 0, perm.permToughness or 0
         local op, ot = p - card.power - tp - pp, t - card.toughness - tt - pt
         if p ~= card.power or t ~= card.toughness or tp ~= 0 or tt ~= 0 or pp ~= 0 or pt ~= 0 then
-            local lines = { { string.format("Printed %d/%d, now %d/%d.", card.power, card.toughness, p, t), 1, 0.82, 0 } }
-            if tp ~= 0 or tt ~= 0 then table.insert(lines, string.format("%s/%s until end of turn.", Signed(tp), Signed(tt))) end
-            if pp ~= 0 or pt ~= 0 then table.insert(lines, string.format("%s/%s permanently.", Signed(pp), Signed(pt))) end
-            if op ~= 0 or ot ~= 0 then table.insert(lines, string.format("%s/%s from other cards on the battlefield.", Signed(op), Signed(ot))) end
+            local function Stats(a, b) return TTS.FormatStats(a, b, 0, "|cFFFFFFFF", 12) end
+            local lines = { { "Printed " .. Stats(card.power, card.toughness) .. ", now " .. Stats(p, t) .. ".", 1, 0.82, 0 } }
+            if tp ~= 0 or tt ~= 0 then table.insert(lines, Stats(Signed(tp), Signed(tt)) .. " until end of turn.") end
+            if pp ~= 0 or pt ~= 0 then table.insert(lines, Stats(Signed(pp), Signed(pt)) .. " permanently.") end
+            if op ~= 0 or ot ~= 0 then table.insert(lines, Stats(Signed(op), Signed(ot)) .. " from other cards on the battlefield.") end
             table.insert(specs, TT:EffectPanel("modified", lines))
         end
     end

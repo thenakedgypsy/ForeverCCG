@@ -1456,9 +1456,11 @@ function E:ResolveCombatDamage()
                 local defCard = TTS.Cards[defPerm.id]
                 local defPower, defToughness = self:GetCreatureStats(defPerm, not isRemoteAttacking)
 
-                self:Log(string.format("Combat clash: %s (%d/%d, Deals %d vs %d Toughness) vs %s (%d/%d, Deals %d vs %d Toughness).",
-                    atkCard.name, atkPower, atkToughness, atkPower, defToughness,
-                    defCard.name, defPower, defToughness, defPower, atkToughness), "COMBAT")
+                local function Stats(p, t)
+                    return TTS.FormatStats and TTS.FormatStats(p, t, 0, "|cFFFFFFFF", 12) or string.format("%d/%d", p, t)
+                end
+                self:Log(string.format("Combat clash: %s (%s) vs %s (%s).",
+                    atkCard.name, Stats(atkPower, atkToughness), defCard.name, Stats(defPower, defToughness)), "COMBAT")
 
                 if not self.preventCombatDamage then
                     local atkFirst = self:HasKeyword(atkPerm, isRemoteAttacking, "firstStrike")

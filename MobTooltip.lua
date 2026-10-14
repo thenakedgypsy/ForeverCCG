@@ -258,12 +258,7 @@ local function ShowMobCard(tooltip, card)
         f.cost:Hide()
     end
 
-    if card.type == "Creature" and card.power and card.toughness then
-        f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
-        f.pt:Show()
-    else
-        f.pt:Hide()
-    end
+    TTS.ShowPrintedStats(f, card)
 
     f:Show()
     if TTS.UpdateCardRules then TTS.UpdateCardRules(f, PREVIEW_RULES) end

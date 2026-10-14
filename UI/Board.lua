@@ -691,11 +691,7 @@ local oppNonLandFrames = {}
 -- P/T text for a creature on the battlefield. Damage taken this turn lowers the
 -- toughness shown (in red) until it wears off at end of turn.
 local function FormatPT(power, toughness, damage, colorCode)
-    damage = damage or 0
-    if damage > 0 then
-        return string.format("%s%d/|r|cFFFF4444%d|r", colorCode, power, toughness - damage)
-    end
-    return string.format("%s%d/%d|r", colorCode, power, toughness)
+    return TTS.FormatStats(power, toughness, damage, colorCode)
 end
 
 local function Card_OnEnter(self)
@@ -977,7 +973,7 @@ local function UpdateCardRules(f, opts)
     -- a hovered hand card's zoom is left out so hovering never toggles the text
     local onScreen = w * f:GetEffectiveScale() / UIParent:GetEffectiveScale() / (f.hovered and 1.18 or 1)
 
-    f.pt:ClearAllPoints()
+    TTS.PlaceCardStats(f)
     if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
@@ -995,10 +991,8 @@ local function UpdateCardRules(f, opts)
             end
         end
         f.rules:Show()
-        f.pt:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * 0.08, h * 0.05)
     else
         f.rules:Hide()
-        f.pt:SetPoint("BOTTOM", f.overlay, "BOTTOM", 0, f.ptOffsetY or 0)
     end
 end
 
@@ -1438,12 +1432,7 @@ local function PaintPreviewCard(f, card)
         f.cost:Hide()
     end
 
-    if card.type == "Creature" and card.power and card.toughness then
-        f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
-        f.pt:Show()
-    else
-        f.pt:Hide()
-    end
+    TTS.ShowPrintedStats(f, card)
 
     f:Show()
     UpdateCardRules(f, PREVIEW_RULES)
@@ -1822,12 +1811,7 @@ function B:UpdateDisplay()
                 f.cost:Hide()
             end
 
-            if card.type == "Creature" and card.power and card.toughness then
-                f.pt:SetText(string.format("|cFFFFD200%d/%d|r", card.power, card.toughness))
-                f.pt:Show()
-            else
-                f.pt:Hide()
-            end
+            TTS.ShowPrintedStats(f, card)
 
             if E.pendingDiscard then
                 f.border:SetVertexColor(1.0, 0.4, 0.4)
@@ -1871,10 +1855,9 @@ function B:UpdateDisplay()
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, false)
                     local colorCode = (effP > card.power or effT > card.toughness) and "|cFF00FF00" or "|cFFFFD200"
-                    f.pt:SetText(FormatPT(effP, effT, perm.damage, colorCode))
-                    f.pt:Show()
+                    TTS.SetCardStats(f, effP, effT, perm.damage, colorCode)
                 else
-                    f.pt:Hide()
+                    TTS.HideCardStats(f)
                 end
 
                 local shade = perm.tapped and 0.4 or 1.0
@@ -1946,10 +1929,9 @@ function B:UpdateDisplay()
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, true)
-                    f.pt:SetText(FormatPT(effP, effT, perm.damage, "|cFFFFD200"))
-                    f.pt:Show()
+                    TTS.SetCardStats(f, effP, effT, perm.damage, "|cFFFFD200")
                 else
-                    f.pt:Hide()
+                    TTS.HideCardStats(f)
                 end
 
                 local shade = perm.tapped and 0.4 or 1.0

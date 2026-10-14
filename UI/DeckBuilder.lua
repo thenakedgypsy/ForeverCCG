@@ -737,12 +737,7 @@ local function PaintCardFrame(f, card, costSize)
         f.cost:Hide()
     end
 
-    if card.type == "Creature" and card.power and card.toughness then
-        f.pt:SetText(string.format("|cFFFFD200%s/%s|r", tostring(card.power), tostring(card.toughness)))
-        f.pt:Show()
-    else
-        f.pt:Hide()
-    end
+    TTS.ShowPrintedStats(f, card)
 end
 
 -- Rules text printed on the card, matching Board.lua's UpdateCardRules: same
@@ -784,7 +779,7 @@ local function PrintCardRules(f, card, opts)
     local w, h = f:GetSize()
     local onScreen = w * (D:GetScale() or 1)
 
-    f.pt:ClearAllPoints()
+    TTS.PlaceCardStats(f)
     if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
@@ -802,10 +797,8 @@ local function PrintCardRules(f, card, opts)
             end
         end
         f.rules:Show()
-        f.pt:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * 0.08, h * 0.05)
     else
         f.rules:Hide()
-        f.pt:SetPoint("BOTTOM", f.overlay, "BOTTOM", 0, f.ptOffsetY or math.floor(h * 0.18))
     end
 end
 
