@@ -725,7 +725,21 @@ local function Card_OnLeave(self)
     if HideBoardPreview then HideBoardPreview() end
 end
 
-local function GetCardFrameTexture(card)
+-- Dual-colour frames: Textures\Cards\card_frame_<sphere>_<sphere>.png, spheres in alphabetical order
+local SPHERE_FILE = { W = "holy", U = "arcane", B = "shadow", R = "fire", G = "nature" }
+
+local function DualFrameTexture(card)
+    local spheres = {}
+    for _, col in ipairs({ "W", "U", "B", "R", "G" }) do
+        if card.cost and card.cost:find("{" .. col .. "}", 1, true) then table.insert(spheres, SPHERE_FILE[col]) end
+    end
+    if #spheres ~= 2 then return nil end
+    table.sort(spheres)
+    return TEXTURE_ROOT .. "Cards\\card_frame_" .. spheres[1] .. "_" .. spheres[2] .. ".png"
+end
+
+-- The card's single-colour frame (its colour, school, or the first colour in its cost)
+local function SingleFrameTexture(card)
     if not card then return CARD_FRAME_DEF end
     if card.color and CARD_FRAMES[string.upper(card.color)] then
         return CARD_FRAMES[string.upper(card.color)]
@@ -742,9 +756,18 @@ local function GetCardFrameTexture(card)
     return CARD_FRAME_DEF
 end
 
+-- Two colours in the cost: the dual frame for that pair; otherwise the single-colour frame
+local function GetCardFrameTexture(card)
+    return (card and DualFrameTexture(card)) or SingleFrameTexture(card)
+end
+
 local function ApplyFrameTexture(t, card)
     local tex = GetCardFrameTexture(card)
     t:SetTexture(tex)
+    -- A missing dual frame falls back to the single-colour one, then the default
+    if not t:GetTexture() and card then
+        t:SetTexture(SingleFrameTexture(card))
+    end
     if not t:GetTexture() then
         t:SetTexture(CARD_FRAME_DEF)
         if not t:GetTexture() then
