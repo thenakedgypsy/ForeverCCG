@@ -339,8 +339,68 @@ local function UpdateHit(h, dt)
     h.num:SetAlpha(1 - p * p)
 end
 
+-- =========================================================================
+-- FLOATING TEXT
+-- Numbers and messages that rise and fade like the damage numbers on the life plates:
+-- damage and healing on creatures and players, and "Invalid target" at the cursor.
+-- =========================================================================
+local FLOAT_TIME, FLOAT_RISE, FLOAT_STACK = 1.0, 36, 14
+TTS.FLOAT_DAMAGE = { 1, 0.2, 0.2 }
+TTS.FLOAT_HEAL   = { 0.2, 1, 0.2 }
+TTS.FLOAT_WARN   = { 1, 0.25, 0.25 }
+
+local floats, freeFloats = {}, {}
+
+-- text at a frame's centre (frame nil = at the cursor); big = the life plates' size
+function TTS.FloatText(text, color, frame, big)
+    local x, y
+    if frame then
+        local p = Pos(frame)
+        if not p then return end
+        x, y = p.x, p.y
+    else
+        local scale = layer:GetEffectiveScale()
+        local cx, cy = GetCursorPosition()
+        local left, bottom = layer:GetLeft(), layer:GetBottom()
+        if not (cx and left) then return end
+        x, y = cx / scale - left, cy / scale - bottom + 12
+    end
+    -- Several at once on the same spot stack upwards instead of overlapping
+    local stack = 0
+    for _, fl in ipairs(floats) do
+        if fl.frame == frame and frame and fl.t < 0.3 then stack = stack + 1 end
+    end
+    local fs = table.remove(freeFloats) or layer:CreateFontString(nil, "OVERLAY")
+    fs:SetFontObject(big and "GameFontNormalHuge" or "GameFontNormalLarge")
+    fs:SetShadowOffset(2, -2)
+    fs:SetShadowColor(0, 0, 0, 1)
+    fs:SetTextColor(color[1], color[2], color[3])
+    fs:SetText(text)
+    fs:SetAlpha(1)
+    fs:Show()
+    table.insert(floats, { fs = fs, frame = frame, x = x, y = y + stack * FLOAT_STACK, t = 0 })
+end
+
+local function UpdateFloats(dt)
+    for i = #floats, 1, -1 do
+        local fl = floats[i]
+        fl.t = fl.t + dt
+        local p = fl.t / FLOAT_TIME
+        if p >= 1 then
+            fl.fs:Hide()
+            table.insert(freeFloats, fl.fs)
+            table.remove(floats, i)
+        else
+            fl.fs:ClearAllPoints()
+            fl.fs:SetPoint("CENTER", layer, "BOTTOMLEFT", fl.x, fl.y + FLOAT_RISE * p)
+            fl.fs:SetAlpha(1 - p * p)
+        end
+    end
+end
+
 layer:SetScript("OnUpdate", function(_, dt)
     UpdateAim()
+    UpdateFloats(dt)
     UpdateReveal(dt)
     for i = #flashes, 1, -1 do
         local fl = flashes[i]
@@ -372,9 +432,11 @@ local function InstallHooks()
             local targeting = self.targeting
             local results = { origResolve(self, targetType, isRemote, fieldIndex, ...) }
             -- Targeting cleared or replaced: the target was accepted (the spell reveal or
-            -- the ability arrow below draws the arrow)
+            -- the ability arrow below draws the arrow). Still targeting: it was refused.
             if targeting and self.targeting ~= targeting then
                 PlayFX(SOUND_TARGET)
+            elseif targeting and self.targeting == targeting then
+                TTS.FloatText("Invalid target", TTS.FLOAT_WARN, nil)
             end
             return unpack(results)
         end

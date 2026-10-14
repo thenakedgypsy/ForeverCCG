@@ -1522,7 +1522,54 @@ local lastField = {}                               -- side -> the field table la
 local leavingPerms = setmetatable({}, { __mode = "k" })
 local diedPerms = setmetatable({}, { __mode = "k" })
 
--- Deaths go through HandleCreatureDeath; any other creature that disappears was returned
+-- =========================================================================
+-- DAMAGE & HEALING NUMBERS
+-- Each redraw compares a creature's damage with the last one: more shows a red "-N",
+-- less a green "+N" (TTS.FloatText, UI\TargetFX.lua). The end-of-turn reset and
+-- regeneration are not healing. Players: life going up shows a green "+N" (damage to
+-- players has its own number in TargetFX).
+-- =========================================================================
+local lastDamage = setmetatable({}, { __mode = "k" })
+local lastLife = {}
+local pendingFloats = {}
+
+local function SilenceDamage(perm)
+    lastDamage[perm] = perm.damage or 0
+end
+
+local function TrackDamage(perm, isRemote, f)
+    local dmg = perm.damage or 0
+    local prev = lastDamage[perm]
+    lastDamage[perm] = dmg
+    if not prev or dmg == prev then return end
+    if dmg > prev then
+        -- Deathtouch marks 999: show no more than the creature could take
+        local _, t = TTS.Engine:GetCreatureStats(perm, isRemote)
+        local shown = math.min(dmg - prev, math.max(1, t - prev))
+        table.insert(pendingFloats, { f, "-" .. shown, "FLOAT_DAMAGE" })
+    else
+        table.insert(pendingFloats, { f, "+" .. (prev - dmg), "FLOAT_HEAL" })
+    end
+end
+
+local function EmitFloats()
+    if TTS.FloatText then
+        for _, p in ipairs(pendingFloats) do TTS.FloatText(p[2], TTS[p[3]], p[1]) end
+    end
+    wipe(pendingFloats)
+end
+
+local function TrackLife(E, isRemote, plate)
+    local life = (isRemote and E.remoteState or E.localState).life
+    local prev = lastLife[isRemote]
+    lastLife[isRemote] = life
+    if prev and life > prev and TTS.FloatText then
+        TTS.FloatText("+" .. (life - prev), TTS.FLOAT_HEAL, plate, true)
+    end
+end
+
+-- Deaths go through HandleCreatureDeath; any other creature that disappears was returned.
+-- Damage wiped at the end of a turn or by regeneration is not shown as healing.
 do
     local E = TTS.Engine
     local origDeath = E and E.HandleCreatureDeath
@@ -1530,6 +1577,31 @@ do
         E.HandleCreatureDeath = function(self, perm, ...)
             if perm then diedPerms[perm] = true end
             return origDeath(self, perm, ...)
+        end
+    end
+    local origClear = E and E.ClearCreatureDamage
+    if origClear then
+        E.ClearCreatureDamage = function(self, ...)
+            local results = { origClear(self, ...) }
+            for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
+                for _, p in ipairs(field) do SilenceDamage(p) end
+            end
+            return unpack(results)
+        end
+    end
+    local origSBA = E and E.CheckStateBasedActions
+    if origSBA then
+        E.CheckStateBasedActions = function(self, ...)
+            -- Note which creatures had a regeneration shield; one used up wiped its damage
+            local shielded = {}
+            for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
+                for _, p in ipairs(field) do if p.regenerateShield then shielded[p] = true end end
+            end
+            local results = { origSBA(self, ...) }
+            for p in pairs(shielded) do
+                if not p.regenerateShield then SilenceDamage(p) end
+            end
+            return unpack(results)
         end
     end
 end
@@ -1542,6 +1614,7 @@ local function BattlefieldList(E, isRemote)
         lastField[isRemote] = field
         lastShown[isRemote] = {}
         leaving[isRemote] = {}
+        lastLife[isRemote] = nil
     end
 
     local present = {}
@@ -1820,6 +1893,7 @@ function B:UpdateDisplay()
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
+                if card.type == "Creature" then TrackDamage(perm, false, f) end
             end
         end
     end
@@ -1890,12 +1964,18 @@ function B:UpdateDisplay()
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
+                if card.type == "Creature" then TrackDamage(perm, true, f) end
             end
         end
     end
 
     LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAND_MAX_SCALE)
     LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, CREATURE_MAX_SCALE)
+
+    -- Damage / healing numbers for this redraw (cards are in place now)
+    EmitFloats()
+    TrackLife(E, false, B.myLifeBtn)
+    TrackLife(E, true, B.oppLifeBtn)
 
     for i = oppLandIdx + 1, #oppLandFrames do
         oppLandFrames[i]:Hide()

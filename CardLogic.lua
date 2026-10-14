@@ -1160,8 +1160,6 @@ function E:ResolveAbilityTarget(targetKind, isRemote, fieldIndex)
 
     if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
         self:Log(CreatureName(tgt.perm) .. " has Hexproof and cannot be targeted!", "ERROR")
-        self.targeting = nil
-        self:RefreshUI()
         return
     end
 
@@ -1221,8 +1219,6 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
 
     if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
         self:Log(TTS.Cards[tgt.perm.id].name .. " has Hexproof and cannot be targeted!", "ERROR")
-        self.targeting = nil
-        self:RefreshUI()
         return
     end
 
