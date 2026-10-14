@@ -170,7 +170,13 @@ local lastRefill = GetTime and GetTime() or 0
 local pumpScheduled = false
 local reportedFailures = {}
 
-local THROTTLED = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.AddonMessageThrottle
+-- Result codes that mean "too fast, try again": the per-prefix addon limit (3) and the
+-- custom channel's own limit (8, hit by bursts like a big attack)
+local RESULTS = Enum and Enum.SendAddonMessageResult
+local THROTTLE_CODES = {
+    [(RESULTS and RESULTS.AddonMessageThrottle) or 3] = true,
+    [(RESULTS and RESULTS.ChannelThrottle) or 8] = true,
+}
 
 -- Returns "ok", "throttled" or "failed", plus the client's result code
 local function RawSend(m)
@@ -178,7 +184,7 @@ local function RawSend(m)
     local result = send(PREFIX, m.msg, m.chatType, m.target)
     -- Older clients return nothing or true; newer ones a result code (0 = success)
     if result == nil or result == true or result == 0 then return "ok" end
-    if THROTTLED and result == THROTTLED then return "throttled", result end
+    if THROTTLE_CODES[result] then return "throttled", result end
     return "failed", result
 end
 
