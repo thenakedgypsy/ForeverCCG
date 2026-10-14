@@ -307,51 +307,101 @@ buttonLayer:SetFrameLevel(lineLayer:GetFrameLevel() + 5)
 -- =========================================================================
 local placed = {}   -- [continent] = { [id] = { x, y } } in map pixels
 
+-- Hand-placed zones (map pixels) where the zone centres sit too close for their names
+local ZONE_PLACEMENT = {
+    DUN = { 470, 362 }, LOC = { 562, 350 }, SEA = { 466, 398 }, BAD = { 574, 404 },
+    BUR = { 510, 456 }, ELW = { 446, 472 }, RED = { 542, 484 }, WES = { 402, 512 },
+    DSK = { 472, 522 }, SIL = { 404, 192 },
+}
+
+-- Each button takes up its square, and a zone also takes up the strip of its name below it.
+-- Anything that touches is pushed apart along the shorter way out: a dungeon moves out of a
+-- zone's way, two zones or two dungeons share the move. Zones stay within ZONE_DRIFT of
+-- their place and dungeons within DUNGEON_DRIFT of their entrance.
+local LABEL_CHAR_W, LABEL_H = 5.6, 11
+local LAYOUT_GAP = 3
+local ZONE_DRIFT, DUNGEON_DRIFT = 24, 50
+
+local function Boxes(it)
+    local half = it.size / 2
+    local list = { { it.x - half, it.y - half, it.x + half, it.y + half } }
+    if it.labelW then
+        local top = it.y + half + 1
+        table.insert(list, { it.x - it.labelW / 2, top, it.x + it.labelW / 2, top + LABEL_H })
+    end
+    return list
+end
+
+local function Clamp(it)
+    local dx, dy = it.x - it.ax, it.y - it.ay
+    local d = math.sqrt(dx * dx + dy * dy)
+    local maxD = it.isDungeon and DUNGEON_DRIFT or ZONE_DRIFT
+    if d > maxD then
+        it.x, it.y = it.ax + dx / d * maxD, it.ay + dy / d * maxD
+    end
+    local half = it.size / 2
+    it.x = math.max(half + 2, math.min(MAP_W - half - 2, it.x))
+    it.y = math.max(half + 2, math.min(MAP_H - half - 2 - (it.labelW and LABEL_H or 0), it.y))
+end
+
 local function Layout(contId)
     if placed[contId] then return placed[contId] end
-    local pos, items = {}, {}
+    local items = {}
     for id, p in pairs(TTS.SoloMapPositions or {}) do
         local enc = TTS.SoloEncounters[id]
         if enc and p[1] == contId then
-            pos[id] = { p[2] * MAP_W, p[3] * MAP_H }
-            table.insert(items, id)
+            local fixed = ZONE_PLACEMENT[id]
+            local x, y = fixed and fixed[1] or p[2] * MAP_W, fixed and fixed[2] or p[3] * MAP_H
+            local isDungeon = enc.kind == "dungeon"
+            table.insert(items, {
+                id = id, isDungeon = isDungeon, x = x, y = y, ax = x, ay = y,
+                size = isDungeon and DUNGEON_SIZE or ZONE_SIZE,
+                labelW = (not isDungeon) and #enc.name * LABEL_CHAR_W or nil,
+            })
         end
     end
-    table.sort(items)
-    for _ = 1, 60 do
+    table.sort(items, function(a, b) return a.id < b.id end)
+
+    for _ = 1, 200 do
         local moved = false
         for i = 1, #items do
             for j = i + 1, #items do
                 local a, b = items[i], items[j]
-                local ea, eb = TTS.SoloEncounters[a], TTS.SoloEncounters[b]
-                local da, db = ea.kind == "dungeon", eb.kind == "dungeon"
-                if da or db then
-                    local pa, pb = pos[a], pos[b]
-                    local dx, dy = pb[1] - pa[1], pb[2] - pa[2]
-                    local d = math.sqrt(dx * dx + dy * dy)
-                    local need = ((da and DUNGEON_SIZE or ZONE_SIZE) + (db and DUNGEON_SIZE or ZONE_SIZE)) / 2 + 6
-                    if d < need then
-                        if d < 0.01 then dx, dy, d = 1, 0, 1 end
-                        local push = (need - d)
-                        local ux, uy = dx / d, dy / d
-                        if da and db then
-                            pa[1], pa[2] = pa[1] - ux * push / 2, pa[2] - uy * push / 2
-                            pb[1], pb[2] = pb[1] + ux * push / 2, pb[2] + uy * push / 2
-                        elseif da then
-                            pa[1], pa[2] = pa[1] - ux * push, pa[2] - uy * push
-                        else
-                            pb[1], pb[2] = pb[1] + ux * push, pb[2] + uy * push
+                for _, ba in ipairs(Boxes(a)) do
+                    for _, bb in ipairs(Boxes(b)) do
+                        local ox = math.min(ba[3], bb[3]) - math.max(ba[1], bb[1]) + LAYOUT_GAP
+                        local oy = math.min(ba[4], bb[4]) - math.max(ba[2], bb[2]) + LAYOUT_GAP
+                        if ox > LAYOUT_GAP and oy > LAYOUT_GAP then
+                            -- Which way b goes relative to a, along the shorter way out
+                            local mx, my = 0, 0
+                            if ox < oy then
+                                mx = ((bb[1] + bb[3]) >= (ba[1] + ba[3])) and ox or -ox
+                            else
+                                my = ((bb[2] + bb[4]) >= (ba[2] + ba[4])) and oy or -oy
+                            end
+                            local shareA, shareB = 0.5, 0.5
+                            if a.isDungeon ~= b.isDungeon then
+                                shareA, shareB = a.isDungeon and 1 or 0, b.isDungeon and 1 or 0
+                            end
+                            a.x, a.y = a.x - mx * shareA, a.y - my * shareA
+                            b.x, b.y = b.x + mx * shareB, b.y + my * shareB
+                            Clamp(a)
+                            Clamp(b)
+                            moved = true
                         end
-                        moved = true
                     end
                 end
             end
         end
         if not moved then break end
     end
+
+    local pos = {}
+    for _, it in ipairs(items) do pos[it.id] = { it.x, it.y } end
     placed[contId] = pos
     return pos
 end
+TTS.SoloMapLayout = Layout
 
 -- =========================================================================
 -- REWARD PREVIEW (docked to the left of the window, like the Deckbuilder's)
