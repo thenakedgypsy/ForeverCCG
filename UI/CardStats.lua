@@ -10,14 +10,15 @@ TTS = TTS or {}
 
 -- =========================================================================
 -- POWER & TOUGHNESS
--- Shown as a sword and a number (power) in a card's bottom-left corner and a number and
--- a heart (toughness) in its bottom-right corner; tooltips use the same two symbols.
+-- Shown as a number and a sword (power) in a card's bottom-left corner and a number and
+-- a shield (toughness) in its bottom-right corner; tooltips use the same two symbols.
+-- The symbols are gold and bronze metalwork to match the card frames.
 -- Damage taken this turn lowers the toughness shown (in red) until it wears off.
 -- Card frames keep toughness in f.pt (as before) and gain f.power for the power.
 -- =========================================================================
 local SYMBOLS = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\"
 TTS.POWER_ICON     = SYMBOLS .. "Sword.png"
-TTS.TOUGHNESS_ICON = SYMBOLS .. "Heart.png"
+TTS.TOUGHNESS_ICON = SYMBOLS .. "Shield.png"
 
 local GOLD = "|cFFFFD200"
 local CORNER_X, CORNER_Y = 0.08, 0.05   -- corner inset, as a share of the card's width / height
@@ -26,12 +27,12 @@ local function Icon(path, size)
     return string.format("|T%s:%d:%d|t", path, size, size)
 end
 
--- "[sword] 3"
+-- "3 [sword]"
 function TTS.PowerText(power, colorCode, size)
-    return Icon(TTS.POWER_ICON, size or 14) .. (colorCode or GOLD) .. tostring(power) .. "|r"
+    return (colorCode or GOLD) .. tostring(power) .. "|r" .. Icon(TTS.POWER_ICON, size or 14)
 end
 
--- "5 [heart]", red when damage has lowered it
+-- "5 [shield]", red when damage has lowered it
 function TTS.ToughnessText(toughness, damage, colorCode, size)
     damage = damage or 0
     local shown = (damage > 0) and ("|cFFFF4444" .. (toughness - damage) .. "|r")
@@ -39,7 +40,7 @@ function TTS.ToughnessText(toughness, damage, colorCode, size)
     return shown .. Icon(TTS.TOUGHNESS_ICON, size or 14)
 end
 
--- One line for tooltips: "[sword] 3   5 [heart]"
+-- One line for tooltips: "3 [sword]    5 [shield]"
 function TTS.FormatStats(power, toughness, damage, colorCode, size)
     return TTS.PowerText(power, colorCode, size) .. "    " .. TTS.ToughnessText(toughness, damage, colorCode, size)
 end
