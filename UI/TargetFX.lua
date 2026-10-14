@@ -368,7 +368,7 @@ function TTS.FloatText(text, color, frame, big)
     -- Several at once on the same spot stack upwards instead of overlapping
     local stack = 0
     for _, fl in ipairs(floats) do
-        if fl.frame == frame and frame and fl.t < 0.3 then stack = stack + 1 end
+        if fl.frame == frame and fl.t < 0.3 then stack = stack + 1 end
     end
     local fs = table.remove(freeFloats) or layer:CreateFontString(nil, "OVERLAY")
     fs:SetFontObject(big and "GameFontNormalHuge" or "GameFontNormalLarge")
@@ -426,8 +426,46 @@ local function InstallHooks()
     local E = TTS.Engine
     if not E then return end
 
+    -- Errors from the player's own actions also float at the cursor in red: only while one of
+    -- the board's click handlers is running, so the AI's fizzles never appear under the mouse.
+    local userDepth, quietDepth = 0, 0
+    local function Counted(fn, isQuiet)
+        return function(self, ...)
+            userDepth = userDepth + 1
+            if isQuiet then quietDepth = quietDepth + 1 end
+            local results = { pcall(fn, self, ...) }
+            userDepth = userDepth - 1
+            if isQuiet then quietDepth = quietDepth - 1 end
+            if not results[1] then error(results[2], 0) end
+            return unpack(results, 2)
+        end
+    end
+    for _, name in ipairs({ "PlayCard", "TapCard", "ClickOpponentCard", "NextPhase", "EndTurn" }) do
+        if E[name] then E[name] = Counted(E[name]) end
+    end
+
+    -- First sentence of a log line, without colour codes or the right-click hint
+    local function ShortMessage(msg)
+        local s = tostring(msg or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+        s = s:gsub("%s*%(Right%-click to cancel%)", "")
+        local cut = s:find("[%.!]%s")
+        if cut then s = s:sub(1, cut) end
+        return TTS.FormatSymbols and TTS:FormatSymbols(s, 16) or s
+    end
+
+    if E.Log then
+        local origLog = E.Log
+        E.Log = function(self, msg, category, ...)
+            if category == "ERROR" and userDepth > 0 and quietDepth == 0 and self.inMatch then
+                TTS.FloatText(ShortMessage(msg), TTS.FLOAT_WARN, nil)
+            end
+            return origLog(self, msg, category, ...)
+        end
+    end
+
     if E.ResolveTarget then
-        local origResolve = E.ResolveTarget
+        -- Its own refusals float "Invalid target" below, so its log lines stay quiet
+        local origResolve = Counted(E.ResolveTarget, true)
         E.ResolveTarget = function(self, targetType, isRemote, fieldIndex, ...)
             local targeting = self.targeting
             local results = { origResolve(self, targetType, isRemote, fieldIndex, ...) }
