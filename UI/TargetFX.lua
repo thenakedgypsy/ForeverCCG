@@ -132,7 +132,6 @@ end
 local REVEAL_HOLD = 1.0    -- seconds the card stays fully visible
 local REVEAL_SCALE = 0.75  -- size of the shown card relative to the full preview card
 local REVEAL_FADE = 0.25   -- then fades out over this long
-local REVEAL_COLOR = { 1.0, 0.82, 0.0, 1.0 }
 local REVEAL_Y = { [true] = 150, [false] = -40 }   -- card centre above the board's centre, by caster
 
 local reveal
@@ -157,24 +156,47 @@ local function TargetFrame(d)
     if idx then return FindFieldFrame(isRemote and true or false, idx) end
 end
 
--- Positions of everything an effect will touch (taken before it resolves: creatures may die)
+-- Arrow colour by what an effect does to a target: damage beats healing beats anything else
+local EFFECT_COLORS = {
+    damage = { 1.0, 0.15, 0.15, 1.0 },
+    heal   = { 0.2, 1.0, 0.2, 1.0 },
+    other  = { 1.0, 0.82, 0.0, 1.0 },
+}
+local OP_KIND = { damage = "damage", dot = "damage", destroy = "damage", heal = "heal", hot = "heal" }
+local KIND_RANK = { damage = 3, heal = 2, other = 1 }
+
+-- Everything an effect will touch, with the arrow colour for each: { { pos, color }, ... }
+-- (positions are taken before it resolves: creatures may die)
 local function EffectTargets(eff, tgt, casterIsRemote)
     local E = TTS.Engine
-    local list, seen = {}, {}
-    local function Add(d)
+    local list, byFrame = {}, {}
+    local function Add(d, op)
         local f = d and TargetFrame(d)
-        if f and not seen[f] then
-            seen[f] = true
+        if not f then return end
+        local kind = OP_KIND[op and op.op] or "other"
+        local entry = byFrame[f]
+        if not entry then
             local p = Pos(f)
-            if p then table.insert(list, p) end
+            if not p then return end
+            entry = { pos = p, kind = kind }
+            byFrame[f] = entry
+            table.insert(list, entry)
+        elseif KIND_RANK[kind] > KIND_RANK[entry.kind] then
+            entry.kind = kind
         end
     end
-    if tgt then Add(tgt) end
+    local targetedOps = 0
     for _, op in ipairs(eff and eff.ops or {}) do
-        if op.to and op.to ~= "target" then
-            for _, d in ipairs(E:CollectSpellTargets(op.to, nil, casterIsRemote, op.filter)) do Add(d) end
+        if op.to == "target" then
+            if tgt then Add(tgt, op) end
+            targetedOps = targetedOps + 1
+        elseif op.to then
+            for _, d in ipairs(E:CollectSpellTargets(op.to, nil, casterIsRemote, op.filter)) do Add(d, op) end
         end
     end
+    -- A target with no op naming it (e.g. an ability without effect data) still gets an arrow
+    if tgt and targetedOps == 0 then Add(tgt, nil) end
+    for _, entry in ipairs(list) do entry.color = EFFECT_COLORS[entry.kind] end
     return list
 end
 
@@ -190,8 +212,8 @@ local function RevealSpell(card, casterIsRemote, targets)
     f:SetAlpha(1)
     f.t = 0
     local src = Pos(f)
-    for _, dst in ipairs(targets or {}) do
-        FlashArrow(src, dst, REVEAL_COLOR, REVEAL_HOLD)
+    for _, t in ipairs(targets or {}) do
+        FlashArrow(src, t.pos, t.color, REVEAL_HOLD)
     end
 end
 
@@ -357,16 +379,22 @@ local function InstallHooks()
 
     -- Activated abilities: an arrow from the creature to what it hits
     if E.ActivateAbility then
-        local ABILITY_AREA = { BOSS07 = "enemy_creatures", BOSS10 = "enemy_creatures" }
+        -- What each ability does, in spell-effect shape, for its arrows and their colours
+        local ABILITY_EFFECTS = {
+            BOSS01 = { ops = { { op = "damage", to = "target" } } },
+            BOSS04 = { ops = { { op = "tuck", to = "target" } } },
+            BOSS07 = { ops = { { op = "damage", to = "enemy_creatures" } } },
+            BOSS08 = { ops = { { op = "freeze", to = "target" } } },
+            BOSS10 = { ops = { { op = "damage", to = "enemy_creatures" } } },
+        }
         local origAbility = E.ActivateAbility
         E.ActivateAbility = function(self, perm, isRemote, tgt, ...)
             local srcRemote, srcIdx = self:FindPerm(perm)
             local src = srcIdx and Pos(FindFieldFrame(srcRemote and true or false, srcIdx))
-            local area = ABILITY_AREA[perm.id]
-            local targets = EffectTargets(area and { ops = { { to = area } } }, tgt, isRemote)
+            local targets = EffectTargets(ABILITY_EFFECTS[perm.id], tgt, isRemote)
             local ok = origAbility(self, perm, isRemote, tgt, ...)
             if ok then
-                for _, dst in ipairs(targets) do FlashArrow(src, dst, TARGET_COLOR, REVEAL_HOLD) end
+                for _, t in ipairs(targets) do FlashArrow(src, t.pos, t.color, REVEAL_HOLD) end
                 if isRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
             end
             return ok
