@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["TAN11"] = {
+        id = "TAN11", name = "Marin Noggenfogger", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 3, isReward = true, displayId = 7185,
+        zone = "Tanaris", creatureType = "Humanoid", npcEntry = 7564,
+        anthem = { tag = "zone", value = "Tanaris", p = 1 },
+        etb = { ops = { { op = "draw", n = 1 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Marin Noggenfogger enters the battlefield, draw a card. Other Tanaris creatures you control get +1/+0."
+    },
 })

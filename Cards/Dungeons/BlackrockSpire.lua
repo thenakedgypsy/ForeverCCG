@@ -149,4 +149,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Haste, Trample."
     },
+    -- Solo reward
+    ["BRS20"] = {
+        id = "BRS20", name = "Warchief Rend Blackhand", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
+        power = 6, toughness = 5, haste = true, trample = true, isReward = true, displayId = 9778,
+        zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcEntry = 10429,
+        anthem = { tag = "zone", value = "Blackrock Spire", p = 1, kw = { "haste" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Haste, Trample. Other Blackrock Spire creatures you control get +1/+0 and Haste."
+    },
 })

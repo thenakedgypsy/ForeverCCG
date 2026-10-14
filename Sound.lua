@@ -43,6 +43,7 @@ TTS.CreatureSounds = {
     ["ALT08"] = { aggro = 1263, death = 2944 }, -- Syndicate Assassin
     ["ALT09"] = { aggro = 402, death = 406 }, -- Crushridge Mage
     ["ALT10"] = { aggro = 396, death = 400 }, -- Crushridge Warmonger
+    ["ALT11"] = { aggro = 1263, death = 2944 }, -- Archmage Ansirem Runeweaver
     ["ARA01"] = { aggro = 694, death = 314 }, -- Drywhisker Kobold
     ["ARA02"] = { aggro = 447, death = 444 }, -- Elder Mesa Buzzard
     ["ARA03"] = { aggro = 1408, death = 1406 }, -- Cresting Exile
@@ -53,6 +54,7 @@ TTS.CreatureSounds = {
     ["ARA08"] = { aggro = 396, death = 400 }, -- Boulderfist Shaman
     ["ARA09"] = { aggro = 283054, death = 2940 }, -- Darbel Montrose
     ["ARA10"] = { aggro = 396, death = 400 }, -- Foulbelly
+    ["ARA11"] = { death = 2940 }, -- Captain Nials
     ["ASH01"] = { aggro = 1230, death = 1228 }, -- Clattering Crawler
     ["ASH02"] = { aggro = 1230, death = 1228 }, -- Spined Crawler
     ["ASH03"] = { aggro = 478, death = 475 }, -- Ashenvale Bear
@@ -63,6 +65,7 @@ TTS.CreatureSounds = {
     ["ASH08"] = { death = 213 }, -- Warsong Peon
     ["ASH09"] = { aggro = 390, death = 394 }, -- Ghostpaw Alpha
     ["ASH10"] = { aggro = 437, death = 441 }, -- Terrowulf Packlord
+    ["ASH11"] = { death = 2936 }, -- Raene Wolfrunner
     ["AZS01"] = { aggro = 1173, death = 1171 }, -- Highborne Apparition
     ["AZS02"] = { aggro = 2656, death = 2654 }, -- Mosshoof Runner
     ["AZS03"] = { aggro = 3438, death = 3436 }, -- Spitelash Warrior
@@ -73,6 +76,7 @@ TTS.CreatureSounds = {
     ["AZS08"] = { aggro = 1010, death = 1009 }, -- Legashi Rogue
     ["AZS09"] = { aggro = 1464, death = 1462 }, -- Coralshell Lurker
     ["AZS10"] = { aggro = 3685, death = 3683 }, -- Monnos the Elder
+    ["AZS11"] = { aggro = 1415, death = 1413 }, -- Kim'jael
     ["BAD01"] = { death = 2932 }, -- Shadowforge Tunneler
     ["BAD02"] = { death = 2932 }, -- Shadowforge Darkweaver
     ["BAD03"] = { aggro = 447, death = 444 }, -- Starving Buzzard
@@ -83,6 +87,7 @@ TTS.CreatureSounds = {
     ["BAD08"] = { death = 2932 }, -- Shadowforge Surveyor
     ["BAD09"] = { death = 2932 }, -- Shadowforge Digger
     ["BAD10"] = { aggro = 3685, death = 3683 }, -- Anathemus
+    ["BAD11"] = { death = 3278 }, -- Lotwil Veriatus
     ["BFD01"] = { aggro = 416, death = 420 }, -- Blindlight Murloc
     ["BFD02"] = { aggro = 1464, death = 1462 }, -- Aku'mai Fisher
     ["BFD03"] = { aggro = 1010, death = 1009 }, -- Fallenroot Shadowstalker
@@ -94,6 +99,7 @@ TTS.CreatureSounds = {
     ["BFD09"] = { aggro = 416, death = 420 }, -- Gelihast
     ["BFD10"] = { aggro = 1236, death = 1234 }, -- Old Serra'kis
     ["BFD11"] = { aggro = 5802, death = 5803 }, -- Twilight Lord Kelris
+    ["BFD12"] = { aggro = 1408, death = 1406 }, -- Baron Aquanis
     ["BLA01"] = { aggro = 2511, death = 2509 }, -- Starving Snickerfang
     ["BLA02"] = { aggro = 2511, death = 2509 }, -- Snickerfang Hyena
     ["BLA03"] = { aggro = 719, death = 718 }, -- Scorpok Stinger
@@ -104,6 +110,7 @@ TTS.CreatureSounds = {
     ["BLA08"] = { aggro = 283608, death = 18493 }, -- Shadowsworn Enforcer
     ["BLA09"] = { aggro = 396, death = 400 }, -- Dreadmaul Mauler
     ["BLA10"] = { death = 1322 }, -- Dreadscorn
+    ["BLA11"] = { aggro = 596, death = 595 }, -- Kum'isha the Collector
     ["BOSS01"] = { aggro = 1010, death = 1009 }, -- Bazzalan
     ["BOSS02"] = { aggro = 1263, death = 2944 }, -- Edwin VanCleef
     ["BOSS03"] = { aggro = 416, death = 420 }, -- Mutanus the Devourer
@@ -152,6 +159,7 @@ TTS.CreatureSounds = {
     ["BRD20"] = { aggro = 472, death = 468 }, -- Panzor the Invincible
     ["BRD21"] = { death = 2932 }, -- General Angerforge
     ["BRD22"] = { aggro = 3685, death = 3683 }, -- Magmus
+    ["BRD23"] = { death = 2928 }, -- Princess Moira Bronzebeard
     ["BRN01"] = { aggro = 1044, death = 1043 }, -- Kolkar Wrangler
     ["BRN02"] = { aggro = 708, death = 707 }, -- Sunscale Screecher
     ["BRN03"] = { aggro = 643, death = 647 }, -- Savannah Prowler
@@ -162,6 +170,7 @@ TTS.CreatureSounds = {
     ["BRN08"] = { aggro = 719, death = 718 }, -- Silithid Swarmer
     ["BRN09"] = { aggro = 1236, death = 1972 }, -- Stormhide
     ["BRN10"] = { aggro = 590, death = 589 }, -- Azzere the Skyblade
+    ["BRN11"] = { death = 1322 }, -- Mankrik
     ["BRS01"] = { death = 1322 }, -- Scarshield Legionnaire
     ["BRS02"] = { aggro = 396, death = 400 }, -- Spirestone Enforcer
     ["BRS03"] = { aggro = 344001, death = 3310 }, -- Smolderthorn Headhunter
@@ -181,6 +190,7 @@ TTS.CreatureSounds = {
     ["BRS17"] = { death = 1322 }, -- Goraluk Anvilcrack
     ["BRS18"] = { aggro = 1288, death = 1286 }, -- Pyroguard Emberseer
     ["BRS19"] = { aggro = 6819, death = 6817 }, -- The Beast
+    ["BRS20"] = { death = 1322 }, -- Warchief Rend Blackhand
     ["BUR01"] = { aggro = 396, death = 400 }, -- Dustbelcher Mauler
     ["BUR02"] = { aggro = 396, death = 400 }, -- Firegut Ogre
     ["BUR03"] = { aggro = 770, death = 769 }, -- Flamekin Sprite
@@ -191,6 +201,7 @@ TTS.CreatureSounds = {
     ["BUR08"] = { aggro = 396, death = 400 }, -- Firegut Brute
     ["BUR09"] = { aggro = 472, death = 468 }, -- War Reaver
     ["BUR10"] = { aggro = 3685, death = 3683 }, -- Volchan
+    ["BUR11"] = { aggro = 1263, death = 2944 }, -- Marshal Maxwell
     ["DAR01"] = { aggro = 1230, death = 1228 }, -- Pygmy Tide Crawler
     ["DAR02"] = { aggro = 1230, death = 1228 }, -- Young Reef Crawler
     ["DAR03"] = { aggro = 1481, death = 1479 }, -- Foreststrider Fledgling
@@ -201,6 +212,7 @@ TTS.CreatureSounds = {
     ["DAR08"] = { aggro = 3438, death = 3436 }, -- Stormscale Myrmidon
     ["DAR09"] = { aggro = 1230, death = 1228 }, -- Raging Reef Crawler
     ["DAR10"] = { death = 1318 }, -- Apothecary Falthis
+    ["DAR11"] = { death = 2959 }, -- Thundris Windweaver
     ["DES01"] = { death = 1322 }, -- Burning Blade Augur
     ["DES02"] = { aggro = 719, death = 718 }, -- Scorpashi Snapper
     ["DES03"] = { death = 1322 }, -- Burning Blade Reaver
@@ -211,6 +223,7 @@ TTS.CreatureSounds = {
     ["DES08"] = { aggro = 2517, death = 2515 }, -- Undead Ravager
     ["DES09"] = { aggro = 1236, death = 1972 }, -- Elder Thunder Lizard
     ["DES10"] = { aggro = 1102, death = 1101 }, -- Kaskk
+    ["DES11"] = { aggro = 3565, death = 3563 }, -- Uthek the Wise
     ["DMA01"] = { aggro = 1010, death = 1009 }, -- Wildspawn Rogue
     ["DMA02"] = { aggro = 1498, death = 3375 }, -- Warpwood Tangler
     ["DMA03"] = { aggro = 396, death = 400 }, -- Gordok Brute
@@ -229,6 +242,7 @@ TTS.CreatureSounds = {
     ["DMA16"] = { aggro = 1525, death = 1523 }, -- Tendris Warpwood
     ["DMA17"] = { aggro = 396, death = 400 }, -- Captain Kromcrush
     ["DMA18"] = { aggro = 6819, death = 6817 }, -- Immol'thar
+    ["DMA19"] = { aggro = 1095, death = 1094 }, -- Lord Hel'nurath
     ["DMS01"] = { aggro = 1263, death = 2944 }, -- Defias Pirate
     ["DMS02"] = { aggro = 1110, death = 324 }, -- Defias Watchman
     ["DMS03"] = { aggro = 283608, death = 18493 }, -- Goblin Engineer
@@ -240,6 +254,7 @@ TTS.CreatureSounds = {
     ["DMS09"] = { aggro = 416, death = 420 }, -- Cookie
     ["DMS10"] = { aggro = 283608, death = 18493 }, -- Captain Greenskin
     ["DMS11"] = { aggro = 5777, death = 1356 }, -- Mr. Smite
+    ["DMS12"] = { aggro = 1415, death = 1413 }, -- Sneed
     ["DSK01"] = { aggro = 1016, death = 337 }, -- Skeletal Warrior
     ["DSK02"] = { aggro = 390, death = 394 }, -- Young Black Ravager
     ["DSK03"] = { aggro = 2517, death = 2515 }, -- Skeletal Horror
@@ -250,6 +265,7 @@ TTS.CreatureSounds = {
     ["DSK08"] = { aggro = 409, death = 413 }, -- Plague Spreader
     ["DSK09"] = { aggro = 437, death = 441 }, -- Nightbane Dark Runner
     ["DSK10"] = { aggro = 437, death = 441 }, -- Nefaru
+    ["DSK11"] = { aggro = 1263, death = 2944 }, -- Lord Ello Ebonlocke
     ["DUN01"] = { aggro = 390, death = 394 }, -- Ragged Young Wolf
     ["DUN02"] = { aggro = 659, death = 658 }, -- Burly Rockjaw Trogg
     ["DUN03"] = { aggro = 390, death = 394 }, -- Ragged Timber Wolf
@@ -260,6 +276,7 @@ TTS.CreatureSounds = {
     ["DUN08"] = { aggro = 390, death = 394 }, -- Winter Wolf
     ["DUN09"] = { aggro = 478, death = 475 }, -- Ice Claw Bear
     ["DUN10"] = { aggro = 659, death = 658 }, -- Hammerspine
+    ["DUN11"] = { death = 2932 }, -- Senir Whitebeard
     ["DUR01"] = { aggro = 770, death = 769 }, -- Vile Familiar
     ["DUR02"] = { aggro = 719, death = 718 }, -- Clattering Scorpid
     ["DUR03"] = { aggro = 379, death = 383 }, -- Dire Mottled Boar
@@ -270,6 +287,7 @@ TTS.CreatureSounds = {
     ["DUR08"] = { aggro = 708, death = 707 }, -- Bloodtalon Scythemaw
     ["DUR09"] = { aggro = 570, death = 569 }, -- Dreadmaw Crocolisk
     ["DUR10"] = { aggro = 719, death = 718 }, -- Death Flayer
+    ["DUR11"] = { death = 3310 }, -- Vol'jin
     ["DUS01"] = { aggro = 590, death = 589 }, -- Noxious Flayer
     ["DUS02"] = { aggro = 462, death = 458 }, -- Withervine Creeper
     ["DUS03"] = { aggro = 416, death = 420 }, -- Mirefin Murloc
@@ -280,6 +298,7 @@ TTS.CreatureSounds = {
     ["DUS08"] = { aggro = 1452, death = 1450 }, -- Muckshell Pincer
     ["DUS09"] = { aggro = 1452, death = 1450 }, -- Muckshell Scrabbler
     ["DUS10"] = { aggro = 1452, death = 1450 }, -- Lord Angler
+    ["DUS11"] = { death = 2940 }, -- Lady Jaina Proudmoore
     ["ELW01"] = { aggro = 694, death = 314 }, -- Kobold Vermin
     ["ELW02"] = { aggro = 694, death = 314 }, -- Kobold Worker
     ["ELW03"] = { aggro = 1263, death = 2944 }, -- Defias Thug
@@ -290,6 +309,7 @@ TTS.CreatureSounds = {
     ["ELW08"] = { aggro = 416, death = 420 }, -- Murloc Forager
     ["ELW09"] = { aggro = 416, death = 420 }, -- Murloc Lurker
     ["ELW10"] = { aggro = 1015, death = 413 }, -- Gruff Swiftbite
+    ["ELW11"] = { aggro = 1263, death = 2944 }, -- Marshal Dughan
     ["EPL01"] = { aggro = 579, death = 578 }, -- Plaguehound Runt
     ["EPL02"] = { aggro = 5043, death = 5041 }, -- Carrion Grub
     ["EPL03"] = { aggro = 409, death = 413 }, -- Cannibal Ghoul
@@ -300,6 +320,7 @@ TTS.CreatureSounds = {
     ["EPL08"] = { aggro = 579, death = 578 }, -- Frenzied Plaguehound
     ["EPL09"] = { aggro = 1446, death = 1444 }, -- Stitched Horror
     ["EPL10"] = { aggro = 3346, death = 3344 }, -- Nerubian Overseer
+    ["EPL11"] = { aggro = 1263, death = 2944 }, -- Duke Nicholas Zverenhoff
     ["FEL01"] = { aggro = 390, death = 394 }, -- Felpaw Wolf
     ["FEL02"] = { aggro = 478, death = 475 }, -- Angerclaw Bear
     ["FEL03"] = { aggro = 356, death = 357 }, -- Deadwood Warrior
@@ -310,6 +331,7 @@ TTS.CreatureSounds = {
     ["FEL08"] = { aggro = 462, death = 458 }, -- Warpwood Moss Flayer
     ["FEL09"] = { death = 1322 }, -- Jaedenar Darkweaver
     ["FEL10"] = { aggro = 1243, death = 1242 }, -- Mezzir the Howler
+    ["FEL11"] = { death = 2936 }, -- Arathandris Silversky
     ["FER01"] = { aggro = 1015, death = 308 }, -- Woodpaw Mystic
     ["FER02"] = { aggro = 1015, death = 308 }, -- Woodpaw Reaver
     ["FER03"] = { aggro = 1391, death = 1389 }, -- Groddoc Ape
@@ -320,6 +342,7 @@ TTS.CreatureSounds = {
     ["FER08"] = { aggro = 1408, death = 1406 }, -- Sea Spray
     ["FER09"] = { aggro = 1408, death = 1406 }, -- Sea Elemental
     ["FER10"] = { aggro = 713, death = 712 }, -- Antilus the Soarer
+    ["FER11"] = { death = 2936 }, -- Kindal Moonweaver
     ["GNO01"] = { aggro = 659, death = 658 }, -- Caverndeep Burrower
     ["GNO02"] = { death = 3272 }, -- Leprous Defender
     ["GNO03"] = { aggro = 4319, death = 4317 }, -- Mechano-Flamewalker
@@ -328,6 +351,7 @@ TTS.CreatureSounds = {
     ["GNO06"] = { death = 2932 }, -- Dark Iron Ambassador
     ["GNO07"] = { aggro = 5811, death = 4317 }, -- Electrocutioner 6000
     ["GNO08"] = { aggro = 2092, death = 2518 }, -- Crowd Pummeler 9-60
+    ["GNO09"] = { aggro = 659, death = 658 }, -- Grubbis
     ["HIL01"] = { aggro = 1015, death = 413 }, -- Rot Hide Brute
     ["HIL02"] = { aggro = 1015, death = 308 }, -- Rot Hide Plague Weaver
     ["HIL03"] = { aggro = 1015, death = 413 }, -- Raging Rot Hide
@@ -338,6 +362,7 @@ TTS.CreatureSounds = {
     ["HIL08"] = { aggro = 1263, death = 2944 }, -- Hillsbrad Miner
     ["HIL09"] = { aggro = 344001, death = 3310 }, -- Witherbark Headhunter
     ["HIL10"] = { aggro = 344001, death = 3310 }, -- Zalas Witherbark
+    ["HIL11"] = { aggro = 1263, death = 2944 }, -- Magistrate Henry Maleb
     ["HIN01"] = { aggro = 390, death = 394 }, -- Mangy Silvermane
     ["HIN02"] = { aggro = 1378, death = 1376 }, -- Trained Razorbeak
     ["HIN03"] = { aggro = 344001, death = 3310 }, -- Witherbark Hideskinner
@@ -348,6 +373,7 @@ TTS.CreatureSounds = {
     ["HIN08"] = { aggro = 344001, death = 3310 }, -- Vilebranch Shadow Hunter
     ["HIN09"] = { aggro = 344001, death = 3310 }, -- Vilebranch Blood Drinker
     ["HIN10"] = { aggro = 344001, death = 3310 }, -- Mith'rethis the Enchanter
+    ["HIN11"] = { death = 2932 }, -- Falstad Wildhammer
     ["LOC01"] = { aggro = 694, death = 314 }, -- Tunnel Rat Vermin
     ["LOC02"] = { aggro = 422, death = 426 }, -- Forest Lurker
     ["LOC03"] = { aggro = 642, death = 641 }, -- Loch Frenzy
@@ -358,6 +384,7 @@ TTS.CreatureSounds = {
     ["LOC08"] = { aggro = 478, death = 475 }, -- Black Bear Patriarch
     ["LOC09"] = { aggro = 1236, death = 1234 }, -- Young Threshadon
     ["LOC10"] = { aggro = 570, death = 569 }, -- Large Loch Crocolisk
+    ["LOC11"] = { death = 2932 }, -- Mountaineer Stormpike
     ["MAR01"] = { aggro = 1010, death = 1009 }, -- Putridus Shadowstalker
     ["MAR02"] = { aggro = 5050, death = 5048 }, -- Barbed Lasher
     ["MAR03"] = { aggro = 1498, death = 3375 }, -- Deeprot Stomper
@@ -370,6 +397,7 @@ TTS.CreatureSounds = {
     ["MAR10"] = { aggro = 1127, death = 1126 }, -- Celebras the Cursed
     ["MAR11"] = { aggro = 570, death = 569 }, -- Rotgrip
     ["MAR12"] = { aggro = 3685, death = 3683 }, -- Landslide
+    ["MAR13"] = { aggro = 462, death = 458 }, -- Meshlok the Harvester
     ["MUL01"] = { aggro = 1481, death = 1479 }, -- Plainstrider
     ["MUL02"] = { aggro = 647, death = 646 }, -- Mountain Cougar
     ["MUL03"] = { aggro = 379, death = 383 }, -- Battleboar
@@ -380,6 +408,7 @@ TTS.CreatureSounds = {
     ["MUL08"] = { aggro = 283608, death = 18493 }, -- Venture Co. Worker
     ["MUL09"] = { aggro = 283608, death = 18493 }, -- Venture Co. Supervisor
     ["MUL10"] = { aggro = 1015, death = 308 }, -- Snagglespear
+    ["MUL11"] = { death = 1356 }, -- Baine Bloodhoof
     ["RED01"] = { aggro = 390, death = 394 }, -- Gray Forest Wolf
     ["RED02"] = { aggro = 422, death = 426 }, -- Tarantula
     ["RED03"] = { aggro = 1015, death = 308 }, -- Redridge Poacher
@@ -390,6 +419,7 @@ TTS.CreatureSounds = {
     ["RED08"] = { death = 1322 }, -- Blackrock Champion
     ["RED09"] = { aggro = 416, death = 420 }, -- Squiddic
     ["RED10"] = { death = 1322 }, -- Kazon
+    ["RED11"] = { aggro = 1263, death = 2944 }, -- Magistrate Solomon
     ["RFC01"] = { aggro = 659, death = 658 }, -- Ragefire Trogg
     ["RFC02"] = { aggro = 5043, death = 5041 }, -- Earthborer
     ["RFC03"] = { death = 1322 }, -- Searing Blade Warlock
@@ -397,6 +427,7 @@ TTS.CreatureSounds = {
     ["RFC05"] = { aggro = 659, death = 658 }, -- Oggleflint
     ["RFC06"] = { death = 1322 }, -- Jergosh the Invoker
     ["RFC07"] = { aggro = 1102, death = 1101 }, -- Taragaman the Hungerer
+    ["RFC08"] = { death = 213 }, -- Searing Blade Enforcer
     ["RFD01"] = { aggro = 1181, death = 1179 }, -- Withered Warrior
     ["RFD02"] = { aggro = 2517, death = 2515 }, -- Skeletal Frostweaver
     ["RFD03"] = { aggro = 409, death = 413 }, -- Boneflayer Ghoul
@@ -404,6 +435,7 @@ TTS.CreatureSounds = {
     ["RFD05"] = { aggro = 5822, death = 2515 }, -- Mordresh Fire Eye
     ["RFD06"] = { aggro = 1446, death = 1444 }, -- Glutton
     ["RFD07"] = { aggro = 1181, death = 1179 }, -- Ragglesnout
+    ["RFD08"] = { aggro = 3346, death = 3344 }, -- Tuten'kash
     ["RFK01"] = { aggro = 1181, death = 1179 }, -- Razorfen Warrior
     ["RFK02"] = { aggro = 1181, death = 1179 }, -- Razorfen Quilguard
     ["RFK03"] = { aggro = 1181, death = 1179 }, -- Razorfen Geomancer
@@ -416,6 +448,7 @@ TTS.CreatureSounds = {
     ["RFK10"] = { aggro = 1181, death = 1179 }, -- Earthcaller Halmgar
     ["RFK11"] = { aggro = 5812, death = 1179 }, -- Overlord Ramtusk
     ["RFK12"] = { aggro = 379, death = 383 }, -- Agathelos the Raging
+    ["RFK13"] = { aggro = 1181, death = 1179 }, -- Razorfen Totemic
     ["SCH01"] = { aggro = 1357, death = 2936 }, -- Scholomance Acolyte
     ["SCH02"] = { aggro = 1016, death = 337 }, -- Risen Guard
     ["SCH03"] = { aggro = 1357, death = 2936 }, -- Scholomance Necromancer
@@ -433,6 +466,7 @@ TTS.CreatureSounds = {
     ["SCH15"] = { aggro = 2517, death = 2515 }, -- Rattlegore
     ["SCH16"] = { aggro = 7139, death = 7137 }, -- The Ravenian
     ["SCH17"] = { aggro = 5800, death = 5796 }, -- Ras Frostwhisper
+    ["SCH18"] = { aggro = 3369, death = 3367 }, -- Kirtonos the Herald
     ["SEA01"] = { death = 2932 }, -- Dark Iron Slaver
     ["SEA02"] = { death = 2932 }, -- Enslaved Archaeologist
     ["SEA03"] = { aggro = 422, death = 426 }, -- Searing Lava Spider
@@ -443,6 +477,7 @@ TTS.CreatureSounds = {
     ["SEA08"] = { aggro = 472, death = 468 }, -- Heavy War Golem
     ["SEA09"] = { aggro = 570, death = 569 }, -- Incendosaur
     ["SEA10"] = { aggro = 739, death = 738 }, -- Smoldar
+    ["SEA11"] = { aggro = 1263, death = 2944 }, -- Kalaran Windblade
     ["SFK01"] = { aggro = 437, death = 441 }, -- Shadowfang Whitescalp
     ["SFK02"] = { aggro = 390, death = 394 }, -- Slavering Worg
     ["SFK03"] = { aggro = 1263, death = 2944 }, -- Haunted Servitor
@@ -455,6 +490,7 @@ TTS.CreatureSounds = {
     ["SFK10"] = { aggro = 1263, death = 2944 }, -- Commander Springvale
     ["SFK11"] = { aggro = 437, death = 441 }, -- Wolf Master Nandos
     ["SFK12"] = { aggro = 6017, death = 394 }, -- Fenrus the Devourer
+    ["SFK13"] = { aggro = 1263, death = 2944 }, -- Deathsworn Captain
     ["SIL01"] = { aggro = 437, death = 441 }, -- Moonrage Whitescalp
     ["SIL02"] = { aggro = 390, death = 394 }, -- Mottled Worg
     ["SIL03"] = { aggro = 478, death = 475 }, -- Ferocious Grizzled Bear
@@ -465,6 +501,7 @@ TTS.CreatureSounds = {
     ["SIL08"] = { aggro = 390, death = 394 }, -- Bloodsnout Worg
     ["SIL09"] = { aggro = 1016, death = 337 }, -- Ravenclaw Guardian
     ["SIL10"] = { aggro = 1016, death = 337 }, -- Ravenclaw Regent
+    ["SIL11"] = { death = 1318 }, -- High Executor Hadrec
     ["SLI01"] = { aggro = 341954, death = 2959 }, -- Tortured Druid
     ["SLI02"] = { aggro = 5043, death = 5041 }, -- Dredge Striker
     ["SLI03"] = { aggro = 719, death = 718 }, -- Stonelash Pincer
@@ -475,6 +512,7 @@ TTS.CreatureSounds = {
     ["SLI08"] = { aggro = 1263, death = 2944 }, -- Twilight Avenger
     ["SLI09"] = { death = 2928 }, -- Twilight Geolord
     ["SLI10"] = { aggro = 341952, death = 2936 }, -- Mistress Natalia Mar'alith
+    ["SLI11"] = { aggro = 1263, death = 2944 }, -- Highlord Demitrian
     ["SMO01"] = { aggro = 1263, death = 2944 }, -- Scarlet Torturer
     ["SMO02"] = { aggro = 2511, death = 2509 }, -- Scarlet Tracking Hound
     ["SMO03"] = { aggro = 1263, death = 2944 }, -- Scarlet Monk
@@ -488,6 +526,7 @@ TTS.CreatureSounds = {
     ["SMO11"] = { aggro = 1016, death = 337 }, -- Ironspine
     ["SMO12"] = { death = 1318 }, -- High Inquisitor Fairbanks
     ["SMO13"] = { aggro = 5835, death = 2944 }, -- Scarlet Commander Mograine
+    ["SMO14"] = { aggro = 1263, death = 2944 }, -- Azshir the Sleepless
     ["STK01"] = { aggro = 1263, death = 2944 }, -- Defias Prisoner
     ["STK02"] = { aggro = 1263, death = 2944 }, -- Defias Insurgent
     ["STK03"] = { aggro = 1346, death = 1344 }, -- Targorr the Dread
@@ -495,6 +534,7 @@ TTS.CreatureSounds = {
     ["STK05"] = { death = 2932 }, -- Kam Deepfury
     ["STK06"] = { aggro = 402, death = 406 }, -- Hamhock
     ["STK07"] = { death = 2932 }, -- Bruegal Ironknuckle
+    ["STK08"] = { aggro = 1263, death = 2944 }, -- Defias Convict
     ["STO01"] = { aggro = 694, death = 314 }, -- Gogger Geomancer
     ["STO02"] = { aggro = 694, death = 314 }, -- Gogger Rock Keeper
     ["STO03"] = { aggro = 694, death = 314 }, -- Gogger Stonepounder
@@ -505,6 +545,7 @@ TTS.CreatureSounds = {
     ["STO08"] = { aggro = 570, death = 569 }, -- Blackened Basilisk
     ["STO09"] = { aggro = 584, death = 583 }, -- Bloodfury Windcaller
     ["STO10"] = { aggro = 761, death = 760 }, -- Sorrow Wing
+    ["STO11"] = { aggro = 1127, death = 1126 }, -- Keeper Albagorm
     ["STR01"] = { aggro = 1263, death = 2944 }, -- Crimson Initiate
     ["STR02"] = { aggro = 409, death = 413 }, -- Plague Ghoul
     ["STR03"] = { aggro = 1263, death = 2944 }, -- Crimson Gallant
@@ -525,6 +566,7 @@ TTS.CreatureSounds = {
     ["STR18"] = { aggro = 3369, death = 3367 }, -- Stonespine
     ["STR19"] = { aggro = 1263, death = 2944 }, -- Maleki the Pallid
     ["STR20"] = { aggro = 1263, death = 2944 }, -- Grand Crusader Dathrohan
+    ["STR21"] = { aggro = 1446, death = 1444 }, -- Ramstein the Gorger
     ["STV01"] = { aggro = 647, death = 646 }, -- Young Panther
     ["STV02"] = { aggro = 1263, death = 2944 }, -- Kurzen Medicine Man
     ["STV03"] = { aggro = 647, death = 646 }, -- Stranglethorn Tiger
@@ -535,6 +577,7 @@ TTS.CreatureSounds = {
     ["STV08"] = { aggro = 283608, death = 18493 }, -- Venture Co. Strip Miner
     ["STV09"] = { aggro = 1230, death = 1228 }, -- Southern Sand Crawler
     ["STV10"] = { aggro = 3438, death = 3436 }, -- Lord Sakrasis
+    ["STV11"] = { death = 2932 }, -- Hemet Nesingwary
     ["SUN01"] = { aggro = 5893, death = 5891 }, -- Atal'ai Warrior
     ["SUN02"] = { aggro = 5043, death = 5041 }, -- Murk Worm
     ["SUN03"] = { aggro = 344001, death = 3310 }, -- Atal'ai Witch Doctor
@@ -547,6 +590,7 @@ TTS.CreatureSounds = {
     ["SUN10"] = { aggro = 344001, death = 3310 }, -- Jammal'an the Prophet
     ["SUN11"] = { aggro = 4065, death = 4063 }, -- Morphaz
     ["SUN12"] = { aggro = 4065, death = 4063 }, -- Hazzas
+    ["SUN13"] = { aggro = 7055, death = 7059 }, -- Avatar of Hakkar
     ["SWA01"] = { aggro = 570, death = 569 }, -- Young Sawtooth Crocolisk
     ["SWA02"] = { aggro = 422, death = 426 }, -- Sorrow Spinner
     ["SWA03"] = { aggro = 596, death = 595 }, -- Lost One Hunter
@@ -557,6 +601,7 @@ TTS.CreatureSounds = {
     ["SWA08"] = { aggro = 344001, death = 3310 }, -- Witherbark Sadist
     ["SWA09"] = { aggro = 422, death = 426 }, -- Witherbark Broodguard
     ["SWA10"] = { aggro = 344001, death = 3310 }, -- Zekkis
+    ["SWA11"] = { death = 1322 }, -- Fallen Hero of the Horde
     ["TAN01"] = { aggro = 719, death = 718 }, -- Scorpid Hunter
     ["TAN02"] = { aggro = 570, death = 569 }, -- Glasshide Basilisk
     ["TAN03"] = { aggro = 1464, death = 1462 }, -- Steeljaw Snapper
@@ -567,6 +612,7 @@ TTS.CreatureSounds = {
     ["TAN08"] = { aggro = 396, death = 400 }, -- Dunemaul Brute
     ["TAN09"] = { aggro = 1464, death = 1462 }, -- Surf Glider
     ["TAN10"] = { aggro = 402, death = 406 }, -- Cyclok the Mad
+    ["TAN11"] = { aggro = 1415, death = 1413 }, -- Marin Noggenfogger
     ["TEL01"] = { aggro = 647, death = 646 }, -- Young Nightsaber
     ["TEL02"] = { aggro = 379, death = 383 }, -- Young Thistle Boar
     ["TEL03"] = { aggro = 647, death = 646 }, -- Mangy Nightsaber
@@ -577,6 +623,7 @@ TTS.CreatureSounds = {
     ["TEL08"] = { aggro = 356, death = 357 }, -- Gnarlpine Defender
     ["TEL09"] = { aggro = 3605, death = 3603 }, -- Strigid Screecher
     ["TEL10"] = { aggro = 462, death = 458 }, -- Blackmoss the Fetid
+    ["TEL11"] = { death = 2959 }, -- Conservator Ilthalaine
     ["THO01"] = { aggro = 647, death = 646 }, -- Savannah Matriarch
     ["THO02"] = { aggro = 3565, death = 3563 }, -- Galak Windchaser
     ["THO03"] = { aggro = 1044, death = 1043 }, -- Galak Wrangler
@@ -587,6 +634,7 @@ TTS.CreatureSounds = {
     ["THO08"] = { aggro = 1464, death = 1462 }, -- Sparkleshell Borer
     ["THO09"] = { aggro = 719, death = 718 }, -- Scorpid Terror
     ["THO10"] = { aggro = 719, death = 718 }, -- Vile Sting
+    ["THO11"] = { aggro = 1415, death = 1413 }, -- Pozzik
     ["TIR01"] = { aggro = 1473, death = 1471 }, -- Mindless Zombie
     ["TIR02"] = { aggro = 1473, death = 1471 }, -- Wretched Zombie
     ["TIR03"] = { aggro = 422, death = 426 }, -- Young Night Web Spider
@@ -597,6 +645,7 @@ TTS.CreatureSounds = {
     ["TIR08"] = { aggro = 416, death = 420 }, -- Vile Fin Muckdweller
     ["TIR09"] = { aggro = 283054, death = 2940 }, -- Scarlet Vanguard
     ["TIR10"] = { aggro = 3417, death = 3416 }, -- Fellicent's Shade
+    ["TIR11"] = { death = 1318 }, -- Executor Zygand
     ["ULD01"] = { aggro = 659, death = 658 }, -- Stonevault Rockchewer
     ["ULD02"] = { death = 2932 }, -- Shadowforge Relic Hunter
     ["ULD03"] = { aggro = 570, death = 569 }, -- Jadespine Basilisk
@@ -609,6 +658,7 @@ TTS.CreatureSounds = {
     ["ULD10"] = { aggro = 5852, death = 2932 }, -- Galgann Firehammer
     ["ULD11"] = { aggro = 5853, death = 658 }, -- Grimlok
     ["ULD12"] = { aggro = 472, death = 468 }, -- Ancient Stone Keeper
+    ["ULD13"] = { aggro = 3032, death = 3035 }, -- Ironaya
     ["UNG01"] = { aggro = 1243, death = 1242 }, -- Ferocious Rage Scar
     ["UNG02"] = { aggro = 708, death = 707 }, -- Ravasaur
     ["UNG03"] = { aggro = 5050, death = 5048 }, -- Bloodpetal Lasher
@@ -619,6 +669,7 @@ TTS.CreatureSounds = {
     ["UNG08"] = { aggro = 6431, death = 6430 }, -- Frenzied Pterrordax
     ["UNG09"] = { aggro = 1288, death = 1286 }, -- Living Blaze
     ["UNG10"] = { aggro = 1391, death = 1389 }, -- Uhk'loc
+    ["UNG11"] = { death = 1356 }, -- Torwa Pathfinder
     ["WCV01"] = { aggro = 4499, death = 4497 }, -- Deviate Adder
     ["WCV02"] = { aggro = 708, death = 707 }, -- Deviate Ravager
     ["WCV03"] = { aggro = 708, death = 707 }, -- Deviate Guardian
@@ -631,6 +682,7 @@ TTS.CreatureSounds = {
     ["WCV10"] = { aggro = 5787, death = 2959 }, -- Lord Pythas
     ["WCV11"] = { aggro = 5788, death = 2959 }, -- Lord Serpentis
     ["WCV12"] = { aggro = 462, death = 458 }, -- Verdan the Everliving
+    ["WCV13"] = { death = 2959 }, -- Boahn
     ["WES01"] = { aggro = 390, death = 394 }, -- Coyote
     ["WES02"] = { aggro = 1263, death = 2944 }, -- Defias Smuggler
     ["WES03"] = { aggro = 2092, death = 2518 }, -- Harvest Golem
@@ -641,6 +693,7 @@ TTS.CreatureSounds = {
     ["WES08"] = { aggro = 1015, death = 308 }, -- Riverpaw Bandit
     ["WES09"] = { aggro = 1230, death = 1228 }, -- Shore Crawler
     ["WES10"] = { aggro = 447, death = 444 }, -- Vultros
+    ["WES11"] = { aggro = 1263, death = 2944 }, -- Gryan Stoutmantle
     ["WET01"] = { aggro = 570, death = 569 }, -- Young Wetlands Crocolisk
     ["WET02"] = { aggro = 1015, death = 308 }, -- Mosshide Fenrunner
     ["WET03"] = { aggro = 708, death = 707 }, -- Mottled Raptor
@@ -651,6 +704,7 @@ TTS.CreatureSounds = {
     ["WET08"] = { aggro = 739, death = 738 }, -- Rumbling Exile
     ["WET09"] = { aggro = 1288, death = 1286 }, -- Burning Exile
     ["WET10"] = { aggro = 396, death = 400 }, -- Molok the Crusher
+    ["WET11"] = { death = 2932 }, -- Captain Stoutfist
     ["WIN01"] = { aggro = 3605, death = 3603 }, -- Winterspring Owl
     ["WIN02"] = { aggro = 1243, death = 1242 }, -- Ice Thistle Yeti
     ["WIN03"] = { aggro = 478, death = 475 }, -- Shardtooth Mauler
@@ -661,6 +715,7 @@ TTS.CreatureSounds = {
     ["WIN08"] = { aggro = 3605, death = 3603 }, -- Winterspring Screecher
     ["WIN09"] = { aggro = 647, death = 646 }, -- Frostsaber Huntress
     ["WIN10"] = { aggro = 1122, death = 1120 }, -- Lady Hederine
+    ["WIN11"] = { death = 2928 }, -- Donova Snowden
     ["WPL01"] = { aggro = 422, death = 426 }, -- Venom Mist Lurker
     ["WPL02"] = { aggro = 2517, death = 2515 }, -- Skeletal Sorcerer
     ["WPL03"] = { aggro = 478, death = 475 }, -- Diseased Black Bear
@@ -671,6 +726,7 @@ TTS.CreatureSounds = {
     ["WPL08"] = { aggro = 1263, death = 2944 }, -- Scarlet Worker
     ["WPL09"] = { aggro = 3417, death = 3416 }, -- Haunting Vision
     ["WPL10"] = { aggro = 1263, death = 2944 }, -- Scarlet High Clerist
+    ["WPL11"] = { aggro = 1263, death = 2944 }, -- Tirion Fordring
     ["ZFK01"] = { aggro = 344001, death = 3310 }, -- Sandfury Blood Drinker
     ["ZFK02"] = { aggro = 344001, death = 3310 }, -- Sandfury Shadowhunter
     ["ZFK03"] = { aggro = 5874, death = 3310 }, -- Sandfury Executioner
@@ -682,6 +738,7 @@ TTS.CreatureSounds = {
     ["ZFK09"] = { aggro = 344001, death = 3310 }, -- Dustwraith
     ["ZFK10"] = { aggro = 344001, death = 3310 }, -- Sandarr Dunereaver
     ["ZFK11"] = { aggro = 344001, death = 3310 }, -- Antu'sul
+    ["ZFK12"] = { aggro = 455, death = 449 }, -- Gahz'rilla
 }
 
 -- =========================================================================

@@ -64,4 +64,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample. Other Ragefire Chasm creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["RFC08"] = {
+        id = "RFC08", name = "Searing Blade Enforcer", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 4, toughness = 3, firstStrike = true, isReward = true, displayId = 11432,
+        zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcEntry = 11323,
+        anthem = { tag = "faction", value = "Burning Blade", p = 1, kw = { "firstStrike" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "First Strike. Other Burning Blade you control get +1/+0 and First Strike."
+    },
 })

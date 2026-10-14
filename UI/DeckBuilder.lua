@@ -379,21 +379,29 @@ local cardPoolKeys = {}
 
 -- =========================================================================
 -- UNLOCK HELPERS
--- Cards flagged isBoss are unlocked by killing the creature; kills = copies allowed (max 4).
+-- Collectible cards are owned in copies (max 4 in a deck): isBoss cards by killing the
+-- creature, isReward cards by winning their solo encounter (TTS:GetOwnedCopies).
 -- =========================================================================
+local function IsCollectible(card)
+    return card and (card.isBoss or card.isReward) and true or false
+end
+
 local function GetKillCount(cardId, card)
-    if not (card and card.isBoss) then return 0 end
-    local rawKills = TTS_KilledBosses and TTS_KilledBosses[cardId]
-    if rawKills == true then
-        return 4
-    elseif type(rawKills) == "number" then
-        return rawKills
+    if not IsCollectible(card) then return 0 end
+    return TTS:GetOwnedCopies(card) or 0
+end
+
+-- What the player has to do to earn a locked collectible card
+local function UnlockHint(card)
+    if card.isReward then
+        local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
+        return "Win the " .. (enc and enc.name or "solo") .. " encounter in Solo mode"
     end
-    return 0
+    return "Defeat " .. card.name
 end
 
 local function IsCardUnlocked(cardId, card)
-    if card.isBoss then return GetKillCount(cardId, card) > 0 end
+    if IsCollectible(card) then return GetKillCount(cardId, card) > 0 end
     return TTS:IsSpellUnlocked(cardId)
 end
 
@@ -406,7 +414,7 @@ end
 
 -- Copies of a card the deck may hold (nil = unlimited, used for Prayers)
 local function GetCopyLimit(cardId, card)
-    if card.isBoss then return math.min(4, GetKillCount(cardId, card)) end
+    if IsCollectible(card) then return math.min(4, GetKillCount(cardId, card)) end
     if card.type == "Land" then return nil end
     return 4
 end
@@ -598,16 +606,19 @@ local function CheckAdd(cardId, card, deck)
 
     local current = cards[cardId] or 0
 
-    if card.isBoss then
+    if IsCollectible(card) then
         local kills = GetKillCount(cardId, card)
         if kills <= 0 then
-            return "|cFFFF2222[TTS]|r Defeat " .. card.name .. " to unlock this card!"
+            return "|cFFFF2222[TTS]|r " .. UnlockHint(card) .. " to unlock this card!"
         end
         local maxAllowed = math.min(4, kills)
         if current >= maxAllowed then
             if maxAllowed >= 4 then
                 return string.format("|cFFFF2222[TTS]|r Maximum 4 copies reached for %s.", card.name)
             else
+                if card.isReward then
+                    return string.format("|cFFFF2222[TTS]|r You own %d cop%s of %s. %s again to earn more (max 4).", kills, kills == 1 and "y" or "ies", card.name, UnlockHint(card))
+                end
                 return string.format("|cFFFF2222[TTS]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name)
             end
         end
@@ -852,10 +863,14 @@ local function CardTooltip_OnEnter(self)
     TT:ShowCard(self, "ANCHOR_CURSOR", cardId, {
         hint = self.hint,
         header = function(tip)
-            if card.isBoss then
+            if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
-                    tip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
+                    if card.isReward then
+                        tip:AddLine("|cFFFF2222Locked: " .. UnlockHint(card) .. " to unlock!|r", 1, 0.2, 0.2, true)
+                    else
+                        tip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
+                    end
                 else
                     local maxAllowed = math.min(4, kills)
                     tip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
@@ -1401,7 +1416,7 @@ collectionLabel:SetJustifyH("LEFT")
 local function UpdateCollectionProgress()
     local total, collected, mastered = 0, 0, 0
     for cardId, card in pairs(TTS.Cards or {}) do
-        if card.type == "Creature" and card.isBoss then
+        if card.type == "Creature" and IsCollectible(card) then
             total = total + 1
             local kills = GetKillCount(cardId, card)
             if kills >= 1 then collected = collected + 1 end

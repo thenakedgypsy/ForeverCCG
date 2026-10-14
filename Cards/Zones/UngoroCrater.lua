@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["UNG11"] = {
+        id = "UNG11", name = "Torwa Pathfinder", cost = "{4}{G}", cmc = 5, color = "G", type = "Creature",
+        power = 4, toughness = 4, trample = true, isReward = true, displayId = 8832,
+        zone = "Un'Goro Crater", creatureType = "Humanoid", npcEntry = 9619,
+        anthem = { tag = "type", value = "Beast", p = 1, t = 1, kw = { "trample" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Trample. Other Beasts you control get +1/+1 and Trample."
+    },
 })

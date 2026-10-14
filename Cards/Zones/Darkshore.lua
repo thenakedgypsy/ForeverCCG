@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["DAR11"] = {
+        id = "DAR11", name = "Thundris Windweaver", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 1, toughness = 3, isReward = true, displayId = 1770,
+        zone = "Darkshore", creatureType = "Humanoid", npcEntry = 3649,
+        anthem = { tag = "zone", value = "Darkshore", t = 1 },
+        etb = { ops = { { op = "draw", n = 1 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Thundris Windweaver enters the battlefield, draw a card. Other Darkshore creatures you control get +0/+1."
+    },
 })

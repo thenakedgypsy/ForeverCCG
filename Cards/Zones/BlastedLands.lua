@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["BLA11"] = {
+        id = "BLA11", name = "Kum'isha the Collector", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 3, toughness = 4, isReward = true, displayId = 11653,
+        zone = "Blasted Lands", creatureType = "Humanoid", npcEntry = 7363,
+        etb = { ops = { { op = "raise", src = "own" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Kum'isha the Collector enters the battlefield, return a creature card from your graveyard to the battlefield."
+    },
 })

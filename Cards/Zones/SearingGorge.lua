@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["SEA11"] = {
+        id = "SEA11", name = "Kalaran Windblade", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
+        power = 4, toughness = 4, flying = true, isReward = true, displayId = 7820,
+        zone = "Searing Gorge", creatureType = "Dragonkin", npcEntry = 8479,
+        anthem = { tag = "zone", value = "Searing Gorge", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Flying. Other Searing Gorge creatures you control get +1/+1."
+    },
 })

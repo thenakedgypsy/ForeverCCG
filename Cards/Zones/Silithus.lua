@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["SLI11"] = {
+        id = "SLI11", name = "Highlord Demitrian", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
+        power = 6, toughness = 6, vigilance = true, firstStrike = true, isReward = true, displayId = 14395,
+        zone = "Silithus", creatureType = "Humanoid", npcEntry = 14347,
+        anthem = { tag = "zone", value = "Silithus", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance, First Strike. Other Silithus creatures you control get +1/+1."
+    },
 })

@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Deathtouch."
     },
+    -- Solo reward
+    ["THO11"] = {
+        id = "THO11", name = "Pozzik", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        power = 3, toughness = 2, haste = true, isReward = true, displayId = 7199,
+        zone = "Thousand Needles", creatureType = "Humanoid", npcEntry = 4630,
+        anthem = { tag = "zone", value = "Thousand Needles", p = 1, kw = { "haste" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Haste. Other Thousand Needles creatures you control get +1/+0 and Haste."
+    },
 })

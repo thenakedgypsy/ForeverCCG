@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["HIN11"] = {
+        id = "HIN11", name = "Falstad Wildhammer", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
+        power = 5, toughness = 5, flying = true, vigilance = true, isReward = true, displayId = 7005,
+        zone = "The Hinterlands", creatureType = "Humanoid", npcEntry = 5635,
+        anthem = { tag = "zone", value = "The Hinterlands", p = 1, t = 1, kw = { "flying" } },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "Flying, Vigilance. Other Hinterlands creatures you control get +1/+1 and Flying."
+    },
 })

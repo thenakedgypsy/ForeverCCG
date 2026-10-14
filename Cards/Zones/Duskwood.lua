@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["DSK11"] = {
+        id = "DSK11", name = "Lord Ello Ebonlocke", cost = "{3}{W}", cmc = 4, color = "W", type = "Creature",
+        power = 3, toughness = 4, isReward = true, displayId = 4321,
+        zone = "Duskwood", creatureType = "Humanoid", npcEntry = 263,
+        anthem = { tag = "zone", value = "Duskwood", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Duskwood creatures you control get +1/+1."
+    },
 })

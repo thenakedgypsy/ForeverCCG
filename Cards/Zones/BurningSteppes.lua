@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["BUR11"] = {
+        id = "BUR11", name = "Marshal Maxwell", cost = "{4}{R}", cmc = 5, color = "R", type = "Creature",
+        power = 4, toughness = 4, vigilance = true, isReward = true, displayId = 8685,
+        zone = "Burning Steppes", creatureType = "Humanoid", npcEntry = 9560,
+        anthem = { tag = "zone", value = "Burning Steppes", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance. Other Burning Steppes creatures you control get +1/+1."
+    },
 })

@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["WIN11"] = {
+        id = "WIN11", name = "Donova Snowden", cost = "{4}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 3, toughness = 4, isReward = true, displayId = 8949,
+        zone = "Winterspring", creatureType = "Humanoid", npcEntry = 9298,
+        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Donova Snowden enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step."
+    },
 })

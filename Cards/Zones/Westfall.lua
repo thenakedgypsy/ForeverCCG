@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Flying. Other Westfall creatures you control get +1/+0."
     },
+    -- Solo reward
+    ["WES11"] = {
+        id = "WES11", name = "Gryan Stoutmantle", cost = "{3}{W}", cmc = 4, color = "W", type = "Creature",
+        power = 3, toughness = 4, vigilance = true, isReward = true, displayId = 1690,
+        zone = "Westfall", creatureType = "Humanoid", npcEntry = 234,
+        anthem = { tag = "zone", value = "Westfall", p = 1, t = 1, kw = { "vigilance" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance. Other Westfall creatures you control get +1/+1 and Vigilance."
+    },
 })

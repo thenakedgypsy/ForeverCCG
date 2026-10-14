@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["DUN11"] = {
+        id = "DUN11", name = "Senir Whitebeard", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 1, toughness = 3, isReward = true, displayId = 1376,
+        zone = "Dun Morogh", creatureType = "Humanoid", npcEntry = 1252,
+        anthem = { tag = "zone", value = "Dun Morogh", p = 1 },
+        etb = { ops = { { op = "draw", n = 1 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Senir Whitebeard enters the battlefield, draw a card. Other Dun Morogh creatures you control get +1/+0."
+    },
 })

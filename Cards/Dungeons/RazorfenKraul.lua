@@ -98,4 +98,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Haste, Trample."
     },
+    -- Solo reward
+    ["RFK13"] = {
+        id = "RFK13", name = "Razorfen Totemic", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
+        power = 2, toughness = 3, isReward = true, displayId = 6112,
+        zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcEntry = 4440,
+        anthem = { tag = "faction", value = "Quilboar", p = 1, t = 1 },
+        etb = { ops = { { op = "shield", to = "self_player", n = 3 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Razorfen Totemic enters the battlefield, prevent the next 3 damage that would be dealt to you. Other Quilboar you control get +1/+1."
+    },
 })

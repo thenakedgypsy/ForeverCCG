@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["STV11"] = {
+        id = "STV11", name = "Hemet Nesingwary", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
+        power = 3, toughness = 3, reach = true, isReward = true, displayId = 1410,
+        zone = "Stranglethorn Vale", creatureType = "Humanoid", npcEntry = 715,
+        anthem = { tag = "zone", value = "Stranglethorn Vale", p = 1 },
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2, filter = { tag = "type", value = "Beast" } } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Reach. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale creatures you control get +1/+0."
+    },
 })

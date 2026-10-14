@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch. Other Durotar creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["DUR11"] = {
+        id = "DUR11", name = "Vol'jin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
+        power = 4, toughness = 4, deathtouch = true, isReward = true, displayId = 10357,
+        zone = "Durotar", creatureType = "Humanoid", faction = "Troll", npcEntry = 10540,
+        anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Deathtouch. Other Trolls you control get +1/+1."
+    },
 })

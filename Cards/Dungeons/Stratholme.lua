@@ -155,4 +155,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink, Vigilance. Other Scarlet Crusade you control have Lifelink."
     },
+    -- Solo reward
+    ["STR21"] = {
+        id = "STR21", name = "Ramstein the Gorger", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
+        power = 8, toughness = 8, trample = true, isReward = true, displayId = 12818,
+        zone = "Stratholme", creatureType = "Undead", npcEntry = 10439,
+        anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "Trample. When Ramstein the Gorger enters the battlefield, deal 2 damage to each enemy creature. Other Undead you control get +1/+1."
+    },
 })

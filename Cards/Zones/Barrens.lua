@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Flying."
     },
+    -- Solo reward
+    ["BRN11"] = {
+        id = "BRN11", name = "Mankrik", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        power = 3, toughness = 2, haste = true, isReward = true, displayId = 3855,
+        zone = "The Barrens", creatureType = "Humanoid", npcEntry = 3432,
+        rally = { tag = "zone", value = "The Barrens", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Haste. Gets +1/+0 for each other Barrens creature you control."
+    },
 })

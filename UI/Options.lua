@@ -18,6 +18,7 @@ local DEFAULTS = {
     extendedTooltipDelay = 0.8,  -- seconds between each further layer of detail after that
     boardScale = 1,         -- game board size (Board.lua)
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
+    boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -132,7 +133,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 410)
+F:SetSize(340, 476)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -318,6 +319,19 @@ local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "Exte
     -92, EXTENDED_MAX, "extendedTooltipDelay")
 
 -- =========================================================================
+-- BOARD SECTION
+-- =========================================================================
+local boardSection = CreateSection("Board", 58)
+boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
+
+local backgroundCheck = CreateCheck(boardSection, 10, -30, "Show zone backgrounds in solo encounters",
+    "Shows the zone's map (or the dungeon's art) behind the battlefield during solo encounters. PvP and Practice games always use the plain board.")
+backgroundCheck:SetScript("OnClick", function(self)
+    O:Set("boardBackgrounds", self:GetChecked() and true or false)
+    if TTS.BoardFrame and TTS.BoardFrame.RefreshBackground then TTS.BoardFrame:RefreshBackground() end
+end)
+
+-- =========================================================================
 -- SYNC
 -- =========================================================================
 function O:SyncControls()
@@ -336,6 +350,7 @@ function O:SyncControls()
     if TTS.BoardFrame and TTS.BoardFrame.soundCheck then
         TTS.BoardFrame.soundCheck:SetChecked(master)
     end
+    backgroundCheck:SetChecked(db.boardBackgrounds ~= false)
 end
 
 F:SetScript("OnShow", function()

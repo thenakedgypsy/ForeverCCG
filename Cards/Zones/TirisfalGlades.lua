@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Other Undead you control get +1/+0."
     },
+    -- Solo reward
+    ["TIR11"] = {
+        id = "TIR11", name = "Executor Zygand", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
+        power = 3, toughness = 2, isReward = true, displayId = 1649,
+        zone = "Tirisfal Glades", creatureType = "Undead", npcEntry = 1515,
+        anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Undead you control get +1/+1."
+    },
 })

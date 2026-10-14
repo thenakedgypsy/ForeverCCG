@@ -70,4 +70,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample. Other Mechanicals you control get +1/+1."
     },
+    -- Solo reward
+    ["GNO09"] = {
+        id = "GNO09", name = "Grubbis", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
+        power = 5, toughness = 4, trample = true, isReward = true, displayId = 6533,
+        zone = "Gnomeregan", creatureType = "Humanoid", npcEntry = 7361,
+        anthem = { tag = "zone", value = "Gnomeregan", p = 1, kw = { "trample" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Trample. Other Gnomeregan creatures you control get +1/+0 and Trample."
+    },
 })

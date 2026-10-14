@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Vigilance."
     },
+    -- Solo reward
+    ["WPL11"] = {
+        id = "WPL11", name = "Tirion Fordring", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
+        power = 5, toughness = 6, vigilance = true, lifelink = true, isReward = true, displayId = 9477,
+        zone = "Western Plaguelands", creatureType = "Humanoid", npcEntry = 1855,
+        anthem = { tag = "type", value = "Humanoid", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance, Lifelink. Other Humanoids you control get +1/+1."
+    },
 })

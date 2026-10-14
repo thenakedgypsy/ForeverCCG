@@ -99,4 +99,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample. Other Wailing Caverns creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["WCV13"] = {
+        id = "WCV13", name = "Boahn", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
+        power = 2, toughness = 3, lifelink = true, isReward = true, displayId = 4212,
+        zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcEntry = 3672,
+        anthem = { tag = "zone", value = "Wailing Caverns", p = 0, kw = { "lifelink" } },
+        rally = { tag = "faction", value = "Druids of the Fang", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Lifelink. Gets +1/+1 for each other Druid of the Fang you control. Other Wailing Caverns creatures you control have Lifelink."
+    },
 })

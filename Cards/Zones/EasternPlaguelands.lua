@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.75, camScale = 1.07, z = -0.11, rotation = 0.15 },
         text = "Vigilance."
     },
+    -- Solo reward
+    ["EPL11"] = {
+        id = "EPL11", name = "Duke Nicholas Zverenhoff", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
+        power = 4, toughness = 5, vigilance = true, isReward = true, displayId = 10468,
+        zone = "Eastern Plaguelands", creatureType = "Humanoid", npcEntry = 11039,
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 3, filter = { tag = "type", value = "Undead" } } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance. When Duke Nicholas Zverenhoff enters the battlefield, deal 3 damage to each enemy Undead."
+    },
 })

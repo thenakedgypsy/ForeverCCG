@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["FER11"] = {
+        id = "FER11", name = "Kindal Moonweaver", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
+        power = 3, toughness = 4, isReward = true, displayId = 7044,
+        zone = "Feralas", creatureType = "Humanoid", npcEntry = 7956,
+        anthem = { tag = "zone", value = "Feralas", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Feralas creatures you control get +1/+1."
+    },
 })

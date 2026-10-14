@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Vigilance."
     },
+    -- Solo reward
+    ["SIL11"] = {
+        id = "SIL11", name = "High Executor Hadrec", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 3, toughness = 3, isReward = true, displayId = 3545,
+        zone = "Silverpine Forest", creatureType = "Undead", npcEntry = 1952,
+        anthem = { tag = "zone", value = "Silverpine Forest", t = 1, kw = { "lifelink" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Silverpine Forest creatures you control get +0/+1 and Lifelink."
+    },
 })

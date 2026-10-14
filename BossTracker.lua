@@ -148,7 +148,8 @@ function TTS.BossTracker:BuildMobCardCache()
     mobCardsByName = {}
 
     for cardId, card in pairs(TTS.Cards or {}) do
-        if card.isMob then
+        -- Solo reward cards are earned only by winning their encounter, never from kills
+        if card.isMob and not card.isReward then
             if card.npcId then
                 mobCardsByNpcID[card.npcId] = card
             end

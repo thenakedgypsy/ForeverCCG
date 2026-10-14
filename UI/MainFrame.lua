@@ -19,7 +19,7 @@ local M = TTS.MainFrame
 local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
 local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
-M:SetSize(400, 260)
+M:SetSize(400, 288)
 M:SetPoint("CENTER")
 M:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -164,13 +164,22 @@ statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
 
 -- =========================================================================
--- SECTION 2: SOLO PRACTICE
+-- SECTION 2: SOLO (encounters and the practice dummy)
 -- =========================================================================
-local practiceSection = CreateSection("Practice", 180, 68)
+local practiceSection = CreateSection("Solo", 180, 96)
 practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
 
+local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "Solo Encounters")
+encountersBtn:SetPoint("TOP", practiceSection, "TOP", 0, -32)
+encountersBtn:SetScript("OnClick", function()
+    if TTS.SoloSelectFrame then
+        TTS.SoloSelectFrame:Show()
+        OpenFromMain(TTS.SoloSelectFrame)
+    end
+end)
+
 local soloBtn = CreatePanelButton("TTS_SoloBtn", practiceSection, 160, 24, "Practice vs Dummy")
-soloBtn:SetPoint("TOP", practiceSection, "TOP", 0, -34)
+soloBtn:SetPoint("TOP", encountersBtn, "BOTTOM", 0, -4)
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before starting a match.")
@@ -182,7 +191,7 @@ end)
 -- =========================================================================
 -- SECTION 3: PVP WAITING ROOM (the only way to challenge other players)
 -- =========================================================================
-local pvpSection = CreateSection("Play Others", 180, 68)
+local pvpSection = CreateSection("Play Others", 180, 96)
 pvpSection:SetPoint("TOPRIGHT", deckSection, "BOTTOMRIGHT", 0, -8)
 
 local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "Open Waiting Room")
@@ -204,6 +213,13 @@ function M:UpdatePlayState()
         deckBtn:Disable()
     else
         deckBtn:Enable()
+    end
+
+    -- Solo encounters open whenever no game is running (the window explains anything else in the way)
+    if (TTS.Engine and TTS.Engine.inMatch) then
+        encountersBtn:Disable()
+    else
+        encountersBtn:Enable()
     end
 
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
@@ -292,6 +308,14 @@ SlashCmdList["TRAGIC"] = function(msg)
             end
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Rules frame not initialized.")
+        end
+    elseif cmd == "solo" or cmd == "encounters" then
+        if TTS.SoloSelectFrame then
+            if TTS.SoloSelectFrame:IsShown() then
+                TTS.SoloSelectFrame:Hide()
+            else
+                TTS.SoloSelectFrame:Show()
+            end
         end
     elseif cmd == "queue" or cmd == "lfm" or cmd == "waiting" then
         if TTS.WaitingRoom and TTS.WaitingRoom.frame then

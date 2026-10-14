@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["MUL11"] = {
+        id = "MUL11", name = "Baine Bloodhoof", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
+        power = 3, toughness = 3, isReward = true, displayId = 3792,
+        zone = "Mulgore", creatureType = "Humanoid", npcEntry = 2993,
+        anthem = { tag = "zone", value = "Mulgore", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Mulgore creatures you control get +1/+1."
+    },
 })

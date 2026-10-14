@@ -93,4 +93,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Lifelink. Other Twilight's Hammer you control get +1/+1."
     },
+    -- Solo reward
+    ["BFD12"] = {
+        id = "BFD12", name = "Baron Aquanis", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 4, toughness = 5, isReward = true, displayId = 110,
+        zone = "Blackfathom Deeps", creatureType = "Elemental", npcEntry = 12876,
+        anthem = { tag = "zone", value = "Blackfathom Deeps", p = 1, t = 1 },
+        etb = { ops = { { op = "draw", n = 1 } } },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "When Baron Aquanis enters the battlefield, draw a card. Other Blackfathom Deeps creatures you control get +1/+1."
+    },
 })

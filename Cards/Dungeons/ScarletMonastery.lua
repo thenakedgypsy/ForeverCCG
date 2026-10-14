@@ -107,4 +107,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike, Vigilance. Other Scarlet Crusade you control get +1/+1."
     },
+    -- Solo reward
+    ["SMO14"] = {
+        id = "SMO14", name = "Azshir the Sleepless", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
+        power = 5, toughness = 5, isReward = true, displayId = 5534,
+        zone = "Scarlet Monastery", creatureType = "Undead", npcEntry = 6490,
+        anthem = { tag = "zone", value = "Scarlet Monastery", p = 1, t = 1 },
+        onDeath = { ops = { { op = "raise", src = "own" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Scarlet Monastery creatures you control get +1/+1. When Azshir the Sleepless dies, return a creature card from your graveyard to the battlefield."
+    },
 })

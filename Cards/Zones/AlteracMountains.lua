@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["ALT11"] = {
+        id = "ALT11", name = "Archmage Ansirem Runeweaver", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 3, toughness = 5, isReward = true, displayId = 1595,
+        zone = "Alterac Mountains", creatureType = "Humanoid", npcEntry = 2543,
+        anthem = { tag = "zone", value = "Alterac Mountains", t = 2 },
+        etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Archmage Ansirem Runeweaver enters the battlefield, tap each enemy creature. Other Alterac Mountains creatures you control get +0/+2."
+    },
 })

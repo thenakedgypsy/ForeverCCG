@@ -143,4 +143,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample. Other Demons you control get +1/+1."
     },
+    -- Solo reward
+    ["DMA19"] = {
+        id = "DMA19", name = "Lord Hel'nurath", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
+        power = 6, toughness = 6, isReward = true, displayId = 14556,
+        zone = "Dire Maul", creatureType = "Demon", npcEntry = 14506,
+        anthem = { tag = "type", value = "Demon", p = 1, t = 1 },
+        etb = { ops = { { op = "damage", to = "enemy_player", n = 3 } } },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "When Lord Hel'nurath enters the battlefield, deal 3 damage to the opponent. Other Demons you control get +1/+1."
+    },
 })

@@ -91,4 +91,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Deathtouch."
     },
+    -- Solo reward
+    ["ZFK12"] = {
+        id = "ZFK12", name = "Gahz'rilla", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
+        power = 6, toughness = 6, isReward = true, displayId = 7271,
+        zone = "Zul'Farrak", creatureType = "Beast", npcEntry = 7273,
+        anthem = { tag = "zone", value = "Zul'Farrak", p = 1, t = 1 },
+        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "When Gahz'rilla enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step. Other Zul'Farrak creatures you control get +1/+1."
+    },
 })

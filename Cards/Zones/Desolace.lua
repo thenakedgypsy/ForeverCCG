@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["DES11"] = {
+        id = "DES11", name = "Uthek the Wise", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 2, toughness = 4, isReward = true, displayId = 4875,
+        zone = "Desolace", creatureType = "Humanoid", npcEntry = 5397,
+        anthem = { tag = "zone", value = "Desolace", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Desolace creatures you control get +1/+1."
+    },
 })

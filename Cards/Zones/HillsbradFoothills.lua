@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["HIL11"] = {
+        id = "HIL11", name = "Magistrate Henry Maleb", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
+        power = 2, toughness = 3, vigilance = true, isReward = true, displayId = 3665,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcEntry = 2276,
+        anthem = { tag = "zone", value = "Hillsbrad Foothills", p = 1 },
+        etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills creatures you control get +1/+0."
+    },
 })

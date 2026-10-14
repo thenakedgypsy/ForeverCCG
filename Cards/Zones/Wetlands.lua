@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["WET11"] = {
+        id = "WET11", name = "Captain Stoutfist", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 4, toughness = 3, trample = true, isReward = true, displayId = 5409,
+        zone = "Wetlands", creatureType = "Humanoid", npcEntry = 2104,
+        anthem = { tag = "zone", value = "Wetlands", p = 1, kw = { "trample" } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Trample. Other Wetlands creatures you control get +1/+0 and Trample."
+    },
 })

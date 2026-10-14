@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["DUS11"] = {
+        id = "DUS11", name = "Lady Jaina Proudmoore", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
+        power = 4, toughness = 6, isReward = true, displayId = 2970,
+        zone = "Dustwallow Marsh", creatureType = "Humanoid", npcEntry = 4968,
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 }, { op = "tap", to = "enemy_creatures" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Lady Jaina Proudmoore enters the battlefield, deal 2 damage to each enemy creature and tap them."
+    },
 })

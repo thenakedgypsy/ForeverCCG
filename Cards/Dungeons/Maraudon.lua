@@ -98,4 +98,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample. Other Maraudon creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["MAR13"] = {
+        id = "MAR13", name = "Meshlok the Harvester", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
+        power = 5, toughness = 6, trample = true, isReward = true, displayId = 9014,
+        zone = "Maraudon", creatureType = "Elemental", npcEntry = 12237,
+        anthem = { tag = "type", value = "Elemental", p = 1, t = 1 },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "Trample. Other Elementals you control get +1/+1."
+    },
 })

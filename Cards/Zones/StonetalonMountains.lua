@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["STO11"] = {
+        id = "STO11", name = "Keeper Albagorm", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
+        power = 2, toughness = 5, reach = true, isReward = true, displayId = 150,
+        zone = "Stonetalon Mountains", creatureType = "Humanoid", npcEntry = 3994,
+        anthem = { tag = "zone", value = "Stonetalon Mountains", t = 2 },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "Reach. Other Stonetalon Mountains creatures you control get +0/+2."
+    },
 })

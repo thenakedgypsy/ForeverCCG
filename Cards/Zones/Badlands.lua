@@ -82,4 +82,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["BAD11"] = {
+        id = "BAD11", name = "Lotwil Veriatus", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        power = 2, toughness = 3, isReward = true, displayId = 4896,
+        zone = "Badlands", creatureType = "Humanoid", npcEntry = 2921,
+        anthem = { tag = "zone", value = "Badlands", p = 1 },
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Lotwil Veriatus enters the battlefield, deal 1 damage to each enemy creature. Other Badlands creatures you control get +1/+0."
+    },
 })

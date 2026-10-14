@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["AZS11"] = {
+        id = "AZS11", name = "Kim'jael", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 2, toughness = 3, isReward = true, displayId = 7670,
+        zone = "Azshara", creatureType = "Humanoid", npcEntry = 8420,
+        rally = { tag = "zone", value = "Azshara", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Gets +1/+1 for each other Azshara creature you control."
+    },
 })

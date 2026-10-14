@@ -84,4 +84,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["RED11"] = {
+        id = "RED11", name = "Magistrate Solomon", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
+        power = 2, toughness = 4, isReward = true, displayId = 1753,
+        zone = "Redridge Mountains", creatureType = "Humanoid", npcEntry = 344,
+        anthem = { tag = "zone", value = "Redridge Mountains", t = 2 },
+        etb = { ops = { { op = "heal", to = "self_player", n = 3 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "When Magistrate Solomon enters the battlefield, you gain 3 life. Other Redridge Mountains creatures you control get +0/+2."
+    },
 })

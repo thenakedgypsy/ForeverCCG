@@ -91,4 +91,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike."
     },
+    -- Solo reward
+    ["DMS12"] = {
+        id = "DMS12", name = "Sneed", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 3, toughness = 3, isReward = true, displayId = 7125,
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcEntry = 643,
+        anthem = { tag = "faction", value = "Defias", p = 0, kw = { "haste" } },
+        rally = { tag = "faction", value = "Defias", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Haste."
+    },
 })

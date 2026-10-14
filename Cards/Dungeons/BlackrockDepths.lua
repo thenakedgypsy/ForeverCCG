@@ -170,4 +170,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Trample. Other Blackrock Depths creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["BRD23"] = {
+        id = "BRD23", name = "Princess Moira Bronzebeard", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
+        power = 3, toughness = 5, lifelink = true, isReward = true, displayId = 8705,
+        zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcEntry = 8929,
+        anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
+        etb = { ops = { { op = "heal", to = "friendly_creatures", n = 4 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Lifelink. When Princess Moira Bronzebeard enters the battlefield, each creature you control regains 4 health. Other Dark Iron you control get +1/+1."
+    },
 })

@@ -406,6 +406,18 @@ p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the b
     "• |cFFFFD200Vigilance:|r Attacking does not cause the creature to tap.\n" ..
     "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
 
+local hS = MakeHeading("Solo Mode")
+
+local pS = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+pS:SetWidth(540)
+pS:SetJustifyH("LEFT")
+pS:SetWordWrap(true)
+pS.rawText = "Open |cFFFFD200Solo Encounters|r from the main window (or type |cFFFFFFFF/tragic solo|r) to play against the computer with your active deck. Beat an encounter to earn its |cFFFFD200reward card|r, which can't drop from world kills.\n\n" ..
+    "|cFFFFD200Zone Gauntlet:|r one opponent per zone, playing that zone's 10 creatures. The starting zones (Elwynn Forest, Dun Morogh, Tirisfal Glades, Durotar, Mulgore and Teldrassil) are open; clearing a zone opens the next one along its path. The reward is a famous friend of that zone, and it strengthens the zone's own creatures.\n\n" ..
+    "|cFFFFD200Dungeons:|r one opponent per dungeon, playing its creatures and its boss under one or two |cFFFF8040boss rules|r (shown beside the opponent's name; hover it for details). A dungeon opens once you have defeated its final boss in the world. Its reward is one of the dungeon's strongest denizens.\n\n" ..
+    "|cFFFFD200Rewards:|r each win adds |cFFFFFFFF1 copy|r of the encounter's reward card, up to |cFFFFFFFF4 copies|r. Reward cards follow the normal deck rules and can be played anywhere, including against other players.\n\n" ..
+    "|cFFFFD200Opponents:|r early encounters play a simple game; later zones and dungeons cast spells, use their abilities, block well and hold removal for your best creature. |cFFFFD200Practice vs Dummy|r is still there to try a deck out."
+
 local h5 = MakeHeading("Challenging Players")
 
 local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -431,6 +443,7 @@ footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 local landFrames = {}
 local unlockFrames = {}
 local kwFrames = {}
+local soloFrames = {}
 
 -- =========================================================================
 -- DYNAMIC LAYOUT & VISUAL REFRESH
@@ -480,6 +493,7 @@ local function LayoutRules()
     p4:SetText(FormatTextWithSymbols(p4.rawText, 16))
     pU:SetText(FormatTextWithSymbols(pU.rawText, 16))
     p5:SetText(FormatTextWithSymbols(p5.rawText, 16))
+    pS:SetText(FormatTextWithSymbols(pS.rawText, 16))
 
     local y = -10
 
@@ -506,7 +520,12 @@ local function LayoutRules()
     y = PlaceParagraph(p4, y)
     y = PlaceCardRow(kwFrames, { "WES04", "WES02", "DSK06", "WES05" }, y) - SECTION_GAP
 
-    -- Section 5: Challenging Players
+    -- Section 5: Solo Mode, with a zone reward and a dungeon reward
+    y = PlaceHeading(hS, y)
+    y = PlaceParagraph(pS, y)
+    y = PlaceCardRow(soloFrames, { "ELW11", "DMS12" }, y) - SECTION_GAP
+
+    -- Section 6: Challenging Players
     y = PlaceHeading(h5, y)
     y = PlaceParagraph(p5, y) - 16
 

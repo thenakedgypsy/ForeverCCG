@@ -181,6 +181,12 @@ function E:GetCreatureStats(perm, isRemote)
         end
     end)
 
+    -- Solo encounter rules (Enrage)
+    if self.encounter and self.EncounterStatBonus then
+        local bp, bt = self:EncounterStatBonus(perm, isRemote)
+        p, t = p + bp, t + bt
+    end
+
     return math.max(0, p), t
 end
 

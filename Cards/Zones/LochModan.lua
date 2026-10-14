@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.81, camScale = 1.03, z = -0.11, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["LOC11"] = {
+        id = "LOC11", name = "Mountaineer Stormpike", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        power = 2, toughness = 2, firstStrike = true, isReward = true, displayId = 1894,
+        zone = "Loch Modan", creatureType = "Humanoid", npcEntry = 1343,
+        rally = { tag = "zone", value = "Loch Modan", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "First Strike. Gets +1/+1 for each other Loch Modan creature you control."
+    },
 })

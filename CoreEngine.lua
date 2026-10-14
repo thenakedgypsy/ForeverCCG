@@ -189,10 +189,23 @@ function E:EndMatch(outcome, reason)
     end
     self.inMatch = false
 
+    -- A solo encounter win records progress and grants the encounter's reward card
+    local rewardText, rewardCard
+    if outcome == "won" and self.isSolo and self.encounter then
+        local rewardId, copies, wasComplete = TTS:RecordEncounterWin(self.encounter)
+        rewardCard = rewardId and TTS.Cards[rewardId]
+        if rewardCard then
+            rewardText = string.format("\n\nReward: |cFFFFD200%s|r (%d/4 copies%s)", rewardCard.name, copies,
+                wasComplete and ", collection complete" or "")
+            self:Log(string.format("Reward earned: |cFFFFD200%s|r (%d/4 copies).", rewardCard.name, copies), "SYSTEM")
+        end
+    end
+
     local headline = outcome and RESULT_HEADLINES[outcome]
     if outcome and opponentName ~= "" then
         if headline then
-            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome], { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
+            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome] .. (rewardText or ""), { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
+            if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
         end
@@ -554,7 +567,7 @@ function E:OnRemoteEndTurn()
     self:RefreshUI()
 end
 
-function E:StartMatch(opponentName, isHost, isSolo)
+function E:StartMatch(opponentName, isHost, isSolo, encounter)
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         self:Log("Cannot start a game while the Deckbuilder is open.", "ERROR")
         return
@@ -587,6 +600,8 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.remoteLandPlayed = false
     self.checkingSBA = false
     self.encounter = nil
+    self.matchReward = nil
+    self.bossIndex = nil
 
     self.localState.life = 20
     self.localState.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
@@ -628,23 +643,19 @@ function E:StartMatch(opponentName, isHost, isSolo)
     self.remoteState.mirror = nil
 
     if self.isSolo then
-        local dummyLands = {
-            "W01", "W01", "W01", "W01",
-            "U01", "U01", "U01", "U01",
-            "B01", "B01", "B01", "B01",
-            "R01", "R01", "R01", "R01",
-            "G01", "G01"
-        }
-        local dummyCreatures = {
-            "ELW02", "RED04", "TEL06", "TEL07",
-            "DAR01", "DUN04", "LOC03", "DUN06",
-            "TIR01", "ELW03", "TIR03", "TIR05", "WES07",
-            "ELW01", "ELW04", "RED03", "ELW05",
-            "DUN01", "DUN03", "WES04", "ELW06", "LOC07"
-        }
-        for _, id in ipairs(dummyLands) do table.insert(self.remoteState.deck, id) end
-        for _, id in ipairs(dummyCreatures) do table.insert(self.remoteState.deck, id) end
+        -- Every solo game is an encounter; Practice vs Dummy is the PRACTICE entry
+        local enc = encounter or (TTS.SoloEncounters and TTS.SoloEncounters.PRACTICE)
+        self.encounter = enc
+        self.remoteState.life = enc.life or 20
+        if TTS.BoardFrame and TTS.BoardFrame.SetBackground then TTS.BoardFrame:SetBackground(enc.background) end
+    elseif TTS.BoardFrame and TTS.BoardFrame.ClearBackground then
+        TTS.BoardFrame:ClearBackground()
+    end
 
+    if self.isSolo then
+        local enc = self.encounter
+
+        self.remoteState.deck = self:BuildEncounterDeck(enc)
         for i = #self.remoteState.deck, 2, -1 do
             local j = math.random(i)
             self.remoteState.deck[i], self.remoteState.deck[j] = self.remoteState.deck[j], self.remoteState.deck[i]
@@ -660,6 +671,8 @@ function E:StartMatch(opponentName, isHost, isSolo)
 
     if TTS.BoardFrame then TTS.BoardFrame:Show() end
     if TTS.MainFrame then TTS.MainFrame:Hide() end
+
+    if self.isSolo then self:RunEncounterRules("onStart") end
 
     if self.isMyTurn then
         self:SetPhase("MAIN1")

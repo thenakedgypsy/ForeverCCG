@@ -134,4 +134,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilance. Other Undead you control get +1/+1."
     },
+    -- Solo reward
+    ["SCH18"] = {
+        id = "SCH18", name = "Kirtonos the Herald", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
+        power = 4, toughness = 4, flying = true, isReward = true, displayId = 7534,
+        zone = "Scholomance", creatureType = "Undead", npcEntry = 10506,
+        anthem = { tag = "zone", value = "Scholomance", p = 1, t = 1 },
+        modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
+        text = "Flying. Other Scholomance creatures you control get +1/+1."
+    },
 })

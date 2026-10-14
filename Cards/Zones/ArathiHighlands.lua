@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["ARA11"] = {
+        id = "ARA11", name = "Captain Nials", cost = "{3}{W}", cmc = 4, color = "W", type = "Creature",
+        power = 3, toughness = 3, firstStrike = true, isReward = true, displayId = 4147,
+        zone = "Arathi Highlands", creatureType = "Humanoid", npcEntry = 2700,
+        rally = { tag = "zone", value = "Arathi Highlands", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "First Strike. Gets +1/+1 for each other Arathi Highlands creature you control."
+    },
 })

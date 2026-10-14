@@ -99,4 +99,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Trample."
     },
+    -- Solo reward
+    ["SFK13"] = {
+        id = "SFK13", name = "Deathsworn Captain", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
+        power = 5, toughness = 4, isReward = true, displayId = 3224,
+        zone = "Shadowfang Keep", creatureType = "Undead", npcEntry = 3872,
+        anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
+        onDeath = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Shadowfang Keep creatures you control get +1/+1. When Deathsworn Captain dies, deal 2 damage to each enemy creature."
+    },
 })

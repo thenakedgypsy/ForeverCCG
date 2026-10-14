@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["SWA11"] = {
+        id = "SWA11", name = "Fallen Hero of the Horde", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
+        power = 5, toughness = 5, lifelink = true, isReward = true, displayId = 6775,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", npcEntry = 7572,
+        anthem = { tag = "zone", value = "Swamp of Sorrows", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Lifelink. Other Swamp of Sorrows creatures you control get +1/+1."
+    },
 })

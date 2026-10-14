@@ -63,4 +63,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "First Strike. Other Stockade creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["STK08"] = {
+        id = "STK08", name = "Defias Convict", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
+        power = 2, toughness = 2, haste = true, isReward = true, displayId = 2145,
+        zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcEntry = 1711,
+        anthem = { tag = "zone", value = "The Stockade", p = 0, kw = { "haste" } },
+        rally = { tag = "faction", value = "Defias", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Haste. Gets +1/+0 for each other Defias you control. Other Stockade creatures you control have Haste."
+    },
 })

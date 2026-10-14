@@ -99,4 +99,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Flying, Vigilance."
     },
+    -- Solo reward
+    ["SUN13"] = {
+        id = "SUN13", name = "Avatar of Hakkar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
+        power = 7, toughness = 7, flying = true, lifelink = true, isReward = true, displayId = 8053,
+        zone = "Sunken Temple", creatureType = "Beast", npcEntry = 8443,
+        anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "Flying, Lifelink. Other Trolls you control get +1/+1."
+    },
 })

@@ -82,4 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["TEL11"] = {
+        id = "TEL11", name = "Conservator Ilthalaine", cost = "{G}", cmc = 1, color = "G", type = "Creature",
+        power = 1, toughness = 2, isReward = true, displayId = 1285,
+        zone = "Teldrassil", creatureType = "Humanoid", npcEntry = 2079,
+        anthem = { tag = "zone", value = "Teldrassil", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Other Teldrassil creatures you control get +1/+0."
+    },
 })

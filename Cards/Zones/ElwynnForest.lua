@@ -84,4 +84,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Other Elwynn Forest creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["ELW11"] = {
+        id = "ELW11", name = "Marshal Dughan", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
+        power = 2, toughness = 3, vigilance = true, isReward = true, displayId = 1985,
+        zone = "Elwynn Forest", creatureType = "Humanoid", npcEntry = 240,
+        anthem = { tag = "zone", value = "Elwynn Forest", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Vigilance. Other Elwynn Forest creatures you control get +1/+1."
+    },
 })

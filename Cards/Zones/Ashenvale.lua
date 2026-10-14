@@ -83,4 +83,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Solo reward
+    ["ASH11"] = {
+        id = "ASH11", name = "Raene Wolfrunner", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
+        power = 3, toughness = 3, haste = true, isReward = true, displayId = 1980,
+        zone = "Ashenvale", creatureType = "Humanoid", npcEntry = 3691,
+        anthem = { tag = "zone", value = "Ashenvale", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Haste. Other Ashenvale creatures you control get +1/+1."
+    },
 })

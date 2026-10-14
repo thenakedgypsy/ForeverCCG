@@ -98,4 +98,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Vigilance. Other Uldaman creatures you control get +1/+1."
     },
+    -- Solo reward
+    ["ULD13"] = {
+        id = "ULD13", name = "Ironaya", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
+        power = 6, toughness = 8, vigilance = true, isReward = true, displayId = 6089,
+        zone = "Uldaman", creatureType = "Giant", npcEntry = 7228,
+        anthem = { tag = "zone", value = "Uldaman", t = 2 },
+        etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "Vigilance. When Ironaya enters the battlefield, deal 2 damage to each enemy creature. Other Uldaman creatures you control get +0/+2."
+    },
 })

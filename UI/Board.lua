@@ -449,8 +449,15 @@ function B:ShowMatchResult(headline)
     concedeBtn:Disable()
 end
 
+-- The reward card earned by a solo win, in the docked preview until the board closes
+function B:ShowRewardCard(card)
+    if card and ShowBoardPreview then ShowBoardPreview(self, card) end
+end
+
 function B:CloseAfterMatch()
     TT:Hide()
+    if HideBoardPreview then HideBoardPreview() end
+    if self.ClearBackground then self:ClearBackground() end
     self:Hide()
     restoreBar:Hide()
     if TTS.MainFrame then
@@ -474,6 +481,13 @@ B.oppLifeText = B.oppLifeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLar
 B.oppLifeText:SetPoint("LEFT", B.oppLifeBtn, "LEFT", 8, 0)
 B.oppLifeText:SetJustifyH("LEFT")
 
+-- Solo encounter rules, beside the opponent's name (details in its tooltip)
+B.oppRulesText = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+B.oppRulesText:SetPoint("TOPLEFT", B.oppLifeBtn, "TOPRIGHT", 8, -2)
+B.oppRulesText:SetWidth(220)
+B.oppRulesText:SetJustifyH("LEFT")
+B.oppRulesText:SetTextColor(1, 0.5, 0.25)
+
 B.oppLifeBtn:SetScript("OnClick", function(self, btn)
     if not TTS.Engine.inMatch then return end
     if btn == "RightButton" and TTS.Engine.targeting then
@@ -488,6 +502,14 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
     TT:Show(self, "ANCHOR_BOTTOMLEFT", { main = function(tip)
         tip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
         tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d", TTS.Engine.remoteState.life, TTS.Engine.remoteState.handCount), 1, 1, 1)
+        local enc = TTS.Engine.isSolo and TTS.Engine.encounter
+        if enc and TTS.GetEncounterRuleLines then
+            for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
+                tip:AddLine(" ")
+                tip:AddLine(rule.name, 1, 0.5, 0.25)
+                tip:AddLine(rule.text, 1, 1, 1, true)
+            end
+        end
         if IsTargetingPlayer() then
             tip:AddLine(" ")
             tip:AddLine("|cFF00FF00[Left-Click to target this player]|r", 0.2, 1.0, 0.2)
@@ -993,6 +1015,116 @@ midLine:SetHeight(1)
 midLine:SetColorTexture(1, 0.82, 0, 0.25)
 
 -- =========================================================================
+-- SOLO BACKGROUNDS
+-- A themed image behind the battlefield in solo encounters, inset 4 px inside the panel's
+-- border and under the cards and the gold line, with a black overlay so cards stay readable.
+--   { map = "Elwynn" }   the client's world map: 12 tiles of 256 px (4 x 3) holding one
+--                        1002 x 668 map, scaled to the panel's width and cropped top and bottom
+--   { file = "Deadmines", map = "Westfall", tint = { r, g, b } }
+--                        custom 1024 x 512 art from Textures\Backgrounds, else the map, tinted
+-- Every texture is checked after it is set; anything missing leaves the plain board.
+-- =========================================================================
+local BG_INSET = 4
+local BG_W, BG_H = 1028 - BG_INSET * 2, 496 - BG_INSET * 2
+local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
+local BG_ART_PATH = "Interface\\AddOns\\ForeverCCG\\Textures\\Backgrounds\\"
+local BG_OVERLAY_ALPHA = 0.55
+local PANEL_BG_DIMMED = 0.25
+
+local bgTiles = {}
+for i = 1, 12 do
+    local t = battlefield:CreateTexture(nil, "BACKGROUND", nil, 1)
+    t:Hide()
+    bgTiles[i] = t
+end
+local bgArt = battlefield:CreateTexture(nil, "BACKGROUND", nil, 1)
+bgArt:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET, -BG_INSET)
+bgArt:SetSize(BG_W, BG_H)
+bgArt:Hide()
+local bgOverlay = battlefield:CreateTexture(nil, "BACKGROUND", nil, 2)
+bgOverlay:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET, -BG_INSET)
+bgOverlay:SetSize(BG_W, BG_H)
+bgOverlay:SetColorTexture(0, 0, 0, BG_OVERLAY_ALPHA)
+bgOverlay:Hide()
+
+local function HideBackground()
+    for _, t in ipairs(bgTiles) do t:Hide() end
+    bgArt:Hide()
+    bgOverlay:Hide()
+    battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], STYLE.panelBg[4])
+end
+
+-- Custom art, cropped top and bottom to the panel's shape. Returns false if the file is missing.
+local function ShowArt(file)
+    bgArt:SetTexture(BG_ART_PATH .. file)
+    if not bgArt:GetTexture() then return false end
+    local scaledH = 512 * (BG_W / 1024)
+    local crop = math.max(0, (scaledH - BG_H) / 2) / scaledH
+    bgArt:SetTexCoord(0, 1, crop, 1 - crop)
+    bgArt:SetVertexColor(1, 1, 1)
+    bgArt:Show()
+    return true
+end
+
+-- A world map, tile by tile. Each tile is cut to the part that falls inside the panel.
+local function ShowMap(map, tint)
+    local s = BG_W / MAP_W
+    local winTop = ((MAP_H * s - BG_H) / 2) / s     -- map rows above the visible window
+    local winBottom = winTop + BG_H / s
+    local shown = 0
+    for row = 0, 2 do
+        for col = 0, 3 do
+            local i = row * 4 + col + 1
+            local t = bgTiles[i]
+            local x0, y0 = col * MAP_TILE, row * MAP_TILE
+            local ix0, ix1 = x0, math.min(x0 + MAP_TILE, MAP_W)
+            local iy0, iy1 = math.max(y0, winTop), math.min(y0 + MAP_TILE, winBottom, MAP_H)
+            if ix1 > ix0 and iy1 > iy0 then
+                t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i))
+                if not t:GetTexture() then
+                    for _, other in ipairs(bgTiles) do other:Hide() end
+                    return false
+                end
+                t:ClearAllPoints()
+                t:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET + ix0 * s, -(BG_INSET + (iy0 - winTop) * s))
+                t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
+                t:SetTexCoord((ix0 - x0) / MAP_TILE, (ix1 - x0) / MAP_TILE, (iy0 - y0) / MAP_TILE, (iy1 - y0) / MAP_TILE)
+                if tint then t:SetVertexColor(tint[1], tint[2], tint[3]) else t:SetVertexColor(1, 1, 1) end
+                t:Show()
+                shown = shown + 1
+            else
+                t:Hide()
+            end
+        end
+    end
+    return shown > 0
+end
+
+-- spec: an encounter's background table (nil = plain board)
+function B:SetBackground(spec)
+    self.backgroundSpec = spec
+    HideBackground()
+    if not spec then return end
+    if TTS.Options and TTS.Options:Get("boardBackgrounds") == false then return end
+    local ok = (spec.file and ShowArt(spec.file)) or (spec.map and ShowMap(spec.map, spec.file and spec.tint))
+    if not ok then
+        HideBackground()
+        return
+    end
+    bgOverlay:Show()
+    battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], PANEL_BG_DIMMED)
+end
+
+function B:ClearBackground()
+    self:SetBackground(nil)
+end
+
+-- Re-applies the current background (the option was toggled)
+function B:RefreshBackground()
+    self:SetBackground(self.backgroundSpec)
+end
+
+-- =========================================================================
 -- BOARD LAYOUT GRIDS
 -- =========================================================================
 for i = 1, 10 do
@@ -1241,14 +1373,8 @@ local function EnsureBoardPreview()
     return f
 end
 
-ShowBoardPreview = function(owner, card)
-    local f = EnsureBoardPreview()
-    previewOwner = owner
-
-    -- Card name and cost sit above the frame, so leave room for them
-    f:ClearAllPoints()
-    f:SetPoint("TOPRIGHT", B, "TOPLEFT", -12, -76)
-
+-- Paints a full-size preview card (a CreateCardFrame of PREVIEW_W x PREVIEW_H) and shows it
+local function PaintPreviewCard(f, card)
     SetupCardVisual(f, card)
     ApplyFrameTexture(f.border, card)
     f.border:SetVertexColor(1, 1, 1)
@@ -1271,6 +1397,16 @@ ShowBoardPreview = function(owner, card)
 
     f:Show()
     UpdateCardRules(f, PREVIEW_RULES)
+end
+
+ShowBoardPreview = function(owner, card)
+    local f = EnsureBoardPreview()
+    previewOwner = owner
+
+    -- Card name and cost sit above the frame, so leave room for them
+    f:ClearAllPoints()
+    f:SetPoint("TOPRIGHT", B, "TOPLEFT", -12, -76)
+    PaintPreviewCard(f, card)
 end
 
 -- owner (optional): only hide if this card is the one being previewed
@@ -1327,6 +1463,11 @@ function B:UpdateDisplay()
     concedeBtn:Enable()
 
     B.oppLifeText:SetText(string.format("%s: %d Life (%d cards)", E.opponent or "Opponent", E.remoteState.life, E.remoteState.handCount))
+    local ruleNames = {}
+    if E.isSolo and E.encounter and TTS.GetEncounterRuleLines then
+        for _, rule in ipairs(TTS:GetEncounterRuleLines(E.encounter)) do table.insert(ruleNames, rule.name) end
+    end
+    B.oppRulesText:SetText(#ruleNames > 0 and ("Rules: " .. table.concat(ruleNames, ", ")) or "")
     B.myLifeText:SetText(string.format("Life: %d", E.localState.life))
 
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
@@ -1640,6 +1781,8 @@ TTS.GetCardFrameTexture = GetCardFrameTexture
 TTS.CARD_FRAME_DEF      = CARD_FRAME_DEF
 TTS.UpdateCardRules     = UpdateCardRules  -- prints rules text on any card made by CreateCardFrame
 TTS.FormatPT            = FormatPT         -- P/T with damage shown, used by the card tooltips
+TTS.PaintPreviewCard    = PaintPreviewCard -- full-size preview card in the board's design
+TTS.PREVIEW_W, TTS.PREVIEW_H = PREVIEW_W, PREVIEW_H
 B.myHandFrames          = myHandFrames  -- read by TargetFX.lua (targeting arrow source)
 
 -- =========================================================================
