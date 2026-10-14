@@ -108,7 +108,7 @@ end
 
 -- Stat text size for a card frame: grows with the card (large previews get large numbers,
 -- symbols and divider), never smaller than the size the frame was built with
-local STAT_SIZE_SHARE = 0.155
+local STAT_SIZE_SHARE = 0.14
 
 local function StatSize(f)
     if not f.ptBaseSize then
