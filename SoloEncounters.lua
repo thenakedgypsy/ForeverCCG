@@ -455,7 +455,10 @@ function TTS:RecordEncounterWin(enc)
     p.cleared[enc.id] = (p.cleared[enc.id] or 0) + 1
     if not enc.reward or not TTS.Cards[enc.reward] then return nil end
     local before = p.rewards[enc.reward] or 0
-    if before < MAX_REWARD_COPIES then p.rewards[enc.reward] = before + 1 end
+    if before < MAX_REWARD_COPIES then
+        p.rewards[enc.reward] = before + 1
+        if TTS.MarkCardNew then TTS:MarkCardNew(enc.reward) end
+    end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()
     end

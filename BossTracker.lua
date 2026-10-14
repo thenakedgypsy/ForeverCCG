@@ -9,6 +9,25 @@
 TTS = TTS or {}
 TTS.BossTracker = {}
 
+-- =========================================================================
+-- NEW CARDS
+-- Every card the player gains a copy of (kills, solo rewards, spells unlocked by level)
+-- is marked new until the Deckbuilder is next closed. Saved in TTS_NewCards.
+-- =========================================================================
+function TTS:MarkCardNew(cardId)
+    if not (cardId and TTS.Cards and TTS.Cards[cardId]) then return end
+    TTS_NewCards = TTS_NewCards or {}
+    TTS_NewCards[cardId] = true
+end
+
+function TTS:IsCardNew(cardId)
+    return TTS_NewCards and TTS_NewCards[cardId] and true or false
+end
+
+function TTS:ClearNewCards()
+    TTS_NewCards = {}
+end
+
 local tracker = CreateFrame("Frame")
 tracker:RegisterEvent("ADDON_LOADED")
 
@@ -265,6 +284,7 @@ function TTS.BossTracker:RecordMobKill(card)
         local newKills = currentKills + 1
         if math.random(100) > COPY_DROP_CHANCE[newKills] then return end
         TTS_KilledBosses[card.id] = newKills
+        TTS:MarkCardNew(card.id)
         local zoneText = card.zone and string.format(" (%s)", card.zone) or ""
         DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Mob Slain: |cFFFFD200%s|r%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", card.name, zoneText, newKills))
 
@@ -426,6 +446,7 @@ function TTS.BossTracker:ScanAllBosses()
 
             if kills > oldKills then
                 TTS_KilledBosses[cardId] = kills
+                if oldKills < 4 then TTS:MarkCardNew(cardId) end
                 anyChange = true
                 DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Boss Tracked: |cFFFFD200%s|r (%d kills recorded).", card.name, kills))
             elseif TTS_KilledBosses[cardId] == nil then

@@ -1274,6 +1274,25 @@ local function CreateTile(index)
     card:Show()
     t.card = card
 
+    -- Newly acquired: a pulsing gold glow behind the card
+    t.newGlow = CreateFrame("Frame", nil, t)
+    t.newGlow:SetPoint("TOPLEFT", card, "TOPLEFT", -5, 5)
+    t.newGlow:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", 5, -5)
+    t.newGlow:SetFrameLevel(math.max(0, card:GetFrameLevel() - 1))
+    local glowTex = t.newGlow:CreateTexture(nil, "BACKGROUND")
+    glowTex:SetAllPoints(t.newGlow)
+    glowTex:SetColorTexture(1, 0.82, 0, 1)
+    if t.newGlow.CreateAnimationGroup then
+        local pulse = t.newGlow:CreateAnimationGroup()
+        local fade = pulse:CreateAnimation("Alpha")
+        fade:SetFromAlpha(0.9)
+        fade:SetToAlpha(0.3)
+        fade:SetDuration(0.8)
+        pulse:SetLooping("BOUNCE")
+        t.newPulse = pulse
+    end
+    t.newGlow:Hide()
+
     -- Click target above the card (so the card frame's own mouse handling never interferes)
     local hit = CreateFrame("Button", nil, t)
     hit:SetAllPoints(t)
@@ -1292,6 +1311,19 @@ local function CreateTile(index)
     t.hover:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
     t.hover:SetBlendMode("ADD")
     t.hover:Hide()
+
+    -- "NEW" badge in the card's top corner
+    t.newBadge = hit:CreateTexture(nil, "OVERLAY", nil, 6)
+    t.newBadge:SetColorTexture(0, 0, 0, 0.8)
+    t.newBadge:SetSize(30, 13)
+    t.newBadge:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -3)
+    t.newText = hit:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    t.newText:SetDrawLayer("OVERLAY", 7)
+    t.newText:SetPoint("CENTER", t.newBadge, "CENTER", 0, 0)
+    t.newText:SetText("NEW")
+    t.newText:SetTextColor(0.3, 1, 0.3)
+    t.newBadge:Hide()
+    t.newText:Hide()
 
     -- Copy pips: gold = in deck, grey = available, dark = not yet collected
     t.pips = {}
@@ -1384,6 +1416,14 @@ local function UpdateTile(t, id, card, deck)
     end
     PrintCardRules(t.card, card)
     UpdateTileState(t, deck)
+
+    local isNew = TTS:IsCardNew(id)
+    t.newGlow:SetShown(isNew)
+    t.newBadge:SetShown(isNew)
+    t.newText:SetShown(isNew)
+    if t.newPulse then
+        if isNew then t.newPulse:Play() else t.newPulse:Stop() end
+    end
 end
 
 -- Pager
@@ -1889,6 +1929,15 @@ function D:RefreshPool()
     end
     table.sort(cardPoolKeys, CompareCards)
 
+    -- Newly acquired cards first (still filtered; in sort order among themselves)
+    local newFirst, rest = {}, {}
+    for _, id in ipairs(cardPoolKeys) do
+        table.insert(TTS:IsCardNew(id) and newFirst or rest, id)
+    end
+    wipe(cardPoolKeys)
+    for _, id in ipairs(newFirst) do table.insert(cardPoolKeys, id) end
+    for _, id in ipairs(rest) do table.insert(cardPoolKeys, id) end
+
     local total = #cardPoolKeys
     local pages = math.max(1, math.ceil(total / TILES_PER_PAGE))
     if poolPage > pages then poolPage = pages end
@@ -2146,6 +2195,7 @@ local function AnnounceSpellUnlocks(newLevel)
     table.sort(unlocked)
     for _, cardId in ipairs(unlocked) do
         local card = TTS.Cards[cardId]
+        TTS:MarkCardNew(cardId)
         DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Level %d reached! Spell Unlocked: |cFFFFD200%s|r (%s).",
             newLevel, card.name, card.class and ClassColored(card.class) or "Spell"))
     end
@@ -2185,6 +2235,8 @@ D:SetScript("OnHide", function()
     StaticPopup_Hide("TTS_RENAME_DECK")
     -- Models may not survive the window being hidden, so force a reload next time
     for _, t in ipairs(tiles) do t.paintedId = nil end
+    -- New cards have been seen: no longer marked new
+    TTS:ClearNewCards()
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end
