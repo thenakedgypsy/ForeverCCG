@@ -1617,10 +1617,17 @@ local function GetDeckRow(i)
     r.rowHl:SetTexture(HIGHLIGHT_TEX)
     r.rowHl:SetBlendMode("ADD")
 
-    r.stripe = r:CreateTexture(nil, "ARTWORK")
-    r.stripe:SetPoint("TOPLEFT", 0, -1)
-    r.stripe:SetPoint("BOTTOMLEFT", 0, 1)
-    r.stripe:SetWidth(3)
+    -- Colour pips at the left edge: one stripe per colour in the card's cost
+    r.stripes = {}
+    for k = 1, #SPHERE_ORDER do
+        local s = r:CreateTexture(nil, "ARTWORK")
+        s:SetPoint("TOPLEFT", (k - 1) * 4, -1)
+        s:SetPoint("BOTTOMLEFT", (k - 1) * 4, 1)
+        s:SetWidth(3)
+        s:Hide()
+        r.stripes[k] = s
+    end
+    r.stripe = r.stripes[1]
 
     r.count = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     r.count:SetPoint("LEFT", 6, 0)
@@ -1673,7 +1680,7 @@ end
 local function SetupHeaderRow(r, group, count)
     r.cardId = nil
     r:EnableMouse(false)
-    r.stripe:Hide()
+    for _, s in ipairs(r.stripes) do s:Hide() end
     r.count:Hide()
     r.cost:Hide()
     r.name:Hide()
@@ -1692,9 +1699,21 @@ end
 local function SetupCardRow(r, cardId, card, count)
     r.cardId = cardId
     r:EnableMouse(true)
-    local rgb = SPHERE_RGB[card.color] or NEUTRAL_RGB
-    r.stripe:SetColorTexture(rgb[1], rgb[2], rgb[3], 0.9)
-    r.stripe:Show()
+    -- One pip per colour in the cost (in sphere order); the card's colour if its cost has none
+    local colors = {}
+    for _, col in ipairs(SPHERE_ORDER) do
+        if card.cost and card.cost:find("{" .. col .. "}", 1, true) then table.insert(colors, col) end
+    end
+    if #colors == 0 then colors[1] = card.color end
+    for k, s in ipairs(r.stripes) do
+        if colors[k] ~= nil or k == 1 then
+            local rgb = SPHERE_RGB[colors[k]] or NEUTRAL_RGB
+            s:SetColorTexture(rgb[1], rgb[2], rgb[3], 0.9)
+            s:Show()
+        else
+            s:Hide()
+        end
+    end
     r.count:SetText(count .. "x")
     r.count:Show()
     if card.cost and card.cost ~= "" then
