@@ -1405,13 +1405,13 @@ function E:ClickOpponentCard(fieldIndex)
             return
         end
 
-        -- One blocker per attacker
+        -- One blocker per attacker: the new blocker replaces the one already there
         for otherBlocker, blockedAttacker in pairs(self.blockingState.blocks) do
             if blockedAttacker == fieldIndex and otherBlocker ~= blockerIdx then
+                self.blockingState.blocks[otherBlocker] = nil
                 local other = self.localState.field[otherBlocker]
-                self:Log(string.format("%s is already blocked by %s. Each attacker can only be blocked by one creature.",
-                    attackerCard.name, other and TTS.Cards[other.id] and TTS.Cards[other.id].name or "another creature"), "ERROR")
-                return
+                self:Log(string.format("|cFFFFD200%s|r is no longer blocking %s.",
+                    other and TTS.Cards[other.id] and TTS.Cards[other.id].name or "The other creature", attackerCard.name), "SYSTEM")
             end
         end
 
