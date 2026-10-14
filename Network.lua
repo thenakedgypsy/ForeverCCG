@@ -692,6 +692,7 @@ end
 -- doesn't answer in one burst. Older builds ignore both.
 -- =========================================================================
 local CENSUS_EVERY = 60
+local BACKGROUND_CENSUS_EVERY = 180   -- with the waiting room closed (StartBackgroundPings)
 local CENSUS_REPLY_COOLDOWN = 30
 local CENSUS_REPLY_JITTER = 5
 local lastCensusSeen = 0
@@ -715,11 +716,15 @@ local function NotePresence(name, charName, queued, score)
     end
 end
 
--- Called by the waiting room (on open and every tick); only asks when it is our turn to
-function TTS.Net:RunCensus()
+-- Called by the waiting room (on open and every tick), and with background = true by the
+-- background rounds whether or not it is open. Only asks when it is our turn to.
+-- Never while queued: askers are listed as not waiting.
+function TTS.Net:RunCensus(background)
     local E, WR = TTS.Engine, TTS.WaitingRoom
-    if (E and E.inMatch) or not (WR and WR.frame and WR.frame:IsShown()) or WR.isQueued then return end
-    if time() - lastCensusSeen < CENSUS_EVERY then return end
+    if (E and E.inMatch) or (WR and WR.isQueued) then return end
+    if not background and not (WR and WR.frame and WR.frame:IsShown()) then return end
+    -- Anyone's census counts: its answers are broadcast, so we heard them too
+    if time() - lastCensusSeen < (background and BACKGROUND_CENSUS_EVERY or CENSUS_EVERY) then return end
     lastCensusSeen = time()
     self:BroadcastLFM("LFM_CENSUS:" .. MyScore() .. ":" .. MyName())
 end
@@ -752,6 +757,7 @@ function TTS.Net:StartBackgroundPings()
         if not (WR and WR.frame and WR.frame:IsShown()) then
             TTS.Net:PingContacts(true)
         end
+        TTS.Net:RunCensus(true)
         TTS:SafeAfter(BACKGROUND_PING_TICK, Round)
     end
     -- First round once the login burst (channel join, addon loading) has settled

@@ -286,7 +286,8 @@ function TTS.BossTracker:RecordMobKill(card)
         TTS_KilledBosses[card.id] = newKills
         TTS:MarkCardNew(card.id)
         local zoneText = card.zone and string.format(" (%s)", card.zone) or ""
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Mob Slain: |cFFFFD200%s|r%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", card.name, zoneText, newKills))
+        local cardText = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. card.name .. "|r")
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Mob Slain: %s%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", cardText, zoneText, newKills))
 
         -- Final copy: raid-warning style announcement in the middle of the screen
         if newKills == 4 then

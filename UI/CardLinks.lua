@@ -53,10 +53,17 @@ end
 -- =========================================================================
 -- INCOMING CHAT: tag -> clickable link
 -- =========================================================================
+-- Clickable gold [Card Name] link for local chat messages (e.g. unlock notices)
+function TTS:CardLink(cardId)
+    local card = TTS.Cards and TTS.Cards[cardId]
+    if not (card and card.name) then return tostring(cardId) end
+    return LINK_COLOR .. "|H" .. LINK_PREFIX .. cardId .. "|h[" .. card.name .. "]|h|r"
+end
+
 local function ReplaceTag(name)
     local id = FindCardByName(name)
     if not id then return nil end -- not a card we know: leave the text as it is
-    return LINK_COLOR .. "|H" .. LINK_PREFIX .. id .. "|h[" .. TTS.Cards[id].name .. "]|h|r"
+    return TTS:CardLink(id)
 end
 
 local function ChatFilter(self, event, msg, ...)

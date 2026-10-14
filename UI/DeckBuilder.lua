@@ -2202,8 +2202,9 @@ local function AnnounceSpellUnlocks(newLevel)
     for _, cardId in ipairs(unlocked) do
         local card = TTS.Cards[cardId]
         TTS:MarkCardNew(cardId)
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Level %d reached! Spell Unlocked: |cFFFFD200%s|r (%s).",
-            newLevel, card.name, card.class and ClassColored(card.class) or "Spell"))
+        local cardText = TTS.CardLink and TTS:CardLink(cardId) or ("|cFFFFD200" .. card.name .. "|r")
+        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Level %d reached! Spell Unlocked: %s (%s).",
+            newLevel, cardText, card.class and ClassColored(card.class) or "Spell"))
     end
 end
 
