@@ -24,6 +24,7 @@ local GOLD = "|cFFFFD200"
 local CORNER_Y = 0.05          -- stat line's height above the card's bottom edge, as a share of its height
 local DIVIDER_SCALE = 1.6      -- divider height relative to the stat font size
 local ICON_SCALE = 0.85        -- sword / shield size on cards, relative to the numbers
+local ICON_SCALE_LARGE = 0.72  -- the same on large previews (cards whose stats grew past their frame's size)
 
 local function Icon(path, size)
     return string.format("|T%s:%d:%d|t", path, size, size)
@@ -126,7 +127,7 @@ function TTS.SetCardStats(f, power, toughness, damage, colorCode)
     if font then f.pt:SetFont(font, size, flags or "OUTLINE") end
     local p = PowerString(f)
     if font then p:SetFont(font, size, flags or "OUTLINE") end
-    local iconSize = math.floor(size * ICON_SCALE + 0.5)
+    local iconSize = math.floor(size * ((size > f.ptBaseSize) and ICON_SCALE_LARGE or ICON_SCALE) + 0.5)
     p:SetText(TTS.PowerText(power, colorCode, iconSize))
     f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode, iconSize))
     TTS.PlaceCardStats(f)
