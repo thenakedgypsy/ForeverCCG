@@ -9,27 +9,35 @@
 TTS = TTS or {}
 
 -- =========================================================================
--- SOLO ENCOUNTER SELECT
--- Two tabs (Zones, Dungeons), one row per encounter with its status, the selected
--- encounter's details, and its reward card docked to the left of the window.
+-- SOLO ENCOUNTER MAP
+-- The continent maps with a button on every zone and dungeon entrance. Hovering a
+-- button shows the encounter and its reward card; clicking it starts the encounter.
+-- Lines join connected zones: clearing a zone opens everything connected to it.
 -- Same look as the main window and the Deckbuilder.
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
-local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
-local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
-local HIGHLIGHT_TEX = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
 
-local GOLD  = "|cFFFFD200"
-local GREY  = "|cFF8A8A8A"
-local GREEN = "|cFF33DD33"
-local RED   = "|cFFFF4444"
+local GOLD   = "|cFFFFD200"
+local GREY   = "|cFF8A8A8A"
+local GREEN  = "|cFF33DD33"
+local RED    = "|cFFFF4444"
 local ORANGE = "|cFFFF8040"
 
 local AI_LABEL = { basic = "Basic", tactical = "Tactical", expert = "Expert", dummy = "Dummy" }
 
-local WIN_W, WIN_H = 520, 580
-local LIST_H = 300
-local ROW_H = 20
+-- The continent maps: 12 tiles of 256 px (4 x 3) holding one 1002 x 668 map
+local CONTINENTS = {
+    { id = "EK",  name = "Eastern Kingdoms", folder = "Azeroth" },
+    { id = "KAL", name = "Kalimdor",         folder = "Kalimdor" },
+}
+local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
+local WIN_W, WIN_H = MAP_W + 34, MAP_H + 128
+
+local ZONE_SIZE, DUNGEON_SIZE = 30, 24
+local ZONE_ICON    = "Interface\\Icons\\INV_Misc_Map_01"
+local DUNGEON_ICON = "Interface\\Icons\\INV_Misc_Bone_HumanSkull_01"
+local CHECK_ICON   = "Interface\\RaidFrame\\ReadyCheck-Ready"
+local GLOW_TEX     = "Interface\\Buttons\\UI-ActionButton-Border"
 
 local TT = TTS.Tooltip
 
@@ -77,31 +85,6 @@ local footer = S:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", S, "BOTTOMRIGHT", -20, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
--- Tooltip-bordered panel with a gold section header and divider
-local function CreateSection(label, w, h)
-    local p = CreateFrame("Frame", nil, S, backdropTemplate)
-    p:SetSize(w, h)
-    p:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 }
-    })
-    p:SetBackdropColor(PANEL_BG[1], PANEL_BG[2], PANEL_BG[3], PANEL_BG[4])
-    p:SetBackdropBorderColor(PANEL_BORDER[1], PANEL_BORDER[2], PANEL_BORDER[3], PANEL_BORDER[4])
-
-    p.header = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    p.header:SetPoint("TOPLEFT", 10, -9)
-    p.header:SetText(label)
-
-    local line = p:CreateTexture(nil, "ARTWORK")
-    line:SetPoint("TOPLEFT", 8, -24)
-    line:SetPoint("TOPRIGHT", -8, -24)
-    line:SetHeight(1)
-    line:SetColorTexture(1, 0.82, 0, 0.30)
-    return p
-end
-
 -- Red panel button with the Deckbuilder's small fonts
 local function CreatePanelButton(parent, w, h, text)
     local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -114,20 +97,143 @@ local function CreatePanelButton(parent, w, h, text)
 end
 
 -- =========================================================================
--- STATE
+-- STATUS
 -- =========================================================================
-local currentTab = "zone"
-local selected = nil          -- encounter table
-local rows = {}               -- row buttons
-local listData = {}           -- { header = text } or { enc = encounter }
-
--- Status of an encounter: text, unlocked, reason
-local function EncounterStatus(enc)
+-- Why a game can't start right now (nil = it can)
+local function StartBlocker(enc)
+    local E = TTS.Engine
+    if not enc then return "Choose an encounter." end
+    if E and E.inMatch then return "A game is already in progress." end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return "Close the Deckbuilder first." end
+    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return "Leave the waiting room queue first." end
+    if E and not E:ValidateDeck() then return "Your active deck must have 40-50 cards." end
     local unlocked, reason = TTS:IsEncounterUnlocked(enc)
-    local wins = TTS:GetEncounterWins(enc.id)
-    if not unlocked then return GREY .. "Locked|r", false, reason end
-    if wins > 0 then return string.format("%sCleared x%d|r", GOLD, wins), true end
-    return GREEN .. "Available|r", true
+    if not unlocked then return reason end
+    return nil
+end
+
+-- "locked", "open" or "cleared"
+local function EncounterState(enc)
+    if not TTS:IsEncounterUnlocked(enc) then return "locked" end
+    if TTS:GetEncounterWins(enc.id) > 0 then return "cleared" end
+    return "open"
+end
+
+-- =========================================================================
+-- TOP BAR: continent tabs, active deck, hint
+-- =========================================================================
+local tabs = {}
+for i, cont in ipairs(CONTINENTS) do
+    local b = CreatePanelButton(S, 140, 22, cont.name)
+    b:SetPoint("TOPLEFT", S, "TOPLEFT", 16 + (i - 1) * 144, -46)
+    tabs[cont.id] = b
+end
+
+local deckStatus = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+deckStatus:SetPoint("RIGHT", S, "TOPRIGHT", -20, -57)
+deckStatus:SetJustifyH("RIGHT")
+
+local hint = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+hint:SetPoint("BOTTOMLEFT", S, "BOTTOMLEFT", 20, 16)
+hint:SetJustifyH("LEFT")
+local HINT_TEXT = "Click a zone or dungeon to start it. Clearing a zone opens the zones and dungeons connected to it."
+
+-- =========================================================================
+-- MAP
+-- =========================================================================
+local map = CreateFrame("Frame", nil, S, backdropTemplate)
+map:SetSize(MAP_W + 8, MAP_H + 8)
+map:SetPoint("TOPLEFT", S, "TOPLEFT", 13, -74)
+map:SetBackdrop({
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+map:SetBackdropColor(0, 0, 0, 1)
+map:SetBackdropBorderColor(0.60, 0.56, 0.48, 1)
+
+local canvas = CreateFrame("Frame", nil, map)
+canvas:SetPoint("TOPLEFT", map, "TOPLEFT", 4, -4)
+canvas:SetSize(MAP_W, MAP_H)
+
+-- Map tiles; the last column and row are cut to the map's 1002 x 668
+local tiles = {}
+for row = 0, 2 do
+    for col = 0, 3 do
+        local t = canvas:CreateTexture(nil, "BACKGROUND")
+        local w = math.min(MAP_TILE, MAP_W - col * MAP_TILE)
+        local h = math.min(MAP_TILE, MAP_H - row * MAP_TILE)
+        t:SetPoint("TOPLEFT", canvas, "TOPLEFT", col * MAP_TILE, -row * MAP_TILE)
+        t:SetSize(w, h)
+        t:SetTexCoord(0, w / MAP_TILE, 0, h / MAP_TILE)
+        tiles[row * 4 + col + 1] = t
+    end
+end
+
+-- Slightly darkened so the buttons and names stand out
+local shade = canvas:CreateTexture(nil, "BORDER")
+shade:SetAllPoints(canvas)
+shade:SetColorTexture(0, 0, 0, 0.25)
+
+-- Lines and buttons sit on their own layers above the map
+local lineLayer = CreateFrame("Frame", nil, canvas)
+lineLayer:SetAllPoints(canvas)
+local buttonLayer = CreateFrame("Frame", nil, canvas)
+buttonLayer:SetAllPoints(canvas)
+buttonLayer:SetFrameLevel(lineLayer:GetFrameLevel() + 5)
+
+-- =========================================================================
+-- BUTTON PLACEMENT
+-- Zones sit at their centre and dungeons at their entrance. Dungeon buttons that would
+-- cover another button are nudged clear of it.
+-- =========================================================================
+local placed = {}   -- [continent] = { [id] = { x, y } } in map pixels
+
+local function Layout(contId)
+    if placed[contId] then return placed[contId] end
+    local pos, items = {}, {}
+    for id, p in pairs(TTS.SoloMapPositions or {}) do
+        local enc = TTS.SoloEncounters[id]
+        if enc and p[1] == contId then
+            pos[id] = { p[2] * MAP_W, p[3] * MAP_H }
+            table.insert(items, id)
+        end
+    end
+    table.sort(items)
+    for _ = 1, 60 do
+        local moved = false
+        for i = 1, #items do
+            for j = i + 1, #items do
+                local a, b = items[i], items[j]
+                local ea, eb = TTS.SoloEncounters[a], TTS.SoloEncounters[b]
+                local da, db = ea.kind == "dungeon", eb.kind == "dungeon"
+                if da or db then
+                    local pa, pb = pos[a], pos[b]
+                    local dx, dy = pb[1] - pa[1], pb[2] - pa[2]
+                    local d = math.sqrt(dx * dx + dy * dy)
+                    local need = ((da and DUNGEON_SIZE or ZONE_SIZE) + (db and DUNGEON_SIZE or ZONE_SIZE)) / 2 + 6
+                    if d < need then
+                        if d < 0.01 then dx, dy, d = 1, 0, 1 end
+                        local push = (need - d)
+                        local ux, uy = dx / d, dy / d
+                        if da and db then
+                            pa[1], pa[2] = pa[1] - ux * push / 2, pa[2] - uy * push / 2
+                            pb[1], pb[2] = pb[1] + ux * push / 2, pb[2] + uy * push / 2
+                        elseif da then
+                            pa[1], pa[2] = pa[1] - ux * push, pa[2] - uy * push
+                        else
+                            pb[1], pb[2] = pb[1] + ux * push, pb[2] + uy * push
+                        end
+                        moved = true
+                    end
+                end
+            end
+        end
+        if not moved then break end
+    end
+    placed[contId] = pos
+    return pos
 end
 
 -- =========================================================================
@@ -152,237 +258,219 @@ local function ShowRewardPreview(enc)
         preview:SetPoint("TOPRIGHT", S, "TOPLEFT", -12, -76)
     end
     TTS.PaintPreviewCard(preview, card)
-    -- Not yet earned: show it dimmed
+    -- Not yet earned: shown dimmed
     local owned = TTS:GetOwnedCopies(card) or 0
-    local shade = owned > 0 and 1 or 0.45
-    preview.art:SetVertexColor(shade, shade, shade)
+    local tone = owned > 0 and 1 or 0.45
+    preview.art:SetVertexColor(tone, tone, tone)
     if preview.model and preview.model.SetAlpha then preview.model:SetAlpha(owned > 0 and 1 or 0.6) end
 end
 
--- =========================================================================
--- TABS
--- =========================================================================
-local zonesTab = CreatePanelButton(S, 110, 22, "Zones")
-zonesTab:SetPoint("TOPLEFT", S, "TOPLEFT", 16, -46)
-local dungeonsTab = CreatePanelButton(S, 110, 22, "Dungeons")
-dungeonsTab:SetPoint("LEFT", zonesTab, "RIGHT", 4, 0)
-
-local deckStatus = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-deckStatus:SetPoint("RIGHT", S, "TOPRIGHT", -20, -57)
-deckStatus:SetJustifyH("RIGHT")
-
--- =========================================================================
--- LIST
--- =========================================================================
-local listSection = CreateSection("Zone Gauntlet", WIN_W - 28, LIST_H)
-listSection:SetPoint("TOPLEFT", S, "TOPLEFT", 14, -74)
-
-local scroll = CreateFrame("ScrollFrame", "TTS_SoloSelectScroll", listSection, "UIPanelScrollFrameTemplate")
-scroll:SetPoint("TOPLEFT", listSection, "TOPLEFT", 8, -30)
-scroll:SetPoint("BOTTOMRIGHT", listSection, "BOTTOMRIGHT", -28, 8)
-
-local content = CreateFrame("Frame", nil, scroll)
-content:SetSize(WIN_W - 28 - 36, 10)
-scroll:SetScrollChild(content)
-
-local UpdateDetails, RefreshList
-
-local function Row(i)
-    if rows[i] then return rows[i] end
-    local r = CreateFrame("Button", nil, content)
-    r:SetSize(content:GetWidth(), ROW_H)
-    r:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(i - 1) * ROW_H)
-
-    r.sel = r:CreateTexture(nil, "BACKGROUND")
-    r.sel:SetAllPoints(r)
-    r.sel:SetColorTexture(1, 0.82, 0, 0.18)
-    r.sel:Hide()
-
-    local hl = r:CreateTexture(nil, "HIGHLIGHT")
-    hl:SetAllPoints(r)
-    hl:SetTexture(HIGHLIGHT_TEX)
-    hl:SetBlendMode("ADD")
-    r.hl = hl
-
-    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    r.name:SetPoint("LEFT", 6, 0)
-    r.name:SetJustifyH("LEFT")
-    r.status = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    r.status:SetPoint("RIGHT", -6, 0)
-    r.status:SetJustifyH("RIGHT")
-
-    r:SetScript("OnClick", function(self)
-        if not self.enc then return end
-        selected = self.enc
-        RefreshList()
-        UpdateDetails()
-    end)
-    r:SetScript("OnEnter", function(self)
-        if not self.enc then return end
-        ShowRewardPreview(self.enc)
-        local _, unlocked, reason = EncounterStatus(self.enc)
-        if TT then
-            TT:ShowText(self, "ANCHOR_RIGHT", self.enc.name, unlocked and ("Opponent: " .. self.enc.opponent) or reason)
-        end
-    end)
-    r:SetScript("OnLeave", function(self)
-        if TT then TT:Hide(self) end
-        ShowRewardPreview(selected)
-    end)
-    rows[i] = r
-    return r
+local function HideRewardPreview()
+    if preview then preview:Hide() end
 end
 
-local function BuildListData()
-    listData = {}
-    local list = TTS:GetSoloEncounters(currentTab)
-    if currentTab == "zone" then
-        for _, chain in ipairs(TTS.SoloZoneChains or {}) do
-            table.insert(listData, { header = chain })
-            for _, enc in ipairs(list) do
-                if enc.chain == chain then table.insert(listData, { enc = enc }) end
-            end
+-- =========================================================================
+-- ENCOUNTER BREAKDOWN (the button's tooltip)
+-- =========================================================================
+local function AddBreakdown(tip, enc)
+    local state = EncounterState(enc)
+    tip:AddLine(enc.name, 1, 0.82, 0)
+    tip:AddLine(enc.kind == "dungeon" and "Dungeon" or "Zone Gauntlet", 0.7, 0.7, 0.7)
+    tip:AddLine(" ")
+    tip:AddLine(string.format("Opponent: %s%s|r", GOLD, enc.opponent), 1, 1, 1)
+    tip:AddLine(string.format("Life: %s%d|r    AI: %s%s|r", GOLD, enc.life or 20, GOLD, AI_LABEL[enc.ai] or enc.ai), 1, 1, 1)
+    if enc.kind == "dungeon" then
+        local names = {}
+        for _, b in ipairs(enc.bosses or {}) do table.insert(names, TTS.Cards[b] and TTS.Cards[b].name or b) end
+        tip:AddLine("Bosses: " .. table.concat(names, ", "), 1, 1, 1, true)
+        for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
+            tip:AddLine(string.format("%s%s:|r %s", ORANGE, rule.name, rule.text), 1, 1, 1, true)
         end
     else
-        for _, enc in ipairs(list) do table.insert(listData, { enc = enc }) end
-    end
-end
-
-RefreshList = function()
-    BuildListData()
-    for i, item in ipairs(listData) do
-        local r = Row(i)
-        r:Show()
-        if item.header then
-            r.enc = nil
-            r.name:SetText(GOLD .. item.header .. "|r")
-            r.status:SetText("")
-            r.sel:Hide()
-            r.hl:SetAlpha(0)
-            r:EnableMouse(false)
-        else
-            local enc = item.enc
-            r.enc = enc
-            r:EnableMouse(true)
-            r.hl:SetAlpha(1)
-            local status, unlocked = EncounterStatus(enc)
-            local indent = currentTab == "zone" and "   " or ""
-            r.name:SetText(indent .. (unlocked and enc.name or (GREY .. enc.name .. "|r")))
-            r.status:SetText(status)
-            if selected == enc then r.sel:Show() else r.sel:Hide() end
-        end
-    end
-    for i = #listData + 1, #rows do rows[i]:Hide(); rows[i].enc = nil end
-    content:SetHeight(math.max(10, #listData * ROW_H))
-end
-
--- =========================================================================
--- DETAILS & START
--- =========================================================================
-local detailSection = CreateSection("Encounter", WIN_W - 28, 150)
-detailSection:SetPoint("TOPLEFT", listSection, "BOTTOMLEFT", 0, -8)
-
-local detailText = detailSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-detailText:SetPoint("TOPLEFT", detailSection, "TOPLEFT", 12, -32)
-detailText:SetPoint("BOTTOMRIGHT", detailSection, "BOTTOMRIGHT", -12, 8)
-detailText:SetJustifyH("LEFT")
-detailText:SetJustifyV("TOP")
-detailText:SetWordWrap(true)
-
-local startBtn = CreatePanelButton(S, 140, 24, "Start Encounter")
-startBtn:SetPoint("TOPRIGHT", detailSection, "BOTTOMRIGHT", 0, -8)
-
-local startHint = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-startHint:SetPoint("RIGHT", startBtn, "LEFT", -10, 0)
-startHint:SetPoint("LEFT", detailSection, "BOTTOMLEFT", 4, 0)
-startHint:SetJustifyH("LEFT")
-
--- Why a game can't start right now (nil = it can)
-local function StartBlocker(enc)
-    local E = TTS.Engine
-    if not enc then return "Choose an encounter." end
-    if E and E.inMatch then return "A game is already in progress." end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return "Close the Deckbuilder first." end
-    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return "Leave the waiting room queue first." end
-    if E and not E:ValidateDeck() then return "Your active deck must have 40-50 cards." end
-    local unlocked, reason = TTS:IsEncounterUnlocked(enc)
-    if not unlocked then return reason end
-    return nil
-end
-
-UpdateDetails = function()
-    local enc = selected
-    if not enc then
-        detailSection.header:SetText("Encounter")
-        detailText:SetText(GREY .. "Choose an encounter from the list.|r")
-    else
-        detailSection.header:SetText(enc.name)
-        local lines = {}
-        table.insert(lines, string.format("Opponent: %s%s|r    Life: %s%d|r    AI: %s%s|r",
-            GOLD, enc.opponent, GOLD, enc.life or 20, GOLD, AI_LABEL[enc.ai] or enc.ai))
-        if enc.kind == "dungeon" then
-            local names = {}
-            for _, b in ipairs(enc.bosses or {}) do
-                table.insert(names, TTS.Cards[b] and TTS.Cards[b].name or b)
-            end
-            table.insert(lines, "Bosses: " .. table.concat(names, ", "))
-            for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
-                table.insert(lines, string.format("%s%s:|r %s", ORANGE, rule.name, rule.text))
-            end
-        else
-            table.insert(lines, "Deck: the creatures of " .. enc.zone .. ".")
-        end
-        local card = enc.reward and TTS.Cards[enc.reward]
-        if card then
-            local owned = TTS:GetOwnedCopies(card) or 0
-            table.insert(lines, string.format("Reward: %s%s|r (%d/4 owned). One copy per win.", GOLD, card.name, owned))
-        end
-        local unlocked, reason = TTS:IsEncounterUnlocked(enc)
-        if not unlocked then table.insert(lines, RED .. "Locked: " .. reason .. "|r") end
-        detailText:SetText(table.concat(lines, "\n"))
+        tip:AddLine("Deck: the creatures of " .. enc.zone .. ".", 1, 1, 1, true)
     end
 
+    local card = enc.reward and TTS.Cards[enc.reward]
+    if card then
+        local owned = TTS:GetOwnedCopies(card) or 0
+        tip:AddLine(" ")
+        tip:AddLine(string.format("Reward: %s%s|r (%d/4 owned)", GOLD, card.name, owned), 1, 1, 1)
+        tip:AddLine("One copy per win.", 0.7, 0.7, 0.7)
+    end
+
+    local wins = TTS:GetEncounterWins(enc.id)
+    if wins > 0 then tip:AddLine(string.format("Cleared %d time%s.", wins, wins == 1 and "" or "s"), 0.2, 0.87, 0.2) end
+
+    tip:AddLine(" ")
     local blocker = StartBlocker(enc)
-    if blocker then
-        startBtn:Disable()
-        startHint:SetText(RED .. blocker .. "|r")
+    if state == "locked" then
+        tip:AddLine("Locked: " .. (select(2, TTS:IsEncounterUnlocked(enc)) or ""), 1, 0.27, 0.27, true)
+    elseif blocker then
+        tip:AddLine(blocker, 1, 0.27, 0.27, true)
     else
-        startBtn:Enable()
-        startHint:SetText("")
+        tip:AddLine("Click to start.", 0.2, 1, 0.2)
     end
-    ShowRewardPreview(enc)
 end
 
-startBtn:SetScript("OnClick", function()
-    local enc = selected
-    if StartBlocker(enc) then return end
-    S:Hide()
-    TTS.Engine:StartMatch(enc.opponent, true, true, enc)
-end)
+-- =========================================================================
+-- BUTTONS
+-- =========================================================================
+local buttons = {}   -- [id] = button
 
-local function SelectTab(kind)
-    currentTab = kind
-    listSection.header:SetText(kind == "zone" and "Zone Gauntlet" or "Dungeons")
-    if kind == "zone" then
-        zonesTab:Disable(); dungeonsTab:Enable()
-    else
-        dungeonsTab:Disable(); zonesTab:Enable()
+local function CreateEncounterButton(enc)
+    local isDungeon = enc.kind == "dungeon"
+    local size = isDungeon and DUNGEON_SIZE or ZONE_SIZE
+    local b = CreateFrame("Button", nil, buttonLayer)
+    b:SetSize(size, size)
+    b.enc = enc
+
+    -- Gold glow behind encounters that are open but not yet cleared
+    b.glow = b:CreateTexture(nil, "BACKGROUND")
+    b.glow:SetTexture(GLOW_TEX)
+    b.glow:SetBlendMode("ADD")
+    b.glow:SetPoint("CENTER")
+    b.glow:SetSize(size * 1.9, size * 1.9)
+
+    b.bg = b:CreateTexture(nil, "BORDER")
+    b.bg:SetAllPoints(b)
+    b.bg:SetColorTexture(0, 0, 0, 0.85)
+
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetPoint("TOPLEFT", 2, -2)
+    b.icon:SetPoint("BOTTOMRIGHT", -2, 2)
+    b.icon:SetTexture(isDungeon and DUNGEON_ICON or ZONE_ICON)
+    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    b.check = b:CreateTexture(nil, "OVERLAY")
+    b.check:SetTexture(CHECK_ICON)
+    b.check:SetSize(14, 14)
+    b.check:SetPoint("BOTTOMRIGHT", 4, -4)
+
+    local hl = b:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints(b)
+    hl:SetColorTexture(1, 1, 1, 0.25)
+
+    -- Zone names are always shown; dungeon names appear on hover
+    if not isDungeon then
+        b.label = buttonLayer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        b.label:SetPoint("TOP", b, "BOTTOM", 0, -1)
+        b.label:SetText(enc.name)
+        local font, fsize = b.label:GetFont()
+        if font then b.label:SetFont(font, fsize or 10, "OUTLINE") end
     end
-    if selected and selected.kind ~= kind then selected = nil end
-    -- Default to the first unlocked encounter without a win, else the first one
-    if not selected then
-        for _, enc in ipairs(TTS:GetSoloEncounters(kind)) do
-            if TTS:IsEncounterUnlocked(enc) and TTS:GetEncounterWins(enc.id) == 0 then selected = enc; break end
+
+    b:SetScript("OnEnter", function(self)
+        ShowRewardPreview(self.enc)
+        if TT then
+            TT:Show(self, "ANCHOR_RIGHT", { main = function(tip) AddBreakdown(tip, self.enc) end })
         end
-        selected = selected or TTS:GetSoloEncounters(kind)[1]
-    end
-    scroll:SetVerticalScroll(0)
-    RefreshList()
-    UpdateDetails()
+    end)
+    b:SetScript("OnLeave", function(self)
+        if TT then TT:Hide(self) end
+        HideRewardPreview()
+    end)
+    b:SetScript("OnClick", function(self)
+        local blocker = StartBlocker(self.enc)
+        if blocker then
+            hint:SetText(RED .. self.enc.name .. ": " .. blocker .. "|r")
+            return
+        end
+        S:Hide()
+        TTS.Engine:StartMatch(self.enc.opponent, true, true, self.enc)
+    end)
+    return b
 end
 
-zonesTab:SetScript("OnClick", function() SelectTab("zone") end)
-dungeonsTab:SetScript("OnClick", function() SelectTab("dungeon") end)
+local function PaintButton(b)
+    local state = EncounterState(b.enc)
+    local locked = state == "locked"
+    if b.icon.SetDesaturated then b.icon:SetDesaturated(locked) end
+    b.icon:SetVertexColor(locked and 0.55 or 1, locked and 0.55 or 1, locked and 0.55 or 1)
+    b:SetAlpha(locked and 0.75 or 1)
+    if state == "open" then b.glow:Show() else b.glow:Hide() end
+    if state == "cleared" then b.check:Show() else b.check:Hide() end
+    if b.label then
+        if locked then b.label:SetTextColor(0.6, 0.6, 0.6)
+        elseif state == "cleared" then b.label:SetTextColor(0.6, 1, 0.6)
+        else b.label:SetTextColor(1, 0.82, 0) end
+    end
+end
+
+-- =========================================================================
+-- CONNECTION LINES
+-- =========================================================================
+local lines = {}
+
+local function DrawLine(i, x1, y1, x2, y2, r, g, bl, a)
+    if not lineLayer.CreateLine then return end
+    local l = lines[i]
+    if not l then
+        l = lineLayer:CreateLine(nil, "ARTWORK")
+        l:SetThickness(2)
+        lines[i] = l
+    end
+    l:SetStartPoint("TOPLEFT", lineLayer, x1, -y1)
+    l:SetEndPoint("TOPLEFT", lineLayer, x2, -y2)
+    l:SetColorTexture(r, g, bl, a)
+    l:Show()
+end
+
+local function DrawConnections(contId, pos)
+    local n = 0
+    local function Link(a, b, dungeonLink)
+        local pa, pb = pos[a], pos[b]
+        if not (pa and pb) then return end
+        local ca, cb = TTS:GetEncounterWins(a) > 0, TTS:GetEncounterWins(b) > 0
+        n = n + 1
+        if ca or cb then
+            DrawLine(n, pa[1], pa[2], pb[1], pb[2], 1, 0.82, 0, dungeonLink and 0.45 or 0.75)
+        else
+            DrawLine(n, pa[1], pa[2], pb[1], pb[2], 0.75, 0.75, 0.75, dungeonLink and 0.25 or 0.4)
+        end
+    end
+    for _, link in ipairs(TTS.SoloConnections or {}) do Link(link[1], link[2], false) end
+    for dungeon, zone in pairs(TTS.SoloDungeonZone or {}) do Link(zone, dungeon, true) end
+    for i = n + 1, #lines do lines[i]:Hide() end
+end
+
+-- =========================================================================
+-- SHOWING A CONTINENT
+-- =========================================================================
+local currentContinent = "EK"
+
+local function ShowContinent(contId)
+    currentContinent = contId
+    local cont
+    for _, c in ipairs(CONTINENTS) do if c.id == contId then cont = c end end
+    for i, t in ipairs(tiles) do
+        t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s%d", cont.folder, cont.folder, i))
+    end
+    for id, b in pairs(tabs) do
+        if id == contId then b:Disable() else b:Enable() end
+    end
+
+    local pos = Layout(contId)
+    for id, enc in pairs(TTS.SoloEncounters) do
+        local p = pos[id]
+        if p then
+            local b = buttons[id] or CreateEncounterButton(enc)
+            buttons[id] = b
+            b:ClearAllPoints()
+            b:SetPoint("CENTER", buttonLayer, "TOPLEFT", p[1], -p[2])
+            b:Show()
+            if b.label then b.label:Show() end
+            PaintButton(b)
+        elseif buttons[id] then
+            buttons[id]:Hide()
+            if buttons[id].label then buttons[id].label:Hide() end
+        end
+    end
+    DrawConnections(contId, pos)
+end
+
+for id, b in pairs(tabs) do
+    b:SetScript("OnClick", function() ShowContinent(id) end)
+end
 
 -- Refreshes everything (called when progress or the deck changes)
 function S:Refresh()
@@ -390,9 +478,11 @@ function S:Refresh()
     local deck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]
     local count = 0
     for _, n in pairs(deck and deck.cards or {}) do count = count + n end
-    deckStatus:SetText(string.format("Active deck: %s%s|r (%d cards)", GOLD, deck and deck.name or "None", count))
-    RefreshList()
-    UpdateDetails()
+    local valid = TTS.Engine and TTS.Engine:ValidateDeck()
+    deckStatus:SetText(string.format("Active deck: %s%s|r (%s%d cards|r)", GOLD, deck and deck.name or "None",
+        valid and GREEN or RED, count))
+    hint:SetText(HINT_TEXT)
+    ShowContinent(currentContinent)
 end
 
 S:SetScript("OnShow", function(self)
@@ -400,13 +490,12 @@ S:SetScript("OnShow", function(self)
         self:Hide()
         return
     end
-    SelectTab(currentTab)
     self:Refresh()
 end)
 
 S:SetScript("OnHide", function()
     if TT then TT:Hide() end
-    if preview then preview:Hide() end
+    HideRewardPreview()
 end)
 
 local loader = CreateFrame("Frame")

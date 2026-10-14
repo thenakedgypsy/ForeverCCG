@@ -21,11 +21,13 @@ local E = TTS.Engine
 --   name        shown in the select window
 --   opponent    display name used for E.opponent (dungeons: the first boss)
 --   zone        the deck is built from creatures carrying this zone tag
---   chain       zone group shown as a header in the select window
 --   life        AI starting life
 --   ai          AI profile: dummy | basic | tactical | expert (see AI.lua)
 --   reward      card id granted for a win (1 copy per win, up to 4)
 --   requires    nil (open) | { cleared = { ids } } (any one cleared) | { killed = "BOSSxx" }
+--               Zones need a connected zone cleared (TTS.SoloConnections); a dungeon needs
+--               the zone it sits in cleared.
+--   map         { continent, x, y } button position on the select map (UI\SoloMapData.lua)
 --   bosses      dungeon boss card ids
 --   rules       boss rule ids, see TTS.EncounterRules below
 --   background  { map = "<WorldMap folder>" } or { file = "<Textures\Backgrounds file>", map = ..., tint = { r, g, b } }
@@ -33,63 +35,98 @@ local E = TTS.Engine
 TTS.SoloEncounters = {}
 local ENC = TTS.SoloEncounters
 
-local CHAIN_EK_A = "Eastern Kingdoms: Elwynn & Dun Morogh"
-local CHAIN_EK_H = "Eastern Kingdoms: Tirisfal"
-local CHAIN_KAL  = "Kalimdor"
-TTS.SoloZoneChains = { CHAIN_EK_A, CHAIN_EK_H, CHAIN_KAL }
+-- Zones that are open from the start
+local START_ZONES = { ELW = true, TIR = true, DUR = true, MUL = true, TEL = true }
 
--- id, zone, opponent, world map folder, AI profile, prerequisite encounter ids (any one)
+-- id, zone, opponent, world map folder, AI profile
 local ZONES = {
-    -- Eastern Kingdoms, starting in Elwynn Forest or Dun Morogh
-    { "ELW", "Elwynn Forest",        "Elwynn Exterminators",            "Elwynn",             "basic",    nil,             CHAIN_EK_A },
-    { "DUN", "Dun Morogh",           "Dun Morogh Defenders",            "DunMorogh",          "basic",    nil,             CHAIN_EK_A },
-    { "WES", "Westfall",             "Westfall Wreckers",               "Westfall",           "basic",    { "ELW", "DUN" }, CHAIN_EK_A },
-    { "LOC", "Loch Modan",           "Loch Modan Looters",              "LochModan",          "basic",    { "WES" },       CHAIN_EK_A },
-    { "RED", "Redridge Mountains",   "Redridge Raiders",                "Redridge",           "tactical", { "LOC" },       CHAIN_EK_A },
-    { "DSK", "Duskwood",             "Duskwood Dreadstalkers",          "Duskwood",           "tactical", { "RED" },       CHAIN_EK_A },
-    { "WET", "Wetlands",             "Wetlands Warband",                "Wetlands",           "tactical", { "DSK" },       CHAIN_EK_A },
-    { "ARA", "Arathi Highlands",     "Arathi Avengers",                 "Arathi",             "tactical", { "WET" },       CHAIN_EK_A },
-    { "STV", "Stranglethorn Vale",   "Stranglethorn Stalkers",          "Stranglethorn",      "expert",   { "ARA" },       CHAIN_EK_A },
-    { "SWA", "Swamp of Sorrows",     "Swamp of Sorrows Slitherers",     "SwampOfSorrows",     "expert",   { "STV" },       CHAIN_EK_A },
-    { "BLA", "Blasted Lands",        "Blasted Lands Bloodbringers",     "BlastedLands",       "expert",   { "SWA" },       CHAIN_EK_A },
-    { "BUR", "Burning Steppes",      "Burning Steppes Brutes",          "BurningSteppes",     "expert",   { "BLA" },       CHAIN_EK_A },
-    -- Eastern Kingdoms, starting in Tirisfal Glades
-    { "TIR", "Tirisfal Glades",      "Tirisfal Tormentors",             "Tirisfal",           "basic",    nil,             CHAIN_EK_H },
-    { "SIL", "Silverpine Forest",    "Silverpine Skulkers",             "Silverpine",         "basic",    { "TIR" },       CHAIN_EK_H },
-    { "HIL", "Hillsbrad Foothills",  "Hillsbrad Harriers",              "Hilsbrad",           "tactical", { "SIL" },       CHAIN_EK_H },
-    { "ALT", "Alterac Mountains",    "Alterac Ambushers",               "Alterac",            "tactical", { "HIL" },       CHAIN_EK_H },
-    { "BAD", "Badlands",             "Badlands Bruisers",               "Badlands",           "expert",   { "ALT" },       CHAIN_EK_H },
-    { "HIN", "The Hinterlands",      "Hinterlands Headhunters",         "Hinterlands",        "expert",   { "BAD" },       CHAIN_EK_H },
-    { "SEA", "Searing Gorge",        "Searing Gorge Scorchers",         "SearingGorge",       "expert",   { "HIN" },       CHAIN_EK_H },
-    { "WPL", "Western Plaguelands",  "Western Plaguelands Wretches",    "WesternPlaguelands", "expert",   { "SEA" },       CHAIN_EK_H },
-    { "EPL", "Eastern Plaguelands",  "Eastern Plaguelands Eradicators", "EasternPlaguelands", "expert",   { "WPL" },       CHAIN_EK_H },
-    -- Kalimdor, starting in Durotar, Mulgore or Teldrassil
-    { "DUR", "Durotar",              "Durotar Despoilers",              "Durotar",            "basic",    nil,             CHAIN_KAL },
-    { "MUL", "Mulgore",              "Mulgore Marauders",               "Mulgore",            "basic",    nil,             CHAIN_KAL },
-    { "TEL", "Teldrassil",           "Teldrassil Tricksters",           "Teldrassil",         "basic",    nil,             CHAIN_KAL },
-    { "DAR", "Darkshore",            "Darkshore Drifters",              "Darkshore",          "basic",    { "DUR", "MUL", "TEL" }, CHAIN_KAL },
-    { "BRN", "The Barrens",          "Barrens Bandits",                 "Barrens",            "basic",    { "DAR" },       CHAIN_KAL },
-    { "STO", "Stonetalon Mountains", "Stonetalon Saboteurs",            "StonetalonMountains", "tactical", { "BRN" },      CHAIN_KAL },
-    { "ASH", "Ashenvale",            "Ashenvale Assassins",             "Ashenvale",          "tactical", { "STO" },       CHAIN_KAL },
-    { "THO", "Thousand Needles",     "Thousand Needles Thrashers",      "ThousandNeedles",    "tactical", { "ASH" },       CHAIN_KAL },
-    { "DES", "Desolace",             "Desolace Defilers",               "Desolace",           "tactical", { "THO" },       CHAIN_KAL },
-    { "DUS", "Dustwallow Marsh",     "Dustwallow Drowners",             "Dustwallow",         "expert",   { "DES" },       CHAIN_KAL },
-    { "FER", "Feralas",              "Feralas Fangs",                   "Feralas",            "expert",   { "DUS" },       CHAIN_KAL },
-    { "TAN", "Tanaris",              "Tanaris Tomb Raiders",            "Tanaris",            "expert",   { "FER" },       CHAIN_KAL },
-    { "AZS", "Azshara",              "Azshara Abominations",            "Aszhara",            "expert",   { "TAN" },       CHAIN_KAL },
-    { "FEL", "Felwood",              "Felwood Fiends",                  "Felwood",            "expert",   { "AZS" },       CHAIN_KAL },
-    { "UNG", "Un'Goro Crater",       "Un'Goro Usurpers",                "UngoroCrater",       "expert",   { "FEL" },       CHAIN_KAL },
-    { "SLI", "Silithus",             "Silithus Swarm",                  "Silithus",           "expert",   { "UNG" },       CHAIN_KAL },
-    { "WIN", "Winterspring",         "Winterspring Wendigos",           "Winterspring",       "expert",   { "SLI" },       CHAIN_KAL },
+    -- Eastern Kingdoms
+    { "ELW", "Elwynn Forest",        "Elwynn Exterminators",            "Elwynn",              "basic" },
+    { "DUN", "Dun Morogh",           "Dun Morogh Defenders",            "DunMorogh",           "basic" },
+    { "TIR", "Tirisfal Glades",      "Tirisfal Tormentors",             "Tirisfal",            "basic" },
+    { "WES", "Westfall",             "Westfall Wreckers",               "Westfall",            "basic" },
+    { "LOC", "Loch Modan",           "Loch Modan Looters",              "LochModan",           "basic" },
+    { "SIL", "Silverpine Forest",    "Silverpine Skulkers",             "Silverpine",          "basic" },
+    { "RED", "Redridge Mountains",   "Redridge Raiders",                "Redridge",            "tactical" },
+    { "DSK", "Duskwood",             "Duskwood Dreadstalkers",          "Duskwood",            "tactical" },
+    { "WET", "Wetlands",             "Wetlands Warband",                "Wetlands",            "tactical" },
+    { "HIL", "Hillsbrad Foothills",  "Hillsbrad Harriers",              "Hilsbrad",            "tactical" },
+    { "ALT", "Alterac Mountains",    "Alterac Ambushers",               "Alterac",             "tactical" },
+    { "ARA", "Arathi Highlands",     "Arathi Avengers",                 "Arathi",              "tactical" },
+    { "STV", "Stranglethorn Vale",   "Stranglethorn Stalkers",          "Stranglethorn",       "expert" },
+    { "BAD", "Badlands",             "Badlands Bruisers",               "Badlands",            "expert" },
+    { "SWA", "Swamp of Sorrows",     "Swamp of Sorrows Slitherers",     "SwampOfSorrows",      "expert" },
+    { "HIN", "The Hinterlands",      "Hinterlands Headhunters",         "Hinterlands",         "expert" },
+    { "SEA", "Searing Gorge",        "Searing Gorge Scorchers",         "SearingGorge",        "expert" },
+    { "BLA", "Blasted Lands",        "Blasted Lands Bloodbringers",     "BlastedLands",        "expert" },
+    { "BUR", "Burning Steppes",      "Burning Steppes Brutes",          "BurningSteppes",      "expert" },
+    { "WPL", "Western Plaguelands",  "Western Plaguelands Wretches",    "WesternPlaguelands",  "expert" },
+    { "EPL", "Eastern Plaguelands",  "Eastern Plaguelands Eradicators", "EasternPlaguelands",  "expert" },
+    -- Kalimdor
+    { "DUR", "Durotar",              "Durotar Despoilers",              "Durotar",             "basic" },
+    { "MUL", "Mulgore",              "Mulgore Marauders",               "Mulgore",             "basic" },
+    { "TEL", "Teldrassil",           "Teldrassil Tricksters",           "Teldrassil",          "basic" },
+    { "DAR", "Darkshore",            "Darkshore Drifters",              "Darkshore",           "basic" },
+    { "BRN", "The Barrens",          "Barrens Bandits",                 "Barrens",             "basic" },
+    { "STO", "Stonetalon Mountains", "Stonetalon Saboteurs",            "StonetalonMountains", "tactical" },
+    { "ASH", "Ashenvale",            "Ashenvale Assassins",             "Ashenvale",           "tactical" },
+    { "THO", "Thousand Needles",     "Thousand Needles Thrashers",      "ThousandNeedles",     "tactical" },
+    { "DES", "Desolace",             "Desolace Defilers",               "Desolace",            "tactical" },
+    { "DUS", "Dustwallow Marsh",     "Dustwallow Drowners",             "Dustwallow",          "expert" },
+    { "FER", "Feralas",              "Feralas Fangs",                   "Feralas",             "expert" },
+    { "TAN", "Tanaris",              "Tanaris Tomb Raiders",            "Tanaris",             "expert" },
+    { "AZS", "Azshara",              "Azshara Abominations",            "Aszhara",             "expert" },
+    { "FEL", "Felwood",              "Felwood Fiends",                  "Felwood",             "expert" },
+    { "UNG", "Un'Goro Crater",       "Un'Goro Usurpers",                "UngoroCrater",        "expert" },
+    { "SLI", "Silithus",             "Silithus Swarm",                  "Silithus",            "expert" },
+    { "WIN", "Winterspring",         "Winterspring Wendigos",           "Winterspring",        "expert" },
 }
+
+-- Zones that border each other (and the Deeprun Tram between Elwynn and Dun Morogh).
+-- Clearing a zone opens every zone connected to it.
+TTS.SoloConnections = {
+    -- Eastern Kingdoms
+    { "ELW", "WES" }, { "ELW", "RED" }, { "ELW", "DSK" }, { "ELW", "DUN" },
+    { "DUN", "LOC" }, { "LOC", "WET" }, { "LOC", "BAD" },
+    { "WES", "DSK" }, { "RED", "DSK" }, { "RED", "BUR" }, { "RED", "SWA" },
+    { "DSK", "STV" }, { "DSK", "SWA" }, { "SWA", "BLA" },
+    { "BUR", "SEA" }, { "SEA", "BAD" },
+    { "WET", "ARA" }, { "ARA", "HIL" }, { "ARA", "HIN" },
+    { "HIL", "ALT" }, { "HIL", "SIL" }, { "HIL", "HIN" },
+    { "ALT", "SIL" }, { "ALT", "WPL" }, { "SIL", "TIR" }, { "TIR", "WPL" },
+    { "WPL", "EPL" }, { "WPL", "HIN" }, { "HIN", "EPL" },
+    -- Kalimdor
+    { "TEL", "DAR" }, { "DAR", "ASH" },
+    { "ASH", "AZS" }, { "ASH", "FEL" }, { "ASH", "STO" }, { "ASH", "BRN" }, { "FEL", "WIN" },
+    { "DUR", "BRN" }, { "MUL", "BRN" }, { "MUL", "STO" },
+    { "BRN", "STO" }, { "BRN", "DUS" }, { "BRN", "THO" },
+    { "STO", "DES" }, { "DES", "FER" }, { "FER", "THO" },
+    { "THO", "TAN" }, { "TAN", "UNG" }, { "UNG", "SLI" },
+}
+
+-- The zone each dungeon's entrance is in; clearing that zone opens the dungeon
+TTS.SoloDungeonZone = {
+    RFC = "DUR", DMS = "WES", WCV = "BRN", SFK = "SIL", BFD = "ASH", STK = "ELW", GNO = "DUN",
+    RFK = "BRN", SMO = "TIR", RFD = "BRN", ULD = "BAD", ZFK = "TAN", MAR = "DES", SUN = "SWA",
+    BRD = "SEA", BRS = "BUR", DMA = "FER", SCH = "WPL", STR = "EPL",
+}
+
+local neighbours = {}
+for _, link in ipairs(TTS.SoloConnections) do
+    local a, b = link[1], link[2]
+    neighbours[a] = neighbours[a] or {}
+    neighbours[b] = neighbours[b] or {}
+    table.insert(neighbours[a], b)
+    table.insert(neighbours[b], a)
+end
 
 for i, z in ipairs(ZONES) do
     ENC[z[1]] = {
         id = z[1], kind = "zone", order = i,
-        name = z[2], zone = z[2], opponent = z[3], chain = z[7],
+        name = z[2], zone = z[2], opponent = z[3],
         life = 20, ai = z[5],
         reward = z[1] .. "11",
-        requires = z[6] and { cleared = z[6] } or nil,
+        requires = (not START_ZONES[z[1]]) and { cleared = neighbours[z[1]] } or nil,
         background = { map = z[4] },
     }
 end
@@ -124,8 +161,8 @@ for i, d in ipairs(DUNGEONS) do
         name = d[2], zone = d[2], opponent = firstBoss and firstBoss.name or d[2],
         life = d[4], ai = d[7], rules = d[5], bosses = d[3],
         reward = d[6],
-        -- For multi-boss dungeons the last boss in the list must have been killed in the world
-        requires = { killed = d[3][#d[3]] },
+        -- Opened by clearing the zone the dungeon sits in
+        requires = { cleared = { TTS.SoloDungeonZone[d[1]] } },
         background = { file = d[8], map = d[9], tint = { 0.6, 0.55, 0.5 } },
     }
 end

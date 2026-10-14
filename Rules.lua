@@ -412,9 +412,9 @@ local pS = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pS:SetWidth(540)
 pS:SetJustifyH("LEFT")
 pS:SetWordWrap(true)
-pS.rawText = "Open |cFFFFD200Solo Encounters|r from the main window (or type |cFFFFFFFF/tragic solo|r) to play against the computer with your active deck. Beat an encounter to earn its |cFFFFD200reward card|r, which can't drop from world kills.\n\n" ..
-    "|cFFFFD200Zone Gauntlet:|r one opponent per zone, playing that zone's 10 creatures. The starting zones (Elwynn Forest, Dun Morogh, Tirisfal Glades, Durotar, Mulgore and Teldrassil) are open; clearing a zone opens the next one along its path. The reward is a famous friend of that zone, and it strengthens the zone's own creatures.\n\n" ..
-    "|cFFFFD200Dungeons:|r one opponent per dungeon, playing its creatures and its boss under one or two |cFFFF8040boss rules|r (shown beside the opponent's name; hover it for details). A dungeon opens once you have defeated its final boss in the world. Its reward is one of the dungeon's strongest denizens.\n\n" ..
+pS.rawText = "Open |cFFFFD200Solo Encounters|r from the main window (or type |cFFFFFFFF/tragic solo|r) to see the world map, with a button on every zone and dungeon entrance. Hover a button for the encounter's details and reward; click it to play against the computer with your active deck. Beat an encounter to earn its |cFFFFD200reward card|r, which can't drop from world kills.\n\n" ..
+    "|cFFFFD200Zone Gauntlet:|r one opponent per zone, playing that zone's 10 creatures. Elwynn Forest, Tirisfal Glades, Durotar, Mulgore and Teldrassil are open from the start; clearing a zone opens every zone it connects to on the map. The reward is a famous friend of that zone, and it strengthens the zone's own creatures.\n\n" ..
+    "|cFFFFD200Dungeons:|r one opponent per dungeon, playing its creatures and its boss under one or two |cFFFF8040boss rules|r (shown beside the opponent's name; hover it for details). A dungeon opens once you clear the zone its entrance is in. Its reward is one of the dungeon's strongest denizens.\n\n" ..
     "|cFFFFD200Rewards:|r each win adds |cFFFFFFFF1 copy|r of the encounter's reward card, up to |cFFFFFFFF4 copies|r. Reward cards follow the normal deck rules and can be played anywhere, including against other players.\n\n" ..
     "|cFFFFD200Opponents:|r early encounters play a simple game; later zones and dungeons cast spells, use their abilities, block well and hold removal for your best creature. |cFFFFD200Practice vs Dummy|r is still there to try a deck out."
 
