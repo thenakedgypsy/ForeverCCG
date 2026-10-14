@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 8013,
         zone = "Azshara", creatureType = "Beast", npcId = 8759,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["AZS03"] = {
         id = "AZS03", name = "Spitelash Warrior", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 10893,
         zone = "Azshara", creatureType = "Beast", npcId = 6378,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["AZS06"] = {
         id = "AZS06", name = "Spitelash Myrmidon", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -59,14 +59,14 @@ TTS:AddCards({
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 10957,
         zone = "Azshara", creatureType = "Beast", npcId = 8761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["AZS08"] = {
         id = "AZS08", name = "Legashi Rogue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 6743,
         zone = "Azshara", creatureType = "Demon", faction = "Satyr", npcId = 6201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["AZS09"] = {
         id = "AZS09", name = "Coralshell Lurker", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 10042,
         zone = "Azshara", creatureType = "Giant", npcId = 6646,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     -- Solo reward
     ["AZS11"] = {

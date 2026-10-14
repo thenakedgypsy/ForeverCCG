@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 4457,
         zone = "Searing Gorge", creatureType = "Beast", npcId = 5857,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["SEA04"] = {
         id = "SEA04", name = "Blazing Elemental", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -53,21 +53,21 @@ TTS:AddCards({
         power = 1, toughness = 7, defender = true, isMob = true, isBoss = true, displayId = 2075,
         zone = "Searing Gorge", creatureType = "Elemental", npcId = 5855,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["SEA07"] = {
         id = "SEA07", name = "Greater Lava Spider", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 7510,
         zone = "Searing Gorge", creatureType = "Beast", npcId = 5858,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["SEA08"] = {
         id = "SEA08", name = "Heavy War Golem", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 1, toughness = 11, defender = true, isMob = true, isBoss = true, displayId = 10801,
         zone = "Searing Gorge", creatureType = "Mechanical", npcId = 5854,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["SEA09"] = {
         id = "SEA09", name = "Incendosaur", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Searing Gorge", creatureType = "Dragonkin", npcEntry = 8479,
         anthem = { tag = "zone", value = "Searing Gorge", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying. Other Searing Gorge creatures you control get +1/+1."
+        text = "Airborne. Other Searing Gorge creatures you control get +1/+1."
     },
 })

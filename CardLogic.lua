@@ -1168,7 +1168,7 @@ function E:ResolveAbilityTarget(targetKind, isRemote, fieldIndex)
     end
 
     if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
-        self:Log(CreatureName(tgt.perm) .. " has Hexproof and cannot be targeted!", "ERROR")
+        self:Log(CreatureName(tgt.perm) .. " is Warded and cannot be targeted!", "ERROR")
         return
     end
 
@@ -1227,7 +1227,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     end
 
     if tgt.kind == "CREATURE" and self:IsHexproofAgainst(tgt.perm, tgt.isRemote, false) then
-        self:Log(TTS.Cards[tgt.perm.id].name .. " has Hexproof and cannot be targeted!", "ERROR")
+        self:Log(TTS.Cards[tgt.perm.id].name .. " is Warded and cannot be targeted!", "ERROR")
         return
     end
 
@@ -1354,7 +1354,7 @@ function E:TapCard(fieldIndex)
             return
         end
         if card.defender then
-            self:Log(card.name .. " has Defender and cannot attack.", "ERROR")
+            self:Log(card.name .. " is a Blocker and cannot attack.", "ERROR")
             return
         end
 
@@ -1409,7 +1409,7 @@ function E:ClickOpponentCard(fieldIndex)
         end
 
         if self:HasKeyword(attackerPerm, true, "flying") and not (self:HasKeyword(blockerPerm, false, "flying") or self:HasKeyword(blockerPerm, false, "reach")) then
-            self:Log(string.format("%s has Flying! Only creatures with Flying or Reach can block it.", attackerCard.name), "ERROR")
+            self:Log(string.format("%s is Airborne! Only Airborne or Anti-Air creatures can block it.", attackerCard.name), "ERROR")
             return
         end
 
@@ -1508,7 +1508,7 @@ function E:ResolveCombatDamage()
                     if self:HasKeyword(atkPerm, isRemoteAttacking, "trample") then
                         local excess = math.max(0, atkPower - defToughness)
                         if excess > 0 then
-                            DamageDefender(excess, atkCard.name .. " Trample")
+                            DamageDefender(excess, atkCard.name .. " Brutish")
                         end
                     end
 

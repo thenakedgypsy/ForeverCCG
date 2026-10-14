@@ -25,7 +25,7 @@ TTS:AddCards({
         power = 5, toughness = 4, haste = true, firstStrike = true, isBoss = true, displayId = 2029, achievementId = 628,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
-        text = "Haste, First Strike."
+        text = "Quick, Strikes-First."
     },
 
     -- Wailing Caverns: Mutanus the Devourer
@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 8, toughness = 9, trample = true, isBoss = true, displayId = 2837, achievementId = 632,
         zone = "Blackfathom Deeps", creatureType = "Beast",
         modelCam = { zoom = 0.20, camScale = 1.80, z = 0.00, rotation = -0.30 },
-        text = "Trample. Aku'mai can block up to two creatures each combat."
+        text = "Brutish. Aku'mai can block up to two creatures each combat."
     },
 
     -- Stockade: Bazil Thredd
@@ -79,7 +79,7 @@ TTS:AddCards({
         power = 5, toughness = 6, reach = true, isBoss = true, displayId = 4642, achievementId = 636,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
-        text = "Reach. {T}: Tap target creature. It does not untap during its controller's next untap step."
+        text = "Anti-Air. {T}: Tap target creature. It does not untap during its controller's next untap step."
     },
 
     -- SM Graveyard: Bloodmage Thalnos
@@ -88,7 +88,7 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isBoss = true, displayId = 11396, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch. When Bloodmage Thalnos dies, draw a card."
+        text = "Fatal. When Bloodmage Thalnos dies, draw a card."
     },
 
     -- SM Library: Arcanist Doan
@@ -106,7 +106,7 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isBoss = true, displayId = 2041, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Haste. Herod attacks each combat if able."
+        text = "Quick. Herod attacks each combat if able."
     },
 
     -- SM Cathedral: High Inquisitor Whitemane
@@ -115,7 +115,7 @@ TTS:AddCards({
         power = 4, toughness = 6, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Lifelink. When Whitemane dies, return another target creature from your graveyard to the battlefield."
+        text = "Drain. When Whitemane dies, return another target creature from your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -133,7 +133,7 @@ TTS:AddCards({
         power = 8, toughness = 10, vigilance = true, hexproof = true, isBoss = true, displayId = 5988, achievementId = 639,
         zone = "Uldaman", creatureType = "Giant",
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
-        text = "Vigilance, Hexproof (Archaedas cannot be the target of spells or abilities your opponents control)."
+        text = "Vigilant, Warded (Archaedas cannot be the target of spells or abilities your opponents control)."
     },
 
     -- Zul'Farrak: Chief Ukorz Sandscalp
@@ -142,7 +142,7 @@ TTS:AddCards({
         power = 8, toughness = 7, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Trample. Ukorz gets +3/+0 as long as your life total is 10 or less."
+        text = "Brutish. Ukorz gets +3/+0 as long as your life total is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -151,7 +151,7 @@ TTS:AddCards({
         power = 9, toughness = 9, trample = true, isBoss = true, displayId = 12292, achievementId = 641,
         zone = "Maraudon", creatureType = "Elemental",
         modelCam = { zoom = 0.35, camScale = 1.60, z = -0.25, rotation = 0.10 },
-        text = "Trample. Whenever Theradras deals combat damage to a player, destroy target non-basic land that player controls."
+        text = "Brutish. Whenever Theradras deals combat damage to a player, destroy target non-basic land that player controls."
     },
 
     -- Sunken Temple: Shade of Eranikus
@@ -160,7 +160,7 @@ TTS:AddCards({
         power = 8, toughness = 8, flying = true, isBoss = true, displayId = 7806, achievementId = 642,
         zone = "Sunken Temple", creatureType = "Dragonkin",
         modelCam = { zoom = 0.25, camScale = 1.80, z = -0.05, rotation = -0.20 },
-        text = "Flying. Whenever Eranikus deals combat damage to a creature, tap that creature and it does not untap during its controller's next untap step."
+        text = "Airborne. Whenever Eranikus deals combat damage to a creature, tap that creature and it does not untap during its controller's next untap step."
     },
 
     -- BRD: Emperor Dagran Thaurissan
@@ -169,7 +169,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isBoss = true, displayId = 8807, achievementId = 643,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron",
         modelCam = { zoom = 0.75, camScale = 0.95, z = 0.00, rotation = 0.15 },
-        text = "Other creatures you control gain +1/+1 and Vigilance."
+        text = "Other creatures you control gain +1/+1 and Vigilant."
     },
 
     -- LBRS: Overlord Wyrmthalak
@@ -178,7 +178,7 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isBoss = true, displayId = 8711, achievementId = 644,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.50, camScale = 1.35, z = -0.20, rotation = 0.15 },
-        text = "Trample. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing creatures."
+        text = "Brutish. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing creatures."
     },
 
     -- UBRS: General Drakkisath
@@ -187,7 +187,7 @@ TTS:AddCards({
         power = 10, toughness = 9, trample = true, isBoss = true, displayId = 10115, achievementId = 1307,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
-        text = "Trample. All other creatures lose and cannot gain Haste."
+        text = "Brutish. All other creatures lose and cannot gain Quick."
     },
 
     -- Dire Maul East: Alzzin the Wildshaper
@@ -196,7 +196,7 @@ TTS:AddCards({
         power = 7, toughness = 8, deathtouch = true, isBoss = true, displayId = 14416, achievementId = 645,
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Deathtouch. {T}: You gain 4 life."
+        text = "Fatal. {T}: You gain 4 life."
     },
 
     -- Dire Maul West: Prince Tortheldrin
@@ -214,7 +214,7 @@ TTS:AddCards({
         power = 10, toughness = 8, trample = true, isBoss = true, displayId = 11583, achievementId = 645,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre",
         modelCam = { zoom = 0.45, camScale = 1.45, z = -0.22, rotation = 0.15 },
-        text = "Trample. Whenever King Gordok attacks, he gets +2/+0 until end of turn."
+        text = "Brutish. Whenever King Gordok attacks, he gets +2/+0 until end of turn."
     },
 
     -- Scholomance: Darkmaster Gandling
@@ -232,7 +232,7 @@ TTS:AddCards({
         power = 8, toughness = 8, lifelink = true, isBoss = true, displayId = 10729, achievementId = 633,
         zone = "Stratholme", creatureType = "Undead",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Lifelink. Whenever an opposing creature dies, its controller loses 2 life."
+        text = "Drain. Whenever an opposing creature dies, its controller loses 2 life."
     },
 
     -- Stratholme: Balnazzar
@@ -241,6 +241,6 @@ TTS:AddCards({
         power = 8, toughness = 9, flying = true, isBoss = true, displayId = 10691, achievementId = 633,
         zone = "Stratholme", creatureType = "Demon",
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Flying. When Balnazzar enters the battlefield, gain control of target opposing creature with power 4 or less."
+        text = "Airborne. When Balnazzar enters the battlefield, gain control of target opposing creature with power 4 or less."
     },
 })

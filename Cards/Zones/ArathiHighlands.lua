@@ -24,14 +24,14 @@ TTS:AddCards({
         power = 1, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 388,
         zone = "Arathi Highlands", creatureType = "Beast", npcId = 2580,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["ARA03"] = {
         id = "ARA03", name = "Cresting Exile", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 5561,
         zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["ARA04"] = {
         id = "ARA04", name = "Thundering Exile", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -52,14 +52,14 @@ TTS:AddCards({
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 4016,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2588,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["ARA07"] = {
         id = "ARA07", name = "Stromgarde Troll Hunter", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 4, trample = true, vigilance = true, isMob = true, isBoss = true, displayId = 4139,
         zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2583,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample, Vigilance."
+        text = "Brutish, Vigilant."
     },
     ["ARA08"] = {
         id = "ARA08", name = "Boulderfist Shaman", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Arathi Highlands", creatureType = "Humanoid", npcEntry = 2700,
         rally = { tag = "zone", value = "Arathi Highlands", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike. Gets +1/+1 for each other Arathi Highlands creature you control."
+        text = "Strikes-First. Gets +1/+1 for each other Arathi Highlands creature you control."
     },
 })

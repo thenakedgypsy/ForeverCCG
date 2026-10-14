@@ -31,28 +31,28 @@ TTS:AddCards({
         power = 2, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 10824,
         zone = "Badlands", creatureType = "Beast", npcId = 2829,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["BAD04"] = {
         id = "BAD04", name = "Ridge Huntress", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 1055,
         zone = "Badlands", creatureType = "Beast", npcId = 2732,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["BAD05"] = {
         id = "BAD05", name = "Rock Elemental", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 1, toughness = 7, defender = true, isMob = true, isBoss = true, displayId = 171,
         zone = "Badlands", creatureType = "Elemental", npcId = 92,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["BAD06"] = {
         id = "BAD06", name = "Scalding Whelp", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 715,
         zone = "Badlands", creatureType = "Dragonkin", npcId = 2725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["BAD07"] = {
         id = "BAD07", name = "Dark Iron Kidnapper", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 10040,
         zone = "Badlands", creatureType = "Giant", npcId = 2754,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     -- Solo reward
     ["BAD11"] = {

@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1058,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 3416,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["THO02"] = {
         id = "THO02", name = "Galak Windchaser", cost = "{U}", cmc = 1, color = "U", type = "Creature",
@@ -38,28 +38,28 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2713,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4248,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["THO05"] = {
         id = "THO05", name = "Needles Cougar", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1056,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4124,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["THO06"] = {
         id = "THO06", name = "Pesterhide Snarler", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 10903,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4249,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["THO07"] = {
         id = "THO07", name = "Screeching Roguefeather", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 1350,
         zone = "Thousand Needles", creatureType = "Humanoid", npcId = 4101,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["THO08"] = {
         id = "THO08", name = "Sparkleshell Borer", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -73,14 +73,14 @@ TTS:AddCards({
         power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4139,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["THO10"] = {
         id = "THO10", name = "Vile Sting", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 8, toughness = 10, deathtouch = true, isMob = true, isBoss = true, displayId = 10988,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 5937,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     -- Solo reward
     ["THO11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Thousand Needles", creatureType = "Humanoid", npcEntry = 4630,
         anthem = { tag = "zone", value = "Thousand Needles", p = 1, kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste. Other Thousand Needles creatures you control get +1/+0 and Haste."
+        text = "Quick. Other Thousand Needles creatures you control get +1/+0 and Quick."
     },
 })

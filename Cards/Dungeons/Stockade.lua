@@ -25,28 +25,28 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 2147,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1715,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STK03"] = {
         id = "STK03", name = "Targorr the Dread", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 517,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1696,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["STK04"] = {
         id = "STK04", name = "Dextren Ward", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2149,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1663,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["STK05"] = {
         id = "STK05", name = "Kam Deepfury", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 825,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1666,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["STK06"] = {
         id = "STK06", name = "Hamhock", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -61,7 +61,7 @@ TTS:AddCards({
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1720,
         anthem = { tag = "zone", value = "The Stockade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike. Other Stockade creatures you control get +1/+1."
+        text = "Strikes-First. Other Stockade creatures you control get +1/+1."
     },
     -- Solo reward
     ["STK08"] = {
@@ -71,6 +71,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "The Stockade", p = 0, kw = { "haste" } },
         rally = { tag = "faction", value = "Defias", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste. Gets +1/+0 for each other Defias you control. Other Stockade creatures you control have Haste."
+        text = "Quick. Gets +1/+0 for each other Defias you control. Other Stockade creatures you control have Quick."
     },
 })

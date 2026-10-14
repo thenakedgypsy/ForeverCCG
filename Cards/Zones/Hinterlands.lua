@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11413,
         zone = "The Hinterlands", creatureType = "Beast", npcId = 2923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["HIN02"] = {
         id = "HIN02", name = "Trained Razorbeak", cost = "{U}", cmc = 1, color = "U", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, vigilance = true, isMob = true, isBoss = true, displayId = 6549,
         zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste, Vigilance."
+        text = "Quick, Vigilant."
     },
     ["HIN06"] = {
         id = "HIN06", name = "Saltwater Snapjaw", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 14760,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 14730,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["HIN08"] = {
         id = "HIN08", name = "Vilebranch Shadow Hunter", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 6495,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2646,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["HIN10"] = {
         id = "HIN10", name = "Mith'rethis the Enchanter", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "The Hinterlands", creatureType = "Humanoid", npcEntry = 5635,
         anthem = { tag = "zone", value = "The Hinterlands", p = 1, t = 1, kw = { "flying" } },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Flying, Vigilance. Other Hinterlands creatures you control get +1/+1 and Flying."
+        text = "Airborne, Vigilant. Other Hinterlands creatures you control get +1/+1 and Airborne."
     },
 })

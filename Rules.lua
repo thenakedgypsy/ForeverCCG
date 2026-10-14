@@ -364,8 +364,8 @@ p2.rawText = "Prayers produce mana when tapped {T}. Colored costs demand their r
     "  {W} |cFFFFD200Holy (White)|r: Life gain, shielding, vigilant guards, board wipes.\n" ..
     "  {U} |cFF66BBFFArcane (Blue)|r: Card draw, tempo manipulation, freezing {T}, bounce.\n" ..
     "  {B} |cFF9966FFShadow (Black)|r: Targeted removal, sacrifice, hand disruption, drain.\n" ..
-    "  {R} |cFFFF4444Fire (Red)|r: Aggression, direct burn, haste, burst damage.\n" ..
-    "  {G} |cFF44FF44Nature (Green)|r: Mana ramp, reach blockers, massive behemoths."
+    "  {R} |cFFFF4444Fire (Red)|r: Aggression, direct burn, Quick creatures, burst damage.\n" ..
+    "  {G} |cFF44FF44Nature (Green)|r: Mana ramp, Anti-Air blockers, massive behemoths."
 
 local h3 = MakeHeading("Turn Sequence")
 
@@ -378,7 +378,7 @@ p3.rawText = "|cFFFFD2001. Untap & Draw:|r All permanents untap (unless frozen),
     "|cFFFFD2003. Combat Phase:|r\n" ..
     "   • |cFFFFFF00Declare Attackers:|r Click untapped creatures (without summoning sickness) to attack.\n" ..
     "   • |cFFFFFF00Declare Blockers:|r The defending player chooses untapped creatures to block incoming attackers.\n" ..
-    "   • |cFFFFFF00Resolve Combat:|r Damage is dealt simultaneously. A creature dies when the damage it has taken this turn equals or exceeds its toughness. Excess damage is absorbed unless the attacker has Trample.\n" ..
+    "   • |cFFFFFF00Resolve Combat:|r Damage is dealt simultaneously. A creature dies when the damage it has taken this turn equals or exceeds its toughness. Excess damage is absorbed unless the attacker is Brutish.\n" ..
     "|cFFFFD2004. Main Phase 2:|r Cast remaining spells and play your Prayer if unused.\n" ..
     "|cFFFFD2005. End Turn:|r Floating mana pool empties, temporary buffs expire, and all damage on creatures (both players') is removed."
 
@@ -388,15 +388,15 @@ local p4 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p4:SetWidth(540)
 p4:SetJustifyH("LEFT")
 p4:SetWordWrap(true)
-p4.rawText = "• |cFFFFD200Haste:|r Can attack and tap the turn it enters the battlefield without summoning sickness.\n" ..
-    "• |cFFFFD200Flying:|r Can only be blocked by creatures that also have Flying or Reach.\n" ..
-    "• |cFFFFD200Reach:|r Can block Flying creatures while staying grounded.\n" ..
-    "• |cFFFFD200First Strike:|r Deals combat damage before non-first strikers. If lethal, the foe dies before striking back.\n" ..
-    "• |cFFFFD200Deathtouch:|r Any combat damage dealt by this creature is immediately lethal.\n" ..
-    "• |cFFFFD200Lifelink:|r Damage dealt by this creature restores that much life to its controller.\n" ..
-    "• |cFFFFD200Trample:|r Excess combat damage beyond the blocker's toughness carries over to the defending player.\n" ..
-    "• |cFFFFD200Vigilance:|r Attacking does not cause the creature to tap.\n" ..
-    "• |cFFFFD200Hexproof:|r Cannot be targeted by opponent spells or abilities."
+p4.rawText = "• |cFFFFD200Quick:|r Can attack and tap the turn it enters the battlefield without summoning sickness.\n" ..
+    "• |cFFFFD200Airborne:|r Can only be blocked by creatures that are also Airborne or Anti-Air.\n" ..
+    "• |cFFFFD200Anti-Air:|r Can block Airborne creatures while staying grounded.\n" ..
+    "• |cFFFFD200Strikes-First:|r Deals combat damage before creatures without Strikes-First. If lethal, the foe dies before striking back.\n" ..
+    "• |cFFFFD200Fatal:|r Any combat damage dealt by this creature is immediately lethal.\n" ..
+    "• |cFFFFD200Drain:|r Damage dealt by this creature restores that much life to its controller.\n" ..
+    "• |cFFFFD200Brutish:|r Excess combat damage beyond the blocker's toughness carries over to the defending player.\n" ..
+    "• |cFFFFD200Vigilant:|r Attacking does not cause the creature to tap.\n" ..
+    "• |cFFFFD200Warded:|r Cannot be targeted by opponent spells or abilities."
 
 local hS = MakeHeading("Solo Mode")
 

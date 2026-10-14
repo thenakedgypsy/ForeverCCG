@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 3, vigilance = true, isMob = true, isBoss = true, displayId = 3623,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Syndicate", npcId = 2261,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["HIL06"] = {
         id = "HIL06", name = "Vicious Gray Bear", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 1059,
         zone = "Hillsbrad Foothills", creatureType = "Beast", npcId = 2384,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["HIL08"] = {
         id = "HIL08", name = "Hillsbrad Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Hillsbrad Foothills", p = 1 },
         etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills creatures you control get +1/+0."
+        text = "Vigilant. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills creatures you control get +1/+0."
     },
 })

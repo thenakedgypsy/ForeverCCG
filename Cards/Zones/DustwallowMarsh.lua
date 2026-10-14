@@ -17,14 +17,14 @@ TTS:AddCards({
         power = 1, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 2700,
         zone = "Dustwallow Marsh", creatureType = "Beast", npcId = 4346,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["DUS02"] = {
         id = "DUS02", name = "Withervine Creeper", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 4, defender = true, isMob = true, isBoss = true, displayId = 2024,
         zone = "Dustwallow Marsh", creatureType = "Elemental", npcId = 4382,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["DUS03"] = {
         id = "DUS03", name = "Mirefin Murloc", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 2546,
         zone = "Dustwallow Marsh", creatureType = "Beast", npcId = 4412,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["DUS07"] = {
         id = "DUS07", name = "Young Murk Thresher", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",

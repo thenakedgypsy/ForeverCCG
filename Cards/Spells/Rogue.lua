@@ -45,25 +45,25 @@ TTS:AddCards({
     },
     ["ROG06"] = {
         id = "ROG06", name = "Sprint", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target creature you control gains Haste and Unblockable until end of turn.",
+        text = "Target creature you control gains Quick and Unblockable until end of turn.",
         art = "Interface\\Icons\\Ability_Rogue_Sprint",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", kw = { "haste", "unblockable" } } } }
     },
     ["ROG07"] = {
         id = "ROG07", name = "Vanish", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target creature you control gains Hexproof until end of turn and a regeneration shield.",
+        text = "Target creature you control gains Warded until end of turn and a regeneration shield.",
         art = "Interface\\Icons\\Ability_Vanish",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", kw = { "hexproof" } }, { op = "regen", to = "target" } } }
     },
     ["ROG08"] = {
         id = "ROG08", name = "Evasion", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target creature you control gets +0/+2 and gains First Strike until end of turn.",
+        text = "Target creature you control gets +0/+2 and gains Strikes-First until end of turn.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWard",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", t = 2, kw = { "firstStrike" } } } }
     },
     ["ROG09"] = {
         id = "ROG09", name = "Slice and Dice", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Creatures you control get +1/+0 and gain Haste until end of turn.",
+        text = "Creatures you control get +1/+0 and gain Quick until end of turn.",
         art = "Interface\\Icons\\Ability_Rogue_SliceDice",
         effect = { ops = { { op = "buff", to = "friendly_creatures", p = 1, kw = { "haste" } } } }
     },

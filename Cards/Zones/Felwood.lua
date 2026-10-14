@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 4124,
         zone = "Felwood", creatureType = "Beast", npcId = 8959,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["FEL02"] = {
         id = "FEL02", name = "Angerclaw Bear", cost = "{G}", cmc = 1, color = "G", type = "Creature",
@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 9278,
         zone = "Felwood", creatureType = "Beast", npcId = 8960,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["FEL05"] = {
         id = "FEL05", name = "Jadefire Satyr", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -52,14 +52,14 @@ TTS:AddCards({
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 1083,
         zone = "Felwood", creatureType = "Beast", npcId = 8958,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["FEL07"] = {
         id = "FEL07", name = "Irontree Stomper", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 1, toughness = 9, defender = true, isMob = true, isBoss = true, displayId = 6351,
         zone = "Felwood", creatureType = "Elemental", npcId = 7139,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["FEL08"] = {
         id = "FEL08", name = "Warpwood Moss Flayer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",

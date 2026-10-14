@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 2, toughness = 3, lifelink = true, isMob = true, isBoss = true, displayId = 6423,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 5649,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["ZFK02"] = {
         id = "ZFK02", name = "Sandfury Shadowhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -32,7 +32,7 @@ TTS:AddCards({
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6440,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7274,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["ZFK04"] = {
         id = "ZFK04", name = "Sul'lithuz Sandcrawler", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 6696,
         zone = "Zul'Farrak", creatureType = "Undead", faction = "Troll", npcId = 7272,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["ZFK06"] = {
         id = "ZFK06", name = "Hydromancer Velratha", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -61,14 +61,14 @@ TTS:AddCards({
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7271,
         anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch. Other Trolls you control get +1/+1."
+        text = "Fatal. Other Trolls you control get +1/+1."
     },
     ["ZFK08"] = {
         id = "ZFK08", name = "Ruuzlu", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 6687,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7797,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["ZFK09"] = {
         id = "ZFK09", name = "Dustwraith", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -82,14 +82,14 @@ TTS:AddCards({
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 9291,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 10080,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["ZFK11"] = {
         id = "ZFK11", name = "Antu'sul", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 7353,
         zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 8127,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     -- Solo reward
     ["ZFK12"] = {

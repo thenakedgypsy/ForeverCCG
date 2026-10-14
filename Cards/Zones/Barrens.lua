@@ -24,28 +24,28 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1747,
         zone = "The Barrens", creatureType = "Beast", npcId = 3255,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BRN03"] = {
         id = "BRN03", name = "Savannah Prowler", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1973,
         zone = "The Barrens", creatureType = "Beast", npcId = 3425,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BRN04"] = {
         id = "BRN04", name = "Hecklefang Hyena", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2710,
         zone = "The Barrens", creatureType = "Beast", npcId = 4127,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BRN05"] = {
         id = "BRN05", name = "Theramore Marine", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 2, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 1858,
         zone = "The Barrens", creatureType = "Humanoid", npcId = 3385,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike, Vigilance."
+        text = "Strikes-First, Vigilant."
     },
     ["BRN06"] = {
         id = "BRN06", name = "Stormsnout", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -66,7 +66,7 @@ TTS:AddCards({
         power = 4, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 2731,
         zone = "The Barrens", creatureType = "Beast", npcId = 3252,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["BRN09"] = {
         id = "BRN09", name = "Stormhide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 8, toughness = 8, flying = true, isMob = true, isBoss = true, displayId = 2702,
         zone = "The Barrens", creatureType = "Beast", npcId = 5834,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     -- Solo reward
     ["BRN11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "The Barrens", creatureType = "Humanoid", npcEntry = 3432,
         rally = { tag = "zone", value = "The Barrens", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste. Gets +1/+0 for each other Barrens creature you control."
+        text = "Quick. Gets +1/+0 for each other Barrens creature you control."
     },
 })

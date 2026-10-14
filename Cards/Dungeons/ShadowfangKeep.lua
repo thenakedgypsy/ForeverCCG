@@ -25,7 +25,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 11421,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 3862,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["SFK03"] = {
         id = "SFK03", name = "Haunted Servitor", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 3, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 8808,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 3866,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying, Lifelink."
+        text = "Airborne, Drain."
     },
     ["SFK05"] = {
         id = "SFK05", name = "Lupine Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -60,21 +60,21 @@ TTS:AddCards({
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 524,
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3886,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["SFK08"] = {
         id = "SFK08", name = "Odo the Blindwatcher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 522,
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 4279,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["SFK09"] = {
         id = "SFK09", name = "Baron Silverlaine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 3222,
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 3887,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["SFK10"] = {
         id = "SFK10", name = "Commander Springvale", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 4278,
         anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. Other Shadowfang Keep creatures you control get +1/+1."
+        text = "Vigilant. Other Shadowfang Keep creatures you control get +1/+1."
     },
     ["SFK11"] = {
         id = "SFK11", name = "Wolf Master Nandos", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -90,14 +90,14 @@ TTS:AddCards({
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3927,
         anthem = { tag = "faction", value = "Worgen", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste. Other Worgen you control get +1/+1."
+        text = "Quick. Other Worgen you control get +1/+1."
     },
     ["SFK12"] = {
         id = "SFK12", name = "Fenrus the Devourer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 2352,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 4274,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     -- Solo reward
     ["SFK13"] = {

@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 855,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 705,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DUN02"] = {
         id = "DUN02", name = "Burly Rockjaw Trogg", cost = "{R}", cmc = 1, color = "R", type = "Creature",
@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11416,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 704,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DUN04"] = {
         id = "DUN04", name = "Frostmane Troll Whelp", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 954,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DUN08"] = {
         id = "DUN08", name = "Winter Wolf", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 4, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 8840,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1196,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["DUN10"] = {
         id = "DUN10", name = "Hammerspine", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",

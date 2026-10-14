@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 2414,
         zone = "Tanaris", creatureType = "Beast", npcId = 5422,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["TAN02"] = {
         id = "TAN02", name = "Glasshide Basilisk", cost = "{W}", cmc = 1, color = "W", type = "Creature",
@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 10987,
         zone = "Tanaris", creatureType = "Beast", npcId = 5423,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["TAN05"] = {
         id = "TAN05", name = "Blisterpaw Hyena", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1536,
         zone = "Tanaris", creatureType = "Beast", npcId = 5426,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["TAN06"] = {
         id = "TAN06", name = "Glasshide Gazer", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -59,14 +59,14 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 2609,
         zone = "Tanaris", creatureType = "Beast", npcId = 5427,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["TAN08"] = {
         id = "TAN08", name = "Dunemaul Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 11545,
         zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 5474,
         modelCam = { zoom = 0.67, camScale = 1.13, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["TAN09"] = {
         id = "TAN09", name = "Surf Glider", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

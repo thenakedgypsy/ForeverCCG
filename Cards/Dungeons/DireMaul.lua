@@ -25,14 +25,14 @@ TTS:AddCards({
         power = 3, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 9592,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11464,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["DMA03"] = {
         id = "DMA03", name = "Gordok Brute", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 5, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 12473,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11441,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["DMA04"] = {
         id = "DMA04", name = "Eldreth Sorcerer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -46,14 +46,14 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, unblockable = true, isMob = true, isBoss = true, displayId = 7552,
         zone = "Dire Maul", creatureType = "Demon", npcId = 14354,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste, Cannot be blocked."
+        text = "Quick, Cannot be blocked."
     },
     ["DMA06"] = {
         id = "DMA06", name = "Warpwood Crusher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 12929,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 13021,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["DMA07"] = {
         id = "DMA07", name = "Gordok Mage-Lord", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -68,14 +68,14 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11490,
         anthem = { tag = "faction", value = "Satyr", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink. Other Satyrs you control get +1/+1."
+        text = "Drain. Other Satyrs you control get +1/+1."
     },
     ["DMA09"] = {
         id = "DMA09", name = "Lethtendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 14378,
         zone = "Dire Maul", creatureType = "Humanoid", npcId = 14327,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["DMA10"] = {
         id = "DMA10", name = "Hydrospawn", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -89,14 +89,14 @@ TTS:AddCards({
         power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 11270,
         zone = "Dire Maul", creatureType = "Undead", npcId = 11488,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["DMA12"] = {
         id = "DMA12", name = "Magister Kalendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 14384,
         zone = "Dire Maul", creatureType = "Undead", npcId = 11487,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["DMA13"] = {
         id = "DMA13", name = "Cho'Rush the Observer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -110,14 +110,14 @@ TTS:AddCards({
         power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 11561,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14326,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["DMA15"] = {
         id = "DMA15", name = "Stomper Kreeg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 11545,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14322,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["DMA16"] = {
         id = "DMA16", name = "Tendris Warpwood", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -125,7 +125,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11489,
         anthem = { tag = "zone", value = "Dire Maul", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample. Other Dire Maul creatures you control get +1/+1."
+        text = "Brutish. Other Dire Maul creatures you control get +1/+1."
     },
     ["DMA17"] = {
         id = "DMA17", name = "Captain Kromcrush", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -133,7 +133,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14325,
         anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance. Other Ogres you control get +1/+1."
+        text = "Vigilant. Other Ogres you control get +1/+1."
     },
     ["DMA18"] = {
         id = "DMA18", name = "Immol'thar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -141,7 +141,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Demon", npcId = 11496,
         anthem = { tag = "type", value = "Demon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample. Other Demons you control get +1/+1."
+        text = "Brutish. Other Demons you control get +1/+1."
     },
     -- Solo reward
     ["DMA19"] = {

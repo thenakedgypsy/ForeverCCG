@@ -18,14 +18,14 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 2347,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 657,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DMS02"] = {
         id = "DMS02", name = "Defias Watchman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 184,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["DMS03"] = {
         id = "DMS03", name = "Goblin Engineer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 7124,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1763,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["DMS07"] = {
         id = "DMS07", name = "Rhahk'Zor", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -67,14 +67,14 @@ TTS:AddCards({
         power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1269,
         zone = "The Deadmines", creatureType = "Mechanical", faction = "Defias", npcId = 642,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["DMS09"] = {
         id = "DMS09", name = "Cookie", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 1305,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 645,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["DMS10"] = {
         id = "DMS10", name = "Captain Greenskin", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -82,14 +82,14 @@ TTS:AddCards({
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 647,
         anthem = { tag = "faction", value = "Defias", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. Other Defias you control get +1/+1."
+        text = "Vigilant. Other Defias you control get +1/+1."
     },
     ["DMS11"] = {
         id = "DMS11", name = "Mr. Smite", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2026,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 646,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     -- Solo reward
     ["DMS12"] = {
@@ -99,6 +99,6 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Defias", p = 0, kw = { "haste" } },
         rally = { tag = "faction", value = "Defias", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Haste."
+        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Quick."
     },
 })

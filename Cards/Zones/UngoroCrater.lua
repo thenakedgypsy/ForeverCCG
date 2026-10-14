@@ -52,21 +52,21 @@ TTS:AddCards({
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 8511,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 9163,
         modelCam = { zoom = 0.66, camScale = 1.13, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["UNG07"] = {
         id = "UNG07", name = "Un'Goro Thunderer", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 5244,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 6516,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["UNG08"] = {
         id = "UNG08", name = "Frenzied Pterrordax", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 4, toughness = 4, flying = true, isMob = true, isBoss = true, displayId = 8412,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 9167,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["UNG09"] = {
         id = "UNG09", name = "Living Blaze", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 8129,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 6585,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     -- Solo reward
     ["UNG11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Un'Goro Crater", creatureType = "Humanoid", npcEntry = 9619,
         anthem = { tag = "type", value = "Beast", p = 1, t = 1, kw = { "trample" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample. Other Beasts you control get +1/+1 and Trample."
+        text = "Brutish. Other Beasts you control get +1/+1 and Brutish."
     },
 })

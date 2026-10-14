@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1207,
         zone = "Ashenvale", creatureType = "Beast", npcId = 3824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["ASH06"] = {
         id = "ASH06", name = "Befouled Water Elemental", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Ashenvale", creatureType = "Humanoid", npcEntry = 3691,
         anthem = { tag = "zone", value = "Ashenvale", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste. Other Ashenvale creatures you control get +1/+1."
+        text = "Quick. Other Ashenvale creatures you control get +1/+1."
     },
 })

@@ -63,7 +63,7 @@ TTS:AddCards({
     },
     ["PRI09"] = {
         id = "PRI09", name = "Mind Control", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Sorcery", class = "Priest",
-        text = "Gain control of target enemy creature until end of turn. Untap it. It gains Haste.",
+        text = "Gain control of target enemy creature until end of turn. Untap it. It gains Quick.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordDominate",
         effect = { target = "enemy_creature", ops = { { op = "steal", to = "target", untilEnd = true } } }
     },

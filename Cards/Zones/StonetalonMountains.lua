@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 295,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 4012,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["STO06"] = {
         id = "STO06", name = "Pridewing Consort", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 4607,
         zone = "Stonetalon Mountains", creatureType = "Elemental", npcId = 4036,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["STO08"] = {
         id = "STO08", name = "Blackened Basilisk", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 10282,
         zone = "Stonetalon Mountains", creatureType = "Humanoid", npcId = 4026,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["STO10"] = {
         id = "STO10", name = "Sorrow Wing", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Stonetalon Mountains", creatureType = "Humanoid", npcEntry = 3994,
         anthem = { tag = "zone", value = "Stonetalon Mountains", t = 2 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Reach. Other Stonetalon Mountains creatures you control get +0/+2."
+        text = "Anti-Air. Other Stonetalon Mountains creatures you control get +0/+2."
     },
 })

@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 1087,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1822,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["WPL02"] = {
         id = "WPL02", name = "Skeletal Sorcerer", cost = "{B}", cmc = 1, color = "B", type = "Creature",
@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 1091,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1821,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["WPL05"] = {
         id = "WPL05", name = "Diseased Wolf", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 4124,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1817,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["WPL06"] = {
         id = "WPL06", name = "Rotting Cadaver", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -59,14 +59,14 @@ TTS:AddCards({
         power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 1083,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1816,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["WPL08"] = {
         id = "WPL08", name = "Scarlet Worker", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 4, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 10303,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1883,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["WPL09"] = {
         id = "WPL09", name = "Haunting Vision", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 9, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 10342,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1839,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     -- Solo reward
     ["WPL11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Western Plaguelands", creatureType = "Humanoid", npcEntry = 1855,
         anthem = { tag = "type", value = "Humanoid", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance, Lifelink. Other Humanoids you control get +1/+1."
+        text = "Vigilant, Drain. Other Humanoids you control get +1/+1."
     },
 })

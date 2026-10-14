@@ -31,14 +31,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 15384,
         zone = "Silithus", creatureType = "Beast", npcId = 11736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["SLI04"] = {
         id = "SLI04", name = "Sand Skitterer", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 8014,
         zone = "Silithus", creatureType = "Beast", npcId = 11738,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["SLI05"] = {
         id = "SLI05", name = "Dust Stormer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -52,14 +52,14 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 15385,
         zone = "Silithus", creatureType = "Beast", npcId = 11737,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["SLI07"] = {
         id = "SLI07", name = "Desert Rumbler", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 8550,
         zone = "Silithus", creatureType = "Elemental", npcId = 11746,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["SLI08"] = {
         id = "SLI08", name = "Twilight Avenger", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Silithus", creatureType = "Humanoid", npcEntry = 14347,
         anthem = { tag = "zone", value = "Silithus", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance, First Strike. Other Silithus creatures you control get +1/+1."
+        text = "Vigilant, Strikes-First. Other Silithus creatures you control get +1/+1."
     },
 })

@@ -60,7 +60,7 @@ TTS:AddCards({
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 2359,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 474,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["ELW08"] = {
         id = "ELW08", name = "Murloc Forager", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -91,6 +91,6 @@ TTS:AddCards({
         zone = "Elwynn Forest", creatureType = "Humanoid", npcEntry = 240,
         anthem = { tag = "zone", value = "Elwynn Forest", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. Other Elwynn Forest creatures you control get +1/+1."
+        text = "Vigilant. Other Elwynn Forest creatures you control get +1/+1."
     },
 })

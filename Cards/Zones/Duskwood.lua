@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 246,
         zone = "Duskwood", creatureType = "Beast", npcId = 923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DSK03"] = {
         id = "DSK03", name = "Skeletal Horror", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -38,21 +38,21 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 368,
         zone = "Duskwood", creatureType = "Beast", npcId = 930,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["DSK05"] = {
         id = "DSK05", name = "Defias Night Runner", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4276,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Defias", npcId = 215,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike, Haste."
+        text = "Strikes-First, Quick."
     },
     ["DSK06"] = {
         id = "DSK06", name = "Carrion Recluse", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 545,
         zone = "Duskwood", creatureType = "Beast", npcId = 949,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["DSK07"] = {
         id = "DSK07", name = "Nightbane Worgen", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 736,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Worgen", npcId = 205,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["DSK10"] = {
         id = "DSK10", name = "Nefaru", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

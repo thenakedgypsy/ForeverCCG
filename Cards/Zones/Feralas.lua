@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 10795,
         zone = "Feralas", creatureType = "Humanoid", faction = "Gnoll", npcId = 5255,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["FER03"] = {
         id = "FER03", name = "Groddoc Ape", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 3202,
         zone = "Feralas", creatureType = "Beast", npcId = 5287,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["FER06"] = {
         id = "FER06", name = "Grizzled Ironfur Bear", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

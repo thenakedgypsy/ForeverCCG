@@ -17,21 +17,21 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 8050,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5984,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BLA02"] = {
         id = "BLA02", name = "Snickerfang Hyena", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2714,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5985,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BLA03"] = {
         id = "BLA03", name = "Scorpok Stinger", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 6068,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5988,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["BLA04"] = {
         id = "BLA04", name = "Felbeast", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 14401,
         zone = "Blasted Lands", creatureType = "Humanoid", faction = "Ogre", npcId = 5977,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["BLA10"] = {
         id = "BLA10", name = "Dreadscorn", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

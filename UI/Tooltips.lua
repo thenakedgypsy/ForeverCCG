@@ -66,17 +66,17 @@ TT.KEYWORD_ORDER = {
 }
 
 TT.KEYWORDS = {
-    flying      = { name = "Flying",       text = "Can only be blocked by creatures with Flying or Reach." },
-    reach       = { name = "Reach",        text = "Can block creatures with Flying." },
-    haste       = { name = "Haste",        text = "No summoning sickness: it can attack and use {T} abilities the turn it enters the battlefield." },
-    vigilance   = { name = "Vigilance",    text = "Attacking doesn't tap this creature, so it is still ready to block on your opponent's turn." },
-    firstStrike = { name = "First Strike", text = "Deals its combat damage before creatures without First Strike. If that damage is lethal, the other creature dies before it can strike back." },
-    deathtouch  = { name = "Deathtouch",   text = "Any combat damage this creature deals to a creature is lethal." },
-    lifelink    = { name = "Lifelink",     text = "Combat damage this creature deals also restores that much life to its controller." },
-    trample     = { name = "Trample",      text = "When blocked, combat damage beyond the blocker's toughness carries over to the defending player." },
-    hexproof    = { name = "Hexproof",     text = "Can't be the target of your opponent's spells or abilities." },
-    defender    = { name = "Defender",     text = "Can't attack. It can still block." },
-    unblockable = { name = "Unblockable",  text = "Can't be blocked." },
+    flying      = { name = "Airborne",      text = "Can only be blocked by creatures with Airborne or Anti-Air." },
+    reach       = { name = "Anti-Air",      text = "Can block creatures with Airborne." },
+    haste       = { name = "Quick",         text = "No summoning sickness: it can attack and use {T} abilities the turn it enters the battlefield." },
+    vigilance   = { name = "Vigilant",      text = "Attacking doesn't tap this creature, so it is still ready to block on your opponent's turn." },
+    firstStrike = { name = "Strikes-First", text = "Deals its combat damage before creatures without Strikes-First. If that damage is lethal, the other creature dies before it can strike back." },
+    deathtouch  = { name = "Fatal",         text = "Any combat damage this creature deals to a creature is lethal." },
+    lifelink    = { name = "Drain",         text = "Combat damage this creature deals also restores that much life to its controller." },
+    trample     = { name = "Brutish",       text = "When blocked, combat damage beyond the blocker's toughness carries over to the defending player." },
+    hexproof    = { name = "Warded",        text = "Can't be the target of your opponent's spells or abilities." },
+    defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
+    unblockable = { name = "Unblockable",   text = "Can't be blocked." },
 }
 
 -- =========================================================================
@@ -88,9 +88,9 @@ TT.SYMBOLS = {
     W       = { name = "Holy",          text = "One Holy mana, made by tapping a Holy Prayer. Holy cards bring life gain, shielding, vigilant guards and board wipes." },
     U       = { name = "Arcane",        text = "One Arcane mana, made by tapping an Arcane Prayer. Arcane cards bring card draw, tempo, freezing and bounce." },
     B       = { name = "Shadow",        text = "One Shadow mana, made by tapping a Shadow Prayer. Shadow cards bring targeted removal, sacrifice, hand disruption and drain." },
-    R       = { name = "Fire",          text = "One Fire mana, made by tapping a Fire Prayer. Fire cards bring aggression, direct burn, haste and burst damage." },
-    G       = { name = "Nature",        text = "One Nature mana, made by tapping a Nature Prayer. Nature cards bring mana ramp, reach blockers and massive behemoths." },
-    T       = { name = "Tap",           text = "Tap the card (it turns grey and shows this symbol) to use the ability. A tapped card stays tapped until it untaps at the start of its controller's turn. Attacking also taps creatures without Vigilance." },
+    R       = { name = "Fire",          text = "One Fire mana, made by tapping a Fire Prayer. Fire cards bring aggression, direct burn, Quick creatures and burst damage." },
+    G       = { name = "Nature",        text = "One Nature mana, made by tapping a Nature Prayer. Nature cards bring mana ramp, Anti-Air blockers and massive behemoths." },
+    T       = { name = "Tap",           text = "Tap the card (it turns grey and shows this symbol) to use the ability. A tapped card stays tapped until it untaps at the start of its controller's turn. Attacking also taps creatures that aren't Vigilant." },
     GENERIC = { name = "Generic Mana",  text = "A number in brackets is generic mana: pay it with mana of any colour." },
     X       = { name = "X",             text = "X stands for a number chosen when the card is played." },
     SKULL   = { name = "Lethal",        text = "This creature dies if the current blocks are accepted." },
@@ -128,7 +128,7 @@ TT.EFFECTS = {
     draw       = { name = "Card Draw",         tag = "Effect", text = "Draw cards from your library. With 10 cards in hand you discard one first. Drawing from an empty library loses the game." },
     mana       = { name = "Mana Gain",         tag = "Effect", text = "Adds mana straight to your pool. Unspent mana empties at the end of your turn." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent creature card in a graveyard to the battlefield under your control." },
-    targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Hexproof enemy creatures can't be chosen." },
+    targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy creatures can't be chosen." },
 
     -- Creature and Prayer abilities
     prayer     = { name = "Prayer",            tag = "Ability", text = "Click an untapped Prayer to tap it for one mana of its colour. You can play one Prayer per turn, during a main phase." },
@@ -145,7 +145,7 @@ TT.EFFECTS = {
     damaged    = { name = "Damaged",           tag = "Status", text = "It dies if the marked damage reaches its toughness. All damage wears off at the end of the turn." },
     attacking  = { name = "Attacking",         tag = "Status", text = "Declared as an attacker this combat." },
     blocking   = { name = "Blocking",          tag = "Status", text = "Assigned to block an attacker this combat." },
-    blocked    = { name = "Blocked",           tag = "Status", text = "A creature is blocking this attacker. Combat damage goes to the blocker instead of the player (unless it has Trample)." },
+    blocked    = { name = "Blocked",           tag = "Status", text = "A creature is blocking this attacker. Combat damage goes to the blocker instead of the player (unless it is Brutish)." },
     selected   = { name = "Choosing Block",    tag = "Status", text = "Selected as a blocker: click an attacking creature to assign it. Right-click to deselect." },
     modified   = { name = "Modified Stats",    tag = "Status", text = "Its power and toughness differ from the printed card." },
     borrowed   = { name = "Borrowed",          tag = "Status", text = "Under your control until the end of the turn, then it returns to its owner." },

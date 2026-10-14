@@ -17,14 +17,14 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1219,
         zone = "Mulgore", creatureType = "Beast", npcId = 2955,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["MUL02"] = {
         id = "MUL02", name = "Mountain Cougar", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11451,
         zone = "Mulgore", creatureType = "Beast", npcId = 2961,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["MUL03"] = {
         id = "MUL03", name = "Battleboar", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -52,14 +52,14 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1100,
         zone = "Mulgore", creatureType = "Beast", npcId = 2958,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["MUL07"] = {
         id = "MUL07", name = "Wiry Swoop", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 2, toughness = 3, flying = true, haste = true, isMob = true, isBoss = true, displayId = 1228,
         zone = "Mulgore", creatureType = "Beast", npcId = 2969,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying, Haste."
+        text = "Airborne, Quick."
     },
     ["MUL08"] = {
         id = "MUL08", name = "Venture Co. Worker", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

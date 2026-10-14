@@ -25,7 +25,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1244,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BFD03"] = {
         id = "BFD03", name = "Fallenroot Shadowstalker", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -54,21 +54,21 @@ TTS:AddCards({
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4831,
         anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike. Other Naga you control get +1/+1."
+        text = "Strikes-First. Other Naga you control get +1/+1."
     },
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 4, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 5027,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4887,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["BFD08"] = {
         id = "BFD08", name = "Lorgus Jett", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 12822,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 12902,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BFD09"] = {
         id = "BFD09", name = "Gelihast", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -83,7 +83,7 @@ TTS:AddCards({
         power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1816,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4830,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["BFD11"] = {
         id = "BFD11", name = "Twilight Lord Kelris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -91,7 +91,7 @@ TTS:AddCards({
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4832,
         anthem = { tag = "faction", value = "Twilight's Hammer", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink. Other Twilight's Hammer you control get +1/+1."
+        text = "Drain. Other Twilight's Hammer you control get +1/+1."
     },
     -- Solo reward
     ["BFD12"] = {

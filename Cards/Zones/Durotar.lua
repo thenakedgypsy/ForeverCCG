@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 2486,
         zone = "Durotar", creatureType = "Beast", npcId = 3125,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["DUR03"] = {
         id = "DUR03", name = "Dire Mottled Boar", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 2487,
         zone = "Durotar", creatureType = "Beast", npcId = 3126,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["DUR05"] = {
         id = "DUR05", name = "Bloodtalon Taillasher", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1960,
         zone = "Durotar", creatureType = "Beast", npcId = 3122,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DUR06"] = {
         id = "DUR06", name = "Elder Mottled Boar", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 2732,
         zone = "Durotar", creatureType = "Beast", npcId = 3127,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["DUR08"] = {
         id = "DUR08", name = "Bloodtalon Scythemaw", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         zone = "Durotar", creatureType = "Beast", npcId = 5823,
         anthem = { tag = "zone", value = "Durotar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch. Other Durotar creatures you control get +1/+1."
+        text = "Fatal. Other Durotar creatures you control get +1/+1."
     },
     -- Solo reward
     ["DUR11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Durotar", creatureType = "Humanoid", faction = "Troll", npcEntry = 10540,
         anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch. Other Trolls you control get +1/+1."
+        text = "Fatal. Other Trolls you control get +1/+1."
     },
 })

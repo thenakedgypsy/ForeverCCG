@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 1, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1042,
         zone = "Darkshore", creatureType = "Beast", npcId = 2321,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DAR04"] = {
         id = "DAR04", name = "Darkshore Thresher", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 1283,
         zone = "Darkshore", creatureType = "Beast", npcId = 2323,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["DAR08"] = {
         id = "DAR08", name = "Stormscale Myrmidon", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",

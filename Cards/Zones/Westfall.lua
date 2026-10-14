@@ -17,42 +17,42 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 643,
         zone = "Westfall", creatureType = "Beast", npcId = 834,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["WES02"] = {
         id = "WES02", name = "Defias Smuggler", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 4418,
         zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 95,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["WES03"] = {
         id = "WES03", name = "Harvest Golem", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 1, toughness = 5, defender = true, isMob = true, isBoss = true, displayId = 367,
         zone = "Westfall", creatureType = "Mechanical", npcId = 36,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["WES04"] = {
         id = "WES04", name = "Fleshripper", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 2305,
         zone = "Westfall", creatureType = "Beast", npcId = 1109,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["WES05"] = {
         id = "WES05", name = "Goretusk", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 3027,
         zone = "Westfall", creatureType = "Beast", npcId = 157,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["WES06"] = {
         id = "WES06", name = "Harvest Watcher", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 1, toughness = 7, defender = true, isMob = true, isBoss = true, displayId = 378,
         zone = "Westfall", creatureType = "Mechanical", npcId = 114,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Defender."
+        text = "Blocker."
     },
     ["WES07"] = {
         id = "WES07", name = "Defias Digger", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -66,7 +66,7 @@ TTS:AddCards({
         power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 383,
         zone = "Westfall", creatureType = "Humanoid", faction = "Gnoll", npcId = 452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["WES09"] = {
         id = "WES09", name = "Shore Crawler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         zone = "Westfall", creatureType = "Beast", npcId = 462,
         anthem = { tag = "zone", value = "Westfall", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Flying. Other Westfall creatures you control get +1/+0."
+        text = "Airborne. Other Westfall creatures you control get +1/+0."
     },
     -- Solo reward
     ["WES11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Westfall", creatureType = "Humanoid", npcEntry = 234,
         anthem = { tag = "zone", value = "Westfall", p = 1, t = 1, kw = { "vigilance" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. Other Westfall creatures you control get +1/+1 and Vigilance."
+        text = "Vigilant. Other Westfall creatures you control get +1/+1 and Vigilant."
     },
 })

@@ -17,14 +17,14 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 380,
         zone = "Redridge Mountains", creatureType = "Beast", npcId = 1922,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["RED02"] = {
         id = "RED02", name = "Tarantula", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 366,
         zone = "Redridge Mountains", creatureType = "Beast", npcId = 442,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["RED03"] = {
         id = "RED03", name = "Redridge Poacher", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -60,14 +60,14 @@ TTS:AddCards({
         power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 391,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 578,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["RED08"] = {
         id = "RED08", name = "Blackrock Champion", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 6044,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["RED09"] = {
         id = "RED09", name = "Squiddic", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",

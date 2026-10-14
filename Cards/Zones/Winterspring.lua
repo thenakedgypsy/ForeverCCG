@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 6212,
         zone = "Winterspring", creatureType = "Beast", npcId = 7455,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["WIN02"] = {
         id = "WIN02", name = "Ice Thistle Yeti", cost = "{U}", cmc = 1, color = "U", type = "Creature",
@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 1, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 10810,
         zone = "Winterspring", creatureType = "Beast", npcId = 7448,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["WIN05"] = {
         id = "WIN05", name = "Moontouched Owlbeast", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -66,14 +66,14 @@ TTS:AddCards({
         power = 4, toughness = 4, flying = true, isMob = true, isBoss = true, displayId = 10833,
         zone = "Winterspring", creatureType = "Beast", npcId = 7456,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["WIN09"] = {
         id = "WIN09", name = "Frostsaber Huntress", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
         zone = "Winterspring", creatureType = "Beast", npcId = 7433,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["WIN10"] = {
         id = "WIN10", name = "Lady Hederine", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

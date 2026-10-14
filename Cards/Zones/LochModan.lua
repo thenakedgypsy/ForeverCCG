@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 827,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1195,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["LOC03"] = {
         id = "LOC03", name = "Loch Frenzy", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -52,21 +52,21 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 410,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1194,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["LOC07"] = {
         id = "LOC07", name = "Elder Mountain Boar", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 1208,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1192,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["LOC08"] = {
         id = "LOC08", name = "Black Bear Patriarch", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 4, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 762,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1189,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["LOC09"] = {
         id = "LOC09", name = "Young Threshadon", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Loch Modan", creatureType = "Humanoid", npcEntry = 1343,
         rally = { tag = "zone", value = "Loch Modan", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike. Gets +1/+1 for each other Loch Modan creature you control."
+        text = "Strikes-First. Gets +1/+1 for each other Loch Modan creature you control."
     },
 })

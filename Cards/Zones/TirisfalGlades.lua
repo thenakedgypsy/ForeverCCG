@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 513,
         zone = "Tirisfal Glades", creatureType = "Beast", npcId = 1504,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["TIR04"] = {
         id = "TIR04", name = "Decrepit Darkhound", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 4734,
         zone = "Tirisfal Glades", creatureType = "Beast", npcId = 1553,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying, Lifelink."
+        text = "Airborne, Drain."
     },
     ["TIR07"] = {
         id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["TIR10"] = {
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

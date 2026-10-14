@@ -25,14 +25,14 @@ TTS:AddCards({
         power = 3, toughness = 2, trample = true, isMob = true, isBoss = true, displayId = 11010,
         zone = "Ragefire Chasm", creatureType = "Beast", npcId = 11320,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["RFC03"] = {
         id = "RFC03", name = "Searing Blade Warlock", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11438,
         zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11324,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["RFC04"] = {
         id = "RFC04", name = "Molten Elemental", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 4, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 11611,
         zone = "Ragefire Chasm", creatureType = "Humanoid", npcId = 11517,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["RFC06"] = {
         id = "RFC06", name = "Jergosh the Invoker", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -54,7 +54,7 @@ TTS:AddCards({
         zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11518,
         anthem = { tag = "faction", value = "Burning Blade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch. Other Burning Blade you control get +1/+1."
+        text = "Fatal. Other Burning Blade you control get +1/+1."
     },
     ["RFC07"] = {
         id = "RFC07", name = "Taragaman the Hungerer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -62,7 +62,7 @@ TTS:AddCards({
         zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11520,
         anthem = { tag = "zone", value = "Ragefire Chasm", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample. Other Ragefire Chasm creatures you control get +1/+1."
+        text = "Brutish. Other Ragefire Chasm creatures you control get +1/+1."
     },
     -- Solo reward
     ["RFC08"] = {
@@ -71,6 +71,6 @@ TTS:AddCards({
         zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcEntry = 11323,
         anthem = { tag = "faction", value = "Burning Blade", p = 1, kw = { "firstStrike" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike. Other Burning Blade you control get +1/+0 and First Strike."
+        text = "Strikes-First. Other Burning Blade you control get +1/+0 and Strikes-First."
     },
 })

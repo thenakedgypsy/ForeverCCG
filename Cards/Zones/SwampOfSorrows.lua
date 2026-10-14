@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 2543,
         zone = "Swamp of Sorrows", creatureType = "Beast", npcId = 858,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach."
+        text = "Anti-Air."
     },
     ["SWA03"] = {
         id = "SWA03", name = "Lost One Hunter", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 633,
         zone = "Swamp of Sorrows", creatureType = "Beast", npcId = 768,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["SWA05"] = {
         id = "SWA05", name = "Tangled Horror", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 1157,
         zone = "Swamp of Sorrows", creatureType = "Beast", faction = "Troll", npcId = 2686,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["SWA10"] = {
         id = "SWA10", name = "Zekkis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Swamp of Sorrows", creatureType = "Humanoid", npcEntry = 7572,
         anthem = { tag = "zone", value = "Swamp of Sorrows", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink. Other Swamp of Sorrows creatures you control get +1/+1."
+        text = "Drain. Other Swamp of Sorrows creatures you control get +1/+1."
     },
 })

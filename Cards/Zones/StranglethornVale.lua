@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2437,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 683,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STV02"] = {
         id = "STV02", name = "Kurzen Medicine Man", cost = "{W}", cmc = 1, color = "W", type = "Creature",
@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 320,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 682,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STV04"] = {
         id = "STV04", name = "Venture Co. Geologist", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 614,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 772,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STV06"] = {
         id = "STV06", name = "Jungle Thunderer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 838,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 1557,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["STV08"] = {
         id = "STV08", name = "Venture Co. Strip Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Stranglethorn Vale", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2, filter = { tag = "type", value = "Beast" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Reach. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale creatures you control get +1/+0."
+        text = "Anti-Air. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale creatures you control get +1/+0."
     },
 })

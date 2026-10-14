@@ -25,21 +25,21 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 559,
         zone = "Stratholme", creatureType = "Undead", npcId = 10405,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STR03"] = {
         id = "STR03", name = "Crimson Gallant", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["STR04"] = {
         id = "STR04", name = "Rockwing Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 3, flying = true, isMob = true, isBoss = true, displayId = 7533,
         zone = "Stratholme", creatureType = "Undead", npcId = 10408,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["STR05"] = {
         id = "STR05", name = "Shrieking Banshee", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 3, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 6841,
         zone = "Stratholme", creatureType = "Undead", npcId = 10412,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["STR07"] = {
         id = "STR07", name = "Patchwork Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -74,14 +74,14 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 10433,
         zone = "Stratholme", creatureType = "Undead", npcId = 10435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["STR10"] = {
         id = "STR10", name = "Hearthsinger Forresten", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 10482,
         zone = "Stratholme", creatureType = "Undead", npcId = 10558,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["STR11"] = {
         id = "STR11", name = "The Unforgiven", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -95,7 +95,7 @@ TTS:AddCards({
         power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 2606,
         zone = "Stratholme", creatureType = "Undead", npcId = 10393,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["STR13"] = {
         id = "STR13", name = "Cannon Master Willey", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -109,35 +109,35 @@ TTS:AddCards({
         power = 7, toughness = 8, firstStrike = true, isMob = true, isBoss = true, displayId = 10544,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10811,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["STR15"] = {
         id = "STR15", name = "Malor the Zealous", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 10458,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 11032,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["STR16"] = {
         id = "STR16", name = "Baroness Anastari", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 10698,
         zone = "Stratholme", creatureType = "Undead", npcId = 10436,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink."
+        text = "Drain."
     },
     ["STR17"] = {
         id = "STR17", name = "Nerub'enkan", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 9793,
         zone = "Stratholme", creatureType = "Undead", npcId = 10437,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["STR18"] = {
         id = "STR18", name = "Stonespine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 8, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 7856,
         zone = "Stratholme", creatureType = "Undead", npcId = 10809,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["STR19"] = {
         id = "STR19", name = "Maleki the Pallid", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
@@ -153,7 +153,7 @@ TTS:AddCards({
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10812,
         anthem = { tag = "faction", value = "Scarlet Crusade", kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Lifelink, Vigilance. Other Scarlet Crusade you control have Lifelink."
+        text = "Drain, Vigilant. Other Scarlet Crusade you control have Drain."
     },
     -- Solo reward
     ["STR21"] = {
@@ -163,6 +163,6 @@ TTS:AddCards({
         anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Trample. When Ramstein the Gorger enters the battlefield, deal 2 damage to each enemy creature. Other Undead you control get +1/+1."
+        text = "Brutish. When Ramstein the Gorger enters the battlefield, deal 2 damage to each enemy creature. Other Undead you control get +1/+1."
     },
 })

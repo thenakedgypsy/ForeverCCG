@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 9371,
         zone = "Burning Steppes", creatureType = "Beast", npcId = 9690,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["BUR06"] = {
         id = "BUR06", name = "Flamekin Spitter", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -59,28 +59,28 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 8970,
         zone = "Burning Steppes", creatureType = "Beast", npcId = 9691,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["BUR08"] = {
         id = "BUR08", name = "Firegut Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 10707,
         zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 7035,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     ["BUR09"] = {
         id = "BUR09", name = "War Reaver", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 10806,
         zone = "Burning Steppes", creatureType = "Elemental", npcId = 7039,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "First Strike."
+        text = "Strikes-First."
     },
     ["BUR10"] = {
         id = "BUR10", name = "Volchan", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12232,
         zone = "Burning Steppes", creatureType = "Giant", npcId = 10119,
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
-        text = "Trample."
+        text = "Brutish."
     },
     -- Solo reward
     ["BUR11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Burning Steppes", creatureType = "Humanoid", npcEntry = 9560,
         anthem = { tag = "zone", value = "Burning Steppes", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. Other Burning Steppes creatures you control get +1/+1."
+        text = "Vigilant. Other Burning Steppes creatures you control get +1/+1."
     },
 })

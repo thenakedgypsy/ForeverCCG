@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 246,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1766,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Haste."
+        text = "Quick."
     },
     ["SIL03"] = {
         id = "SIL03", name = "Ferocious Grizzled Bear", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 760,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1781,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Deathtouch."
+        text = "Fatal."
     },
     ["SIL08"] = {
         id = "SIL08", name = "Bloodsnout Worg", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -73,14 +73,14 @@ TTS:AddCards({
         power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 370,
         zone = "Silverpine Forest", creatureType = "Undead", npcId = 1973,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     ["SIL10"] = {
         id = "SIL10", name = "Ravenclaw Regent", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 8, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 1019,
         zone = "Silverpine Forest", creatureType = "Undead", npcId = 2283,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     -- Solo reward
     ["SIL11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Silverpine Forest", creatureType = "Undead", npcEntry = 1952,
         anthem = { tag = "zone", value = "Silverpine Forest", t = 1, kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Silverpine Forest creatures you control get +0/+1 and Lifelink."
+        text = "Other Silverpine Forest creatures you control get +0/+1 and Drain."
     },
 })

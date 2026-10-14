@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["WAR02"] = {
         id = "WAR02", name = "Charge", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target creature you control gets +1/+0 and gains Haste until end of turn.",
+        text = "Target creature you control gets +1/+0 and gains Quick until end of turn.",
         art = "Interface\\Icons\\Ability_Warrior_Charge",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, kw = { "haste" } } } }
     },
@@ -45,7 +45,7 @@ TTS:AddCards({
     },
     ["WAR06"] = {
         id = "WAR06", name = "Overpower", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target creature you control gets +3/+0 and gains First Strike until end of turn.",
+        text = "Target creature you control gets +3/+0 and gains Strikes-First until end of turn.",
         art = "Interface\\Icons\\Ability_MeleeDamage",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, kw = { "firstStrike" } } } }
     },

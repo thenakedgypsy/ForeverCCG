@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 2, toughness = 1, flying = true, isMob = true, isBoss = true, displayId = 7896,
         zone = "Eastern Plaguelands", creatureType = "Beast", npcId = 8601,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["EPL05"] = {
         id = "EPL05", name = "Putrid Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 7854,
         zone = "Eastern Plaguelands", creatureType = "Undead", npcId = 8534,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying."
+        text = "Airborne."
     },
     ["EPL06"] = {
         id = "EPL06", name = "Carrion Devourer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 2, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 7897,
         zone = "Eastern Plaguelands", creatureType = "Beast", npcId = 8602,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Flying, Lifelink."
+        text = "Airborne, Drain."
     },
     ["EPL08"] = {
         id = "EPL08", name = "Frenzied Plaguehound", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 9, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 14698,
         zone = "Eastern Plaguelands", creatureType = "Undead", npcId = 16184,
         modelCam = { zoom = 0.75, camScale = 1.07, z = -0.11, rotation = 0.15 },
-        text = "Vigilance."
+        text = "Vigilant."
     },
     -- Solo reward
     ["EPL11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Eastern Plaguelands", creatureType = "Humanoid", npcEntry = 11039,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 3, filter = { tag = "type", value = "Undead" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilance. When Duke Nicholas Zverenhoff enters the battlefield, deal 3 damage to each enemy Undead."
+        text = "Vigilant. When Duke Nicholas Zverenhoff enters the battlefield, deal 3 damage to each enemy Undead."
     },
 })
