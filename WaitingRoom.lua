@@ -163,10 +163,17 @@ local function UpdateVersionText()
     versionText:SetText("v" .. (TTS.VERSION or "unknown"))
 end
 
--- Score column header, above the list
-local scoreHeader = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-scoreHeader:SetPoint("BOTTOMRIGHT", listContainer, "TOPRIGHT", -182, 2)
-scoreHeader:SetText("Collection Score")
+-- Column headers, above the list (rows sit 10px in from the list's left and right edges)
+local function CreateColumnHeader(text, point, relPoint, x)
+    local h = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    h:SetPoint(point, listContainer, relPoint, x, 2)
+    h:SetText(text)
+    return h
+end
+CreateColumnHeader("Player", "BOTTOMLEFT", "TOPLEFT", 16)
+CreateColumnHeader("Collection Score", "BOTTOMRIGHT", "TOPRIGHT", -182)
+CreateColumnHeader("Party", "BOTTOM", "TOPRIGHT", -132)       -- centred over the Party Invite buttons
+CreateColumnHeader("Challenge", "BOTTOM", "TOPRIGHT", -51)    -- centred over the Invite buttons
 
 -- =========================================================================
 -- PARTY INVITES
