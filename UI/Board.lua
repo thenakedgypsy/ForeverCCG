@@ -1131,13 +1131,14 @@ local function ShowMap(map, tint)
         local down = math.ceil(h / MAP_TILE)
         for r = 0, down - 1 do
             for c = 0, across - 1 do
-                local fileId = files[r * across + c + 1]
-                if fileId then
+                local name = files[r * across + c + 1]
+                if name then
                     local pw = (c < across - 1) and MAP_TILE or (w - c * MAP_TILE)
                     local ph = (r < down - 1) and MAP_TILE or (h - r * MAP_TILE)
                     local t = OverlayTexture(used + 1)
-                    t:SetTexture(fileId)
-                    if t:GetTexture() and PlaceMapPiece(t, ox + c * MAP_TILE, oy + r * MAP_TILE, pw, ph,
+                    -- A file this client doesn't have is skipped rather than drawn
+                    local loaded = t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s", map, name))
+                    if loaded ~= false and t:GetTexture() and PlaceMapPiece(t, ox + c * MAP_TILE, oy + r * MAP_TILE, pw, ph,
                             TextureFileSize(pw), TextureFileSize(ph), s, winTop, winBottom, tint) then
                         used = used + 1
                     end
