@@ -1246,6 +1246,7 @@ for i = 1, 10 do
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
+        if TTS:TryLinkCard(self.cardId) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1338,6 +1339,7 @@ local function WithFieldSound(handler)
         if not TTS.Engine.inMatch then return end
         local perm = self.fieldIndex and TTS.Engine.localState.field[self.fieldIndex]
         local wasTapped = perm and perm.tapped
+        if TTS:TryLinkCard(self.cardId) then return end
         handler(self, btn)
         PlayFieldClickSound(perm, wasTapped)
     end
@@ -1365,6 +1367,7 @@ for i = 1, 12 do
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
+        if TTS:TryLinkCard(self.cardId) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1383,6 +1386,7 @@ for i = 1, 12 do
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
+        if TTS:TryLinkCard(self.cardId) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()

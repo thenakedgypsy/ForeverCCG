@@ -1333,6 +1333,7 @@ local function CreateTile(index)
     hit:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     hit:SetScript("OnClick", function(self, button)
         if not self.cardId then return end
+        if TTS:TryLinkCard(self.cardId) then return end
         if button == "RightButton" then
             D:RemoveCardFromDeck(self.cardId)
         else
@@ -1656,6 +1657,7 @@ local function GetDeckRow(i)
     r:SetScript("OnLeave", CardTooltip_OnLeave)
     r:SetScript("OnClick", function(self)
         if not self.cardId then return end
+        if TTS:TryLinkCard(self.cardId) then return end
         D:RemoveCardFromDeck(self.cardId)
         -- Rows shift after a removal, so refresh what's under the cursor
         if self:IsShown() and self.cardId and self:IsMouseOver() then

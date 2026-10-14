@@ -300,6 +300,10 @@ local function CreateExampleCard(parent, cardId)
         if TTS.Tooltip then TTS.Tooltip:Hide(self) end
         HideRulesPreview()
     end)
+    -- Shift-click while typing in chat links the card (UI\CardLinks.lua)
+    f:SetScript("OnClick", function(self)
+        if TTS.TryLinkCard then TTS:TryLinkCard(self.cardId) end
+    end)
 
     SetupRuleCard(f, cardId)
     return f
