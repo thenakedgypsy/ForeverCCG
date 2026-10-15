@@ -75,6 +75,8 @@ local function ReadName(site, file)
     if not raw or raw:match("^%[.*%]$") then return nil end
     raw = raw:gsub("\\u(%x%x%x%x)", function(h) return Utf8(tonumber(h, 16)) end)
     raw = raw:gsub('\\(["\\/])', "%1")
+    -- Some translated zones carry the English name as a hint: "Les Paluns (Wetlands)"
+    raw = raw:gsub(" %([%w%s'%.%-]+%)$", "")
     return raw
 end
 
@@ -117,10 +119,12 @@ end
 
 -- Class spell cards, named after the WoW spell in tools/SpellIds.lua
 local spellIds = dofile(dir .. "/tools/SpellIds.lua")
+local retailIds = spellIds.RETAIL or {}
 local spells = {}
 for id, card in pairs(TTS.Cards) do
     if card.class then
-        if spellIds[id] then spells[#spells + 1] = { card = id, file = "spell-" .. spellIds[id] }
+        local sid = spellIds[id]
+        if sid then spells[#spells + 1] = { card = id, file = "spell-" .. sid, retail = retailIds[sid] and "rtspell-" .. retailIds[sid] }
         else io.stderr:write("no spell id for " .. id .. " (add it to tools/SpellIds.lua)\n") end
     end
 end
@@ -132,7 +136,10 @@ if mode == "ids" then
         if not seen[c.file] then seen[c.file] = true; print(c.kind .. " " .. c.id) end
     end
     for _, z in ipairs(zones) do print(z.kind .. " " .. z.id) end
-    for _, s in ipairs(spells) do print("spell " .. s.file:sub(7)) end
+    for _, s in ipairs(spells) do
+        print("spell " .. s.file:sub(7))
+        if s.retail then print("rtspell " .. s.retail:sub(9)) end
+    end
     for _, id in ipairs(unmapped) do io.stderr:write("no npc id for " .. id .. " (add it to tools/CreatureIds.lua)\n") end
     return
 end
@@ -184,7 +191,7 @@ for _, sp in ipairs(spells) do
     else
         if en ~= card.name then zoneNotes[#zoneNotes + 1] = string.format("spell card \"%s\" is \"%s\" on Wowhead", card.name, en) end
         for _, s in ipairs(SITES) do
-            local name = ReadName(s.site, sp.file)
+            local name = ReadName(s.site, sp.file) or (sp.retail and ReadName(s.site, sp.retail))
             if name and name ~= "" and name ~= card.name then
                 table.insert(results[s.code], { key = "card." .. sp.card .. ".name", name = name })
             end

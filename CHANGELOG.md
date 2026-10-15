@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.14.1
+
+- dungeon creature cards can now be collected by looting the corpse, so kills that give no experience still count
+- fix for dungeon creatures whose names appear with an extra word (e.g. Tormented Soul in the Hall of Thanes) not being recognised
+- looting a corpse that already counted from experience no longer rolls for its card again
+- rules guide explains how dungeon kills are counted, and that each spell unlock gives 4 copies
+
+## 0.14.0
+
+- new dungeons: The Hall of Thanes, Ruins of Lordaeron and Excavation Site
+
+## 0.13.8
+
+- localisation support, with additional languages available as a separate download
+
 ## 0.13.7
 
 - fix for error-11, messages now wait and resend when the game blocks addon messages

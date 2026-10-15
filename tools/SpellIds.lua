@@ -99,4 +99,25 @@ return {
     PAL10 = 7328, -- Redemption
     WLK02 = 172, -- Corruption
     WLK10 = 1098, -- Enslave Demon (Wowhead now calls it Subjugate Demon)
+
+    -- Italian names come from retail Wowhead, which no longer has these Classic ranks:
+    -- the same spell's current retail id. (Immolation Trap, Blessing of Might, Bloodrage,
+    -- Healing Touch, Heroic Strike and Rockbiter Weapon are gone from retail.)
+    RETAIL = {
+        [10] = 190356, -- Blizzard
+        [1499] = 187650, -- Freezing Trap
+        [1978] = 271788, -- Serpent Sting
+        [2136] = 108853, -- Fire Blast
+        [2912] = 194153, -- Starfire
+        [3044] = 185358, -- Arcane Shot
+        [331] = 77472, -- Healing Wave
+        [403] = 188196, -- Lightning Bolt
+        [421] = 188443, -- Chain Lightning
+        [635] = 82326, -- Holy Light
+        [689] = 234153, -- Drain Life
+        [8050] = 188389, -- Flame Shock
+        [8056] = 196840, -- Frost Shock
+        [8071] = 383017, -- Stoneskin Totem
+        [879] = 383185, -- Exorcism
+    },
 }

@@ -26,6 +26,9 @@ echo "$list" | while read -r kind id; do
       spell)  f="$CACHE/$site/spell-$id.json";  type=spell; game=classic ;;
       fvnpc)  f="$CACHE/$site/fv-$id.json";     type=npc;   game=forever ;;
       fvzone) f="$CACHE/$site/fvzone-$id.json"; type=zone;  game=forever ;;
+      # rtspell: a Classic spell rank retail lost, by its retail id (Italian only, see SpellIds.lua)
+      rtspell) [ "$site" = it ] || continue
+              f="$CACHE/$site/rtspell-$id.json"; type=spell; game=classic ;;
       *)      f="$CACHE/$site/$id.json";        type=npc;   game=classic ;;
     esac
     [ -s "$f" ] && continue

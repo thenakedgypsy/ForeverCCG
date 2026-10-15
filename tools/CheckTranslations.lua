@@ -104,7 +104,8 @@ for _, code in ipairs(codes) do
     for k in pairs(english) do
         if not k:match("^card%.") then
             ui = ui + 1
-            if byCode[code][k] then uiDone = uiDone + 1 end
+            if byCode[code][k] then uiDone = uiDone + 1
+            elseif arg[2] == "missing" then print("MISSING  " .. code .. "  " .. k) end
         end
     end
     for _ in pairs(byCode[code]) do n = n + 1 end

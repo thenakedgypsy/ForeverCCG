@@ -49,6 +49,9 @@ local recentKilledCount = 0
 local KILL_DEDUPE_SECONDS = 15    -- same kill reported by several events
 local LOOT_DEDUPE_SECONDS = 600   -- looting a corpse that was already credited
 
+-- Kills credited by name alone (card id -> list of times), matched off when the corpse is looted
+local pendingNameKills = {}
+
 -- Chance (in %) that a creature kill awards the next copy of its card, indexed by
 -- the copy being rolled for: 1st copy is guaranteed, then 25%, 12% and 6%.
 local COPY_DROP_CHANCE = { 100, 25, 12, 6 }
@@ -362,15 +365,38 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
 
         local npcId = ExtractNpcID(guid)
         if npcId and mobCardsByNpcID[npcId] then
-            self:RecordMobKill(mobCardsByNpcID[npcId])
+            local card = mobCardsByNpcID[npcId]
+            -- Already credited by name (XP message, no GUID in instances): looting it is the same kill
+            local pending = pendingNameKills[card.id]
+            while pending and pending[1] and (GetTime() - pending[1]) > LOOT_DEDUPE_SECONDS do
+                table.remove(pending, 1)
+            end
+            if pending and pending[1] then
+                table.remove(pending, 1)
+                return
+            end
+            self:RecordMobKill(card)
             return
         end
     end
 
     if name and not IsSecret(name) then
+        -- Instances scramble kill names with a trailing word ("Tormented Soul Jinx"):
+        -- drop trailing words until a card name matches, longest first
         local norm = Normalize(name)
-        if norm ~= "" and mobCardsByName[norm] then
-            self:RecordMobKill(mobCardsByName[norm])
+        while norm ~= "" do
+            local card = mobCardsByName[norm]
+            if card then
+                if not guid or IsSecret(guid) then
+                    pendingNameKills[card.id] = pendingNameKills[card.id] or {}
+                    table.insert(pendingNameKills[card.id], GetTime())
+                end
+                self:RecordMobKill(card)
+                return
+            end
+            local shorter = norm:match("^(.+) %S+$")
+            if not shorter then break end
+            norm = shorter
         end
     end
 end
@@ -520,6 +546,7 @@ local function RegisterEvents()
     tracker:RegisterEvent("PLAYER_ENTERING_WORLD")
     tracker:RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN")
     tracker:RegisterEvent("LOOT_OPENED")
+    SafeRegister("LOOT_READY") -- earlier than LOOT_OPENED, before fast auto-loot empties the slots
 
     if not isMidnight then
         if not SafeRegister("COMBAT_LOG_EVENT_UNFILTERED") then
@@ -635,7 +662,24 @@ tracker:SetScript("OnEvent", function(self, event, ...)
             end
         end
 
-    elseif event == "LOOT_OPENED" then
+    elseif event == "LOOT_OPENED" or event == "LOOT_READY" then
+        -- The loot source GUIDs stay readable in instances, where the target's GUID is secret
+        -- and kill names are scrambled; each slot may list several corpses (area loot)
+        if GetLootSourceInfo and GetNumLootItems then
+            local seen = {}
+            for slot = 1, SafeCall(GetNumLootItems) or 0 do
+                local sources = { pcall(GetLootSourceInfo, slot) }
+                if sources[1] then
+                    for i = 2, #sources, 2 do
+                        local guid = sources[i]
+                        if guid and not IsSecret(guid) and type(guid) == "string" and not seen[guid] then
+                            seen[guid] = true
+                            TTS.BossTracker:RecordMobKillByGUIDOrName(guid, nil, LOOT_DEDUPE_SECONDS)
+                        end
+                    end
+                end
+            end
+        end
         if UnitExists("target") then
             local guid = SafeCall(UnitGUID, "target")
             local name = SafeCall(UnitName, "target")
