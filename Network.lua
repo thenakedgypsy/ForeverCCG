@@ -42,6 +42,12 @@ local CHALLENGE_POPUP_TIMEOUT = 60
 -- clicked at the last second still has time to travel back over the channel.
 local INVITE_EXPIRY = 90
 
+-- Seconds to pick a deck once a game is agreed (UI\DeckPicker.lua); the selected deck is
+-- played when it runs out. After accepting, the pick must also finish in time for our
+-- ACCEPT to reach the challenger inside their INVITE_EXPIRY (with this much to spare).
+local DECK_PICK_TIMEOUT = 30
+local DECK_PICK_MARGIN = 10
+
 -- Seconds to wait for INVITE_ACK before deciding the target doesn't have the addon
 local INVITE_ACK_TIMEOUT = 8
 
@@ -393,15 +399,12 @@ function TTS.Net:InvitePlayer(target)
     end
 
     local E = TTS.Engine
-    if E and E.inMatch then
+    if (E and E.inMatch) or (TTS.DeckPicker and TTS.DeckPicker:IsPending()) then
         Print(L("net.alreadyInMatch"))
         return
     end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        Print(L("net.closeDeckbuilder"))
-        return
-    end
-    if E and not E:ValidateDeck() then
+    -- The deck is picked once they accept (and the picker closes the Deckbuilder)
+    if E and not E:HasPlayableDeck() then
         Print(L("net.deckSize"))
         return
     end
@@ -1044,19 +1047,27 @@ function TTS.Net:OnReceive(msg, sender)
             return
         end
 
-        if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
+        -- Queued players can have the Deckbuilder open (accepting closes it); anyone else is busy in it
+        local queued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
+        if not queued and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
             TTS.Net:Send(sender, "DECLINE:DECKBUILDER_OPEN")
             Print(L("net.autoDeclineDeckbuilder", sender))
             return
         end
 
-        -- Only one challenge popup at a time; a second challenger is told we're busy
-        if TTS.Net.incomingChallenge and not SameName(TTS.Net.incomingChallenge, sender) then
+        -- Only one challenge at a time, from the popup until the deck is picked;
+        -- a second challenger is told we're busy
+        local picker = TTS.DeckPicker
+        -- Already accepted and picking a deck for a game with them
+        if picker and picker:IsPendingWith(sender) then return end
+        if (TTS.Net.incomingChallenge and not SameName(TTS.Net.incomingChallenge, sender))
+            or (picker and picker:IsPending() and not picker:IsPendingWith(sender)) then
             TTS.Net:Send(sender, "DECLINE:BUSY")
             Print(L("net.autoDeclineBusy", sender))
             return
         end
         TTS.Net.incomingChallenge = sender
+        local receivedAt = time()
 
         StaticPopupDialogs["TTS_CHALLENGE"] = {
             text = L("net.challenged", sender),
@@ -1068,23 +1079,34 @@ function TTS.Net:OnReceive(msg, sender)
                     Print(L("net.acceptInMatch"))
                     return
                 end
-                if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-                    TTS.Net:Send(sender, "DECLINE:BUSY")
-                    Print(L("net.acceptDeckbuilder"))
-                    return
-                end
-                if TTS.Engine and TTS.Engine:ValidateDeck() then
-                    TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore())
-                    TTS.Net.matchId = theirMatchId
-                    TTS.Net:AddContact(sender)
-                    TTS.Engine:StartMatch(sender, false, false)
-                    TTS.Engine.opponentScore = theirScore
-                    TTS.Engine.remoteState.handCount = 7
-                    TTS.Engine:RefreshUI()
-                else
+                if TTS.Engine and not TTS.Engine:HasPlayableDeck() then
                     TTS.Net:Send(sender, "DECLINE:NO_DECK")
                     Print(L("net.acceptDeckSize"))
+                    return
                 end
+                -- Pick a deck, then accept. The ACCEPT goes once the deck is picked, so the
+                -- challenger (who goes first) can't start before we're ready.
+                local timeLeft = receivedAt + INVITE_EXPIRY - DECK_PICK_MARGIN - time()
+                TTS.DeckPicker:Open({
+                    opponent = sender,
+                    timeout = math.max(5, math.min(DECK_PICK_TIMEOUT, timeLeft)),
+                    onPick = function()
+                        if TTS.Engine and TTS.Engine.inMatch then
+                            TTS.Net:Send(sender, "DECLINE:IN_MATCH")
+                            return
+                        end
+                        TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore())
+                        TTS.Net.matchId = theirMatchId
+                        TTS.Net:AddContact(sender)
+                        TTS.Engine:StartMatch(sender, false, false)
+                        TTS.Engine.opponentScore = theirScore
+                        TTS.Engine.remoteState.handCount = 7
+                        TTS.Engine:RefreshUI()
+                    end,
+                    onCancel = function()
+                        TTS.Net:Send(sender, "DECLINE:REFUSED")
+                    end,
+                })
             end,
             OnCancel = function()
                 TTS.Net:Send(sender, "DECLINE:REFUSED")
@@ -1129,31 +1151,38 @@ function TTS.Net:OnReceive(msg, sender)
             return
         end
 
-        if TTS.Engine and TTS.Engine.inMatch then
+        if (TTS.Engine and TTS.Engine.inMatch) or (TTS.DeckPicker and TTS.DeckPicker:IsPending()) then
             TTS.Net:Send(sender, "CANCEL:IN_MATCH")
             Print(L("net.acceptedInMatch", sender))
             return
         end
-        if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-            TTS.Net:Send(sender, "CANCEL:DECKBUILDER_OPEN")
-            Print(L("net.acceptedDeckbuilder"))
-            return
-        end
-        if TTS.Engine and not TTS.Engine:ValidateDeck() then
+        if TTS.Engine and not TTS.Engine:HasPlayableDeck() then
             TTS.Net:Send(sender, "CANCEL:NO_DECK")
             Print(L("net.acceptedDeckSize"))
             return
         end
 
         Print(L("net.accepted", sender))
-        TTS.Net.matchId = invite.matchId
         TTS.Net:AddContact(sender)
-        if TTS.Engine then
-            TTS.Engine:StartMatch(sender, true, false)
-            TTS.Engine.opponentScore = tonumber(parts[4])   -- nil from builds without collection scores
-            TTS.Engine.remoteState.handCount = 7
-            TTS.Engine:RefreshUI()
-        end
+        local theirScore = tonumber(parts[4])   -- nil from builds without collection scores
+        -- They have started already and wait for our first turn while we pick a deck.
+        -- The match id lets their messages in meanwhile (a concede, see ACTION below).
+        TTS.Net.matchId = invite.matchId
+        TTS.DeckPicker:Open({
+            opponent = sender,
+            timeout = DECK_PICK_TIMEOUT,
+            onPick = function()
+                if not TTS.Engine then return end
+                TTS.Engine:StartMatch(sender, true, false)
+                TTS.Engine.opponentScore = theirScore
+                TTS.Engine.remoteState.handCount = 7
+                TTS.Engine:RefreshUI()
+            end,
+            onCancel = function()
+                -- Their game has started: a CANCEL from their opponent ends it ("setup cancelled")
+                TTS.Net:Send(sender, "CANCEL:REFUSED")
+            end,
+        })
 
     elseif cmd == "DECLINE" or cmd == "CANCEL" then
         local key = sender:lower()
@@ -1162,6 +1191,11 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net.outgoingInvites[key] = nil
 
         local reason = parts[2] or "Declined"
+        -- Gone while we were still picking a deck for the game with them
+        if TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender) then
+            TTS.DeckPicker:Abort()
+            wasInvited = true
+        end
         if cmd == "CANCEL" and IsMatchOpponent(sender) then
             TTS.Engine:EndMatch("cancelled", L("end.setupCancelled"))
         elseif not wasInvited and cmd == "DECLINE" then
@@ -1179,6 +1213,13 @@ function TTS.Net:OnReceive(msg, sender)
         local actionType = parts[2]
         local E = TTS.Engine
         if not E then return end
+
+        -- They left while we were picking a deck (they started as soon as they accepted)
+        if actionType == "CONCEDE" and TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender) then
+            TTS.DeckPicker:Abort()
+            Print(L("picker.opponentLeft", sender))
+            return
+        end
 
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end

@@ -372,9 +372,10 @@ function WR:BroadcastPresence()
 end
 
 function WR:ToggleQueue()
-    -- The Deckbuilder is disabled while queued, so it must be closed before joining
-    if not self.isQueued and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        DEFAULT_CHAT_FRAME:AddMessage(L("wr.closeDeckbuilder"))
+    -- The deck is picked when a game starts, so any playable deck will do (and the
+    -- Deckbuilder keeps at least one playable while queued)
+    if not self.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
+        DEFAULT_CHAT_FRAME:AddMessage(L("wr.needPlayableDeck"))
         return
     end
 
@@ -392,7 +393,7 @@ function WR:ToggleQueue()
     end
     self:UpdateUI()
 
-    -- Main menu's Deckbuilder button depends on the queue state
+    -- Main menu's buttons and status line depend on the queue state
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end
@@ -445,6 +446,11 @@ F:SetScript("OnUpdate", function(self, elapsed)
     end
     if ticker >= 10 then
         ticker = 0
+        -- Safety net: cards lost from the collection can leave no deck playable
+        if WR.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
+            DEFAULT_CHAT_FRAME:AddMessage(L("wr.noPlayableDeckLeft"))
+            WR:ToggleQueue()
+        end
         if WR.isQueued then
             WR:BroadcastPresence()
         end

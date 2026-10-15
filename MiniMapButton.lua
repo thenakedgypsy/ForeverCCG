@@ -93,11 +93,9 @@ local function ToggleWaitingRoom()
         Print(L("minimap.wrInMatch"))
         return
     end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        Print(L("minimap.wrDeckbuilder"))
-        return
-    end
-    if TTS.Engine and not TTS.Engine:ValidateDeck() then
+    -- Already queued: always reopens, so the player can leave
+    local queued = TTS.WaitingRoom.isQueued
+    if not queued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
         Print(L("minimap.wrDeckSize"))
         return
     end
@@ -145,24 +143,6 @@ local function BuildMinimapTooltip(tip)
     tip:AddLine("Forever: CCG", 1, 0.82, 0)
     tip:AddLine(" ")
 
-    local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]
-    local count = 0
-    if activeDeck and activeDeck.cards then
-        for _, qty in pairs(activeDeck.cards) do
-            count = count + qty
-        end
-    end
-    local deckName = (activeDeck and activeDeck.name) or L("deck.defaultName")
-
-    tip:AddDoubleLine(L("minimap.activeDeck"), deckName, 1, 1, 1, 0.9, 0.9, 0.6)
-    tip:AddDoubleLine(
-        L("minimap.cardCount"),
-        string.format("%d / 40", count),
-        1, 1, 1,
-        (count >= 40 and 0 or 1),
-        (count >= 40 and 1 or 0.2),
-        0.2
-    )
     if TTS.GetCollectionScore then
         tip:AddDoubleLine(L("minimap.score"), TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
     end
@@ -170,6 +150,9 @@ local function BuildMinimapTooltip(tip)
     if TTS.Engine and TTS.Engine.inMatch then
         tip:AddLine(" ")
         tip:AddLine("|cFF00FF00" .. L("minimap.inMatch") .. "|r")
+    elseif TTS.WaitingRoom and TTS.WaitingRoom.isQueued then
+        tip:AddLine(" ")
+        tip:AddLine("|cFF00FF00" .. L("minimap.inWaitingRoom") .. "|r")
     end
 
     tip:AddLine(" ")

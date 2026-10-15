@@ -21,7 +21,6 @@ local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
 local GOLD   = "|cFFFFD200"
 local GREY   = "|cFF8A8A8A"
-local GREEN  = "|cFF33DD33"
 local RED    = "|cFFFF4444"
 local ORANGE = "|cFFFF8040"
 
@@ -109,7 +108,8 @@ local function StartBlocker(enc)
     if E and E.inMatch then return L("solo.inProgress") end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return L("solo.closeDeckbuilder") end
     if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return L("solo.leaveQueue") end
-    if E and not E:ValidateDeck() then return L("solo.deckSize") end
+    -- The deck is picked as the game starts (UI\DeckPicker.lua)
+    if E and not E:HasPlayableDeck() then return L("solo.deckSize") end
     local unlocked, reason = TTS:IsEncounterUnlocked(enc)
     if not unlocked then return reason end
     return nil
@@ -123,7 +123,7 @@ local function EncounterState(enc)
 end
 
 -- =========================================================================
--- TOP BAR: continent tabs, active deck, hint
+-- TOP BAR: continent tabs, hint
 -- =========================================================================
 local tabs = {}
 for i, cont in ipairs(CONTINENTS) do
@@ -131,127 +131,6 @@ for i, cont in ipairs(CONTINENTS) do
     b:SetPoint("TOPLEFT", S, "TOPLEFT", 16 + (i - 1) * 144, -46)
     tabs[cont.id] = b
 end
-
--- =========================================================================
--- DECK SELECTOR (top right): picks the active deck, like the Deckbuilder's deck tabs
--- =========================================================================
-local DECK_PICKER_W, DECK_ROW_H = 240, 20
-
-local function DeckCount(deck)
-    local count = 0
-    for _, n in pairs(deck and deck.cards or {}) do count = count + n end
-    return count
-end
-
--- "Name (40)" with the count green when the deck is legal, red when it isn't
-local function DeckLabel(deck)
-    local count = DeckCount(deck)
-    local ok = count >= 40 and count <= 50
-    return string.format("%s%s|r (%s%d|r)", GOLD, deck and deck.name or L("solo.noDeck"), ok and GREEN or RED, count)
-end
-
-local function Skin(f, bg, border, edge)
-    f:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = edge or 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
-    f:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
-    f:SetBackdropBorderColor(border[1], border[2], border[3], border[4])
-end
-
-local deckPicker = CreateFrame("Button", nil, S, backdropTemplate)
-deckPicker:SetSize(DECK_PICKER_W, 22)
-deckPicker:SetPoint("TOPRIGHT", S, "TOPRIGHT", -16, -46)
-Skin(deckPicker, { 0.10, 0.08, 0.06, 0.95 }, { 0.55, 0.50, 0.40, 1 })
-
-local deckPickerLabel = deckPicker:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-deckPickerLabel:SetPoint("RIGHT", deckPicker, "LEFT", -6, 0)
-Loc:Bind(deckPickerLabel, "solo.deck")
-
-deckPicker.text = deckPicker:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-deckPicker.text:SetPoint("LEFT", 8, 0)
-deckPicker.text:SetPoint("RIGHT", -22, 0)
-deckPicker.text:SetJustifyH("LEFT")
-deckPicker.text:SetWordWrap(false)
-
-local arrow = deckPicker:CreateTexture(nil, "OVERLAY")
-arrow:SetTexture("Interface\\ChatFrame\\ChatFrameExpandArrow")
-arrow:SetSize(14, 14)
-arrow:SetPoint("RIGHT", -5, 0)
-arrow:SetRotation(-math.pi / 2)
-
-local pickerHl = deckPicker:CreateTexture(nil, "HIGHLIGHT")
-pickerHl:SetPoint("TOPLEFT", 3, -3)
-pickerHl:SetPoint("BOTTOMRIGHT", -3, 3)
-pickerHl:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-pickerHl:SetBlendMode("ADD")
-
--- The list of decks under the selector
-local deckMenu = CreateFrame("Frame", nil, deckPicker, backdropTemplate)
-deckMenu:SetPoint("TOPRIGHT", deckPicker, "BOTTOMRIGHT", 0, -2)
-deckMenu:SetFrameStrata("FULLSCREEN_DIALOG")
-Skin(deckMenu, { 0.02, 0.02, 0.02, 0.95 }, { 0.85, 0.75, 0.45, 1 })
-deckMenu:Hide()
-
-local deckRows = {}
-
-local function PickDeck(i)
-    if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
-    if TTS_SavedDecks and TTS_SavedDecks[i] then
-        TTS_ActiveDeckIndex = i
-        DEFAULT_CHAT_FRAME:AddMessage(L("db.loadedDeck", TTS_SavedDecks[i].name))
-    end
-    deckMenu:Hide()
-    S:Refresh()
-end
-
-local function BuildDeckMenu()
-    if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
-    local slots = TTS.MAX_DECK_SLOTS or #(TTS_SavedDecks or {})
-    for i = 1, slots do
-        local row = deckRows[i]
-        if not row then
-            row = CreateFrame("Button", nil, deckMenu)
-            row:SetSize(DECK_PICKER_W - 8, DECK_ROW_H)
-            row:SetPoint("TOPLEFT", deckMenu, "TOPLEFT", 4, -4 - (i - 1) * DECK_ROW_H)
-            row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            row.text:SetPoint("LEFT", 6, 0)
-            row.text:SetPoint("RIGHT", -6, 0)
-            row.text:SetJustifyH("LEFT")
-            row.text:SetWordWrap(false)
-            row.sel = row:CreateTexture(nil, "BACKGROUND")
-            row.sel:SetAllPoints(row)
-            row.sel:SetColorTexture(1, 0.82, 0, 0.18)
-            local hl = row:CreateTexture(nil, "HIGHLIGHT")
-            hl:SetAllPoints(row)
-            hl:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-            hl:SetBlendMode("ADD")
-            row:SetScript("OnClick", function(self) PickDeck(self.index) end)
-            deckRows[i] = row
-        end
-        row.index = i
-        row.text:SetText(DeckLabel(TTS_SavedDecks and TTS_SavedDecks[i]))
-        if i == TTS_ActiveDeckIndex then row.sel:Show() else row.sel:Hide() end
-        row:Show()
-    end
-    for i = slots + 1, #deckRows do deckRows[i]:Hide() end
-    deckMenu:SetSize(DECK_PICKER_W, slots * DECK_ROW_H + 8)
-end
-
-deckPicker:SetScript("OnClick", function()
-    if deckMenu:IsShown() then
-        deckMenu:Hide()
-    else
-        BuildDeckMenu()
-        deckMenu:Show()
-    end
-end)
-deckPicker:SetScript("OnEnter", function(self)
-    if TT then TT:ShowText(self, "ANCHOR_BOTTOM", L("solo.activeDeck"), L("solo.activeDeck.desc")) end
-end)
-deckPicker:SetScript("OnLeave", function(self) if TT then TT:Hide(self) end end)
 
 local hint = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 hint:SetPoint("BOTTOMLEFT", S, "BOTTOMLEFT", 20, 16)
@@ -545,8 +424,20 @@ local function CreateEncounterButton(enc)
             hint:SetText(RED .. TTS:EncounterName(self.enc) .. ": " .. blocker .. "|r")
             return
         end
+        local enc = self.enc
+        local opponent = TTS:EncounterOpponent(enc)
+        -- The picker replaces this window; cancelling it comes back to the map
         S:Hide()
-        TTS.Engine:StartMatch(TTS:EncounterOpponent(self.enc), true, true, self.enc)
+        TTS.DeckPicker:Open({
+            opponent = opponent,
+            onPick = function()
+                if TTS.Engine.inMatch then return end
+                TTS.Engine:StartMatch(opponent, true, true, enc)
+            end,
+            onCancel = function()
+                if not TTS.Engine.inMatch then S:Show() end
+            end,
+        })
     end)
     return b
 end
@@ -646,8 +537,6 @@ end
 function S:Refresh()
     if not self:IsShown() then return end
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
-    deckPicker.text:SetText(DeckLabel(TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]))
-    if deckMenu:IsShown() then BuildDeckMenu() end
     hint:SetText(L(HINT_TEXT))
     ShowContinent(currentContinent)
 end
@@ -663,7 +552,6 @@ end)
 S:SetScript("OnHide", function()
     if TT then TT:Hide() end
     HideRewardPreview()
-    deckMenu:Hide()
 end)
 
 local loader = CreateFrame("Frame")

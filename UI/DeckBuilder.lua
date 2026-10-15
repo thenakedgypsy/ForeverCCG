@@ -2069,6 +2069,16 @@ function D:RefreshDeck()
     end
 end
 
+-- While queued in the waiting room at least one deck must stay playable (40-50 cards):
+-- true (and a chat warning) if taking this deck to newCount cards would leave none
+local function BreaksLastPlayableDeck(deck, newCount)
+    if not (TTS.WaitingRoom and TTS.WaitingRoom.isQueued) then return false end
+    if newCount >= 40 and newCount <= 50 then return false end
+    if not TTS:IsDeckPlayable(deck) or TTS:PlayableDeckCount() > 1 then return false end
+    DEFAULT_CHAT_FRAME:AddMessage(L("db.lastPlayableDeck"))
+    return true
+end
+
 function D:AddCardToDeck(cardId)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not card then return end
@@ -2081,6 +2091,7 @@ function D:AddCardToDeck(cardId)
         DEFAULT_CHAT_FRAME:AddMessage(err)
         return
     end
+    if BreaksLastPlayableDeck(deck, TTS:DeckCardCount(deck) + 1) then return end
 
     deck.cards[cardId] = (deck.cards[cardId] or 0) + 1
     D:RefreshDeck()
@@ -2089,6 +2100,7 @@ end
 function D:RemoveCardFromDeck(cardId)
     local deck = GetActiveDeck()
     if not deck or not deck.cards or not deck.cards[cardId] then return end
+    if BreaksLastPlayableDeck(deck, TTS:DeckCardCount(deck) - 1) then return end
     deck.cards[cardId] = deck.cards[cardId] - 1
     if deck.cards[cardId] <= 0 then
         deck.cards[cardId] = nil
@@ -2099,6 +2111,7 @@ end
 function D:ClearDeck()
     local deck = GetActiveDeck()
     if not deck then return end
+    if BreaksLastPlayableDeck(deck, 0) then return end
     deck.cards = {}
     D:RefreshDeck()
 end
@@ -2145,32 +2158,21 @@ end)
 ]==]
 
 -- =========================================================================
--- OPENING (blocked while a game is in progress)
+-- OPENING (blocked while a game is in progress or a deck is being picked for one;
+-- allowed while queued, see BreaksLastPlayableDeck)
 -- =========================================================================
 local function InMatch()
-    return TTS.Engine and TTS.Engine.inMatch
+    return (TTS.Engine and TTS.Engine.inMatch) or (TTS.DeckPicker and TTS.DeckPicker:IsPending())
 end
 
 local function PrintInMatchWarning()
     DEFAULT_CHAT_FRAME:AddMessage(L("db.noOpenInMatch"))
 end
 
-local function IsQueued()
-    return TTS.WaitingRoom and TTS.WaitingRoom.isQueued
-end
-
-local function PrintQueuedWarning()
-    DEFAULT_CHAT_FRAME:AddMessage(L("db.noOpenQueued"))
-end
-
 -- Use this instead of :Show(). Returns true if the Deckbuilder opened.
 function D:TryOpen()
     if InMatch() then
         PrintInMatchWarning()
-        return false
-    end
-    if IsQueued() then
-        PrintQueuedWarning()
         return false
     end
     self:Show()
@@ -2184,11 +2186,6 @@ D:SetScript("OnShow", function()
     -- Safety net for any path that calls :Show() directly
     if InMatch() then
         PrintInMatchWarning()
-        D:Hide()
-        return
-    end
-    if IsQueued() then
-        PrintQueuedWarning()
         D:Hide()
         return
     end

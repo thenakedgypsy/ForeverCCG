@@ -109,6 +109,11 @@ local function OnChildHidden(child)
     TTS:SafeAfter(0, function()
         if child:IsShown() or M:IsShown() then return end
         if TTS.Engine and TTS.Engine.inMatch then return end
+        -- Hidden for the deck picker: cancelling it may bring the window back, still ours
+        if TTS.DeckPicker and TTS.DeckPicker:IsPending() then
+            child.ttsOpenedFromMain = true
+            return
+        end
         M:Show()
     end)
 end
@@ -192,7 +197,14 @@ soloBtn:SetScript("OnClick", function()
         DEFAULT_CHAT_FRAME:AddMessage(L("main.closeDeckbuilderFirst"))
         return
     end
-    TTS.Engine:StartMatch(L("solo.dummy"), true, true)
+    local dummy = L("solo.dummy")
+    TTS.DeckPicker:Open({
+        opponent = dummy,
+        onPick = function()
+            if TTS.Engine.inMatch then return end
+            TTS.Engine:StartMatch(dummy, true, true)
+        end,
+    })
 end)
 
 -- =========================================================================
@@ -218,60 +230,29 @@ function M:UpdatePlayState()
         scoreLabel:SetText(L("main.score", TTS:FormatScore((TTS:GetCollectionScore()))))
     end
 
-    -- The Deckbuilder cannot be opened while a game is in progress or while queued in the waiting room
+    local inMatch = TTS.Engine and TTS.Engine.inMatch
     local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
-    if (TTS.Engine and TTS.Engine.inMatch) or isQueued then
-        deckBtn:Disable()
-    else
-        deckBtn:Enable()
-    end
+    local playable = TTS:PlayableDeckCount()
 
+    -- The Deckbuilder cannot be opened while a game is in progress (it can while queued)
+    deckBtn:SetEnabled(not inMatch)
     -- Solo encounters open whenever no game is running (the window explains anything else in the way)
-    if (TTS.Engine and TTS.Engine.inMatch) then
-        encountersBtn:Disable()
-    else
-        encountersBtn:Enable()
-    end
-
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        soloBtn:Disable()
-        waitingRoomBtn:Disable()
-        statusLabel:SetText(L("main.deckbuilderOpen"))
-        return
-    end
-
-    local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]
-    local cardCount = 0
-    if activeDeck and activeDeck.cards then
-        for _, count in pairs(activeDeck.cards) do
-            cardCount = cardCount + count
-        end
-    end
-
-    local deckName = (activeDeck and activeDeck.name) or L("deck.defaultName")
-
-    if cardCount >= 40 and cardCount <= 50 then
-        soloBtn:Enable()
-        waitingRoomBtn:Enable()
-        statusLabel:SetText(L("main.deckValid", deckName, cardCount))
-    elseif cardCount > 50 then
-        soloBtn:Disable()
-        waitingRoomBtn:Disable()
-        statusLabel:SetText(L("main.deckTooBig", deckName, cardCount))
-    else
-        soloBtn:Disable()
-        waitingRoomBtn:Disable()
-        statusLabel:SetText(L("main.deckTooSmall", deckName, cardCount))
-    end
-
-    -- The waiting room cannot be opened while a game is in progress
-    if TTS.Engine and TTS.Engine.inMatch then
-        waitingRoomBtn:Disable()
-    end
-
+    encountersBtn:SetEnabled(not inMatch)
+    -- Decks are picked as a game starts, so one playable deck is enough. Once queued the
+    -- waiting room always reopens, so the player can leave.
+    waitingRoomBtn:SetEnabled(not inMatch and (isQueued or playable > 0))
     -- Practice vs Dummy is unavailable during a game or while queued in the waiting room
-    if (TTS.Engine and TTS.Engine.inMatch) or isQueued then
-        soloBtn:Disable()
+    soloBtn:SetEnabled(not inMatch and not isQueued and playable > 0
+        and not (TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown()))
+
+    if isQueued then
+        statusLabel:SetText(L("main.inWaitingRoom"))
+    elseif TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
+        statusLabel:SetText(L("main.deckbuilderOpen"))
+    elseif playable > 0 then
+        statusLabel:SetText(L("main.decksReady", playable))
+    else
+        statusLabel:SetText(L("main.noDeckReady"))
     end
 end
 

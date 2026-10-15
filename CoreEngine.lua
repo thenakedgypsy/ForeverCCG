@@ -90,13 +90,34 @@ function E:Log(msg, category)
     end
 end
 
--- In CoreEngine.lua -> E:ValidateDeck()
-function E:ValidateDeck()
-    local deck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]
-    if not deck or not deck.cards then return false end
+function TTS:DeckCardCount(deck)
     local count = 0
-    for _, qty in pairs(deck.cards) do count = count + qty end
+    for _, qty in pairs(deck and deck.cards or {}) do count = count + qty end
+    return count
+end
+
+-- 40-50 cards
+function TTS:IsDeckPlayable(deck)
+    local count = TTS:DeckCardCount(deck)
     return count >= 40 and count <= 50
+end
+
+function TTS:PlayableDeckCount()
+    local n = 0
+    for i = 1, TTS.MAX_DECK_SLOTS or #(TTS_SavedDecks or {}) do
+        if TTS:IsDeckPlayable(TTS_SavedDecks and TTS_SavedDecks[i]) then n = n + 1 end
+    end
+    return n
+end
+
+-- The active deck (solo games, and the deck a PvP game is played with once picked)
+function E:ValidateDeck()
+    return TTS:IsDeckPlayable(TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex])
+end
+
+-- PvP: the deck is picked when the game starts (UI\DeckPicker.lua), so any playable deck will do
+function E:HasPlayableDeck()
+    return TTS:PlayableDeckCount() > 0
 end
 
 -- =========================================================================
