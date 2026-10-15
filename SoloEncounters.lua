@@ -9,6 +9,7 @@
 TTS = TTS or {}
 TTS.Engine = TTS.Engine or {}
 local E = TTS.Engine
+local L = TTS.L
 
 -- =========================================================================
 -- SOLO ENCOUNTERS
@@ -457,14 +458,14 @@ function TTS:IsEncounterUnlocked(enc)
         local names = {}
         for _, id in ipairs(req.cleared) do
             if self:GetEncounterWins(id) > 0 then return true end
-            table.insert(names, ENC[id] and ENC[id].name or id)
+            table.insert(names, ENC[id] and TTS:EncounterName(ENC[id]) or id)
         end
-        return false, "Clear " .. table.concat(names, " or ") .. " first."
+        return false, L("solo.clearFirst", table.concat(names, L("solo.or")))
     end
     if req.killed then
         if TTS_DevModeActive or KillCount(req.killed) > 0 then return true end
         local boss = TTS.Cards[req.killed]
-        return false, string.format("Defeat %s in %s first.", boss and boss.name or req.killed, enc.name)
+        return false, L("solo.defeatFirst", boss and TTS:CardName(boss) or req.killed, TTS:EncounterName(enc))
     end
     return true
 end
@@ -493,7 +494,7 @@ end
 -- =========================================================================
 local function BossName(id)
     local c = TTS.Cards[id]
-    return c and c.name or id
+    return c and TTS:CardName(c) or id
 end
 
 -- Takes a card out of the AI's deck or hand (deck first). Returns true if found.
@@ -517,9 +518,10 @@ local function OnAIBattlefield(self, cardId)
     return false
 end
 
-local function BringInBoss(self, bossId, verb)
+-- verbKey: locale key of the announcement, filled with the boss name
+local function BringInBoss(self, bossId, verbKey)
     PullFromLibraryOrHand(self, bossId)
-    self:Log(string.format("|cFFFF4444%s %s!|r", BossName(bossId), verb), "SYSTEM")
+    self:Log("|cFFFF4444" .. L(verbKey, BossName(bossId)) .. "|r", "SYSTEM")
     self:PutCreatureOntoBattlefield(bossId, true, { ready = true })
 end
 
@@ -528,7 +530,7 @@ TTS.EncounterRules = {
         name = "Opening Boss",
         text = "The boss starts on the battlefield, ready to fight.",
         onStart = function(self, enc)
-            for _, b in ipairs(enc.bosses or {}) do BringInBoss(self, b, "awaits you") end
+            for _, b in ipairs(enc.bosses or {}) do BringInBoss(self, b, "solo.bossAwaits") end
         end,
     },
     HEAD_START = {
@@ -551,7 +553,7 @@ TTS.EncounterRules = {
                 local id = ids[((i - 1) % math.max(1, #ids)) + 1] or "W01"
                 table.insert(self.remoteState.field, { id = id, tapped = false, uid = self:NewUid() })
             end
-            self:Log(string.format("%s starts with 2 extra prayers.", self.opponent), "SYSTEM")
+            self:Log(L("solo.headStart", self.opponent), "SYSTEM")
         end,
     },
     REINFORCEMENTS = {
@@ -566,7 +568,7 @@ TTS.EncounterRules = {
             end
             if #options == 0 then return end
             local id = table.remove(self.remoteState.deck, options[math.random(#options)])
-            self:Log(string.format("|cFFFF4444Reinforcements:|r %s joins %s.", BossName(id), self.opponent), "SYSTEM")
+            self:Log(L("solo.reinforcements", BossName(id), self.opponent), "SYSTEM")
             self:PutCreatureOntoBattlefield(id, true)
         end,
     },
@@ -575,7 +577,7 @@ TTS.EncounterRules = {
         text = "From turn 10, the opponent's creatures get +2/+0.",
         onPlayerTurnStart = function(self, enc)
             if self.turn == 10 then
-                self:Log(string.format("|cFFFF4444%s is enraged!|r Its creatures get +2/+0.", self.opponent), "SYSTEM")
+                self:Log(L("solo.enraged", self.opponent), "SYSTEM")
             end
         end,
         statBonus = function(self, enc, perm, isRemote)
@@ -593,7 +595,7 @@ TTS.EncounterRules = {
                 local inGraveyard = false
                 for _, id in ipairs(self.remoteState.graveyard) do if id == b then inGraveyard = true end end
                 if not OnAIBattlefield(self, b) and not inGraveyard then
-                    BringInBoss(self, b, "awakens")
+                    BringInBoss(self, b, "solo.bossAwakens")
                 end
             end
         end,
@@ -611,11 +613,11 @@ TTS.EncounterRules = {
             self.bossIndex = (self.bossIndex or 1) + 1
             local nextId = enc.bosses[self.bossIndex]
             if not nextId then
-                self:WinMatch(string.format("Victory! %s has been cleared.", enc.name))
+                self:WinMatch(L("solo.cleared", TTS:EncounterName(enc)))
                 return
             end
             self.opponent = BossName(nextId)
-            BringInBoss(self, nextId, "enters the fight")
+            BringInBoss(self, nextId, "solo.bossEnters")
         end,
     },
 }
@@ -640,7 +642,12 @@ function TTS:GetEncounterRuleLines(enc)
     local lines = {}
     for _, ruleId in ipairs(enc and enc.rules or {}) do
         local rule = TTS.EncounterRules[ruleId]
-        if rule then table.insert(lines, { name = rule.name, text = rule.text }) end
+        if rule then
+            table.insert(lines, {
+                name = TTS.Locale:Data("rule." .. ruleId .. ".name", rule.name),
+                text = TTS.Locale:Data("rule." .. ruleId .. ".text", rule.text),
+            })
+        end
     end
     return lines
 end

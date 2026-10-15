@@ -48,6 +48,7 @@ TTS.Engine = TTS.Engine or {
 }
 
 local E = TTS.Engine
+local L = TTS.L
 
 function TTS:SafeAfter(seconds, callback)
     if C_Timer and C_Timer.After then
@@ -117,7 +118,7 @@ end
 -- MATCH COMPLETION & EMOTES
 -- =========================================================================
 function E:PlayMatchEmote(outcome, opponentName)
-    local emoteText = string.format("has %s a game of Forever: CCG against %s", outcome, opponentName)
+    local emoteText = L("emote." .. outcome, opponentName)
     SendChatMessage(emoteText, "EMOTE")
 
     -- Play the built-in emote a moment later so it does not collide with the emote text above
@@ -135,20 +136,12 @@ end
 -- Post-game popup: your result, then the opponent's ("Thrall wins!" / "Thrall loses!").
 -- The emote is sent from the Accept click: a win often arrives as an
 -- addon message, and the chat emote is blocked when no click is behind it.
-local RESULT_HEADLINES = {
-    won      = "|cFF00FF00You have won!|r",
-    lost     = "|cFFFF4444You have lost!|r",
-    conceded = "|cFFFF4444You have conceded!|r",
-}
-local OPPONENT_RESULT = {
-    won      = "loses!",
-    lost     = "wins!",
-    conceded = "wins!",
-}
+-- Headline and opponent line per outcome: result.<outcome> / result.opponent.<outcome>
+local RESULT_HEADLINES = { won = true, lost = true, conceded = true }
 
 StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     text = "%s\n\n%s",
-    button1 = "Accept",
+    button1 = ACCEPT or "Accept",
     OnAccept = function(self, data)
         -- No public emote for games against the AI
         if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent) end
@@ -179,7 +172,7 @@ end
 
 function E:EndMatch(outcome, reason)
     if not self.inMatch then return end
-    local opponentName = self.opponent or "Opponent"
+    local opponentName = self.opponent or L("side.opponentCap")
 
     -- Draw the final board state while still in the match (the board may be minimized),
     -- then freeze it there until the result popup is accepted
@@ -195,23 +188,22 @@ function E:EndMatch(outcome, reason)
         local rewardId, copies, wasComplete = TTS:RecordEncounterWin(self.encounter)
         rewardCard = rewardId and TTS.Cards[rewardId]
         if rewardCard then
-            rewardText = string.format("\n\nReward: |cFFFFD200%s|r (%d/4 copies%s)", rewardCard.name, copies,
-                wasComplete and ", collection complete" or "")
-            self:Log(string.format("Reward earned: |cFFFFD200%s|r (%d/4 copies).", rewardCard.name, copies), "SYSTEM")
+            rewardText = "\n\n" .. L(wasComplete and "result.rewardComplete" or "result.reward", TTS:CardName(rewardCard), copies)
+            self:Log(L("log.rewardEarned", TTS:CardName(rewardCard), copies), "SYSTEM")
         end
     end
 
-    local headline = outcome and RESULT_HEADLINES[outcome]
+    local headline = outcome and RESULT_HEADLINES[outcome] and L("result." .. outcome)
     if outcome and opponentName ~= "" then
         if headline then
-            StaticPopup_Show("TTS_MATCH_RESULT", headline, opponentName .. " " .. OPPONENT_RESULT[outcome] .. (rewardText or ""), { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
+            StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""), { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
             if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
         end
     end
 
-    self:Log(string.format("Match ended (%s): %s", outcome:upper(), reason or ""), "SYSTEM")
+    self:Log(L("log.matchEnded", L("outcome." .. outcome), reason or ""), "SYSTEM")
 
     if headline and opponentName ~= "" and B and B.ShowMatchResult then
         B:ShowMatchResult(headline)
@@ -222,21 +214,21 @@ function E:EndMatch(outcome, reason)
 end
 
 function E:WinMatch(reason)
-    self:EndMatch("won", reason or "Victory!")
+    self:EndMatch("won", reason or L("end.victory"))
 end
 
 function E:LoseMatch(reason)
     if not self.isSolo and self.opponent then
         TTS.Net:Send(self.opponent, "ACTION:DEFEATED")
     end
-    self:EndMatch("lost", reason or "Defeat.")
+    self:EndMatch("lost", reason or L("end.defeat"))
 end
 
 function E:ConcedeMatch()
     if not self.isSolo and self.opponent then
         TTS.Net:Send(self.opponent, "ACTION:CONCEDE")
     end
-    self:EndMatch("conceded", "Conceded match.")
+    self:EndMatch("conceded", L("end.conceded"))
 end
 
 -- =========================================================================
@@ -252,7 +244,7 @@ function E:DamagePlayer(isRemote, amount, reason)
         amount = amount - math.min(amount, shield)
         if amount <= 0 then return end
         self.remoteState.life = self.remoteState.life - amount
-        self:Log(string.format("%s took |cFFFF2222%d damage|r (%s). (Opponent Life: %d)", self.opponent, amount, reason or "Effect", self.remoteState.life), "COMBAT")
+        self:Log(L("log.oppTookDamage", self.opponent, amount, TTS:ReasonText(reason) or L("reason.effect"), self.remoteState.life), "COMBAT")
         self:RefreshUI()
         return
     end
@@ -262,7 +254,7 @@ function E:DamagePlayer(isRemote, amount, reason)
         local prevented = math.min(amount, targetState.damageShield)
         targetState.damageShield = targetState.damageShield - prevented
         amount = amount - prevented
-        self:Log(string.format("Shield prevented %d damage to %s.", prevented, isRemote and self.opponent or "you"), "ACTION")
+        self:Log(L("log.shieldPrevented", prevented, isRemote and self.opponent or L("side.you")), "ACTION")
         self:SyncEffects()
         if amount <= 0 then
             self:RefreshUI()
@@ -272,18 +264,18 @@ function E:DamagePlayer(isRemote, amount, reason)
 
     if isRemote then
         self.remoteState.life = self.remoteState.life - amount
-        self:Log(string.format("Dealt |cFFFF2222%d damage|r to %s (%s). (Opponent Life: %d)", amount, self.opponent, reason or "Effect", self.remoteState.life), "COMBAT")
+        self:Log(L("log.dealtToOpp", amount, self.opponent, TTS:ReasonText(reason) or L("reason.effect"), self.remoteState.life), "COMBAT")
         if not self.isSolo then
             TTS.Net:Send(self.opponent, string.format("ACTION:DAMAGE:%d:%s", amount, reason or "Damage"))
         end
         if self.remoteState.life <= 0 then
-            self:WinMatch("Victory! " .. self.opponent .. " was defeated.")
+            self:WinMatch(L("end.oppDefeated", self.opponent))
         end
     else
         self.localState.life = self.localState.life - amount
-        self:Log(string.format("Took |cFFFF2222%d damage|r (%s). (Current Life: %d)", amount, reason or "Damage", self.localState.life), "COMBAT")
+        self:Log(L("log.tookDamage", amount, TTS:ReasonText(reason) or L("reason.damage"), self.localState.life), "COMBAT")
         if self.localState.life <= 0 then
-            self:LoseMatch("Reduced to 0 life.")
+            self:LoseMatch(L("end.zeroLife"))
         end
     end
     self:RefreshUI()
@@ -464,7 +456,7 @@ E.AI_TURN_PHASE = AI_TURN_PHASE
 
 function E:CancelTargeting()
     if self.targeting then
-        self:Log("Targeting cancelled.", "SYSTEM")
+        self:Log(L("log.targetingCancelled"), "SYSTEM")
         self.targeting = nil
         self:RefreshUI()
     end
@@ -479,7 +471,7 @@ function E:NextPhase()
                 self:ResolveCombatDamage()
             elseif not bs.attacksDone then
                 -- More ATTACK messages may still be on their way
-                self:Log(string.format("%s is still declaring attackers.", self.opponent), "ERROR")
+                self:Log(L("err.stillDeclaring", self.opponent), "ERROR")
             elseif not bs.blocksDeclared and next(bs.blocks) == nil then
                 -- No blocks to show the attacker: resolve on both clients straight away
                 bs.selectedBlocker = nil
@@ -493,7 +485,7 @@ function E:NextPhase()
                 end
                 TTS.Net:Send(self.opponent, "ACTION:BLOCKS_DECLARED")
                 bs.blocksDeclared = true
-                self:Log("Blocks declared. Waiting for the attacker to resolve combat...", "SYSTEM")
+                self:Log(L("log.blocksDeclaredWait"), "SYSTEM")
                 self:RefreshUI()
             end
         elseif bs.blocksDeclared then
@@ -511,7 +503,7 @@ function E:NextPhase()
     if self.phase == "MAIN1" then
         self:SetPhase("COMBAT_ATTACK")
         self.blockingState = { attackers = {}, blocks = {}, isRemoteAttacking = false }
-        self:Log("--- Combat Phase --- Click untapped creatures to declare attack.", "SYSTEM")
+        self:Log(L("log.combatPhase"), "SYSTEM")
 
     elseif self.phase == "COMBAT_ATTACK" then
         for i, perm in ipairs(self.localState.field) do
@@ -526,21 +518,21 @@ function E:NextPhase()
                 self:AIAssignBlocks()
                 if next(self.blockingState.blocks) == nil then
                     -- Nothing blocked, so there are no blocks to review: resolve right away
-                    self:Log(self.opponent .. " declared no blockers.", "SYSTEM")
+                    self:Log(L("log.oppNoBlockers", self.opponent), "SYSTEM")
                     self:ResolveCombatDamage()
                     return
                 end
                 self.blockingState.blocksDeclared = true
-                self:Log(self.opponent .. " declared blockers. Review the blocks, then click Resolve Combat.", "SYSTEM")
+                self:Log(L("log.oppBlockers", self.opponent), "SYSTEM")
             else
                 -- Every ATTACK has gone out: the defender may now block
                 TTS.Net:Send(self.opponent, "ACTION:ATTACKS_DONE")
-                self:Log("Waiting for opponent to declare blockers...", "SYSTEM")
+                self:Log(L("log.waitBlockers"), "SYSTEM")
             end
         else
             self.blockingState = nil
             self:SetPhase("MAIN2")
-            self:Log("No attackers declared. --- Main Phase 2 ---", "SYSTEM")
+            self:Log(L("log.noAttackers"), "SYSTEM")
         end
 
     elseif self.phase == "MAIN2" then
@@ -554,7 +546,7 @@ function E:EndTurn()
     if self:UndoBlocksAction() then return end
     -- Declared attackers have to be resolved first
     if self.phase == "COMBAT_BLOCK" or (self.blockingState and #(self.blockingState.attackers or {}) > 0) then
-        self:Log("Finish combat before ending your turn.", "ERROR")
+        self:Log(L("err.finishCombat"), "ERROR")
         return
     end
 
@@ -562,8 +554,8 @@ function E:EndTurn()
         local mustAttack = (perm.id == "BOSS11")
         if mustAttack and not perm.hasAttackedThisTurn and self:CanCreatureAttack(perm) then
             local card = TTS.Cards[perm.id]
-            local cName = card and card.name or perm.id
-            self:Log(string.format("|cFFFF2222%s|r must attack this turn if able! Enter combat and attack before ending turn.", cName), "ERROR")
+            local cName = card and TTS:CardName(card) or perm.id
+            self:Log(L("err.mustAttack", cName), "ERROR")
             return
         end
     end
@@ -572,7 +564,7 @@ function E:EndTurn()
     self:CancelTargeting()
     self:EndTurnCleanup(false)
 
-    self:Log("Ended turn. Mana pool emptied and damage on creatures removed.", "SYSTEM")
+    self:Log(L("log.endedTurn"), "SYSTEM")
 
     if self.isSolo then
         self:SetPhase(AI_TURN_PHASE)
@@ -652,7 +644,7 @@ function E:EndTurnCleanup(isRemote)
                     perm.sick = true
                     perm.isAttacking = nil
                     table.insert(to, perm)
-                    self:Log("Control effect expired: returned creature to owner.", "ACTION")
+                    self:Log(L("log.controlExpired"), "ACTION")
                     break
                 end
             end
@@ -681,7 +673,7 @@ function E:OnRemoteEndTurn()
 
     self.isMyTurn = true
     self.turn = self.turn + 1
-    self:Log(string.format("=== Turn %d === Untapped permanents.", self.turn), "SYSTEM")
+    self:Log(L("log.turnStart", self.turn), "SYSTEM")
     if not self:BeginTurn(false) then return end
     self:SetPhase("MAIN1")
     PlayTurnSound()
@@ -690,7 +682,7 @@ end
 
 function E:StartMatch(opponentName, isHost, isSolo, encounter)
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        self:Log("Cannot start a game while the Deckbuilder is open.", "ERROR")
+        self:Log(L("err.deckbuilderOpen"), "ERROR")
         return
     end
 
@@ -706,7 +698,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     end
 
     self.inMatch = true
-    self.opponent = opponentName or "Opponent"
+    self.opponent = opponentName or L("side.opponentCap")
     self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT, if their build sends it
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
@@ -836,13 +828,13 @@ function E:DrawCard(silent)
         return
     end
     if #self.localState.deck == 0 then
-        self:LoseMatch("Deck out: drawn from empty library.")
+        self:LoseMatch(L("end.deckOut"))
         return
     end
     if #self.localState.hand >= MAX_HAND_SIZE then
         self.pendingDiscard = 1
         self:CancelTargeting()
-        self:Log(string.format("Your hand is full (%d cards). Click a card in your hand to discard before you draw.", MAX_HAND_SIZE), "SYSTEM")
+        self:Log(L("log.handFull", MAX_HAND_SIZE), "SYSTEM")
         self:RefreshUI()
         return
     end
@@ -850,7 +842,7 @@ function E:DrawCard(silent)
     table.insert(self.localState.hand, cardId)
     local card = TTS.Cards[cardId]
     if not silent and card then
-        self:Log("Drew " .. card.name .. ".", "ACTION")
+        self:Log(L("log.drew", TTS:CardName(card)), "ACTION")
     end
     self:RefreshUI()
 end
@@ -872,7 +864,7 @@ function E:DrawCardFor(isRemote)
     end
 
     if #st.deck == 0 then
-        self:WinMatch(string.format("Victory! %s drew from an empty library.", self.opponent))
+        self:WinMatch(L("end.oppDeckOut", self.opponent))
         return
     end
     if #st.hand >= MAX_HAND_SIZE then
@@ -884,7 +876,7 @@ function E:DrawCardFor(isRemote)
         local discarded = table.remove(st.hand, worstIdx)
         table.insert(st.graveyard, discarded)
         local dc = TTS.Cards[discarded]
-        self:Log(string.format("%s discarded |cFFFFD200%s|r (hand full).", self.opponent, dc and dc.name or discarded), "ACTION")
+        self:Log(L("log.oppDiscardFull", self.opponent, dc and TTS:CardName(dc) or discarded), "ACTION")
     end
     table.insert(st.hand, table.remove(st.deck, 1))
     st.handCount = #st.hand
@@ -901,7 +893,8 @@ function E:DiscardRandom(isRemote)
     table.insert(st.graveyard, cardId)
     if isRemote then st.handCount = #st.hand end
     local card = TTS.Cards[cardId]
-    self:Log(string.format("%s discarded |cFFFFD200%s|r.", isRemote and self.opponent or "You", card and card.name or cardId), "ACTION")
+    local shown = card and TTS:CardName(card) or cardId
+    self:Log(isRemote and L("log.oppDiscarded", self.opponent, shown) or L("log.youDiscarded", shown), "ACTION")
     if not isRemote and not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
 end
 
@@ -913,7 +906,7 @@ function E:DiscardForDraw(handIndex)
 
     table.insert(self.localState.graveyard, cardId)
     local card = TTS.Cards[cardId]
-    self:Log(string.format("Discarded |cFFFFD200%s|r.", card and card.name or cardId), "ACTION")
+    self:Log(L("log.discarded", card and TTS:CardName(card) or cardId), "ACTION")
     if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
 
     local waiting = self.pendingDiscard
@@ -925,19 +918,24 @@ function E:DiscardForDraw(handIndex)
     self:RefreshUI()
 end
 
+-- Phase as shown to the player (phase.<ID>; the ID itself when no translation exists)
+function E:PhaseName(phase)
+    return TTS.Locale:Data("phase." .. tostring(phase), phase)
+end
+
 function E:SetPhase(newPhase)
     self.phase = newPhase
     if TTS.BoardFrame and TTS.BoardFrame.phaseText then
         if self.targeting then
-            TTS.BoardFrame.phaseText:SetText("|cFFFFD200TARGETING: Select target (Right-click to cancel)|r")
+            TTS.BoardFrame.phaseText:SetText("|cFFFFD200" .. L("phase.targeting") .. "|r")
         elseif self.phase == "COMBAT_BLOCK" then
             if self.blockingState and self.blockingState.isRemoteAttacking then
-                TTS.BoardFrame.phaseText:SetText("|cFFFF4444COMBAT: Select Blockers or Pass|r")
+                TTS.BoardFrame.phaseText:SetText("|cFFFF4444" .. L("phase.selectBlockers") .. "|r")
             else
-                TTS.BoardFrame.phaseText:SetText("|cFFFFD200COMBAT: Blockers Declared|r")
+                TTS.BoardFrame.phaseText:SetText("|cFFFFD200" .. L("phase.blockersDeclared") .. "|r")
             end
         else
-            TTS.BoardFrame.phaseText:SetText("Phase: " .. newPhase)
+            TTS.BoardFrame.phaseText:SetText(L("phase.label", E:PhaseName(newPhase)))
         end
     end
 end

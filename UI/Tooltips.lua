@@ -9,6 +9,8 @@
 TTS = TTS or {}
 TTS.Tooltip = TTS.Tooltip or {}
 local TT = TTS.Tooltip
+local L = TTS.L
+local Loc = TTS.Locale
 
 -- =========================================================================
 -- TOOLTIP MANAGER
@@ -47,8 +49,9 @@ local function Sym(str, size)
     return str
 end
 
-local function Plural(n, word)
-    return string.format("%d %s%s", n, word, n == 1 and "" or "s")
+-- "1 turn" / "3 turns": the language's <key>.one / <key>.other form, filled with n
+local function Plural(n, key)
+    return L(key .. (n == 1 and ".one" or ".other"), n)
 end
 
 local function Signed(n)
@@ -59,6 +62,9 @@ end
 -- =========================================================================
 -- KEYWORDS
 -- Keys are the card fields the Cards files and CardLogic.lua use.
+-- The English below is the reference text; other languages translate
+-- keyword.<key>.name / .text, symbol.<key>.name / .text and effect.<id>.name / .text
+-- (read through TT:Def).
 -- =========================================================================
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
@@ -171,8 +177,20 @@ local TARGET_TEXT = {
     player            = "a player",
 }
 
-local SPHERE_NAME = { W = "Holy", U = "Arcane", B = "Shadow", R = "Fire", G = "Nature" }
-local TAG_FIELD_LABEL = { faction = "faction", zone = "zone", type = "creature type" }
+-- Translated name / text of a KEYWORDS / SYMBOLS / EFFECTS entry: TT:Def("keyword", key, "name")
+local DEF_TABLES = { keyword = TT.KEYWORDS, symbol = TT.SYMBOLS, effect = TT.EFFECTS }
+function TT:Def(group, key, field)
+    local def = DEF_TABLES[group][key]
+    return def and Loc:Data(group .. "." .. key .. "." .. field, def[field])
+end
+
+local function Area(to) return AREA_TEXT[to] and Loc:Data("tt.area." .. to, AREA_TEXT[to]) end
+local function Target(t) return TARGET_TEXT[t] and Loc:Data("tt.target." .. t, TARGET_TEXT[t]) end
+local function SphereName(c) return TT.SYMBOLS[c] and TT:Def("symbol", c, "name") or c end
+-- Card tag fields (anthem / rally) and the label group their values translate under
+local TAG_GROUP = { faction = "faction", zone = "zone", type = "creatureType" }
+local function TagFieldLabel(tag) return L("tt.tagField." .. tostring(tag)) end
+local function TagValue(tag, value) return Loc:Term(TAG_GROUP[tag] or tag, value) end
 
 -- =========================================================================
 -- PANEL SPECS
@@ -182,26 +200,26 @@ local TAG_FIELD_LABEL = { faction = "faction", zone = "zone", type = "creature t
 function TT:KeywordPanel(key, note)
     local def = TT.KEYWORDS[key]
     if not def then return nil end
-    local lines = { Sym(def.text, 14) }
+    local lines = { Sym(TT:Def("keyword", key, "text"), 14) }
     if note then table.insert(lines, { note, 0.6, 0.9, 0.6 }) end
-    return { title = def.name, tag = "Keyword", lines = lines }
+    return { title = TT:Def("keyword", key, "name"), tag = "Keyword", lines = lines }
 end
 
 function TT:SymbolPanel(key, note)
     local def = TT.SYMBOLS[key]
     if not def then return nil end
-    local lines = { def.text }
+    local lines = { TT:Def("symbol", key, "text") }
     if note then table.insert(lines, { note, 0.6, 0.9, 0.6 }) end
-    return { title = SymbolIcon(key, 16) .. "  " .. def.name, tag = "Symbol", lines = lines }
+    return { title = SymbolIcon(key, 16) .. "  " .. TT:Def("symbol", key, "name"), tag = "Symbol", lines = lines }
 end
 
 -- extra (optional): more lines under the description, e.g. the numbers on this card
 function TT:EffectPanel(id, extra, titleOverride)
     local def = TT.EFFECTS[id]
     if not def then return nil end
-    local lines = { Sym(def.text, 14) }
+    local lines = { Sym(TT:Def("effect", id, "text"), 14) }
     for _, l in ipairs(extra or {}) do table.insert(lines, l) end
-    return { title = titleOverride or def.name, tag = def.tag, lines = lines }
+    return { title = titleOverride or TT:Def("effect", id, "name"), tag = def.tag, lines = lines }
 end
 
 -- =========================================================================
@@ -238,7 +256,7 @@ local function RenderPanel(spec)
     p:ClearLines()
     local c = spec.color or TAG_COLORS[spec.tag] or TAG_COLORS.Card
     if spec.tag then
-        p:AddDoubleLine(spec.title, spec.tag, c[1], c[2], c[3], 0.55, 0.55, 0.55)
+        p:AddDoubleLine(spec.title, Loc:Data("tt.tag." .. spec.tag, spec.tag), c[1], c[2], c[3], 0.55, 0.55, 0.55)
     else
         p:AddLine(spec.title, c[1], c[2], c[3])
     end
@@ -324,11 +342,11 @@ local function RenderMain()
     -- Say what more is coming while the cursor stays
     local remaining = {}
     for i = st.stageShown + 1, #st.stages do
-        table.insert(remaining, st.stages[i].label)
+        table.insert(remaining, Loc:Data("tt.stage." .. st.stages[i].label, st.stages[i].label))
     end
     if #remaining > 0 then
         mainTip:AddLine(" ")
-        mainTip:AddLine("Keep hovering for " .. table.concat(remaining, ", ") .. "...", 0.5, 0.5, 0.5)
+        mainTip:AddLine(L("tt.keepHovering", table.concat(remaining, ", ")), 0.5, 0.5, 0.5)
     end
     mainTip:Show()
 end
@@ -467,8 +485,8 @@ end
 --   hint                        grey line at the bottom (e.g. click instructions)
 -- =========================================================================
 local function DisplayType(card)
-    if card.type == "Land" then return "Prayer" end
-    return card.type or "Card"
+    if not card.type then return L("tt.card") end
+    return Loc:Term("type", card.type)
 end
 
 local function FormatPT(power, toughness, damage, colorCode)
@@ -476,11 +494,11 @@ local function FormatPT(power, toughness, damage, colorCode)
 end
 
 local function BuildCardMain(tip, card, ctx)
-    tip:AddLine(card.name, 1, 1, 1)
+    tip:AddLine(TTS:CardName(card), 1, 1, 1)
     if ctx.header then ctx.header(tip) end
 
     local costStr = (card.cost and card.cost ~= "") and Sym(card.cost, 18) or "0"
-    tip:AddLine("Cost: " .. costStr .. "  |  " .. DisplayType(card), 0.8, 0.8, 0.8)
+    tip:AddLine(L("tt.cost", costStr) .. "  |  " .. DisplayType(card), 0.8, 0.8, 0.8)
     local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
     if tagLine then tip:AddLine(tagLine, 1, 1, 1) end
 
@@ -494,7 +512,7 @@ local function BuildCardMain(tip, card, ctx)
     end
 
     if card.text and card.text ~= "" then
-        tip:AddLine(Sym(card.text, 16), 0.9, 0.9, 0.5, true)
+        tip:AddLine(Sym(TTS:CardText(card), 16), 0.9, 0.9, 0.5, true)
     end
 
     tip:AddLine(" ")
@@ -502,7 +520,7 @@ local function BuildCardMain(tip, card, ctx)
         tip:AddLine(ctx.hint, 0.5, 0.5, 0.5)
     end
     -- Every card tooltip belongs to a card that can be linked (UI\CardLinks.lua)
-    tip:AddLine("Shift-click while typing to link in chat", 0.5, 0.5, 0.5)
+    tip:AddLine(L("tt.linkHint"), 0.5, 0.5, 0.5)
 end
 
 -- Cards attached to a permanent and cards whose effects are on it
@@ -516,10 +534,10 @@ local function AttachedPanels(perm)
         if aCard then
             local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
             local aCost = (aCard.cost and aCard.cost ~= "") and Sym(aCard.cost, 16) or "0"
-            local lines = { { "Cost: " .. aCost, 0.8, 0.8, 0.8 } }
-            if aCard.text and aCard.text ~= "" then table.insert(lines, { Sym(aCard.text, 14), 0.9, 0.9, 0.6 }) end
+            local lines = { { L("tt.cost", aCost), 0.8, 0.8, 0.8 } }
+            if aCard.text and aCard.text ~= "" then table.insert(lines, { Sym(TTS:CardText(aCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, {
-                title = aCard.name,
+                title = TTS:CardName(aCard),
                 tag = isEquip and "Equipment" or "Enchantment",
                 color = isEquip and { 0.4, 0.73, 1.0 } or { 1.0, 0.82, 0.0 },
                 lines = lines,
@@ -530,9 +548,9 @@ local function AttachedPanels(perm)
         for _, effId in ipairs(TTS.Engine:GetPermEffectCards(perm)) do
             local eCard = TTS.Cards[effId]
             local eCost = (eCard.cost and eCard.cost ~= "") and Sym(eCard.cost, 16) or "0"
-            local lines = { { "Cost: " .. eCost .. "  |  " .. (eCard.type or "Spell"), 0.8, 0.8, 0.8 } }
-            if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(eCard.text, 14), 0.9, 0.9, 0.6 }) end
-            table.insert(specs, { title = eCard.name, tag = "Affected by", color = { 0.69, 0.5, 1.0 }, lines = lines })
+            local lines = { { L("tt.cost", eCost) .. "  |  " .. (eCard.type and Loc:Term("type", eCard.type) or L("type.Spell")), 0.8, 0.8, 0.8 } }
+            if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(TTS:CardText(eCard), 14), 0.9, 0.9, 0.6 }) end
+            table.insert(specs, { title = TTS:CardName(eCard), tag = "Affected by", color = { 0.69, 0.5, 1.0 }, lines = lines })
         end
     end
     return specs
@@ -553,9 +571,9 @@ local function KeywordPanels(card, ctx)
     for _, kw in ipairs(TT.KEYWORD_ORDER) do
         if ctx.perm and E and E.HasKeyword then
             if E:HasKeyword(ctx.perm, ctx.isRemote, kw) then
-                add(kw, (not card[kw]) and "Granted by another card." or nil)
+                add(kw, (not card[kw]) and L("tt.kwGranted") or nil)
             elseif card[kw] then
-                add(kw, "Currently switched off by another card.")
+                add(kw, L("tt.kwSwitchedOff"))
             end
         elseif card[kw] then
             add(kw)
@@ -564,11 +582,11 @@ local function KeywordPanels(card, ctx)
 
     -- Keywords this card hands out
     for _, op in ipairs((card.effect and card.effect.ops) or {}) do
-        for _, kw in ipairs(op.kw or {}) do add(kw, "This spell grants it until end of turn.") end
+        for _, kw in ipairs(op.kw or {}) do add(kw, L("tt.kwSpellGrants")) end
     end
     local a = card.anthem
     for _, kw in ipairs((a and a.kw) or {}) do
-        add(kw, string.format("Granted to your other %s creatures.", a.value))
+        add(kw, L("tt.kwAnthem", TagValue(a.tag, a.value)))
     end
     return specs
 end
@@ -587,7 +605,7 @@ local function StatusPanels(card, ctx)
     if perm.freezeUntap then table.insert(specs, TT:EffectPanel("frozen")) end
     if perm.regenerateShield then table.insert(specs, TT:EffectPanel("regenerating")) end
     if (perm.damage or 0) > 0 then
-        table.insert(specs, TT:EffectPanel("damaged", { { Plural(perm.damage, "damage") .. " marked this turn.", 1, 0.3, 0.3 } }))
+        table.insert(specs, TT:EffectPanel("damaged", { { L("tt.damageMarked", Plural(perm.damage, "tt.n.damage")), 1, 0.3, 0.3 } }))
     end
 
     -- Combat
@@ -600,7 +618,7 @@ local function StatusPanels(card, ctx)
             local atkIdx = bs.blocks and bs.blocks[ctx.fieldIndex]
             local atk = atkIdx and otherField[atkIdx]
             if atk and TTS.Cards[atk.id] then
-                table.insert(specs, TT:EffectPanel("blocking", { { "Blocking " .. TTS.Cards[atk.id].name .. ".", 0.6, 0.9, 0.6 } }))
+                table.insert(specs, TT:EffectPanel("blocking", { { L("tt.blockingX", TTS:CardName(atk.id)), 0.6, 0.9, 0.6 } }))
             end
             if not ctx.isRemote and bs.selectedBlocker == ctx.fieldIndex then
                 table.insert(specs, TT:EffectPanel("selected"))
@@ -609,10 +627,10 @@ local function StatusPanels(card, ctx)
             local names = {}
             for bIdx, aIdx in pairs(bs.blocks or {}) do
                 local b = aIdx == ctx.fieldIndex and otherField[bIdx]
-                if b and TTS.Cards[b.id] then table.insert(names, TTS.Cards[b.id].name) end
+                if b and TTS.Cards[b.id] then table.insert(names, TTS:CardName(b.id)) end
             end
             if #names > 0 then
-                table.insert(specs, TT:EffectPanel("blocked", { { "Blocked by " .. table.concat(names, ", ") .. ".", 1, 0.5, 0.5 } }))
+                table.insert(specs, TT:EffectPanel("blocked", { { L("tt.blockedBy", table.concat(names, ", ")), 1, 0.5, 0.5 } }))
             end
         end
     end
@@ -625,10 +643,10 @@ local function StatusPanels(card, ctx)
         local op, ot = p - card.power - tp - pp, t - card.toughness - tt - pt
         if p ~= card.power or t ~= card.toughness or tp ~= 0 or tt ~= 0 or pp ~= 0 or pt ~= 0 then
             local function Stats(a, b) return TTS.FormatStats(a, b, 0, "|cFFFFFFFF", 12) end
-            local lines = { { "Printed " .. Stats(card.power, card.toughness) .. ", now " .. Stats(p, t) .. ".", 1, 0.82, 0 } }
-            if tp ~= 0 or tt ~= 0 then table.insert(lines, Stats(Signed(tp), Signed(tt)) .. " until end of turn.") end
-            if pp ~= 0 or pt ~= 0 then table.insert(lines, Stats(Signed(pp), Signed(pt)) .. " permanently.") end
-            if op ~= 0 or ot ~= 0 then table.insert(lines, Stats(Signed(op), Signed(ot)) .. " from other cards on the battlefield.") end
+            local lines = { { L("tt.printedNow", Stats(card.power, card.toughness), Stats(p, t)), 1, 0.82, 0 } }
+            if tp ~= 0 or tt ~= 0 then table.insert(lines, L("tt.modTemp", Stats(Signed(tp), Signed(tt)))) end
+            if pp ~= 0 or pt ~= 0 then table.insert(lines, L("tt.modPerm", Stats(Signed(pp), Signed(pt)))) end
+            if op ~= 0 or ot ~= 0 then table.insert(lines, L("tt.modOther", Stats(Signed(op), Signed(ot)))) end
             table.insert(specs, TT:EffectPanel("modified", lines))
         end
     end
@@ -639,8 +657,8 @@ local function StatusPanels(card, ctx)
         if list and #list > 0 then
             local lines = {}
             for _, e in ipairs(list) do
-                table.insert(lines, { string.format("%s: %d %s each turn, %s left.", e.src or "Effect", e.n,
-                    kind == "dot" and "damage" or "healing", Plural(e.turns, "turn")), 1, 1, 1 })
+                table.insert(lines, { L(kind == "dot" and "tt.dotLine" or "tt.hotLine", TTS:ReasonText(e.src) or L("reason.effect"), e.n,
+                    Plural(e.turns, "tt.n.turn")), 1, 1, 1 })
             end
             table.insert(specs, TT:EffectPanel(kind, lines))
         end
@@ -656,7 +674,7 @@ end
 local function OpPanel(op, eff)
     local id = op.op
     local extra = {}
-    local area = op.to and AREA_TEXT[op.to]
+    local area = op.to and Area(op.to)
 
     if id == "buff" then
         if (op.p or 0) < 0 or (op.t or 0) < 0 then
@@ -665,32 +683,32 @@ local function OpPanel(op, eff)
             id = op.perm and "buff_perm" or "buff_temp"
         end
         if (op.p or 0) ~= 0 or (op.t or 0) ~= 0 then
-            table.insert(extra, string.format("%s/%s%s.", Signed(op.p), Signed(op.t), op.perm and "" or " until end of turn"))
+            table.insert(extra, L(op.perm and "tt.buffPerm" or "tt.buffTemp", Signed(op.p) .. "/" .. Signed(op.t)))
         end
     elseif id == "damage" then
-        table.insert(extra, string.format("%s.", Plural(op.n or 0, "damage")))
-        if op.bonusIfTapped then table.insert(extra, string.format("%d more if the creature is tapped.", op.bonusIfTapped)) end
+        table.insert(extra, L("tt.sentence", Plural(op.n or 0, "tt.n.damage")))
+        if op.bonusIfTapped then table.insert(extra, L("tt.bonusIfTapped", op.bonusIfTapped)) end
     elseif id == "heal" then
-        table.insert(extra, string.format("Restores %d.", op.n or 0))
+        table.insert(extra, L("tt.restores", op.n or 0))
     elseif id == "dot" or id == "hot" then
-        table.insert(extra, string.format("%d each turn for %s.", op.n or 0, Plural(op.turns or 0, "turn")))
+        table.insert(extra, L("tt.eachTurnFor", op.n or 0, Plural(op.turns or 0, "tt.n.turn")))
     elseif id == "shield" then
-        table.insert(extra, string.format("Absorbs %d.", op.n or 0))
+        table.insert(extra, L("tt.absorbs", op.n or 0))
     elseif id == "draw" then
-        table.insert(extra, string.format("Draws %s.", Plural(op.n or 0, "card")))
+        table.insert(extra, L("tt.draws", Plural(op.n or 0, "tt.n.card")))
     elseif id == "mana" then
-        table.insert(extra, string.format("Adds %s.", Sym(string.rep("{" .. (op.color or "C") .. "}", op.n or 0), 14)))
+        table.insert(extra, L("tt.adds", Sym(string.rep("{" .. (op.color or "C") .. "}", op.n or 0), 14)))
     elseif id == "destroy" then
-        if op.damaged then table.insert(extra, "Only works on a creature that has been dealt damage this turn.") end
-        if op.nonColor then table.insert(extra, string.format("Doesn't work on %s creatures.", SPHERE_NAME[op.nonColor] or op.nonColor)) end
+        if op.damaged then table.insert(extra, L("tt.onlyDamaged")) end
+        if op.nonColor then table.insert(extra, L("tt.nonColor", SphereName(op.nonColor))) end
     elseif id == "steal" then
-        if op.maxPower then table.insert(extra, string.format("Only a creature with %d power or less.", op.maxPower)) end
-        table.insert(extra, op.untilEnd and "Until end of turn, then it returns to its owner." or "Permanently.")
+        if op.maxPower then table.insert(extra, L("tt.maxPower", op.maxPower)) end
+        table.insert(extra, op.untilEnd and L("tt.stealTemp") or L("tt.stealPerm"))
     elseif id == "raise" then
-        table.insert(extra, op.src == "any" and "From your graveyard or your opponent's." or "From your graveyard.")
+        table.insert(extra, op.src == "any" and L("tt.raiseAny") or L("tt.raiseOwn"))
     end
 
-    if area then table.insert(extra, { "Affects " .. area .. ".", 0.6, 0.9, 0.6 }) end
+    if area then table.insert(extra, { L("tt.affects", area), 0.6, 0.9, 0.6 }) end
 
     local panel = TT:EffectPanel(id, extra)
     if panel then panel.key = id .. (area or "") end
@@ -706,21 +724,22 @@ local function AbilityPanels(card)
         local bonus = string.format("%s/%s", Signed(a.p), Signed(a.t))
         local kws = {}
         for _, kw in ipairs(a.kw or {}) do
-            if TT.KEYWORDS[kw] then table.insert(kws, TT.KEYWORDS[kw].name) end
+            if TT.KEYWORDS[kw] then table.insert(kws, TT:Def("keyword", kw, "name")) end
         end
-        local line = string.format("Other %s creatures you control get %s", a.value, bonus)
-        if #kws > 0 then line = line .. " and " .. table.concat(kws, ", ") end
-        table.insert(specs, TT:EffectPanel("anthem", { { line .. ".", 1, 0.82, 0 }, { "Matches by " .. (TAG_FIELD_LABEL[a.tag] or a.tag) .. ".", 0.6, 0.6, 0.6 } }))
+        local line = #kws > 0 and L("tt.anthemKw", TagValue(a.tag, a.value), bonus, table.concat(kws, ", "))
+            or L("tt.anthem", TagValue(a.tag, a.value), bonus)
+        table.insert(specs, TT:EffectPanel("anthem", { { line, 1, 0.82, 0 }, { L("tt.matchesBy", TagFieldLabel(a.tag)), 0.6, 0.6, 0.6 } }))
     end
 
     local r = card.rally
     if r then
         table.insert(specs, TT:EffectPanel("rally", {
-            { string.format("%s/%s for each other %s creature you control.", Signed(r.p), Signed(r.t), r.value), 1, 0.82, 0 },
-            { "Matches by " .. (TAG_FIELD_LABEL[r.tag] or r.tag) .. ".", 0.6, 0.6, 0.6 },
+            { L("tt.rally", Signed(r.p) .. "/" .. Signed(r.t), TagValue(r.tag, r.value)), 1, 0.82, 0 },
+            { L("tt.matchesBy", TagFieldLabel(r.tag)), 0.6, 0.6, 0.6 },
         }))
     end
 
+    -- The English rules text is the data here (it is the same whatever the language)
     local text = card.text or ""
     if card.type == "Creature" and text ~= "" then
         if text:match("^[{%w}]+:") then table.insert(specs, TT:EffectPanel("activated")) end
@@ -732,7 +751,7 @@ local function AbilityPanels(card)
     local eff = card.effect
     if eff then
         if eff.target and TARGET_TEXT[eff.target] then
-            table.insert(specs, TT:EffectPanel("targeting", { { "Choose " .. TARGET_TEXT[eff.target] .. ".", 0.6, 0.9, 0.6 } }))
+            table.insert(specs, TT:EffectPanel("targeting", { { L("tt.choose", Target(eff.target)), 0.6, 0.9, 0.6 } }))
         end
         local seen = {}
         for _, op in ipairs(eff.ops or {}) do
@@ -766,7 +785,7 @@ local function SymbolPanels(card, ctx)
 
     -- Symbols drawn on the card itself on the board
     if ctx.perm then
-        if ctx.perm.tapped then add("T", "Shown over this card because it is tapped.") end
+        if ctx.perm.tapped then add("T", L("tt.tappedSymbol")) end
         local deaths = TTS.BoardFrame and TTS.BoardFrame.predictedDeaths
         if deaths and deaths[ctx.perm] then add("SKULL") end
     end
@@ -808,16 +827,16 @@ function TT:ShowPlayerEffect(owner, anchor, e)
     self:Show(owner, anchor, {
         main = function(tip)
             if e.kind == "shield" then
-                tip:AddLine("Damage Shield", c[1], c[2], c[3])
-                tip:AddLine(string.format("Prevents the next %d damage.", e.n), 1, 1, 1, true)
+                tip:AddLine(TT:Def("effect", "shield", "name"), c[1], c[2], c[3])
+                tip:AddLine(L("tt.shieldPrevents", e.n), 1, 1, 1, true)
             else
-                tip:AddLine(e.src or "Effect", c[1], c[2], c[3])
+                tip:AddLine(TTS:ReasonText(e.src) or L("reason.effect"), c[1], c[2], c[3])
                 if e.kind == "dot" then
-                    tip:AddLine(string.format("Takes %d damage each turn.", e.n), 1, 1, 1, true)
+                    tip:AddLine(L("tt.takesEachTurn", e.n), 1, 1, 1, true)
                 else
-                    tip:AddLine(string.format("Restores %d life each turn.", e.n), 1, 1, 1, true)
+                    tip:AddLine(L("tt.restoresEachTurn", e.n), 1, 1, 1, true)
                 end
-                tip:AddLine(string.format("%s remaining", Plural(e.turns, "turn")), 0.8, 0.8, 0.8)
+                tip:AddLine(L("tt.remaining", Plural(e.turns, "tt.n.turn")), 0.8, 0.8, 0.8)
             end
         end,
         stages = {
@@ -832,9 +851,9 @@ function TT:ShowManaSymbol(owner, anchor, key, amount)
     if not def then return end
     self:Show(owner, anchor, {
         main = function(tip)
-            tip:AddLine(SymbolIcon(key, 18) .. "  " .. def.name .. " Mana", 1, 1, 1)
-            tip:AddLine(string.format("In your mana pool: %d", amount or 0), 1, 0.82, 0)
-            tip:AddLine(def.text, 0.7, 0.7, 0.7, true)
+            tip:AddLine(SymbolIcon(key, 18) .. "  " .. L("tt.manaName", TT:Def("symbol", key, "name")), 1, 1, 1)
+            tip:AddLine(L("tt.inPool", amount or 0), 1, 0.82, 0)
+            tip:AddLine(TT:Def("symbol", key, "text"), 0.7, 0.7, 0.7, true)
         end,
     })
 end

@@ -454,7 +454,9 @@ local function InstallHooks()
     -- First sentence of a log line, without colour codes or the right-click hint
     local function ShortMessage(msg)
         local s = tostring(msg or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-        s = s:gsub("%s*%(Right%-click to cancel%)", "")
+        local hint = TTS.L("log.cancelHint")
+        local at = s:find(hint, 1, true)
+        if at then s = (s:sub(1, at - 1) .. s:sub(at + #hint)):gsub("%s+$", "") end
         local cut = s:find("[%.!]%s")
         if cut then s = s:sub(1, cut) end
         return TTS.FormatSymbols and TTS:FormatSymbols(s, 16) or s

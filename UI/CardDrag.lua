@@ -7,6 +7,7 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
 
 -- =========================================================================
 -- DRAGGING CARDS
@@ -64,7 +65,7 @@ local function ShowGhost(card, scale)
     TTS.SetupCardVisual(g, card)
     TTS.ApplyFrameTexture(g.border, card)
     g.border:SetVertexColor(1, 1, 1)
-    g.title:SetText(card.name or "")
+    g.title:SetText(TTS:CardName(card) or "")
     if card.cost and card.cost ~= "" then
         g.cost:SetText(TTS:FormatSymbols(card.cost, 16))
         g.cost:Show()
@@ -111,10 +112,10 @@ end
 
 -- Why this creature cannot attack right now, or nil if it can
 local function AttackRefusal(E, perm, card)
-    if perm.isAttacking then return card.name .. " is already attacking." end
-    if perm.tapped then return card.name .. " is tapped and cannot attack." end
-    if perm.sick and not E:HasKeyword(perm, false, "haste") then return card.name .. " has summoning sickness." end
-    if card.defender then return card.name .. " is a Blocker and cannot attack." end
+    if perm.isAttacking then return L("err.alreadyAttacking", TTS:CardName(card)) end
+    if perm.tapped then return L("err.tappedCantAttack", TTS:CardName(card)) end
+    if perm.sick and not E:HasKeyword(perm, false, "haste") then return L("err.summoningSick", TTS:CardName(card)) end
+    if card.defender then return L("err.blockerCantAttack", TTS:CardName(card)) end
 end
 
 -- =========================================================================
@@ -124,8 +125,8 @@ local function BeginHandDrag(f)
     local E = TTS.Engine
     local card = f.cardId and TTS.Cards[f.cardId]
     if not card then return end
-    if E.pendingDiscard then Warn("Click a card in your hand to discard it."); return end
-    if not E.isMyTurn then Warn("Cannot play cards outside of your turn."); return end
+    if E.pendingDiscard then Warn(L("err.discardFirst")); return end
+    if not E.isMyTurn then Warn(L("err.notYourTurnPlay")); return end
     -- A target being chosen for another card is dropped quietly
     E.targeting = nil
 
@@ -134,7 +135,7 @@ local function BeginHandDrag(f)
     if targetType then
         drag.kind = "spell"
         B.dragTargeting = { targetMode = "SPELL", cardId = f.cardId, handIndex = f.handIndex,
-            targetType = targetType, cardName = card.name }
+            targetType = targetType, cardName = TTS:CardName(card) }
         SetAim(f, AIM_TARGET)
     else
         ShowGhost(card, f.baseScale or 1)
@@ -155,18 +156,18 @@ local function BeginFieldDrag(f)
     local bs = E.blockingState
     local d = { frame = f, fieldIndex = idx, perm = perm }
     if E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking then
-        if bs.blocksDeclared then Warn("Blocks are already declared."); return end
-        if perm.tapped then Warn("Tapped creatures cannot block."); return end
-        if E.cantBlockThisTurn then Warn("Creatures cannot block this turn!"); return end
+        if bs.blocksDeclared then Warn(L("err.blocksDeclared")); return end
+        if perm.tapped then Warn(L("err.tappedCantBlock")); return end
+        if E.cantBlockThisTurn then Warn(L("err.cantBlockThisTurn")); return end
         d.kind = "block"
         SetAim(f, AIM_BLOCK)
     elseif not E.isMyTurn then
-        Warn("Cannot act outside of your turn.")
+        Warn(L("err.notYourTurnAct"))
         return
     else
         local ab = E:GetAbility(perm.id)
         if ab and ab.target and (E.phase == "MAIN1" or E.phase == "MAIN2") and E:CanActivateAbility(perm, false) then
-            d.ability = { targetMode = "ABILITY", sourceIndex = idx, sourcePerm = perm, cardName = card.name,
+            d.ability = { targetMode = "ABILITY", sourceIndex = idx, sourcePerm = perm, cardName = TTS:CardName(card),
                 targetType = (ab.target == "enemy_player") and "PLAYER" or "CREATURE" }
             B.dragTargeting = d.ability
         end
@@ -175,8 +176,8 @@ local function BeginFieldDrag(f)
             d.attack = not d.attackRefusal
         end
         if not (d.ability or d.attack) then
-            Warn(d.attackRefusal or (E.phase == "MAIN2" and "Combat is over for this turn.")
-                or "Nothing to drag this creature to right now.")
+            Warn(d.attackRefusal or (E.phase == "MAIN2" and L("err.combatOver"))
+                or L("err.nothingToDrag"))
             B.dragTargeting = nil
             return
         end
@@ -235,7 +236,7 @@ local function DropBlocker(E, d, target)
     elseif bs.blocks[idx] then
         bs.blocks[idx] = nil
         local card = TTS.Cards[d.perm.id]
-        E:Log(string.format("Removed |cFFFFD200%s|r from blocking.", card and card.name or "Creature"), "COMBAT")
+        E:Log(L("log.unblocked", card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
     end
 end
 

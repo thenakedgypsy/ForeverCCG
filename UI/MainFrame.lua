@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 TTS.MainFrame = CreateFrame("Frame", "TTS_MainDialog", UIParent, backdropTemplate)
@@ -59,8 +61,8 @@ closeBtn:SetPoint("TOPRIGHT", -2, -2)
 local content = CreateFrame("Frame", nil, M)
 content:SetAllPoints(M)
 
--- Tooltip-bordered panel with a gold section header and divider
-local function CreateSection(label, w, h)
+-- Tooltip-bordered panel with a gold section header (locale key) and divider
+local function CreateSection(labelKey, w, h)
     local p = CreateFrame("Frame", nil, content, backdropTemplate)
     p:SetSize(w, h)
     p:SetBackdrop({
@@ -74,7 +76,7 @@ local function CreateSection(label, w, h)
 
     local header = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     header:SetPoint("TOPLEFT", 10, -9)
-    header:SetText(label)
+    Loc:Bind(header, labelKey)
 
     local line = p:CreateTexture(nil, "ARTWORK")
     line:SetPoint("TOPLEFT", 8, -24)
@@ -84,14 +86,14 @@ local function CreateSection(label, w, h)
     return p
 end
 
--- Red panel button with the Deckbuilder's small fonts
-local function CreatePanelButton(name, parent, w, h, text)
+-- Red panel button with the Deckbuilder's small fonts, labelled with locale key textKey
+local function CreatePanelButton(name, parent, w, h, textKey)
     local b = CreateFrame("Button", name, parent, "UIPanelButtonTemplate")
     b:SetSize(w, h)
     b:SetNormalFontObject("GameFontNormalSmall")
     b:SetHighlightFontObject("GameFontHighlightSmall")
     b:SetDisabledFontObject("GameFontDisableSmall")
-    b:SetText(text)
+    Loc:Bind(b, textKey)
     return b
 end
 
@@ -124,7 +126,7 @@ end
 -- =========================================================================
 -- OPTIONS (title bar, left of the close button)
 -- =========================================================================
-local optionsBtn = CreatePanelButton("TTS_OptionsBtn", M, 64, 20, "Options")
+local optionsBtn = CreatePanelButton("TTS_OptionsBtn", M, 64, 20, "options.title")
 optionsBtn:SetPoint("TOPRIGHT", M, "TOPRIGHT", -32, -15)
 optionsBtn:SetScript("OnClick", function()
     if TTS.OptionsFrame then
@@ -136,10 +138,10 @@ end)
 -- =========================================================================
 -- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
 -- =========================================================================
-local deckSection = CreateSection("Your Deck", 372, 104)
+local deckSection = CreateSection("main.yourDeck", 372, 104)
 deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -46)
 
-local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "Open Deckbuilder")
+local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "main.openDeckbuilder")
 deckBtn:SetPoint("TOPLEFT", deckSection, "TOPLEFT", 10, -32)
 deckBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame.TryOpen then
@@ -148,7 +150,7 @@ deckBtn:SetScript("OnClick", function()
     end
 end)
 
-local rulesBtn = CreatePanelButton("TTS_RulesBtn", deckSection, 170, 24, "Official Rules")
+local rulesBtn = CreatePanelButton("TTS_RulesBtn", deckSection, 170, 24, "main.rules")
 rulesBtn:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -32)
 rulesBtn:SetScript("OnClick", function()
     if TTS.RulesFrame then
@@ -171,10 +173,10 @@ statusLabel:SetWordWrap(true)
 -- =========================================================================
 -- SECTION 2: SOLO (encounters and the practice dummy)
 -- =========================================================================
-local practiceSection = CreateSection("Solo", 180, 96)
+local practiceSection = CreateSection("main.solo", 180, 96)
 practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
 
-local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "Solo Encounters")
+local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "main.soloEncounters")
 encountersBtn:SetPoint("TOP", practiceSection, "TOP", 0, -32)
 encountersBtn:SetScript("OnClick", function()
     if TTS.SoloSelectFrame then
@@ -183,23 +185,23 @@ encountersBtn:SetScript("OnClick", function()
     end
 end)
 
-local soloBtn = CreatePanelButton("TTS_SoloBtn", practiceSection, 160, 24, "Practice vs Dummy")
+local soloBtn = CreatePanelButton("TTS_SoloBtn", practiceSection, 160, 24, "main.practice")
 soloBtn:SetPoint("TOP", encountersBtn, "BOTTOM", 0, -4)
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before starting a match.")
+        DEFAULT_CHAT_FRAME:AddMessage(L("main.closeDeckbuilderFirst"))
         return
     end
-    TTS.Engine:StartMatch("Target Dummy", true, true)
+    TTS.Engine:StartMatch(L("solo.dummy"), true, true)
 end)
 
 -- =========================================================================
 -- SECTION 3: PVP WAITING ROOM (the only way to challenge other players)
 -- =========================================================================
-local pvpSection = CreateSection("Play Others", 180, 96)
+local pvpSection = CreateSection("main.playOthers", 180, 96)
 pvpSection:SetPoint("TOPRIGHT", deckSection, "BOTTOMRIGHT", 0, -8)
 
-local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "Open Waiting Room")
+local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "main.openWaitingRoom")
 waitingRoomBtn:SetPoint("TOP", pvpSection, "TOP", 0, -34)
 waitingRoomBtn:SetScript("OnClick", function()
     if TTS.WaitingRoom and TTS.WaitingRoom.frame then
@@ -213,7 +215,7 @@ end)
 -- =========================================================================
 function M:UpdatePlayState()
     if TTS.GetCollectionScore then
-        scoreLabel:SetText("Collection Score: |cFFFFFFFF" .. TTS:FormatScore((TTS:GetCollectionScore())) .. "|r")
+        scoreLabel:SetText(L("main.score", TTS:FormatScore((TTS:GetCollectionScore()))))
     end
 
     -- The Deckbuilder cannot be opened while a game is in progress or while queued in the waiting room
@@ -234,7 +236,7 @@ function M:UpdatePlayState()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         soloBtn:Disable()
         waitingRoomBtn:Disable()
-        statusLabel:SetText("|cFFFF4444Deckbuilder is open — close it to start a game.|r")
+        statusLabel:SetText(L("main.deckbuilderOpen"))
         return
     end
 
@@ -246,20 +248,20 @@ function M:UpdatePlayState()
         end
     end
 
-    local deckName = (activeDeck and activeDeck.name) or "Default Deck"
+    local deckName = (activeDeck and activeDeck.name) or L("deck.defaultName")
 
     if cardCount >= 40 and cardCount <= 50 then
         soloBtn:Enable()
         waitingRoomBtn:Enable()
-        statusLabel:SetText(string.format("|cFF00FF00Deck valid: %s (%d/50 cards)|r", deckName, cardCount))
+        statusLabel:SetText(L("main.deckValid", deckName, cardCount))
     elseif cardCount > 50 then
         soloBtn:Disable()
         waitingRoomBtn:Disable()
-        statusLabel:SetText(string.format("|cFFFF2222Deck invalid: %s (%d cards - Max 50 cards allowed)|r", deckName, cardCount))
+        statusLabel:SetText(L("main.deckTooBig", deckName, cardCount))
     else
         soloBtn:Disable()
         waitingRoomBtn:Disable()
-        statusLabel:SetText(string.format("|cFFFF2222Deck invalid: %s (%d/40 cards minimum)|r", deckName, cardCount))
+        statusLabel:SetText(L("main.deckTooSmall", deckName, cardCount))
     end
 
     -- The waiting room cannot be opened while a game is in progress
@@ -298,7 +300,7 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.MainFrame:Hide()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Deckbuilder frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage(L("main.noDeckbuilder"))
         end
     elseif cmd == "board" or cmd == "game" then
         if TTS.BoardFrame then
@@ -316,7 +318,17 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.RulesFrame:Show()
             end
         else
-            DEFAULT_CHAT_FRAME:AddMessage("|cFFFF0000[TTS]|r Rules frame not initialized.")
+            DEFAULT_CHAT_FRAME:AddMessage(L("main.noRules"))
+        end
+    elseif cmd:match("^lang") then
+        -- /tragic lang [auto|enUS|deDE|...|pseudo]: choose a language (pseudo marks untranslated text)
+        local choice = msg:trim():match("^%S+%s+(%S+)")
+        if choice then
+            if choice:lower() == "auto" or choice:lower() == "pseudo" then choice = choice:lower() end
+            Loc:SetChoice(choice)
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. choice .. " - " .. L("locale.reload"))
+        else
+            DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("options.language") .. ": " .. Loc:GetChoice() .. " (" .. Loc.code .. ")")
         end
     elseif cmd == "solo" or cmd == "encounters" then
         if TTS.SoloSelectFrame then

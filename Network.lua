@@ -9,6 +9,7 @@
 local ADDON_NAME = ...
 TTS = TTS or {}
 TTS.Net = TTS.Net or {}
+local L = TTS.L
 
 TTS.DOWNLOAD_URL = "https://www.curseforge.com/wow/addons/forever-ccg"
 
@@ -198,8 +199,7 @@ local function ReportSendFailure(m, code)
     local key = tostring(m.chatType) .. ":" .. tostring(code)
     if reportedFailures[key] then return end
     reportedFailures[key] = true
-    Print(string.format("|cFFFF2222[TTSE]|r A message over %s could not be sent (error %s).",
-        m.chatType == "CHANNEL" and LFM_CHANNEL or tostring(m.chatType), tostring(code)))
+    Print(L("net.sendFailed", m.chatType == "CHANNEL" and LFM_CHANNEL or tostring(m.chatType), tostring(code)))
 end
 
 local function PumpSendQueue()
@@ -224,7 +224,7 @@ local function PumpSendQueue()
             sendTokens = 0
             if not lockdownNoticed then
                 lockdownNoticed = true
-                Print("|cFFFFD200[TTSE]|r Addon messages are blocked by the game right now; they will be sent when it allows them again.")
+                Print(L("net.throttled"))
             end
             delay = LOCKDOWN_RETRY
             break
@@ -265,7 +265,7 @@ local function FlushChannelQueue()
         if joinAttempts >= MAX_JOIN_ATTEMPTS then
             joinAttempts = 0
             wipe(channelQueue)
-            Print("|cFFFF2222[TTSE]|r Could not join the " .. LFM_CHANNEL .. " channel; messages were not sent.")
+            Print(L("net.channelFailed", LFM_CHANNEL))
             return
         end
         JoinLFMChannel()
@@ -328,13 +328,8 @@ end
 -- Fallback order after FCCGTTSE (which is always tried first)
 local FALLBACK_ROUTES = { "WHISPER", "PARTY", "RAID", "GUILD", "YELL" }
 
-local ROUTE_LABELS = {
-    WHISPER = "whisper",
-    PARTY = "party chat",
-    RAID = "raid chat",
-    GUILD = "guild chat",
-    YELL = "yell",
-}
+-- Route names shown to the player (route.<ROUTE>)
+local ROUTE_LABELS = setmetatable({}, { __index = function(_, route) return L("route." .. route) end })
 
 -- Whether a route can currently reach the named player
 local function RouteAvailable(route, target)
@@ -388,26 +383,26 @@ function TTS.Net:InvitePlayer(target)
     target = NormalizeName(target)
 
     if self:IsInvitePending(target) then
-        Print("|cFFFFD200[TTSE]|r Still trying to reach " .. target .. ". Please wait.")
+        Print(L("net.stillTrying", target))
         return
     end
     local wait = self:InviteCooldownLeft()
     if wait > 0 then
-        Print(string.format("|cFFFFD200[TTSE]|r You can send another challenge in %d seconds.", wait))
+        Print(L("net.challengeCooldown", wait))
         return
     end
 
     local E = TTS.Engine
     if E and E.inMatch then
-        Print("|cFFFF2222[TTSE]|r You are already in a match.")
+        Print(L("net.alreadyInMatch"))
         return
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        Print("|cFFFF2222[TTSE]|r Close the Deckbuilder before challenging a player.")
+        Print(L("net.closeDeckbuilder"))
         return
     end
     if E and not E:ValidateDeck() then
-        Print("|cFFFF2222[TTSE]|r Your active deck must have 40-50 cards before you can challenge someone.")
+        Print(L("net.deckSize"))
         return
     end
 
@@ -425,7 +420,7 @@ function TTS.Net:InvitePlayer(target)
     if TTS.WaitingRoom and TTS.WaitingRoom.UpdateUI then TTS.WaitingRoom:UpdateUI() end
 
     self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
-    Print("|cFF00FF00[TTSE]|r Invitation sent to " .. target .. ". Checking for addon...")
+    Print(L("net.inviteSent", target))
     self:AwaitInviteAck(inviteKey, matchId)
 end
 
@@ -448,8 +443,7 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
             Net.routes[inviteKey] = nextRoute
             invite.sentAt = time()
             table.insert(invite.tried, ROUTE_LABELS[nextRoute])
-            Print(string.format("|cFFFFD200[TTSE]|r No response from %s on %s. Retrying over %s...",
-                target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
+            Print(L("net.retrying", target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
             Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
             Net:AwaitInviteAck(inviteKey, matchId)
             return
@@ -464,15 +458,13 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
             if label == ROUTE_LABELS.PARTY or label == ROUTE_LABELS.RAID then triedGroup = true end
         end
 
-        local whisperMsg = string.format("I tried to challenge you to a game of Forever: CCG but couldn't reach you. If you have it installed, join my party and I'll challenge you again. If not, visit: %s to download!", TTS.DOWNLOAD_URL)
+        local whisperMsg = L("net.whisper", TTS.DOWNLOAD_URL)
         SendChatMessage(whisperMsg, "WHISPER", nil, CharName(target))
         local tried = table.concat(invite.tried, ", ")
         if triedGroup then
-            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond (tried: %s). They may not have Forever: CCG installed. Whisper sent!",
-                target, tried))
+            Print(L("net.noResponse", target, tried))
         else
-            Print(string.format("|cFFFF4444[TTSE]|r %s didn't respond (tried: %s). If they have Forever: CCG, invite them to your party (or raid) and challenge them again. Whisper sent!",
-                target, tried))
+            Print(L("net.noResponseGroup", target, tried))
         end
     end)
 end
@@ -587,7 +579,7 @@ local function MergeSharedContacts(entries)
     for entry in (entries or ""):gmatch("[^,]+") do
         local name, age = entry:match("^(.-)=(%d+)$")
         name = name and NormalizeName(name)
-        if name and name ~= "" and name ~= "Target Dummy" and not SameName(name, MyName()) then
+        if name and name ~= "" and not TTS:IsDummyName(name) and not SameName(name, MyName()) then
             local seen = now - tonumber(age)
             local key = name:lower()
             local existing = db[key]
@@ -605,7 +597,7 @@ end
 -- ("Firstname Surname"). The first time they become a direct contact, we swap lists.
 function TTS.Net:AddContact(name)
     name = NormalizeName(name)
-    if name == "" or name == "Target Dummy" or SameName(name, MyName()) then return end
+    if name == "" or TTS:IsDummyName(name) or SameName(name, MyName()) then return end
     local db = ContactDB()
     local key = name:lower()
     local before = db[key]
@@ -884,7 +876,7 @@ end)
 function TTS.Net:Send(target, msg)
     -- isSolo stays set after a solo game ends, so only a solo game in progress blocks sending
     local E = TTS.Engine
-    if not target or target == "" or target == "Target Dummy" or (E and E.inMatch and E.isSolo) then
+    if not target or target == "" or TTS:IsDummyName(target) or (E and E.inMatch and E.isSolo) then
         return
     end
     target = NormalizeName(target)
@@ -922,8 +914,7 @@ local function VersionsCompatible(a, b)
 end
 
 local function ReportVersionMismatch(otherName, otherVersion)
-    Print(string.format("|cFFFF2222[TTSE]|r Version mismatch: %s is on %s, you are on %s. Both players must use the same version of Forever: CCG.",
-        otherName, VersionText(otherVersion), TTS.VERSION))
+    Print(L("net.versionMismatch", otherName, VersionText(otherVersion), TTS.VERSION))
 end
 
 function TTS.Net:OnReceive(msg, sender)
@@ -1049,37 +1040,37 @@ function TTS.Net:OnReceive(msg, sender)
 
         if TTS.Engine and TTS.Engine.inMatch then
             TTS.Net:Send(sender, "DECLINE:IN_MATCH")
-            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": you are already in a match.")
+            Print(L("net.autoDeclineMatch", sender))
             return
         end
 
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
             TTS.Net:Send(sender, "DECLINE:DECKBUILDER_OPEN")
-            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": close Deckbuilder first.")
+            Print(L("net.autoDeclineDeckbuilder", sender))
             return
         end
 
         -- Only one challenge popup at a time; a second challenger is told we're busy
         if TTS.Net.incomingChallenge and not SameName(TTS.Net.incomingChallenge, sender) then
             TTS.Net:Send(sender, "DECLINE:BUSY")
-            Print("|cFFFF0000[TTSE]|r Auto-declined challenge from " .. sender .. ": another challenge is already pending.")
+            Print(L("net.autoDeclineBusy", sender))
             return
         end
         TTS.Net.incomingChallenge = sender
 
         StaticPopupDialogs["TTS_CHALLENGE"] = {
-            text = sender .. " has challenged you to a game of Forever: CCG!",
-            button1 = "Accept",
-            button2 = "Decline",
+            text = L("net.challenged", sender),
+            button1 = ACCEPT or "Accept",
+            button2 = DECLINE or "Decline",
             OnAccept = function()
                 if TTS.Engine and TTS.Engine.inMatch then
                     TTS.Net:Send(sender, "DECLINE:IN_MATCH")
-                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge while in a match.")
+                    Print(L("net.acceptInMatch"))
                     return
                 end
                 if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
                     TTS.Net:Send(sender, "DECLINE:BUSY")
-                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge while Deckbuilder is open.")
+                    Print(L("net.acceptDeckbuilder"))
                     return
                 end
                 if TTS.Engine and TTS.Engine:ValidateDeck() then
@@ -1092,7 +1083,7 @@ function TTS.Net:OnReceive(msg, sender)
                     TTS.Engine:RefreshUI()
                 else
                     TTS.Net:Send(sender, "DECLINE:NO_DECK")
-                    Print("|cFFFF0000[TTSE]|r Cannot accept challenge: your active deck must have 40-50 cards.")
+                    Print(L("net.acceptDeckSize"))
                 end
             end,
             OnCancel = function()
@@ -1111,7 +1102,7 @@ function TTS.Net:OnReceive(msg, sender)
 
     elseif cmd == "INVITE_ACK" then
         TTS.Net.pendingInvites[sender:lower()] = nil
-        Print("|cFF00FF00[TTSE]|r " .. sender .. " has Forever: CCG installed. Awaiting their response...")
+        Print(L("net.hasAddon", sender))
 
     elseif cmd == "ACCEPT" then
         local key = sender:lower()
@@ -1140,21 +1131,21 @@ function TTS.Net:OnReceive(msg, sender)
 
         if TTS.Engine and TTS.Engine.inMatch then
             TTS.Net:Send(sender, "CANCEL:IN_MATCH")
-            Print("|cFFFF0000[TTSE]|r " .. sender .. " accepted, but you are already in a match.")
+            Print(L("net.acceptedInMatch", sender))
             return
         end
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
             TTS.Net:Send(sender, "CANCEL:DECKBUILDER_OPEN")
-            Print("|cFFFF0000[TTSE]|r Challenge accepted, but match cancelled because Deckbuilder is open.")
+            Print(L("net.acceptedDeckbuilder"))
             return
         end
         if TTS.Engine and not TTS.Engine:ValidateDeck() then
             TTS.Net:Send(sender, "CANCEL:NO_DECK")
-            Print("|cFFFF0000[TTSE]|r Challenge accepted, but match cancelled: your active deck must have 40-50 cards.")
+            Print(L("net.acceptedDeckSize"))
             return
         end
 
-        Print("|cFF00FF00[TTSE]|r Challenge accepted by " .. sender .. "!")
+        Print(L("net.accepted", sender))
         TTS.Net.matchId = invite.matchId
         TTS.Net:AddContact(sender)
         if TTS.Engine then
@@ -1172,7 +1163,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         local reason = parts[2] or "Declined"
         if cmd == "CANCEL" and IsMatchOpponent(sender) then
-            TTS.Engine:EndMatch("cancelled", "Opponent cancelled match setup.")
+            TTS.Engine:EndMatch("cancelled", L("end.setupCancelled"))
         elseif not wasInvited and cmd == "DECLINE" then
             -- Not a reply to anything we sent
             return
@@ -1181,7 +1172,7 @@ function TTS.Net:OnReceive(msg, sender)
         if reason == "VERSION" then
             ReportVersionMismatch(sender, parts[3])
         else
-            Print("|cFFFF0000[TTSE]|r " .. sender .. " declined or cancelled challenge (" .. reason .. ").")
+            Print(L("net.declined", sender, TTS.Locale:Data("decline." .. reason, reason)))
         end
 
     elseif cmd == "ACTION" then
@@ -1193,21 +1184,21 @@ function TTS.Net:OnReceive(msg, sender)
         if not IsMatchOpponent(sender) then return end
 
         if actionType == "CONCEDE" then
-            E:WinMatch(sender .. " conceded the match.")
+            E:WinMatch(L("end.oppConceded", sender))
 
         elseif actionType == "DEFEATED" then
-            E:WinMatch(sender .. " was defeated.")
+            E:WinMatch(L("end.oppWasDefeated", sender))
 
         elseif actionType == "DRAW" then
             E.remoteState.handCount = (E.remoteState.handCount or 0) + 1
-            E:Log(sender .. " drew a card.", "ACTION")
+            E:Log(L("log.oppDrew", sender), "ACTION")
             E:RefreshUI()
 
         elseif actionType == "DISCARD" then
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             local cardId = parts[3]
             if cardId then table.insert(E.remoteState.graveyard, cardId) end
-            E:Log(sender .. " discarded a card.", "ACTION")
+            E:Log(L("log.oppDiscardedCard", sender), "ACTION")
             E:RefreshUI()
 
         elseif actionType == "PLAY_LAND" then
@@ -1223,7 +1214,7 @@ function TTS.Net:OnReceive(msg, sender)
                 tempToughness = 0,
                 uid = time() + #E.remoteState.field
             })
-            E:Log(string.format("%s played land: |cFFFFD200%s|r.", sender, card and card.name or cardId), "ACTION")
+            E:Log(L("log.oppPlayedPrayer", sender, card and TTS:CardName(card) or cardId), "ACTION")
             E:PlayNonCreatureCardSound()
             E:RefreshUI()
 
@@ -1232,7 +1223,7 @@ function TTS.Net:OnReceive(msg, sender)
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
-            E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Permanent", card and card.name or cardId), "ACTION")
+            E:Log(L("log.oppCast", sender, card and TTS.Locale:Term("type", card.type) or L("type.Permanent"), card and TTS:CardName(card) or cardId), "ACTION")
             -- Their client runs its enter trigger too; we mirror it so both boards match
             E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
             E:RefreshUI()
@@ -1243,7 +1234,7 @@ function TTS.Net:OnReceive(msg, sender)
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
-            E:Log(string.format("%s cast %s: |cFFFFD200%s|r.", sender, card and card.type or "Spell", card and card.name or cardId), "ACTION")
+            E:Log(L("log.oppCast", sender, card and TTS.Locale:Term("type", card.type) or L("type.Spell"), card and TTS:CardName(card) or cardId), "ACTION")
             E:PlaySpellCastSound()
             -- Optional target: PLAYER|CREATURE, MINE|THEIRS from the caster's side, field index
             local tgt
@@ -1290,7 +1281,7 @@ function TTS.Net:OnReceive(msg, sender)
             if amt then
                 local st = (side == "THEIRS") and E.localState or E.remoteState
                 st.life = st.life + amt
-                E:Log(string.format("%s restored %d life to %s.", (src and src ~= "") and src or "Healing", amt,
+                E:Log(L("log.restoredLife", (src and src ~= "") and TTS:ReasonText(src) or L("reason.healing"), amt,
                     E:SideName(st == E.remoteState)), "ACTION")
                 E:RefreshUI()
             end
@@ -1312,7 +1303,7 @@ function TTS.Net:OnReceive(msg, sender)
                     controllerIsRemote = true
                 })
                 E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
-                E:Log(string.format("%s attached |cFFFFD200%s|r to %s.", sender, card and card.name or cardId, TTS.Cards[perm.id] and TTS.Cards[perm.id].name or "card"), "ACTION")
+                E:Log(L("log.oppAttached", sender, card and TTS:CardName(card) or cardId, TTS.Cards[perm.id] and TTS:CardName(perm.id) or L("side.card")), "ACTION")
                 E:PlayNonCreatureCardSound()
                 E:RefreshUI()
             end
@@ -1324,7 +1315,7 @@ function TTS.Net:OnReceive(msg, sender)
                 local perm = table.remove(E.localState.field, fieldIdx)
                 E:DetachAttachments(perm, false)
                 table.insert(E.localState.hand, perm.id or cardId)
-                E:Log("Creature was returned to your hand.", "ACTION")
+                E:Log(L("log.bounced"), "ACTION")
                 E:RefreshUI()
             end
 
@@ -1333,7 +1324,7 @@ function TTS.Net:OnReceive(msg, sender)
             if idx and E.remoteState.field[idx] then
                 E.remoteState.field[idx].tapped = true
                 local card = TTS.Cards[E.remoteState.field[idx].id]
-                E:Log(string.format("%s tapped |cFFFFD200%s|r.", sender, card and card.name or "Permanent"), "MANA")
+                E:Log(L("log.oppTapped", sender, card and TTS:CardName(card) or L("type.Permanent")), "MANA")
                 if TTS.Sound then TTS.Sound:PlayUI("tap") end
                 E:RefreshUI()
             end
@@ -1342,9 +1333,9 @@ function TTS.Net:OnReceive(msg, sender)
             -- Reason can itself contain ":" (e.g. "Shadow Word: Pain"), so take everything after the amount
             local amtStr, reason = msg:match("^ACTION:DAMAGE:(%d+):?(.*)$")
             local amt = tonumber(amtStr) or 0
-            if not reason or reason == "" then reason = "Damage" end
+            local shown = (reason and reason ~= "") and TTS:ReasonText(reason) or L("reason.damage")
             -- DamagePlayer applies our own damage shield, logs, and handles defeat
-            E:DamagePlayer(false, amt, string.format("%s from %s", reason, sender))
+            E:DamagePlayer(false, amt, L("reason.from", shown, sender))
 
         elseif actionType == "EFFECTS" then
             -- Snapshot of the over-time effects / shields the opponent is tracking (display only)
@@ -1368,7 +1359,7 @@ function TTS.Net:OnReceive(msg, sender)
                 }
                 table.insert(E.blockingState.attackers, idx)
                 E:SetPhase("COMBAT_BLOCK")
-                E:Log(string.format("%s declared attacker: |cFFFF2222%s|r.", sender, card and card.name or "Creature"), "COMBAT")
+                E:Log(L("log.oppDeclaredAttacker", sender, card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
                 if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
                 E:RunMirrored(function() E:OnCreatureAttack(perm, true) end)
                 E:RefreshUI()
@@ -1386,7 +1377,7 @@ function TTS.Net:OnReceive(msg, sender)
                 E.blockingState.blocks[blockerIdx] = attackerIdx
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
-                E:Log(string.format("%s assigned %s to block %s.", sender, blockerCard and blockerCard.name or "Creature", attackerCard and attackerCard.name or "Creature"), "COMBAT")
+                E:Log(L("log.oppAssignedBlock", sender, blockerCard and TTS:CardName(blockerCard) or L("type.Creature"), attackerCard and TTS:CardName(attackerCard) or L("type.Creature")), "COMBAT")
                 E:RefreshUI()
             end
 
@@ -1394,7 +1385,7 @@ function TTS.Net:OnReceive(msg, sender)
             -- The attacker has declared every attacker: blocks can be declared now
             if E.blockingState and E.blockingState.isRemoteAttacking then
                 E.blockingState.attacksDone = true
-                E:Log(string.format("%s finished declaring attackers. Assign blockers, then continue.", sender), "COMBAT")
+                E:Log(L("log.oppAttacksDone", sender), "COMBAT")
                 E:RefreshUI()
             end
 
@@ -1402,7 +1393,7 @@ function TTS.Net:OnReceive(msg, sender)
             -- The defender is done: control comes back to us to review the blocks and resolve
             if E.blockingState then
                 E.blockingState.blocksDeclared = true
-                E:Log(string.format("%s declared blockers. Review the blocks, then click Resolve Combat.", sender), "COMBAT")
+                E:Log(L("log.oppBlockers", sender), "COMBAT")
                 E:RefreshUI()
             end
 
@@ -1425,7 +1416,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         elseif actionType == "END_TURN" then
             -- (their side untapped at the start of their turn, in E:EndTurn)
-            E:Log(sender .. " ended their turn.", "SYSTEM")
+            E:Log(L("log.oppEndedTurn", sender), "SYSTEM")
             E:OnRemoteEndTurn()
         end
     end

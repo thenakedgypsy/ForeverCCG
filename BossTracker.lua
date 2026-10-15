@@ -8,6 +8,7 @@
 ]]
 TTS = TTS or {}
 TTS.BossTracker = {}
+local L = TTS.L
 
 -- =========================================================================
 -- NEW CARDS
@@ -99,6 +100,28 @@ local function Normalize(v)
     return ""
 end
 
+-- Pattern for "<mob> dies, you gain N experience." in the client's language, built from
+-- Blizzard's own format string (falls back to English)
+local xpGainPattern
+local function XpGainPattern()
+    if xpGainPattern then return xpGainPattern end
+    local fmt = type(COMBATLOG_XPGAIN_FIRSTPERSON) == "string" and COMBATLOG_XPGAIN_FIRSTPERSON
+    if fmt then
+        -- Mark the specifiers (%s, %d, %1$s...), escape the rest, then turn the marks into captures
+        local first = true
+        local s = fmt:gsub("%%(%d*)%$?([sd])", function(_, kind)
+            if kind == "s" and first then first = false; return "\001" end
+            return kind == "d" and "\002" or "\003"
+        end)
+        s = s:gsub("[%^%$%(%)%.%[%]%*%+%-%?%%]", "%%%0")
+        s = s:gsub("\001", "(.-)"):gsub("\002", "%%d+"):gsub("\003", ".-")
+        xpGainPattern = "^" .. s
+    else
+        xpGainPattern = "^(.-) dies, you gain"
+    end
+    return xpGainPattern
+end
+
 local function SanitizeKillCount(val)
     if IsSecret(val) then return 0 end
     if val == true then return 1 end
@@ -174,6 +197,9 @@ function TTS.BossTracker:BuildMobCardCache()
             end
             if card.name then
                 mobCardsByName[Normalize(card.name)] = card
+                -- Kill messages and unit names come in the client's language: match the translated name too
+                local shown = TTS:CardName(card)
+                if shown then mobCardsByName[Normalize(shown)] = card end
             end
         end
     end
@@ -234,8 +260,21 @@ local function InstanceKey(name)
     return INSTANCE_ALIASES[key] or key
 end
 
-function TTS.BossTracker:InstanceHasLockedCards(instanceName)
-    local key = InstanceKey(instanceName)
+-- Instance map ids (GetInstanceInfo's 8th return) by instance key: the client names
+-- instances in its own language, the id is the same everywhere
+local INSTANCE_IDS = {
+    ["ragefire chasm"] = 389, ["deadmines"] = 36, ["wailing caverns"] = 43, ["shadowfang keep"] = 33,
+    ["blackfathom deeps"] = 48, ["stockade"] = 34, ["gnomeregan"] = 90, ["razorfen kraul"] = 47,
+    ["scarlet monastery"] = 189, ["razorfen downs"] = 129, ["uldaman"] = 70, ["zul farrak"] = 209,
+    ["maraudon"] = 349, ["sunken temple"] = 109, ["blackrock depths"] = 230, ["blackrock spire"] = 229,
+    ["dire maul"] = 429, ["scholomance"] = 289, ["stratholme"] = 329,
+}
+local INSTANCE_KEY_BY_ID = {}
+for key, id in pairs(INSTANCE_IDS) do INSTANCE_KEY_BY_ID[id] = key end
+
+-- instanceId (optional) wins over the name, which only matches on English clients
+function TTS.BossTracker:InstanceHasLockedCards(instanceName, instanceId)
+    local key = instanceId and INSTANCE_KEY_BY_ID[instanceId] or InstanceKey(instanceName)
     if key == "" then return false end
 
     for cardId, card in pairs(TTS.Cards or {}) do
@@ -250,12 +289,13 @@ function TTS.BossTracker:InstanceHasLockedCards(instanceName)
 end
 
 local function AnnounceInstanceCards()
-    local name, instanceType = SafeCall(GetInstanceInfo)
+    local name, instanceType, _, _, _, _, _, instanceId = SafeCall(GetInstanceInfo)
     if not name or IsSecret(name) or IsSecret(instanceType) then return end
     if instanceType ~= "party" and instanceType ~= "raid" then return end
+    if IsSecret(instanceId) or type(instanceId) ~= "number" then instanceId = nil end
 
-    if TTS.BossTracker:InstanceHasLockedCards(name) then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTSE]|r |cFFFFD200This instance has cards you are yet to unlock!|r")
+    if TTS.BossTracker:InstanceHasLockedCards(name, instanceId) then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTSE]|r |cFFFFD200" .. L("boss.instanceHasCards") .. "|r")
     end
 end
 
@@ -266,7 +306,7 @@ end
 -- Raid-warning style announcement in the middle of the screen when a card reaches 4/4
 local function ShowCardCompletePopup(card)
     if not card then return end
-    local text = string.format("Card Complete: %s (4/4 copies)!", card.name or card.id or "Card")
+    local text = L("boss.cardComplete", TTS:CardName(card) or card.id)
     if RaidNotice_AddMessage and RaidWarningFrame then
         local info = (ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]) or { r = 1, g = 0.82, b = 0 }
         RaidNotice_AddMessage(RaidWarningFrame, text, info)
@@ -285,9 +325,9 @@ function TTS.BossTracker:RecordMobKill(card)
         if math.random(100) > COPY_DROP_CHANCE[newKills] then return end
         TTS_KilledBosses[card.id] = newKills
         TTS:MarkCardNew(card.id)
-        local zoneText = card.zone and string.format(" (%s)", card.zone) or ""
-        local cardText = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. card.name .. "|r")
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Mob Slain: %s%s! Card Unlocked: |cFF00FFFF(%d/4 copies)|r.", cardText, zoneText, newKills))
+        local zoneText = card.zone and string.format(" (%s)", TTS.Locale:Term("zone", card.zone)) or ""
+        local cardText = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+        DEFAULT_CHAT_FRAME:AddMessage(L("boss.mobSlain", cardText .. zoneText, newKills))
 
         -- Final copy: raid-warning style announcement in the middle of the screen
         if newKills == 4 then
@@ -358,11 +398,14 @@ function TTS.BossTracker:GetBossKills(card)
         end
     end
 
+    -- Statistic names are in the client's language: try the English and the translated card name
     if kills == 0 and card.name then
-        local targetName = Normalize(card.name)
-        for statName, val in pairs(cachedStatisticsByName) do
-            if statName:find(targetName, 1, true) and val > kills then
-                kills = val
+        for _, cardName in ipairs({ card.name, TTS:CardName(card) }) do
+            local targetName = Normalize(cardName)
+            for statName, val in pairs(cachedStatisticsByName) do
+                if targetName ~= "" and statName:find(targetName, 1, true) and val > kills then
+                    kills = val
+                end
             end
         end
     end
@@ -396,7 +439,7 @@ function TTS.BossTracker:UnlockAllBosses()
         end
     end
 
-    DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS DEVMODE]|r Dev mode ENABLED: All boss and mob cards unlocked (4x copies)!")
+    DEFAULT_CHAT_FRAME:AddMessage(L("boss.devOn"))
 
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()
@@ -406,7 +449,7 @@ end
 function TTS.BossTracker:ResetBosses()
     TTS_DevModeActive = false
     TTS_KilledBosses = {}
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r Dev mode DISABLED. Rescanning character statistics and mob progress...")
+    DEFAULT_CHAT_FRAME:AddMessage(L("boss.devOff"))
 
     self:ScanAllBosses()
 
@@ -449,7 +492,7 @@ function TTS.BossTracker:ScanAllBosses()
                 TTS_KilledBosses[cardId] = kills
                 if oldKills < 4 then TTS:MarkCardNew(cardId) end
                 anyChange = true
-                DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Boss Tracked: |cFFFFD200%s|r (%d kills recorded).", card.name, kills))
+                DEFAULT_CHAT_FRAME:AddMessage(L("boss.tracked", TTS:CardName(card), kills))
             elseif TTS_KilledBosses[cardId] == nil then
                 TTS_KilledBosses[cardId] = oldKills
             end
@@ -600,7 +643,7 @@ tracker:SetScript("OnEvent", function(self, event, ...)
     elseif event == "CHAT_MSG_COMBAT_XP_GAIN" then
         local msg = ...
         if msg and not IsSecret(msg) and type(msg) == "string" then
-            local mobName = msg:match("^(.-) dies, you gain")
+            local mobName = msg:match(XpGainPattern())
             if mobName then
                 local guid
                 if SafeCall(UnitIsDead, "target") and SafeCompare(SafeCall(UnitName, "target"), mobName) then

@@ -7,6 +7,7 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
 TTS.Engine = TTS.Engine or {}
 local E = TTS.Engine
 
@@ -49,7 +50,7 @@ local COLORS = { "W", "U", "B", "R", "G" }
 
 local function Card(id) return TTS.Cards[id] end
 local function IsCreature(perm) local c = perm and Card(perm.id); return c and c.type == "Creature" end
-local function Name(perm) local c = Card(perm.id); return c and c.name or perm.id end
+local function Name(perm) local c = Card(perm.id); return c and TTS:CardName(c) or perm.id end
 
 -- =========================================================================
 -- VALUES
@@ -203,7 +204,7 @@ function E:AIPlayLand(handIdx)
     table.insert(self.remoteState.field, { id = cardId, tapped = false, uid = self:NewUid() })
     self.remoteState.handCount = #self.remoteState.hand
     self.remoteLandPlayed = true
-    self:Log(string.format("%s played prayer: |cFFFFD200%s|r.", self.opponent, card.name), "ACTION")
+    self:Log(L("log.aiPlayedPrayer", self.opponent, TTS:CardName(card)), "ACTION")
     self:PlayNonCreatureCardSound()
 end
 
@@ -391,7 +392,7 @@ function E:AIDeclareAttack(indices)
             perm.isAttacking = true
             perm.hasAttackedThisTurn = true
             table.insert(attackerIndices, i)
-            self:Log(string.format("%s attacks with |cFFFF2222%s|r!", self.opponent, card.name), "COMBAT")
+            self:Log(L("log.aiAttacks", self.opponent, TTS:CardName(card)), "COMBAT")
             if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
             self:OnCreatureAttack(perm, true)
             if not self.inMatch then return true end
@@ -406,7 +407,7 @@ function E:AIDeclareAttack(indices)
         selectedBlocker = nil
     }
     self:SetPhase("COMBAT_BLOCK")
-    self:Log("Opponent declared attackers! Click your untapped creatures to block, then click 'End Block Step'.", "SYSTEM")
+    self:Log(L("log.aiDeclaredAttackers"), "SYSTEM")
     self:RefreshUI()
     return true
 end
@@ -434,7 +435,7 @@ function E:AIAssignBlocks()
         end
         local b = self.remoteState.field[blockerIdx]
         local a = self.localState.field[atkIdx]
-        self:Log(string.format("%s assigned %s to block %s.", self.opponent, Name(b), Name(a)), "COMBAT")
+        self:Log(L("log.oppAssignedBlock", self.opponent, Name(b), Name(a)), "COMBAT")
     end
 
     if profile.blocks == "greedy" then
@@ -833,8 +834,8 @@ end
 
 local function TargetText(self, tgt)
     if not tgt then return "" end
-    if tgt.kind == "PLAYER" then return " targeting " .. self:SideName(tgt.isRemote) end
-    return " targeting |cFFFFD200" .. Name(tgt.perm) .. "|r"
+    if tgt.kind == "PLAYER" then return L("log.aiTargeting", self:SideName(tgt.isRemote)) end
+    return L("log.aiTargeting", "|cFFFFD200" .. Name(tgt.perm) .. "|r")
 end
 
 -- Carries out an action (its prayers are already tapped). Returns true if it happened.
@@ -843,7 +844,7 @@ function E:AIExecute(a)
         if self.remoteState.hand[a.handIdx] ~= a.card.id or not self:PayMana(a.cost, true) then return false end
         local cardId = table.remove(self.remoteState.hand, a.handIdx)
         self.remoteState.handCount = #self.remoteState.hand
-        self:Log(string.format("%s cast |cFFFFD200%s|r (%s).", self.opponent, a.card.name, a.card.cost or "0"), "ACTION")
+        self:Log(L("log.aiCastCost", self.opponent, TTS:CardName(a.card), a.card.cost or "0"), "ACTION")
         self:PutCreatureOntoBattlefield(cardId, true)
         return true
     elseif a.kind == "spell" then
@@ -854,13 +855,13 @@ function E:AIExecute(a)
         local cardId = table.remove(self.remoteState.hand, a.handIdx)
         self.remoteState.handCount = #self.remoteState.hand
         table.insert(self.remoteState.graveyard, cardId)
-        self:Log(string.format("%s cast |cFFFFD200%s|r%s.", self.opponent, a.card.name, TargetText(self, a.tgt)), "ACTION")
+        self:Log(L("log.aiCast", self.opponent, TTS:CardName(a.card), TargetText(self, a.tgt)), "ACTION")
         self:PlaySpellCastSound()
         self:ResolveSpell(a.card, a.tgt, true)
         return true
     elseif a.kind == "ability" then
         if a.tgt and a.tgt.kind == "CREATURE" and not select(2, self:FindPerm(a.tgt.perm)) then return false end
-        self:Log(string.format("%s activated |cFFFFD200%s|r%s.", self.opponent, a.card.name, TargetText(self, a.tgt)), "ACTION")
+        self:Log(L("log.aiActivated", self.opponent, TTS:CardName(a.card), TargetText(self, a.tgt)), "ACTION")
         return self:ActivateAbility(a.perm, true, a.tgt)
     end
     return false
@@ -887,7 +888,7 @@ function E:AITakeTurn()
 
     local function EndStep()
         E.aiAfterCombat = nil
-        E:Log(E.opponent .. " passed turn.", "SYSTEM")
+        E:Log(L("log.aiPassed", E.opponent), "SYSTEM")
         E:OnRemoteEndTurn()
     end
 
@@ -963,7 +964,7 @@ function E:AIAfterCombat()
     end
     TTS:SafeAfter(STEP_DELAY, function()
         if E.inMatch and E.isSolo then
-            E:Log(E.opponent .. " passed turn.", "SYSTEM")
+            E:Log(L("log.aiPassed", E.opponent), "SYSTEM")
             E:OnRemoteEndTurn()
         end
     end)

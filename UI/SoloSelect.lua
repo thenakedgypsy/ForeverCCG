@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 
 -- =========================================================================
 -- SOLO ENCOUNTER MAP
@@ -23,12 +25,13 @@ local GREEN  = "|cFF33DD33"
 local RED    = "|cFFFF4444"
 local ORANGE = "|cFFFF8040"
 
-local AI_LABEL = { basic = "Basic", tactical = "Tactical", expert = "Expert", dummy = "Dummy" }
+-- AI difficulty shown as solo.ai.<profile>
+local AI_LABEL = setmetatable({}, { __index = function(_, ai) return Loc:Data("solo.ai." .. tostring(ai), ai) end })
 
 -- The continent maps: 12 tiles of 256 px (4 x 3) holding one 1002 x 668 map
 local CONTINENTS = {
-    { id = "KAL", name = "Kalimdor",         folder = "Kalimdor" },
-    { id = "EK",  name = "Eastern Kingdoms", folder = "Azeroth" },
+    { id = "KAL", name = "solo.continent.KAL", folder = "Kalimdor" },
+    { id = "EK",  name = "solo.continent.EK",  folder = "Azeroth" },
 }
 local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
 local WIN_W, WIN_H = MAP_W + 34, MAP_H + 128
@@ -76,7 +79,7 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = S:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
-title:SetText("Solo Encounters")
+Loc:Bind(title, "main.soloEncounters")
 
 local closeBtn = CreateFrame("Button", nil, S, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -2, -2)
@@ -92,7 +95,7 @@ local function CreatePanelButton(parent, w, h, text)
     b:SetNormalFontObject("GameFontNormalSmall")
     b:SetHighlightFontObject("GameFontHighlightSmall")
     b:SetDisabledFontObject("GameFontDisableSmall")
-    b:SetText(text)
+    Loc:Bind(b, text)
     return b
 end
 
@@ -102,11 +105,11 @@ end
 -- Why a game can't start right now (nil = it can)
 local function StartBlocker(enc)
     local E = TTS.Engine
-    if not enc then return "Choose an encounter." end
-    if E and E.inMatch then return "A game is already in progress." end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return "Close the Deckbuilder first." end
-    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return "Leave the waiting room queue first." end
-    if E and not E:ValidateDeck() then return "Your active deck must have 40-50 cards." end
+    if not enc then return L("solo.chooseEncounter") end
+    if E and E.inMatch then return L("solo.inProgress") end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return L("solo.closeDeckbuilder") end
+    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return L("solo.leaveQueue") end
+    if E and not E:ValidateDeck() then return L("solo.deckSize") end
     local unlocked, reason = TTS:IsEncounterUnlocked(enc)
     if not unlocked then return reason end
     return nil
@@ -144,7 +147,7 @@ end
 local function DeckLabel(deck)
     local count = DeckCount(deck)
     local ok = count >= 40 and count <= 50
-    return string.format("%s%s|r (%s%d|r)", GOLD, deck and deck.name or "None", ok and GREEN or RED, count)
+    return string.format("%s%s|r (%s%d|r)", GOLD, deck and deck.name or L("solo.noDeck"), ok and GREEN or RED, count)
 end
 
 local function Skin(f, bg, border, edge)
@@ -165,7 +168,7 @@ Skin(deckPicker, { 0.10, 0.08, 0.06, 0.95 }, { 0.55, 0.50, 0.40, 1 })
 
 local deckPickerLabel = deckPicker:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 deckPickerLabel:SetPoint("RIGHT", deckPicker, "LEFT", -6, 0)
-deckPickerLabel:SetText("Deck:")
+Loc:Bind(deckPickerLabel, "solo.deck")
 
 deckPicker.text = deckPicker:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 deckPicker.text:SetPoint("LEFT", 8, 0)
@@ -198,7 +201,7 @@ local function PickDeck(i)
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
     if TTS_SavedDecks and TTS_SavedDecks[i] then
         TTS_ActiveDeckIndex = i
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
+        DEFAULT_CHAT_FRAME:AddMessage(L("db.loadedDeck", TTS_SavedDecks[i].name))
     end
     deckMenu:Hide()
     S:Refresh()
@@ -246,14 +249,14 @@ deckPicker:SetScript("OnClick", function()
     end
 end)
 deckPicker:SetScript("OnEnter", function(self)
-    if TT then TT:ShowText(self, "ANCHOR_BOTTOM", "Active deck", "The deck you play encounters with. Decks need 40-50 cards.") end
+    if TT then TT:ShowText(self, "ANCHOR_BOTTOM", L("solo.activeDeck"), L("solo.activeDeck.desc")) end
 end)
 deckPicker:SetScript("OnLeave", function(self) if TT then TT:Hide(self) end end)
 
 local hint = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 hint:SetPoint("BOTTOMLEFT", S, "BOTTOMLEFT", 20, 16)
 hint:SetJustifyH("LEFT")
-local HINT_TEXT = "Click a zone or dungeon to start it. Clearing a zone opens the zones and dungeons connected to it."
+local HINT_TEXT = "solo.hint"
 
 -- =========================================================================
 -- MAP
@@ -356,7 +359,7 @@ local function Layout(contId)
             table.insert(items, {
                 id = id, isDungeon = isDungeon, x = x, y = y, ax = x, ay = y,
                 size = isDungeon and DUNGEON_SIZE or ZONE_SIZE,
-                labelW = (not isDungeon) and #enc.name * LABEL_CHAR_W or nil,
+                labelW = (not isDungeon) and #TTS:EncounterName(enc) * LABEL_CHAR_W or nil,
             })
         end
     end
@@ -441,41 +444,41 @@ end
 -- =========================================================================
 local function AddBreakdown(tip, enc)
     local state = EncounterState(enc)
-    tip:AddLine(enc.name, 1, 0.82, 0)
-    tip:AddLine(enc.kind == "dungeon" and "Dungeon" or "Zone Gauntlet", 0.7, 0.7, 0.7)
+    tip:AddLine(TTS:EncounterName(enc), 1, 0.82, 0)
+    tip:AddLine(enc.kind == "dungeon" and L("solo.dungeon") or L("solo.zoneGauntlet"), 0.7, 0.7, 0.7)
     tip:AddLine(" ")
-    tip:AddLine(string.format("Opponent: %s%s|r", GOLD, enc.opponent), 1, 1, 1)
-    tip:AddLine(string.format("Life: %s%d|r    AI: %s%s|r", GOLD, enc.life or 20, GOLD, AI_LABEL[enc.ai] or enc.ai), 1, 1, 1)
+    tip:AddLine(L("solo.opponent", GOLD .. TTS:EncounterOpponent(enc) .. "|r"), 1, 1, 1)
+    tip:AddLine(L("solo.lifeAi", GOLD .. (enc.life or 20) .. "|r", GOLD .. AI_LABEL[enc.ai] .. "|r"), 1, 1, 1)
     if enc.kind == "dungeon" then
         local names = {}
-        for _, b in ipairs(enc.bosses or {}) do table.insert(names, TTS.Cards[b] and TTS.Cards[b].name or b) end
-        tip:AddLine("Bosses: " .. table.concat(names, ", "), 1, 1, 1, true)
+        for _, b in ipairs(enc.bosses or {}) do table.insert(names, TTS.Cards[b] and TTS:CardName(b) or b) end
+        tip:AddLine(L("solo.bosses", table.concat(names, ", ")), 1, 1, 1, true)
         for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
             tip:AddLine(string.format("%s%s:|r %s", ORANGE, rule.name, rule.text), 1, 1, 1, true)
         end
     else
-        tip:AddLine("Deck: the creatures of " .. enc.zone .. ".", 1, 1, 1, true)
+        tip:AddLine(L("solo.deckOf", Loc:Term("zone", enc.zone)), 1, 1, 1, true)
     end
 
     local card = enc.reward and TTS.Cards[enc.reward]
     if card then
         local owned = TTS:GetOwnedCopies(card) or 0
         tip:AddLine(" ")
-        tip:AddLine(string.format("Reward: %s%s|r (%d/4 owned)", GOLD, card.name, owned), 1, 1, 1)
-        tip:AddLine("One copy per win.", 0.7, 0.7, 0.7)
+        tip:AddLine(L("solo.reward", GOLD .. TTS:CardName(card) .. "|r", owned), 1, 1, 1)
+        tip:AddLine(L("solo.onePerWin"), 0.7, 0.7, 0.7)
     end
 
     local wins = TTS:GetEncounterWins(enc.id)
-    if wins > 0 then tip:AddLine(string.format("Cleared %d time%s.", wins, wins == 1 and "" or "s"), 0.2, 0.87, 0.2) end
+    if wins > 0 then tip:AddLine(L(wins == 1 and "solo.clearedTimes.one" or "solo.clearedTimes.other", wins), 0.2, 0.87, 0.2) end
 
     tip:AddLine(" ")
     local blocker = StartBlocker(enc)
     if state == "locked" then
-        tip:AddLine("Locked: " .. (select(2, TTS:IsEncounterUnlocked(enc)) or ""), 1, 0.27, 0.27, true)
+        tip:AddLine(L("solo.locked", select(2, TTS:IsEncounterUnlocked(enc)) or ""), 1, 0.27, 0.27, true)
     elseif blocker then
         tip:AddLine(blocker, 1, 0.27, 0.27, true)
     else
-        tip:AddLine("Click to start.", 0.2, 1, 0.2)
+        tip:AddLine(L("solo.clickToStart"), 0.2, 1, 0.2)
     end
 end
 
@@ -521,7 +524,7 @@ local function CreateEncounterButton(enc)
     if not isDungeon then
         b.label = buttonLayer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         b.label:SetPoint("TOP", b, "BOTTOM", 0, -1)
-        b.label:SetText(enc.name)
+        b.label:SetText(TTS:EncounterName(enc))
         local font, fsize = b.label:GetFont()
         if font then b.label:SetFont(font, fsize or 10, "OUTLINE") end
     end
@@ -539,11 +542,11 @@ local function CreateEncounterButton(enc)
     b:SetScript("OnClick", function(self)
         local blocker = StartBlocker(self.enc)
         if blocker then
-            hint:SetText(RED .. self.enc.name .. ": " .. blocker .. "|r")
+            hint:SetText(RED .. TTS:EncounterName(self.enc) .. ": " .. blocker .. "|r")
             return
         end
         S:Hide()
-        TTS.Engine:StartMatch(self.enc.opponent, true, true, self.enc)
+        TTS.Engine:StartMatch(TTS:EncounterOpponent(self.enc), true, true, self.enc)
     end)
     return b
 end
@@ -645,7 +648,7 @@ function S:Refresh()
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
     deckPicker.text:SetText(DeckLabel(TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex]))
     if deckMenu:IsShown() then BuildDeckMenu() end
-    hint:SetText(HINT_TEXT)
+    hint:SetText(L(HINT_TEXT))
     ShowContinent(currentContinent)
 end
 

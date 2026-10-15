@@ -66,6 +66,9 @@ local function BuildLookup()
             end
             if card.name then
                 cardsByName[card.name:lower()] = card
+                -- The client reports names in its own language; match the translated name too
+                local shown = TTS:CardName(card)
+                if shown then cardsByName[shown:lower()] = card end
             end
         end
     end
@@ -239,7 +242,7 @@ local function ShowMobCard(tooltip, card)
     if TTS.ApplyFrameTexture then TTS.ApplyFrameTexture(f.border, card) end
     f.border:SetVertexColor(1, 1, 1)
     f.art:SetVertexColor(1, 1, 1)
-    f.title:SetText(card.name or "")
+    f.title:SetText(TTS:CardName(card) or "")
 
     -- 3D model goes in the ModelScene instead of the card's PlayerModel
     if card.displayId and f.scene then
@@ -279,8 +282,8 @@ local function AddCardLine(tooltip)
     local copies = GetUnlockedCopies(card)
     local color = (copies >= MAX_COPIES) and "|cFF00FF00" or (copies == 0 and "|cFF888888" or "|cFFFFFFFF")
 
-    tooltip:AddLine(string.format("|T%s:20:10|t |cFFFFD200Forever: CCG card:|r %s%d/%d|r",
-        CARD_BACK_ICON, color, copies, MAX_COPIES))
+    tooltip:AddLine(string.format("|T%s:20:10|t |cFFFFD200%s|r %s%d/%d|r",
+        CARD_BACK_ICON, TTS.L("mobtip.card"), color, copies, MAX_COPIES))
     tooltip:Show()
 
     ShowMobCard(tooltip, card)

@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local R = CreateFrame("Frame", "TTS_RulesFrame", UIParent, backdropTemplate)
@@ -83,7 +85,7 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = R:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
-title:SetText("Rules & Guide")
+Loc:Bind(title, "rules.title")
 
 local subtitle = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 subtitle:SetPoint("LEFT", title, "RIGHT", 10, -1)
@@ -159,7 +161,7 @@ local function SetupRuleCard(f, cardId)
 
     -- 3. Card Title
     if f.title then
-        f.title:SetText(card.name or "")
+        f.title:SetText(TTS:CardName(card) or "")
     end
 
     -- 4. Cost String
@@ -219,7 +221,7 @@ local function ShowRulesPreview(card)
     f.currentCard = card
     if TTS.ApplyFrameTexture then TTS.ApplyFrameTexture(f.border, card) end
     f.border:SetVertexColor(1, 1, 1, 1)
-    f.title:SetText(card.name or "")
+    f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
         f.cost:SetText(FormatTextWithSymbols(card.cost, 18))
@@ -312,131 +314,79 @@ end
 -- =========================================================================
 -- TEXT ELEMENTS
 -- =========================================================================
--- Section heading with a thin gold divider underneath
-local function MakeHeading(text)
+-- Section heading (locale key) with a thin gold divider underneath
+local function MakeHeading(key)
     local h = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    h:SetText(text)
+    Loc:Bind(h, key)
     h.rule = content:CreateTexture(nil, "ARTWORK")
     h.rule:SetHeight(1)
     h.rule:SetColorTexture(1, 0.82, 0, 0.30)
     return h
 end
 
-local h1 = MakeHeading("Overview & Deck Building")
+local h1 = MakeHeading("rules.h.overview")
 
 local p1 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p1:SetWidth(540)
 p1:SetJustifyH("LEFT")
 p1:SetWordWrap(true)
-p1.rawText = "Both players begin at |cFFFFD20020 Life|r. Victory is achieved by reducing the enemy's life to 0 or forcing them to draw from an empty library.\n\n" ..
-    "|cFFFFD200Deck Rules:|r\n" ..
-    "• Minimum deck size: |cFFFFFFFF40 cards|r.\n" ..
-    "• Maximum deck size: |cFFFFFFFF50 cards|r.\n" ..
-    "• Max copies per non-Prayer card: |cFFFFFFFF4 copies|r (Basic Prayers have no limit).\n" ..
-    "• Max spells per deck: |cFFFFFFFF12 spells|r (all non-Prayer, non-Creature cards count).\n" ..
-    "• Creature cards must be |cFFFFD200unlocked|r by defeating them (see |cFFFFD200Unlocking Cards|r below)."
+p1.rawKey = "rules.overview"
 
-local hU = MakeHeading("Unlocking Cards")
+local hU = MakeHeading("rules.h.unlocking")
 
 local pU = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pU:SetWidth(540)
 pU:SetJustifyH("LEFT")
 pU:SetWordWrap(true)
-pU.rawText = "You build your collection by playing World of Warcraft. Some cards are free, the rest are earned.\n\n" ..
-    "|cFFFFD200Always available:|r Prayers.\n\n" ..
-    "|cFFFFD200Class Spells unlock as you level.|r Each of the nine classes (Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid) has 10 spells. You unlock |cFFFFFFFF1 spell from every class|r at level 6 and again every |cFFFFFFFF6 levels|r (12, 18, 24 ... 60), so all 90 are available by level 60. Each set of new spells is spread across all five colours.\n\n" ..
-    "|cFFFFD200Creature cards start locked.|r Every zone has 10 creatures to collect. Defeat the creature in the world for a |cFFFFD200chance|r to unlock its card:\n" ..
-    "• Each card drop adds |cFFFFFFFF1 copy|r to your collection, up to |cFFFFFFFF4 copies|r.\n" ..
-    "• The chance falls with each copy you own: 1st copy |cFF00FF00100%|r, 2nd |cFFFFFFFF25%|r, 3rd |cFFFFFFFF12%|r, 4th |cFFFFFFFF6%|r.\n" ..
-    "• Kills count when you, your party or your raid (including pets) defeat the creature.\n" ..
-    "• A tooltip icon shows if a creature has a card that can drop, the icon currently does not show in dungeons.\n" ..
-    "• |cFFFFD200Dungeon bosses|r that aren't the final boss drop their card with the |cFFFFFFFFsame chance|r as normal creatures.\n" ..
-    "• |cFFFFD200Final bosses|r (the last boss of each dungeon) |cFF00FF00always|r drop their card: 1 copy per defeat, up to 4. These come from the boss kills recorded on your character and update when you log in, reload, or leave an instance.\n\n" ..
-    "|cFFFFD200In the Deckbuilder:|r only cards you have unlocked are shown; hover a card to see your number of copies. Spell unlocks follow the level of the character you are playing.\n\n"
+pU.rawKey = "rules.unlocking"
 
-local h2 = MakeHeading("Colours of Mana")
+local h2 = MakeHeading("rules.h.colours")
 
 local p2 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p2:SetWidth(540)
 p2:SetJustifyH("LEFT")
 p2:SetWordWrap(true)
-p2.rawText = "Prayers produce mana when tapped {T}. Colored costs demand their respective colour:\n\n" ..
-    "  {W} |cFFFFD200Holy (White)|r: Life gain, shielding, vigilant guards, board wipes.\n" ..
-    "  {U} |cFF66BBFFArcane (Blue)|r: Card draw, tempo manipulation, freezing {T}, bounce.\n" ..
-    "  {B} |cFF9966FFShadow (Black)|r: Targeted removal, sacrifice, hand disruption, drain.\n" ..
-    "  {R} |cFFFF4444Fire (Red)|r: Aggression, direct burn, Quick creatures, burst damage.\n" ..
-    "  {G} |cFF44FF44Nature (Green)|r: Mana ramp, Anti-Air blockers, massive behemoths."
+p2.rawKey = "rules.colours"
 
-local h3 = MakeHeading("Turn Sequence")
+local h3 = MakeHeading("rules.h.turns")
 
 local p3 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p3:SetWidth(540)
 p3:SetJustifyH("LEFT")
 p3:SetWordWrap(true)
-p3.rawText = "|cFFFFD2001. Untap & Draw:|r All permanents untap (unless frozen), and you draw 1 card.\n" ..
-    "|cFFFFD2002. Main Phase 1:|r Play up to 1 Prayer, tap Prayers for mana, summon creatures, cast sorceries, or equip gear.\n" ..
-    "|cFFFFD2003. Combat Phase:|r\n" ..
-    "   • |cFFFFFF00Declare Attackers:|r Click untapped creatures (without summoning sickness) to attack.\n" ..
-    "   • |cFFFFFF00Declare Blockers:|r The defending player chooses untapped creatures to block incoming attackers.\n" ..
-    "   • |cFFFFFF00Resolve Combat:|r Damage is dealt simultaneously. A creature dies when the damage it has taken this turn equals or exceeds its toughness. Excess damage is absorbed unless the attacker is Brutish.\n" ..
-    "|cFFFFD2004. Main Phase 2:|r Cast remaining spells and play your Prayer if unused.\n" ..
-    "|cFFFFD2005. End Turn:|r Floating mana pool empties, temporary buffs expire, and all damage on creatures (both players') is removed."
+p3.rawKey = "rules.turns"
 
-local h4 = MakeHeading("Keywords & Mechanics")
+local h4 = MakeHeading("rules.h.keywords")
 
 local p4 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p4:SetWidth(540)
 p4:SetJustifyH("LEFT")
 p4:SetWordWrap(true)
-p4.rawText = "• |cFFFFD200Quick:|r Can attack and tap the turn it enters the battlefield without summoning sickness.\n" ..
-    "• |cFFFFD200Airborne:|r Can only be blocked by creatures that are also Airborne or Anti-Air.\n" ..
-    "• |cFFFFD200Anti-Air:|r Can block Airborne creatures while staying grounded.\n" ..
-    "• |cFFFFD200Strikes-First:|r Deals combat damage before creatures without Strikes-First. If lethal, the foe dies before striking back.\n" ..
-    "• |cFFFFD200Fatal:|r Any combat damage dealt by this creature is immediately lethal.\n" ..
-    "• |cFFFFD200Drain:|r Damage dealt by this creature restores that much life to its controller.\n" ..
-    "• |cFFFFD200Brutish:|r Excess combat damage beyond the blocker's toughness carries over to the defending player.\n" ..
-    "• |cFFFFD200Vigilant:|r Attacking does not cause the creature to tap.\n" ..
-    "• |cFFFFD200Warded:|r Cannot be targeted by opponent spells or abilities."
+p4.rawKey = "rules.keywords"
 
-local hS = MakeHeading("Solo Mode")
+local hS = MakeHeading("rules.h.solo")
 
 local pS = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pS:SetWidth(540)
 pS:SetJustifyH("LEFT")
 pS:SetWordWrap(true)
-pS.rawText = "Open |cFFFFD200Solo Encounters|r from the main window (or type |cFFFFFFFF/tragic solo|r) to see the world map, with a button on every zone and dungeon entrance. Hover a button for the encounter's details and reward; click it to play against the computer with your active deck. Beat an encounter to earn its |cFFFFD200reward card|r, which can't drop from world kills.\n\n" ..
-    "|cFFFFD200Zone Gauntlet:|r one opponent per zone, playing that zone's 10 creatures. Elwynn Forest, Tirisfal Glades, Durotar, Mulgore and Teldrassil are open from the start; clearing a zone opens every zone it connects to on the map. The reward is a famous friend of that zone, and it strengthens the zone's own creatures.\n\n" ..
-    "|cFFFFD200Dungeons:|r one opponent per dungeon, playing its creatures and its boss under one or two |cFFFF8040boss rules|r (shown beside the opponent's name; hover it for details). A dungeon opens once you clear the zone its entrance is in. Its reward is one of the dungeon's strongest denizens.\n\n" ..
-    "|cFFFFD200Rewards:|r each win adds |cFFFFFFFF1 copy|r of the encounter's reward card, up to |cFFFFFFFF4 copies|r. Reward cards follow the normal deck rules and can be played anywhere, including against other players.\n\n" ..
-    "|cFFFFD200Opponents:|r early encounters play a simple game; later zones and dungeons cast spells, use their abilities, block well and hold removal for your best creature. |cFFFFD200Practice vs Dummy|r is still there to try a deck out."
+pS.rawKey = "rules.solo"
 
-local hL = MakeHeading("Card Links")
+local hL = MakeHeading("rules.h.links")
 
 local pL = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pL:SetWidth(540)
 pL:SetJustifyH("LEFT")
 pL:SetWordWrap(true)
-pL.rawText = "Show a card to other players in chat. With the chat box open, |cFFFFD200Shift-click|r any card (in the Deckbuilder, on the board, or the examples in this guide) to add it to your message.\n\n" ..
-    "• Players with Forever: CCG see a gold |cFFFFD200[Card Name]|r link. Hover it for the card's tooltip, or click it to open a preview showing the card and how many copies you own (or how to get it).\n" ..
-    "• Shift-click a link with the chat box open to pass it on.\n" ..
-    "• Players without the addon see it as plain text: |cFFFFFFFF[Forever CCG: Card Name]|r.\n" ..
-    "• Links work in every chat: say, party, raid, guild, whispers and channels."
+pL.rawKey = "rules.links"
 
-local h5 = MakeHeading("Challenging Players")
+local h5 = MakeHeading("rules.h.challenging")
 
 local p5 = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 p5:SetWidth(540)
 p5:SetJustifyH("LEFT")
 p5:SetWordWrap(true)
-p5.rawText = "Both players must be on the |cFFFFD200same major & minor version|r of Forever: CCG. Only the first two numbers of the version need to match; the last number (the patch) can differ. For example, |cFFFFFFFF1.4.0|r can play |cFFFFFFFF1.4.7|r, but not |cFFFFFFFF1.5.0|r.\n\n" ..
-    "|cFFFFD200Connection:|r Challenges and matches are sent over the |cFFFFFFFFFCCGTTSE|r chat channel, which the addon joins for you a few seconds after you log in. The channel is always tried first.\n\n" ..
-    "|cFFFFD200Fallback:|r If your opponent doesn't respond within |cFFFFFFFF8 seconds|r, the challenge is retried on the next route in this order:\n" ..
-    "   |cFFFFFFFFwhisper|r -> |cFFFFFFFFparty chat|r -> |cFFFFFFFFraid chat|r -> |cFFFFFFFFguild chat|r -> |cFFFFFFFFyell|r\n" ..
-    "• Routes that can't reach your opponent are skipped (party and raid only if you're grouped with them, guild only if you're in one).\n" ..
-    "• Yell only reaches players |cFFFFD200near you|r.\n" ..
-    "• Once a route works, the rest of that match uses it.\n" ..
-    "• If every route fails, the challenge is cancelled. Inviting your opponent to |cFFFFD200your party|r is the most reliable way to play.\n\n" ..
-    "|cFFFFD200Accepting:|r Your opponent has |cFFFFFFFF60 seconds|r to accept a challenge."
+p5.rawKey = "rules.challenging"
 
 -- Footer is pinned to the bottom of the window (outside the scroll area), like the title at the top
 local footer = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -491,14 +441,9 @@ local function PlaceCardRow(frames, ids, y)
 end
 
 local function LayoutRules()
-    p1:SetText(FormatTextWithSymbols(p1.rawText, 16))
-    p2:SetText(FormatTextWithSymbols(p2.rawText, 16))
-    p3:SetText(FormatTextWithSymbols(p3.rawText, 16))
-    p4:SetText(FormatTextWithSymbols(p4.rawText, 16))
-    pU:SetText(FormatTextWithSymbols(pU.rawText, 16))
-    p5:SetText(FormatTextWithSymbols(p5.rawText, 16))
-    pS:SetText(FormatTextWithSymbols(pS.rawText, 16))
-    pL:SetText(FormatTextWithSymbols(pL.rawText, 16))
+    for _, p in ipairs({ p1, p2, p3, p4, pU, p5, pS, pL }) do
+        p:SetText(FormatTextWithSymbols(L(p.rawKey), 16))
+    end
 
     local y = -10
 

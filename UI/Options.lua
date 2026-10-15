@@ -9,6 +9,8 @@
 TTS = TTS or {}
 TTS.Options = TTS.Options or {}
 local O = TTS.Options
+local L = TTS.L
+local Loc = TTS.Locale
 
 -- =========================================================================
 -- SAVED SETTINGS (TTS_Options)
@@ -35,14 +37,8 @@ local DEFAULTS = {
 local DELAY_MIN, DELAY_MAX, DELAY_STEP = 0, 2, 0.1
 local EXTENDED_MAX = 3
 
--- Sound categories shown under the master switch, in order
-O.SOUND_CATEGORIES = {
-    { key = "creatures", label = "Creature voices",         desc = "Aggro and death sounds when creatures are played, attack or die." },
-    { key = "cards",     label = "Card & spell sounds",     desc = "Prayers being played and spells being cast, by either player." },
-    { key = "ui",        label = "Button & card clicks",    desc = "Clicks on buttons and cards, and the sound of a Prayer tapping." },
-    { key = "combat",    label = "Targeting & hit sounds",  desc = "The click when a target is chosen and the hit when a player takes damage." },
-    { key = "turn",      label = "Your-turn alert",         desc = "The chime at the start of a game and at the start of each of your turns." },
-}
+-- Sound categories shown under the master switch, in order (label / tooltip: options.sound.<key>[.desc])
+O.SOUND_CATEGORIES = { "creatures", "cards", "ui", "combat", "turn" }
 
 local function MergeDefaults(db, defaults)
     for k, v in pairs(defaults) do
@@ -136,7 +132,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 550)
+F:SetSize(340, 624)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -167,7 +163,7 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = F:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
-title:SetText("Options")
+Loc:Bind(title, "options.title")
 
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -2, -2)
@@ -176,8 +172,8 @@ local footer = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -20, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
--- Tooltip-bordered panel with a gold section header and divider
-local function CreateSection(label, h)
+-- Tooltip-bordered panel with a gold section header (locale key) and divider
+local function CreateSection(labelKey, h)
     local p = CreateFrame("Frame", nil, F, backdropTemplate)
     p:SetSize(312, h)
     p:SetBackdrop({
@@ -191,7 +187,7 @@ local function CreateSection(label, h)
 
     local header = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     header:SetPoint("TOPLEFT", 10, -9)
-    header:SetText(label)
+    Loc:Bind(header, labelKey)
 
     local line = p:CreateTexture(nil, "ARTWORK")
     line:SetPoint("TOPLEFT", 8, -24)
@@ -201,18 +197,18 @@ local function CreateSection(label, h)
     return p
 end
 
--- Checkbox with a label; the label is part of the click area
-local function CreateCheck(parent, x, y, label, desc)
+-- Checkbox labelled with locale key (tooltip: key .. ".desc"); the label is part of the click area
+local function CreateCheck(parent, x, y, key)
     local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     cb:SetSize(24, 24)
     cb:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     cb.label = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     cb.label:SetPoint("LEFT", cb, "RIGHT", 2, 1)
-    cb.label:SetText(label)
-    cb:SetHitRectInsets(0, -(cb.label:GetStringWidth() + 4), 0, 0)
-    if desc then
+    Loc:Bind(cb.label, key)
+    Loc:OnReady(function() cb:SetHitRectInsets(0, -(cb.label:GetStringWidth() + 4), 0, 0) end)
+    do
         cb:SetScript("OnEnter", function(self)
-            if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", label, desc) end
+            if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(key), L(key .. ".desc")) end
         end)
         cb:SetScript("OnLeave", function(self)
             if TTS.Tooltip then TTS.Tooltip:Hide(self) end
@@ -234,35 +230,34 @@ end
 -- =========================================================================
 -- SOUND SECTION
 -- =========================================================================
-local soundSection = CreateSection("Sound", 182)
+local soundSection = CreateSection("options.sound", 182)
 soundSection:SetPoint("TOPLEFT", F, "TOPLEFT", 14, -46)
 
-local masterCheck = CreateCheck(soundSection, 10, -30, "Enable sounds",
-    "Turns every Forever: CCG sound on or off. Same as the Sounds checkbox on the board.")
+local masterCheck = CreateCheck(soundSection, 10, -30, "options.sound.enable")
 masterCheck:SetScript("OnClick", function(self)
     S:SetEnabled(self:GetChecked())
 end)
 
 local categoryChecks = {}
 for i, cat in ipairs(O.SOUND_CATEGORIES) do
-    local cb = CreateCheck(soundSection, 30, -30 - i * 24, cat.label, cat.desc)
+    local cb = CreateCheck(soundSection, 30, -30 - i * 24, "options.sound." .. cat)
     cb:SetScript("OnClick", function(self)
-        O:SetSound(cat.key, self:GetChecked())
+        O:SetSound(cat, self:GetChecked())
     end)
-    categoryChecks[cat.key] = cb
+    categoryChecks[cat] = cb
 end
 
 -- =========================================================================
 -- TOOLTIP SECTION
 -- =========================================================================
-local tipSection = CreateSection("Tooltips", 150)
+local tipSection = CreateSection("options.tooltips", 150)
 tipSection:SetPoint("TOPLEFT", soundSection, "BOTTOMLEFT", 0, -8)
 
--- Labelled slider for a delay setting, snapped to DELAY_STEP and saved under key
-local function CreateDelaySlider(name, label, desc, y, maxValue, key)
+-- Slider for a delay setting labelled with locale labelKey (tooltip: labelKey .. ".desc"), snapped to DELAY_STEP and saved under key
+local function CreateDelaySlider(name, labelKey, y, maxValue, key)
     local text = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     text:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 12, y)
-    text:SetText(label)
+    Loc:Bind(text, labelKey)
 
     local value = tipSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     value:SetPoint("TOPRIGHT", tipSection, "TOPRIGHT", -14, y)
@@ -284,17 +279,17 @@ local function CreateDelaySlider(name, label, desc, y, maxValue, key)
 
     local lowText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     lowText:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 2, 0)
-    lowText:SetText(DELAY_MIN .. "s")
+    Loc:Bind(lowText, "options.secondsShort", DELAY_MIN)
 
     local highText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     highText:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", -2, 0)
-    highText:SetText(maxValue .. "s")
+    Loc:Bind(highText, "options.secondsShort", maxValue)
 
     function slider:ShowValue(v)
         if v <= 0 then
-            value:SetText("Instant")
+            value:SetText(L("options.instant"))
         else
-            value:SetText(string.format("%.1f s", v))
+            value:SetText(L("options.seconds", v))
         end
     end
 
@@ -304,7 +299,7 @@ local function CreateDelaySlider(name, label, desc, y, maxValue, key)
         self:ShowValue(v)
     end)
     slider:SetScript("OnEnter", function(self)
-        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", label, desc) end
+        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(labelKey), L(labelKey .. ".desc")) end
     end)
     slider:SetScript("OnLeave", function(self)
         if TTS.Tooltip then TTS.Tooltip:Hide(self) end
@@ -313,65 +308,142 @@ local function CreateDelaySlider(name, label, desc, y, maxValue, key)
     return slider
 end
 
-local delaySlider = CreateDelaySlider("TTS_OptionsDelaySlider", "Tooltip delay",
-    "How long the cursor rests on something before its tooltip appears.",
+local delaySlider = CreateDelaySlider("TTS_OptionsDelaySlider", "options.tooltipDelay",
     -34, DELAY_MAX, "tooltipDelay")
 
-local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "Extended tooltip delay",
-    "How long each further layer of detail (keywords, effects, symbols) waits after the one before it.",
+local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "options.extendedDelay",
     -92, EXTENDED_MAX, "extendedTooltipDelay")
 
 -- =========================================================================
 -- BOARD SECTION
 -- =========================================================================
-local boardSection = CreateSection("Board", 132)
+local boardSection = CreateSection("options.board", 132)
 boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
 
-local backgroundCheck = CreateCheck(boardSection, 10, -30, "Show zone backgrounds in solo encounters",
-    "Shows the zone's map (or the dungeon's art) behind the battlefield during solo encounters. PvP and Practice games always use the plain board.")
+local backgroundCheck = CreateCheck(boardSection, 10, -30, "options.backgrounds")
 backgroundCheck:SetScript("OnClick", function(self)
     O:Set("boardBackgrounds", self:GetChecked() and true or false)
     if TTS.BoardFrame and TTS.BoardFrame.RefreshBackground then TTS.BoardFrame:RefreshBackground() end
 end)
 
-local animateCheck = CreateCheck(boardSection, 10, -54, "Animate played cards",
-    "Cards played by either player fly from the hand to the battlefield.")
+local animateCheck = CreateCheck(boardSection, 10, -54, "options.animate")
 animateCheck:SetScript("OnClick", function(self)
     O:Set("animateCards", self:GetChecked() and true or false)
 end)
 
 local controlsText = boardSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -86)
-controlsText:SetText("Card controls")
+Loc:Bind(controlsText, "options.controls")
 
--- One choice of how cards are played; saved as cardControls
-local CONTROL_MODES = {
-    { key = "click", label = "Click", desc = "Click a card to play it, click your creatures to attack and block, then click a target." },
-    { key = "drag",  label = "Drag",  desc = "Drag cards onto the board to play them, drag a spell onto its target, drag creatures at the opponent to attack and onto attackers to block. Prayers are still tapped by clicking." },
-    { key = "both",  label = "Both",  desc = "Clicking and dragging both work." },
-}
+-- One choice of how cards are played; saved as cardControls (label / tooltip: options.controls.<mode>[.desc])
+local CONTROL_MODES = { "click", "drag", "both" }
 local controlRadios = {}
 for i, mode in ipairs(CONTROL_MODES) do
+    local key = "options.controls." .. mode
     local rb = CreateFrame("CheckButton", nil, boardSection, "UIRadioButtonTemplate")
     rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -104)
     rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
-    rb.label:SetText(mode.label)
-    rb:SetHitRectInsets(0, -(rb.label:GetStringWidth() + 6), 0, 0)
+    Loc:Bind(rb.label, key)
+    Loc:OnReady(function() rb:SetHitRectInsets(0, -(rb.label:GetStringWidth() + 6), 0, 0) end)
     rb:SetScript("OnClick", function()
-        O:Set("cardControls", mode.key)
+        O:Set("cardControls", mode)
         for _, other in ipairs(controlRadios) do other:SetChecked(other == rb) end
         if TTS.ApplyCardControls then TTS.ApplyCardControls() end
     end)
     rb:SetScript("OnEnter", function(self)
-        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", mode.label, mode.desc) end
+        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(key), L(key .. ".desc")) end
     end)
     rb:SetScript("OnLeave", function(self)
         if TTS.Tooltip then TTS.Tooltip:Hide(self) end
     end)
-    rb.key = mode.key
+    rb.key = mode
     controlRadios[i] = rb
 end
+
+-- =========================================================================
+-- LANGUAGE SECTION
+-- A button showing the saved choice; clicking it lists the installed
+-- languages (English plus the ForeverCCG_Languages pack). A new choice is
+-- used after a /reload.
+-- =========================================================================
+local langSection = CreateSection("options.language", 66)
+langSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
+
+local langButton = CreateFrame("Button", nil, langSection, "UIPanelButtonTemplate")
+langButton:SetSize(170, 22)
+langButton:SetPoint("TOPLEFT", langSection, "TOPLEFT", 12, -32)
+
+local reloadButton = CreateFrame("Button", nil, langSection, "UIPanelButtonTemplate")
+reloadButton:SetSize(110, 22)
+reloadButton:SetPoint("LEFT", langButton, "RIGHT", 8, 0)
+Loc:Bind(reloadButton, "options.language.reloadNow")
+reloadButton:SetScript("OnClick", function() if ReloadUI then ReloadUI() end end)
+reloadButton:Hide()
+
+local function ChoiceLabel(choice)
+    if choice == "auto" then
+        return L("locale.auto", Loc:NameOf(Loc:Resolve("auto")))
+    end
+    return Loc:NameOf(choice)
+end
+
+local langList = CreateFrame("Frame", nil, langButton, backdropTemplate)
+langList:SetFrameStrata("FULLSCREEN_DIALOG")
+langList:SetPoint("TOPLEFT", langButton, "BOTTOMLEFT", 0, -2)
+langList:SetBackdrop({
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+langList:SetBackdropColor(0, 0, 0, 0.95)
+langList:Hide()
+local langRows = {}
+
+local function PickLanguage(choice)
+    langList:Hide()
+    Loc:SetChoice(choice)
+    langButton:SetText(ChoiceLabel(choice))
+    local changed = choice ~= Loc.loadedChoice
+    reloadButton:SetShown(changed)
+    if changed and DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("locale.reload"))
+    end
+end
+
+local function OpenLanguageList()
+    local choices = { "auto" }
+    for _, lang in ipairs(Loc:Available()) do choices[#choices + 1] = lang.code end
+    for i, choice in ipairs(choices) do
+        local row = langRows[i]
+        if not row then
+            row = CreateFrame("Button", nil, langList)
+            row:SetSize(160, 18)
+            row:SetPoint("TOPLEFT", langList, "TOPLEFT", 6, -6 - (i - 1) * 18)
+            row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+            row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            row.text:SetPoint("LEFT", 4, 0)
+            langRows[i] = row
+        end
+        row.text:SetText(ChoiceLabel(choice))
+        row:SetScript("OnClick", function() PickLanguage(choice) end)
+        row:Show()
+    end
+    for i = #choices + 1, #langRows do langRows[i]:Hide() end
+    langList:SetSize(172, 12 + #choices * 18)
+    langList:Show()
+end
+
+langButton:SetScript("OnClick", function()
+    if langList:IsShown() then langList:Hide() else OpenLanguageList() end
+end)
+langButton:SetScript("OnEnter", function(self)
+    if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L("options.language"), L("options.language.desc")) end
+end)
+langButton:SetScript("OnLeave", function(self)
+    if TTS.Tooltip then TTS.Tooltip:Hide(self) end
+end)
 
 -- =========================================================================
 -- SYNC
@@ -381,8 +453,8 @@ function O:SyncControls()
     local master = db.sound.enabled and true or false
     masterCheck:SetChecked(master)
     for _, cat in ipairs(O.SOUND_CATEGORIES) do
-        local cb = categoryChecks[cat.key]
-        cb:SetChecked(db.sound[cat.key] ~= false)
+        local cb = categoryChecks[cat]
+        cb:SetChecked(db.sound[cat] ~= false)
         SetCheckEnabled(cb, master)
     end
     for _, sl in ipairs({ delaySlider, extendedSlider }) do
@@ -396,6 +468,7 @@ function O:SyncControls()
     animateCheck:SetChecked(db.animateCards ~= false)
     local mode = TTS.CardControls and TTS.CardControls() or "both"
     for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
+    langButton:SetText(ChoiceLabel(Loc:GetChoice()))
 end
 
 F:SetScript("OnShow", function()
@@ -403,6 +476,7 @@ F:SetScript("OnShow", function()
 end)
 
 F:SetScript("OnHide", function()
+    langList:Hide()
     if TTS.Tooltip then TTS.Tooltip:Hide() end
 end)
 

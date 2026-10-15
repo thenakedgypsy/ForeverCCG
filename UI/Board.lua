@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 
 -- =========================================================================
 -- TEXTURE PATH CONFIGURATION & MANA ICONS
@@ -113,9 +115,9 @@ end
 function TTS:GetCardTagLine(card)
     if not card or card.type ~= "Creature" then return nil end
     local parts = {}
-    if card.creatureType then table.insert(parts, card.creatureType) end
-    if card.faction then table.insert(parts, "|cFFFFD200" .. card.faction .. "|r") end
-    if card.zone then table.insert(parts, "|cFF888888" .. card.zone .. "|r") end
+    if card.creatureType then table.insert(parts, Loc:Term("creatureType", card.creatureType)) end
+    if card.faction then table.insert(parts, "|cFFFFD200" .. Loc:Term("faction", card.faction) .. "|r") end
+    if card.zone then table.insert(parts, "|cFF888888" .. Loc:Term("zone", card.zone) .. "|r") end
     if #parts == 0 then return nil end
     return table.concat(parts, "  •  ")
 end
@@ -327,7 +329,7 @@ AddTitleStrip(sideLog)
 
 local logTitle = sideLog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 logTitle:SetPoint("TOPLEFT", 16, -11)
-logTitle:SetText("Game Log")
+Loc:Bind(logTitle, "board.gameLog")
 
 local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
 logPanel:SetPoint("TOPLEFT", 14, -46)
@@ -355,14 +357,14 @@ local clearLogBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
 clearLogBtn:SetSize(60, 20)
 clearLogBtn:SetPoint("BOTTOMLEFT", 14, 12)
 StyleButton(clearLogBtn)
-clearLogBtn:SetText("Clear")
+Loc:Bind(clearLogBtn, "board.clear")
 clearLogBtn:SetScript("OnClick", function() logMsg:Clear() end)
 
 local bottomLogBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
 bottomLogBtn:SetSize(60, 20)
 bottomLogBtn:SetPoint("BOTTOMRIGHT", -14, 12)
 StyleButton(bottomLogBtn)
-bottomLogBtn:SetText("Bottom")
+Loc:Bind(bottomLogBtn, "board.bottom")
 bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 
 -- =========================================================================
@@ -383,13 +385,13 @@ restoreBar:Hide()
 
 local restoreText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 restoreText:SetPoint("LEFT", 14, 0)
-restoreText:SetText("Forever: CCG (minimized)")
+Loc:Bind(restoreText, "board.minimized")
 
 local restoreBtn = CreateFrame("Button", nil, restoreBar, "UIPanelButtonTemplate")
 restoreBtn:SetSize(70, 22)
 restoreBtn:SetPoint("RIGHT", -10, 0)
 StyleButton(restoreBtn)
-restoreBtn:SetText("Restore")
+Loc:Bind(restoreBtn, "board.restore")
 restoreBtn:SetScript("OnClick", function() B:Show() end)
 
 function B:Minimize()
@@ -411,7 +413,7 @@ minimizeBtn:SetSize(24, 24)
 minimizeBtn:SetPoint("TOPRIGHT", -16, -17)
 minimizeBtn:SetText("-")
 minimizeBtn:SetScript("OnClick", function() B:Minimize() end)
-minimizeBtn:SetScript("OnEnter", function(self) TT:ShowText(self, "ANCHOR_TOP", "Minimize") end)
+minimizeBtn:SetScript("OnEnter", function(self) TT:ShowText(self, "ANCHOR_TOP", L("board.minimize")) end)
 minimizeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 -- =========================================================================
@@ -420,7 +422,7 @@ minimizeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 local concedeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 concedeBtn:SetSize(80, 24)
 concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
-concedeBtn:SetText("Concede")
+Loc:Bind(concedeBtn, "board.concede")
 StyleButton(concedeBtn)
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConcedeMatch() end)
 
@@ -435,7 +437,7 @@ B.soundCheck = soundCheck   -- kept in step with the options menu
 
 local soundLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 soundLabel:SetPoint("RIGHT", soundCheck, "LEFT", 0, 1)
-soundLabel:SetText("Sounds")
+Loc:Bind(soundLabel, "board.sounds")
 soundCheck:SetHitRectInsets(-(soundLabel:GetStringWidth() + 4), 0, 0, 0)
 
 -- Auto-pay: casting taps the prayers the mana pool is short of (CoreEngine.lua)
@@ -449,11 +451,10 @@ B.autoPayCheck = autoPayCheck   -- set from the saved option when the board open
 
 local autoPayLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 autoPayLabel:SetPoint("RIGHT", autoPayCheck, "LEFT", 0, 1)
-autoPayLabel:SetText("Auto-pay")
+Loc:Bind(autoPayLabel, "board.autoPay")
 autoPayCheck:SetHitRectInsets(-(autoPayLabel:GetStringWidth() + 4), 0, 0, 0)
 autoPayCheck:SetScript("OnEnter", function(self)
-    TT:ShowText(self, "ANCHOR_TOP", "Auto-pay mana",
-        "When your mana pool is short, playing a card or using an ability taps the prayers it needs for you.")
+    TT:ShowText(self, "ANCHOR_TOP", L("board.autoPayTitle"), L("board.autoPayDesc"))
 end)
 autoPayCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
@@ -465,14 +466,14 @@ subtitle:SetText("Forever: CCG")
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.endTurnBtn:SetSize(90, 24)
 B.endTurnBtn:SetPoint("BOTTOMRIGHT", -30, 16)
-B.endTurnBtn:SetText("End Turn")
+Loc:Bind(B.endTurnBtn, "board.endTurn")
 StyleButton(B.endTurnBtn)
 B.endTurnBtn:SetScript("OnClick", function() TTS.Engine:EndTurn() end)
 
 B.nextPhaseBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.nextPhaseBtn:SetSize(160, 24)
 B.nextPhaseBtn:SetPoint("RIGHT", B.endTurnBtn, "LEFT", -8, 0)
-B.nextPhaseBtn:SetText("To Combat")
+Loc:Bind(B.nextPhaseBtn, "board.toCombat")
 StyleButton(B.nextPhaseBtn)
 B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
 
@@ -480,7 +481,7 @@ B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
 B.undoBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.undoBtn:SetSize(70, 24)
 B.undoBtn:SetPoint("RIGHT", B.nextPhaseBtn, "LEFT", -8, 0)
-B.undoBtn:SetText("Undo")
+Loc:Bind(B.undoBtn, "board.undo")
 StyleButton(B.undoBtn)
 if B.undoBtn.SetMotionScriptsWhileDisabled then B.undoBtn:SetMotionScriptsWhileDisabled(true) end
 B.undoBtn:SetScript("OnClick", function(self)
@@ -492,28 +493,28 @@ B.undoBtn:SetScript("OnEnter", function(self)
     local ok, reason = E:CanUndo()
     local lines = {}
     if ok then
-        table.insert(lines, { string.format("Return |cFFFFD200%s|r to your hand and take back everything it did.", E:UndoCardName()), 1, 1, 1, true })
+        table.insert(lines, { L("board.undoDesc", E:UndoCardName()), 1, 1, 1, true })
         if not E.isSolo then
-            table.insert(lines, { string.format("%s must agree, and their answer is final.", E.opponent or "Your opponent"), 0.7, 0.7, 0.7, true })
+            table.insert(lines, { L("board.undoAgree", E.opponent or L("undo.yourOpponentCap")), 0.7, 0.7, 0.7, true })
         end
     else
         table.insert(lines, { reason, 1, 0.4, 0.4, true })
     end
-    TT:ShowText(self, "ANCHOR_TOP", "Undo", nil, { r = 1, g = 0.82, b = 0, lines = lines })
+    TT:ShowText(self, "ANCHOR_TOP", L("board.undo"), nil, { r = 1, g = 0.82, b = 0, lines = lines })
 end)
 B.undoBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 B.phaseText:SetPoint("TOP", 0, -22)
-B.phaseText:SetText("Phase: SETUP")
+Loc:Bind(B.phaseText, "phase.label", "SETUP")
 
 -- =========================================================================
 -- MATCH OVER
 -- The board stays up on the final state until the result popup is accepted.
 -- =========================================================================
 function B:ShowMatchResult(headline)
-    self.phaseText:SetText(headline .. "  |cFFFFFFFF(click Accept to leave the board)|r")
-    self.nextPhaseBtn:SetText("Match Over")
+    self.phaseText:SetText(headline .. "  |cFFFFFFFF" .. L("board.clickAccept") .. "|r")
+    self.nextPhaseBtn:SetText(L("board.matchOver"))
     self.nextPhaseBtn:Disable()
     self.endTurnBtn:Disable()
     self.undoBtn:Disable()
@@ -576,11 +577,11 @@ B.oppLifeBtn:SetScript("OnClick", function(self, btn)
 end)
 B.oppLifeBtn:SetScript("OnEnter", function(self)
     TT:Show(self, "ANCHOR_BOTTOMLEFT", { main = function(tip)
-        tip:AddLine(TTS.Engine.opponent or "Opponent", 1, 0.82, 0)
-        tip:AddLine(string.format("Life: %d  |  Cards in Hand: %d  |  Cards in Deck: %s", TTS.Engine.remoteState.life,
+        tip:AddLine(TTS.Engine.opponent or L("side.opponentCap"), 1, 0.82, 0)
+        tip:AddLine(L("board.oppStats", TTS.Engine.remoteState.life,
             TTS.Engine.remoteState.handCount, TTS.Engine:RemoteDeckCount() or "?"), 1, 1, 1)
         if TTS.Engine.opponentScore then
-            tip:AddLine("Collection Score: " .. TTS:FormatScore(TTS.Engine.opponentScore), 1, 1, 1)
+            tip:AddLine(L("board.score", TTS:FormatScore(TTS.Engine.opponentScore)), 1, 1, 1)
         end
         local enc = TTS.Engine.isSolo and TTS.Engine.encounter
         if enc and TTS.GetEncounterRuleLines then
@@ -592,7 +593,7 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
         end
         if IsTargetingPlayer(true) then
             tip:AddLine(" ")
-            tip:AddLine("|cFF00FF00[Left-Click to target this player]|r", 0.2, 1.0, 0.2)
+            tip:AddLine("|cFF00FF00" .. L("board.targetThisPlayer") .. "|r", 0.2, 1.0, 0.2)
         end
     end })
 end)
@@ -620,14 +621,14 @@ B.myLifeBtn:SetScript("OnClick", function(self, btn)
 end)
 B.myLifeBtn:SetScript("OnEnter", function(self)
     TT:Show(self, "ANCHOR_TOPLEFT", { main = function(tip)
-        tip:AddLine("You", 1, 0.82, 0)
-        tip:AddLine(string.format("Life: %d", TTS.Engine.localState.life), 1, 1, 1)
+        tip:AddLine(L("board.you"), 1, 0.82, 0)
+        tip:AddLine(L("board.life", TTS.Engine.localState.life), 1, 1, 1)
         if TTS.GetCollectionScore then
-            tip:AddLine("Collection Score: " .. TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1)
+            tip:AddLine(L("board.score", TTS:FormatScore((TTS:GetCollectionScore()))), 1, 1, 1)
         end
         if IsTargetingPlayer(false) then
             tip:AddLine(" ")
-            tip:AddLine("|cFF00FF00[Left-Click to target yourself]|r", 0.2, 1.0, 0.2)
+            tip:AddLine("|cFF00FF00" .. L("board.targetYourself") .. "|r", 0.2, 1.0, 0.2)
         end
     end })
 end)
@@ -641,7 +642,7 @@ local MANA_ORDER = { "W", "U", "B", "R", "G" }
 
 B.manaText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 B.manaText:SetPoint("BOTTOMLEFT", 205, 20)
-B.manaText:SetText("Mana: ")
+Loc:Bind(B.manaText, "board.mana")
 
 B.manaSlots = {}
 do
@@ -696,7 +697,7 @@ local function CreateEffectBar(labelText)
     bar.label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bar.label:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
     bar.label:SetJustifyH("RIGHT")
-    bar.label:SetText(labelText)
+    Loc:Bind(bar.label, labelText)
 
     bar.icons = {}
     for i = 1, EFFECT_COLS * EFFECT_ROWS do
@@ -755,10 +756,10 @@ local function UpdateEffectBar(bar, effects)
     bar:Show()
 end
 
-B.oppEffectBar = CreateEffectBar("Opponent Effects")
+B.oppEffectBar = CreateEffectBar("board.oppEffects")
 B.oppEffectBar:SetPoint("TOPRIGHT", B, "TOPRIGHT", -20, -44)
 
-B.myEffectBar = CreateEffectBar("Your Effects")
+B.myEffectBar = CreateEffectBar("board.myEffects")
 B.myEffectBar:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -20, 174)
 
 local myHandFrames     = {}
@@ -1092,7 +1093,7 @@ local function UpdateCardRules(f, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(card.text, size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(TTS:FormatSymbols(TTS:CardText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -1294,7 +1295,7 @@ for i = 1, 10 do
         end
         -- Drag mode plays cards by dragging; a click still discards when asked to
         if TTS.CardControls() == "drag" and not TTS.Engine.pendingDiscard then
-            if TTS.FloatText then TTS.FloatText("Drag the card onto the board to play it.", TTS.FLOAT_WARN) end
+            if TTS.FloatText then TTS.FloatText(L("board.dragToPlay"), TTS.FLOAT_WARN) end
             return
         end
         TTS.Engine:PlayCard(i)
@@ -1330,8 +1331,8 @@ for i = 1, 10 do
     end)
     f:SetScript("OnEnter", function(self)
         if IsTargetingPlayer(true) then
-            TT:ShowText(self, "ANCHOR_TOP", TTS.Engine.opponent or "Opponent", nil,
-                { r = 1, g = 0.82, b = 0, lines = { { "|cFF00FF00Click to target enemy player|r", 0.2, 1.0, 0.2 } } })
+            TT:ShowText(self, "ANCHOR_TOP", TTS.Engine.opponent or L("side.opponentCap"), nil,
+                { r = 1, g = 0.82, b = 0, lines = { { "|cFF00FF00" .. L("board.targetEnemy") .. "|r", 0.2, 1.0, 0.2 } } })
         end
     end)
     f:SetScript("OnLeave", function(self) TT:Hide(self) end)
@@ -1362,7 +1363,7 @@ local function MyNonLand_OnClick(self, btn)
                 bs.blocks[idx] = nil
                 local perm = TTS.Engine.localState.field[idx]
                 local card = perm and TTS.Cards[perm.id]
-                TTS.Engine:Log(string.format("Removed |cFFFFD200%s|r from blocking.", card and card.name or "Creature"), "COMBAT")
+                TTS.Engine:Log(L("log.unblocked", card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
             end
             TTS.Engine:RefreshUI()
             return
@@ -1380,10 +1381,10 @@ local function MyNonLand_OnClick(self, btn)
     if TTS.CardControls() == "drag" and TTS.FloatText then
         local bs = E.blockingState
         if E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking and not bs.blocksDeclared then
-            TTS.FloatText("Drag the creature onto an attacker to block.", TTS.FLOAT_WARN)
+            TTS.FloatText(L("board.dragToBlock"), TTS.FLOAT_WARN)
             return
         elseif E.phase == "COMBAT_ATTACK" and E.isMyTurn then
-            TTS.FloatText("Drag the creature at the opponent to attack.", TTS.FLOAT_WARN)
+            TTS.FloatText(L("board.dragToAttack"), TTS.FLOAT_WARN)
             return
         end
     end
@@ -1481,16 +1482,16 @@ ApplyBackTexture(oppDeckFrame.back)
 oppDeckFrame.count = oppDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 oppDeckFrame.count:SetPoint("RIGHT", oppDeckFrame, "LEFT", -6, 0)
 
-local function ShowDeckTip(self, owner, count)
-    TT:ShowText(self, "ANCHOR_LEFT", owner .. " Deck", nil, { r = 1, g = 0.82, b = 0,
-        lines = { count and string.format("%d cards left", count) or "Cards left: not known yet" } })
+local function ShowDeckTip(self, title, count)
+    TT:ShowText(self, "ANCHOR_LEFT", title, nil, { r = 1, g = 0.82, b = 0,
+        lines = { count and L("board.cardsLeft", count) or L("board.cardsLeftUnknown") } })
 end
 myDeckFrame:EnableMouse(true)
-myDeckFrame:SetScript("OnEnter", function(self) ShowDeckTip(self, "Your", #TTS.Engine.localState.deck) end)
+myDeckFrame:SetScript("OnEnter", function(self) ShowDeckTip(self, L("board.yourDeck"), #TTS.Engine.localState.deck) end)
 myDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
 oppDeckFrame:EnableMouse(true)
 oppDeckFrame:SetScript("OnEnter", function(self)
-    ShowDeckTip(self, (TTS.Engine.opponent or "Opponent") .. "'s", TTS.Engine:RemoteDeckCount())
+    ShowDeckTip(self, L("board.oppDeck", TTS.Engine.opponent or L("side.opponentCap")), TTS.Engine:RemoteDeckCount())
 end)
 oppDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
@@ -1576,7 +1577,7 @@ local function PaintPreviewCard(f, card)
     ApplyFrameTexture(f.border, card)
     f.border:SetVertexColor(1, 1, 1)
     f.art:SetVertexColor(1, 1, 1)
-    f.title:SetText(card.name or "")
+    f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
         f.cost:SetText(TTS:FormatSymbols(card.cost, 18))
@@ -1940,18 +1941,18 @@ function B:UpdateDisplay()
     RememberHand()
     concedeBtn:Enable()
 
-    B.oppLifeText:SetText(string.format("%s: %d Life (%d cards)", E.opponent or "Opponent", E.remoteState.life, E.remoteState.handCount))
+    B.oppLifeText:SetText(L("board.oppLife", E.opponent or L("side.opponentCap"), E.remoteState.life, E.remoteState.handCount))
     local ruleNames = {}
     if E.isSolo and E.encounter and TTS.GetEncounterRuleLines then
         for _, rule in ipairs(TTS:GetEncounterRuleLines(E.encounter)) do table.insert(ruleNames, rule.name) end
     end
-    B.oppRulesText:SetText(#ruleNames > 0 and ("Rules: " .. table.concat(ruleNames, ", ")) or "")
+    B.oppRulesText:SetText(#ruleNames > 0 and L("board.rules", table.concat(ruleNames, ", ")) or "")
     if not E.isSolo and E.opponentScore then
-        B.oppScoreText:SetText("Collection Score: |cFFFFFFFF" .. TTS:FormatScore(E.opponentScore) .. "|r")
+        B.oppScoreText:SetText(L("main.score", TTS:FormatScore(E.opponentScore)))
     else
         B.oppScoreText:SetText("")
     end
-    B.myLifeText:SetText(string.format("Life: %d", E.localState.life))
+    B.myLifeText:SetText(L("board.life", E.localState.life))
 
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
     UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
@@ -1984,11 +1985,11 @@ function B:UpdateDisplay()
         if E.blockingState.isRemoteAttacking then
             if E.blockingState.blocksDeclared then
                 -- Local player is defending and has declared: the attacker resolves
-                B.nextPhaseBtn:SetText("Waiting for Attacker...")
+                B.nextPhaseBtn:SetText(L("board.btn.waitAttacker"))
                 B.nextPhaseBtn:Disable()
             elseif not E.isSolo and not E.blockingState.attacksDone then
                 -- More attackers may still be coming (Network.lua, ATTACKS_DONE)
-                B.nextPhaseBtn:SetText("Attackers Incoming...")
+                B.nextPhaseBtn:SetText(L("board.btn.attackersIncoming"))
                 B.nextPhaseBtn:Disable()
             else
                 -- Local player is defending: enabled to confirm blocks
@@ -1996,22 +1997,22 @@ function B:UpdateDisplay()
                 local numBlocks = 0
                 for _ in pairs(E.blockingState.blocks) do numBlocks = numBlocks + 1 end
                 if numBlocks > 0 then
-                    B.nextPhaseBtn:SetText("Confirm Blocks")
+                    B.nextPhaseBtn:SetText(L("board.btn.confirmBlocks"))
                 else
-                    B.nextPhaseBtn:SetText("No Blocks (Pass)")
+                    B.nextPhaseBtn:SetText(L("board.btn.noBlocks"))
                 end
             end
         elseif E.blockingState.blocksDeclared then
             -- Local player is attacking and blocks are in: review them, then resolve
-            B.nextPhaseBtn:SetText("Resolve Combat")
+            B.nextPhaseBtn:SetText(L("board.btn.resolveCombat"))
             B.nextPhaseBtn:Enable()
         else
             -- Local player is attacking: waiting for the defender to declare blocks
-            B.nextPhaseBtn:SetText("Waiting for Defender...")
+            B.nextPhaseBtn:SetText(L("board.btn.waitDefender"))
             B.nextPhaseBtn:Disable()
         end
     elseif E.pendingDiscard then
-        B.nextPhaseBtn:SetText("Discard a Card")
+        B.nextPhaseBtn:SetText(L("board.btn.discard"))
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()
     elseif E.phase == "COMBAT_ATTACK" then
@@ -2019,54 +2020,54 @@ function B:UpdateDisplay()
         -- Until an attacker is declared the turn can still end (or skip on to Main 2)
         local hasAttackers = E.blockingState and #E.blockingState.attackers > 0
         if hasAttackers then
-            B.nextPhaseBtn:SetText("Declare Blocks")
+            B.nextPhaseBtn:SetText(L("board.btn.declareBlocks"))
             B.endTurnBtn:Disable()
         else
-            B.nextPhaseBtn:SetText("To Main 2")
+            B.nextPhaseBtn:SetText(L("board.btn.toMain2"))
             B.endTurnBtn:Enable()
         end
     elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
-        B.nextPhaseBtn:SetText("Opponent Turn")
+        B.nextPhaseBtn:SetText(L("board.btn.opponentTurn"))
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()
     else
         B.nextPhaseBtn:Enable()
         B.endTurnBtn:Enable()
         if E.phase == "MAIN1" then
-            B.nextPhaseBtn:SetText("To Combat")
+            B.nextPhaseBtn:SetText(L("board.toCombat"))
         elseif E.phase == "MAIN2" then
-            B.nextPhaseBtn:SetText("End Turn")
+            B.nextPhaseBtn:SetText(L("board.endTurn"))
         else
-            B.nextPhaseBtn:SetText("Next Phase")
+            B.nextPhaseBtn:SetText(L("board.btn.nextPhase"))
         end
     end
 
     if E:CanUndo() then B.undoBtn:Enable() else B.undoBtn:Disable() end
-    B.undoBtn:SetText((E.undo and E.undo.pending) and "Asking..." or "Undo")
+    B.undoBtn:SetText((E.undo and E.undo.pending) and L("board.asking") or L("board.undo"))
 
     -- =====================================================================
     -- TOP PHASE TEXT
     -- =====================================================================
     if E.pendingDiscard then
-        B.phaseText:SetText("|cFFFFCC00DISCARD: Click a card in your hand to discard|r")
+        B.phaseText:SetText("|cFFFFCC00" .. L("phase.discard") .. "|r")
     elseif E.targeting then
-        B.phaseText:SetText(string.format("|cFFFFD200TARGETING: Select %s for %s (Right-click to cancel)|r", E.targeting.targetType, E.targeting.cardName))
+        B.phaseText:SetText("|cFFFFD200" .. L("phase.targetingFor", Loc:Data("targetType." .. tostring(E.targeting.targetType), E.targeting.targetType), E.targeting.cardName) .. "|r")
     elseif E.phase == "COMBAT_BLOCK" and E.blockingState then
         if E.blockingState.isRemoteAttacking then
             if E.blockingState.blocksDeclared then
-                B.phaseText:SetText("|cFFFFD200COMBAT: Blocks declared. Waiting for attacker to resolve...|r")
+                B.phaseText:SetText("|cFFFFD200" .. L("phase.blocksDeclaredWait") .. "|r")
             elseif not E.isSolo and not E.blockingState.attacksDone then
-                B.phaseText:SetText("|cFFFFD200COMBAT: Opponent is declaring attackers...|r")
+                B.phaseText:SetText("|cFFFFD200" .. L("phase.oppAttacking") .. "|r")
             else
-                B.phaseText:SetText("|cFFFF4444COMBAT: Assign Blockers, then click Confirm Blocks|r")
+                B.phaseText:SetText("|cFFFF4444" .. L("phase.assignBlockers") .. "|r")
             end
         elseif E.blockingState.blocksDeclared then
-            B.phaseText:SetText("|cFFFF4444COMBAT: Review the blocks, then click Resolve Combat|r")
+            B.phaseText:SetText("|cFFFF4444" .. L("phase.reviewBlocks") .. "|r")
         else
-            B.phaseText:SetText("|cFFFFD200COMBAT: Opponent is declaring blockers...|r")
+            B.phaseText:SetText("|cFFFFD200" .. L("phase.oppBlocking") .. "|r")
         end
     else
-        B.phaseText:SetText("Phase: " .. E.phase)
+        B.phaseText:SetText(L("phase.label", E:PhaseName(E.phase)))
     end
 
     myDeckFrame.count:SetText(#E.localState.deck)
@@ -2097,7 +2098,7 @@ function B:UpdateDisplay()
             f.cardId = cardId
             SetupCardVisual(f, card)
             ApplyFrameTexture(f.border, card)
-            f.title:SetText(card.name)
+            f.title:SetText(TTS:CardName(card))
 
             if card.cost and card.cost ~= "" then
                 f.cost:SetText(TTS:FormatSymbols(card.cost, 16))
@@ -2144,7 +2145,7 @@ function B:UpdateDisplay()
                 f.cardId = perm.id
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
-                f.title:SetText(card.name)
+                f.title:SetText(TTS:CardName(card))
 
                 UpdateTuckedFrames(f, perm)
 
@@ -2226,7 +2227,7 @@ function B:UpdateDisplay()
                 f.cardId = perm.id
                 SetupCardVisual(f, card)
                 ApplyFrameTexture(f.border, card)
-                f.title:SetText(card.name)
+                f.title:SetText(TTS:CardName(card))
 
                 UpdateTuckedFrames(f, perm)
 

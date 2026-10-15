@@ -8,6 +8,7 @@
 ]]
 TTS = TTS or {}
 local E = TTS.Engine
+local L = TTS.L
 
 -- =========================================================================
 -- UNDO
@@ -75,7 +76,7 @@ end
 
 local function CardName(cardId)
     local card = TTS.Cards[cardId]
-    return card and card.name or cardId or "card"
+    return card and TTS:CardName(card) or cardId or L("side.card")
 end
 
 -- Called by every new match
@@ -115,16 +116,16 @@ end
 -- Whether the undo button can be used now. Returns ok, reason (reason when not ok).
 function E:CanUndo()
     local u = self.undo
-    if not self.inMatch then return false, "No match in progress." end
-    if not self.isMyTurn then return false, "Only on your turn." end
-    if not u then return false, "No card to take back. Undo takes back the last card you played this phase." end
-    if u.pending then return false, string.format("Waiting for %s to answer...", self.opponent or "your opponent") end
-    if u.denied then return false, string.format("%s denied undoing %s.", self.opponent or "Your opponent", CardName(u.cardId)) end
-    if u.revealed then return false, string.format("%s drew a card, so it cannot be undone.", CardName(u.cardId)) end
-    if self.phase ~= u.phase then return false, "You cannot go back phases." end
-    if self.targeting then return false, "Finish or cancel targeting first." end
-    if self.pendingDiscard then return false, "Discard a card first." end
-    if self.blockingState then return false, "Not during combat." end
+    if not self.inMatch then return false, L("undo.noMatch") end
+    if not self.isMyTurn then return false, L("undo.notYourTurn") end
+    if not u then return false, L("undo.nothing") end
+    if u.pending then return false, L("undo.waiting", self.opponent or L("undo.yourOpponent")) end
+    if u.denied then return false, L("undo.denied", self.opponent or L("undo.yourOpponentCap"), CardName(u.cardId)) end
+    if u.revealed then return false, L("undo.revealed", CardName(u.cardId)) end
+    if self.phase ~= u.phase then return false, L("undo.phase") end
+    if self.targeting then return false, L("undo.targeting") end
+    if self.pendingDiscard then return false, L("undo.discard") end
+    if self.blockingState then return false, L("undo.combat") end
     return true
 end
 
@@ -136,7 +137,7 @@ end
 -- True (and says so) while our undo request waits for the opponent: the board is frozen
 function E:UndoBlocksAction()
     if self.undo and self.undo.pending then
-        self:Log(string.format("Waiting for %s to answer your undo request.", self.opponent or "your opponent"), "ERROR")
+        self:Log(L("undo.waitingAnswer", self.opponent or L("undo.yourOpponent")), "ERROR")
         return true
     end
     return false
@@ -146,7 +147,7 @@ local function ApplyLocalUndo(self)
     local u = self.undo
     self.undo = nil
     RestoreSnapshot(self, u.snap)
-    self:Log(string.format("Undid |cFFFFD200%s|r: it is back in your hand.", CardName(u.cardId)), "SYSTEM")
+    self:Log(L("undo.done", CardName(u.cardId)), "SYSTEM")
     self:SyncEffects()
     self:RefreshUI()
 end
@@ -166,7 +167,7 @@ function E:RequestUndo()
 
     u.pending = true
     TTS.Net:Send(self.opponent, string.format("ACTION:UNDO_REQUEST:%d:%s", u.seq, u.cardId))
-    self:Log(string.format("Asked %s to let you undo |cFFFFD200%s|r...", self.opponent, CardName(u.cardId)), "SYSTEM")
+    self:Log(L("undo.asked", self.opponent, CardName(u.cardId)), "SYSTEM")
     self:RefreshUI()
 
     -- No answer at all (e.g. the opponent went offline): count it as denied
@@ -174,7 +175,7 @@ function E:RequestUndo()
         if E.undo == u and u.pending then
             u.pending = false
             u.denied = true
-            E:Log(string.format("%s did not answer the undo request.", E.opponent or "Your opponent"), "SYSTEM")
+            E:Log(L("undo.noAnswer", E.opponent or L("undo.yourOpponentCap")), "SYSTEM")
             E:RefreshUI()
         end
     end)
@@ -186,11 +187,11 @@ function E:OnUndoAnswer(seq, accepted)
     if not (u and u.pending and u.seq == seq) then return end
     u.pending = false
     if accepted and self.inMatch then
-        self:Log(string.format("%s accepted your undo.", self.opponent), "SYSTEM")
+        self:Log(L("undo.accepted", self.opponent), "SYSTEM")
         ApplyLocalUndo(self)
     else
         u.denied = true
-        self:Log(string.format("%s denied your undo of |cFFFFD200%s|r.", self.opponent, CardName(u.cardId)), "SYSTEM")
+        self:Log(L("undo.deniedYours", self.opponent, CardName(u.cardId)), "SYSTEM")
         self:RefreshUI()
     end
 end
@@ -221,22 +222,22 @@ local function AnswerUndo(seq, accepted)
         self.remoteUndo = nil
         RestoreSnapshot(self, ru.snap)
         TTS.Net:Send(self.opponent, "ACTION:UNDO_ACCEPT:" .. seq)
-        self:Log(string.format("You allowed %s to undo their last card.", self.opponent), "SYSTEM")
+        self:Log(L("undo.allowed", self.opponent), "SYSTEM")
         self:RefreshUI()
     else
         if self.inMatch and self.opponent then
             TTS.Net:Send(self.opponent, "ACTION:UNDO_DENY:" .. seq)
         end
         if valid then
-            self:Log(string.format("You denied %s's undo request.", self.opponent), "SYSTEM")
+            self:Log(L("undo.youDenied", self.opponent), "SYSTEM")
         end
     end
 end
 
 StaticPopupDialogs["TTS_UNDO_REQUEST"] = {
-    text = "%s wants to undo playing |cFFFFD200%s|r.\n\nAllow it? Your answer is final.",
-    button1 = "Allow",
-    button2 = "Deny",
+    text = L("undo.popup"),
+    button1 = L("undo.allow"),
+    button2 = L("undo.deny"),
     OnAccept = function(self, data)
         if data.answered then return end
         data.answered = true
@@ -260,6 +261,11 @@ StaticPopupDialogs["TTS_UNDO_REQUEST"] = {
     hideOnEscape = true,
     preferredIndex = 3,
 }
+-- The popup reads these when it shows: set them again once the chosen language has loaded
+TTS.Locale:OnReady(function()
+    local d = StaticPopupDialogs["TTS_UNDO_REQUEST"]
+    d.text, d.button1, d.button2 = L("undo.popup"), L("undo.allow"), L("undo.deny")
+end)
 
 function E:OnUndoRequest(seq, cardId)
     local ru = self.remoteUndo
@@ -268,7 +274,7 @@ function E:OnUndoRequest(seq, cardId)
         TTS.Net:Send(self.opponent, "ACTION:UNDO_DENY:" .. tostring(seq))
         return
     end
-    self:Log(string.format("%s asks to undo |cFFFFD200%s|r.", self.opponent, CardName(cardId)), "SYSTEM")
+    self:Log(L("undo.asks", self.opponent, CardName(cardId)), "SYSTEM")
     StaticPopup_Show("TTS_UNDO_REQUEST", self.opponent, CardName(cardId), { seq = seq })
 end
 

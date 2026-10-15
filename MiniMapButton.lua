@@ -7,6 +7,7 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
 
 local ADDON_NAME = "ForeverCCG"
 local DEFAULT_MINIMAP_POS = 205
@@ -89,15 +90,15 @@ local function ToggleWaitingRoom()
         return
     end
     if TTS.Engine and TTS.Engine.inMatch then
-        Print("|cFFFF2222[TTS]|r The waiting room can't be opened during a game.")
+        Print(L("minimap.wrInMatch"))
         return
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        Print("|cFFFF2222[TTS]|r Close the Deckbuilder before opening the waiting room.")
+        Print(L("minimap.wrDeckbuilder"))
         return
     end
     if TTS.Engine and not TTS.Engine:ValidateDeck() then
-        Print("|cFFFF2222[TTS]|r Your active deck must have 40-50 cards to open the waiting room.")
+        Print(L("minimap.wrDeckSize"))
         return
     end
     F:Show()
@@ -151,11 +152,11 @@ local function BuildMinimapTooltip(tip)
             count = count + qty
         end
     end
-    local deckName = (activeDeck and activeDeck.name) or "Default Deck"
+    local deckName = (activeDeck and activeDeck.name) or L("deck.defaultName")
 
-    tip:AddDoubleLine("Active Deck:", deckName, 1, 1, 1, 0.9, 0.9, 0.6)
+    tip:AddDoubleLine(L("minimap.activeDeck"), deckName, 1, 1, 1, 0.9, 0.9, 0.6)
     tip:AddDoubleLine(
-        "Card Count:",
+        L("minimap.cardCount"),
         string.format("%d / 40", count),
         1, 1, 1,
         (count >= 40 and 0 or 1),
@@ -163,20 +164,18 @@ local function BuildMinimapTooltip(tip)
         0.2
     )
     if TTS.GetCollectionScore then
-        tip:AddDoubleLine("Collection Score:", TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
+        tip:AddDoubleLine(L("minimap.score"), TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
     end
 
     if TTS.Engine and TTS.Engine.inMatch then
         tip:AddLine(" ")
-        tip:AddLine("|cFF00FF00Match in Progress!|r")
+        tip:AddLine("|cFF00FF00" .. L("minimap.inMatch") .. "|r")
     end
 
     tip:AddLine(" ")
-    tip:AddLine("|cFF808080Left-Click: Toggle Main Window|r")
-    tip:AddLine("|cFF808080Shift + Left-Click: Toggle Deckbuilder|r")
-    tip:AddLine("|cFF808080Alt + Left-Click: Toggle Rules|r")
-    tip:AddLine("|cFF808080Ctrl + Left-Click: Toggle Waiting Room|r")
-    tip:AddLine("|cFF808080Left-Click & Drag: Move Button|r")
+    for _, key in ipairs({ "minimap.hintMain", "minimap.hintDeck", "minimap.hintRules", "minimap.hintWaiting", "minimap.hintMove" }) do
+        tip:AddLine("|cFF808080" .. L(key) .. "|r")
+    end
 end
 
 -- Shown through the tooltip manager (UI\Tooltips.lua)

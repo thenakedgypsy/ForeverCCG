@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 TTS.WaitingRoom = TTS.WaitingRoom or {
     isQueued = false,
     players = {}, -- [fullName] = lastSeenTimestamp
@@ -86,7 +88,7 @@ F:Hide()
 
 local title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 title:SetPoint("TOP", 0, -18)
-title:SetText("Forever: CCG - Waiting Room")
+Loc:Bind(title, "wr.title")
 
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -5, -5)
@@ -95,7 +97,7 @@ local statusDesc = F:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 statusDesc:SetPoint("TOPLEFT", 20, -42)
 statusDesc:SetPoint("TOPRIGHT", -20, -42)
 statusDesc:SetJustifyH("CENTER")
-statusDesc:SetText("Players currently looking for a match:")
+Loc:Bind(statusDesc, "wr.lookingForMatch")
 
 local listContainer = CreateFrame("Frame", nil, F, backdropTemplate)
 listContainer:SetPoint("TOPLEFT", 20, -72)
@@ -119,12 +121,12 @@ for i = 1, 8 do
     row.inviteBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.inviteBtn:SetSize(70, 20)
     row.inviteBtn:SetPoint("RIGHT", -6, 0)
-    row.inviteBtn:SetText("Invite")
+    Loc:Bind(row.inviteBtn, "wr.invite")
 
     row.partyBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.partyBtn:SetSize(84, 20)
     row.partyBtn:SetPoint("RIGHT", row.inviteBtn, "LEFT", -4, 0)
-    row.partyBtn:SetText("Party Invite")
+    Loc:Bind(row.partyBtn, "wr.partyInvite")
 
     row.scoreText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     row.scoreText:SetPoint("RIGHT", row.partyBtn, "LEFT", -8, 0)
@@ -190,17 +192,17 @@ end
 
 local onlineEmpty = onlineContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 onlineEmpty:SetPoint("CENTER")
-onlineEmpty:SetText("Nobody else found yet. Players you meet are checked on in the background.")
+Loc:Bind(onlineEmpty, "wr.nobodyOnline")
 onlineEmpty:SetWidth(380)
 
 local function UpdateOnlineList()
     local list = TTS.Net and TTS.Net.GetOnlineIdleContacts and TTS.Net:GetOnlineIdleContacts() or {}
-    onlineDesc:SetText(string.format("Recent players online (%d):", #list))
+    onlineDesc:SetText(L("wr.recentOnline", #list))
     onlineEmpty:SetShown(#list == 0)
     for i, row in ipairs(onlineRows) do
         local entry = list[i]
         if i == ONLINE_ROWS and #list > ONLINE_ROWS then
-            row.nameText:SetText(string.format("+ %d more", #list - ONLINE_ROWS + 1))
+            row.nameText:SetText(L("wr.more", #list - ONLINE_ROWS + 1))
             row.scoreText:SetText("")
             row:Show()
         elseif entry then
@@ -219,12 +221,12 @@ end
 local toggleBtn = CreateFrame("Button", nil, F, "UIPanelButtonTemplate")
 toggleBtn:SetSize(180, 26)
 toggleBtn:SetPoint("BOTTOM", 0, 42)
-toggleBtn:SetText("Join Waiting Room")
+Loc:Bind(toggleBtn, "wr.join")
 
 local refreshBtn = CreateFrame("Button", nil, F, "UIPanelButtonTemplate")
 refreshBtn:SetSize(100, 22)
 refreshBtn:SetPoint("BOTTOM", 0, 14)
-refreshBtn:SetText("Refresh")
+Loc:Bind(refreshBtn, "wr.refresh")
 
 -- Addon version (from the .toc), bottom-right corner
 local versionText = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -232,20 +234,20 @@ versionText:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -16, 18)
 versionText:SetJustifyH("RIGHT")
 
 local function UpdateVersionText()
-    versionText:SetText("v" .. (TTS.VERSION or "unknown"))
+    versionText:SetText("v" .. (TTS.VERSION or "?"))
 end
 
 -- Column headers, above the list (rows sit 10px in from the list's left and right edges)
-local function CreateColumnHeader(text, point, relPoint, x)
+local function CreateColumnHeader(textKey, point, relPoint, x)
     local h = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     h:SetPoint(point, listContainer, relPoint, x, 2)
-    h:SetText(text)
+    Loc:Bind(h, textKey)
     return h
 end
-CreateColumnHeader("Player", "BOTTOMLEFT", "TOPLEFT", 16)
-CreateColumnHeader("Collection Score", "BOTTOMRIGHT", "TOPRIGHT", -182)
-CreateColumnHeader("Party", "BOTTOM", "TOPRIGHT", -132)       -- centred over the Party Invite buttons
-CreateColumnHeader("Challenge", "BOTTOM", "TOPRIGHT", -51)    -- centred over the Invite buttons
+CreateColumnHeader("wr.colPlayer", "BOTTOMLEFT", "TOPLEFT", 16)
+CreateColumnHeader("wr.colScore", "BOTTOMRIGHT", "TOPRIGHT", -182)
+CreateColumnHeader("wr.colParty", "BOTTOM", "TOPRIGHT", -132)       -- centred over the Party Invite buttons
+CreateColumnHeader("wr.colChallenge", "BOTTOM", "TOPRIGHT", -51)    -- centred over the Invite buttons
 
 -- =========================================================================
 -- PARTY INVITES
@@ -267,7 +269,7 @@ local function InviteToParty(name)
     local invite = (C_PartyInfo and C_PartyInfo.InviteUnit) or InviteUnit
     if not invite then return end
     invite(unitName)
-    DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r Party invite sent to " .. unitName .. ".")
+    DEFAULT_CHAT_FRAME:AddMessage(L("wr.partyInviteSent", unitName))
 end
 
 -- =========================================================================
@@ -278,9 +280,9 @@ function WR:UpdateUI()
     local myKey = myFullName:lower()
 
     if self.isQueued then
-        toggleBtn:SetText("|cFFFF4444Leave Waiting Room|r")
+        toggleBtn:SetText("|cFFFF4444" .. L("wr.leave") .. "|r")
     else
-        toggleBtn:SetText("|cFF00FF00Join Waiting Room|r")
+        toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
     end
 
     local now = time()
@@ -312,9 +314,9 @@ function WR:UpdateUI()
         local entry = displayList[i]
         if entry then
             if entry.isSelf then
-                row.nameText:SetText(string.format("|cFF00FF00%s (You)|r", entry.name))
+                row.nameText:SetText("|cFF00FF00" .. L("wr.you", entry.name) .. "|r")
                 row.scoreText:SetText("|cFFFFFFFF" .. TTS:FormatScore(TTS.Net.MyScore()) .. "|r")
-                row.inviteBtn:SetText("Queued")
+                row.inviteBtn:SetText(L("wr.queued"))
                 row.inviteBtn:Disable()
                 row.partyBtn:Hide()
             else
@@ -325,13 +327,13 @@ function WR:UpdateUI()
                 local Net = TTS.Net
                 local wait = Net and Net.InviteCooldownLeft and Net:InviteCooldownLeft() or 0
                 if Net and Net.IsInvitePending and Net:IsInvitePending(entry.name) then
-                    row.inviteBtn:SetText("Sent...")
+                    row.inviteBtn:SetText(L("wr.sent"))
                     row.inviteBtn:Disable()
                 elseif wait > 0 then
-                    row.inviteBtn:SetText(string.format("Invite (%d)", wait))
+                    row.inviteBtn:SetText(L("wr.inviteWait", wait))
                     row.inviteBtn:Disable()
                 else
-                    row.inviteBtn:SetText("Invite")
+                    row.inviteBtn:SetText(L("wr.invite"))
                     row.inviteBtn:Enable()
                 end
                 row.inviteBtn:SetScript("OnClick", function()
@@ -341,10 +343,10 @@ function WR:UpdateUI()
                 end)
                 row.partyBtn:Show()
                 if InGroupWith(PartyName(entry.name)) then
-                    row.partyBtn:SetText("In Party")
+                    row.partyBtn:SetText(L("wr.inParty"))
                     row.partyBtn:Disable()
                 else
-                    row.partyBtn:SetText("Party Invite")
+                    row.partyBtn:SetText(L("wr.partyInvite"))
                     row.partyBtn:Enable()
                 end
                 row.partyBtn:SetScript("OnClick", function()
@@ -372,7 +374,7 @@ end
 function WR:ToggleQueue()
     -- The Deckbuilder is disabled while queued, so it must be closed before joining
     if not self.isQueued and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r Close the Deckbuilder before joining the waiting room.")
+        DEFAULT_CHAT_FRAME:AddMessage(L("wr.closeDeckbuilder"))
         return
     end
 
@@ -381,12 +383,12 @@ function WR:ToggleQueue()
 
     if self.isQueued then
         self:BroadcastPresence()
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS]|r You joined the waiting room as " .. myName .. ".")
+        DEFAULT_CHAT_FRAME:AddMessage(L("wr.joined", myName))
     else
         if TTS.Net and TTS.Net.BroadcastLFM then
             TTS.Net:BroadcastLFM("LFM_LEAVE:" .. myName)
         end
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTS]|r You left the waiting room.")
+        DEFAULT_CHAT_FRAME:AddMessage(L("wr.left"))
     end
     self:UpdateUI()
 
@@ -410,7 +412,7 @@ end)
 F:SetScript("OnShow", function(self)
     -- The waiting room is unavailable during a game
     if TTS.Engine and TTS.Engine.inMatch then
-        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The waiting room can't be opened during a game.")
+        DEFAULT_CHAT_FRAME:AddMessage(L("minimap.wrInMatch"))
         self:Hide()
         return
     end

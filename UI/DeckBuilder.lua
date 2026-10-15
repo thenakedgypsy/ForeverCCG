@@ -7,6 +7,8 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
+local Loc = TTS.Locale
 
 -- =========================================================================
 -- DECK SLOTS (up to 3 saved decks, switchable from the Deckbuilder)
@@ -62,7 +64,7 @@ function TTS:IsSpellUnlocked(cardId)
 end
 
 local function DefaultDeckName(i)
-    return (i == 1) and "Default Deck" or ("Deck " .. i)
+    return (i == 1) and L("deck.defaultName") or L("deck.numbered", i)
 end
 
 function TTS:EnsureDeckSlots()
@@ -186,8 +188,12 @@ local TT = TTS.Tooltip
 
 local function AddTooltipScripts(b)
     b:SetScript("OnEnter", function(self)
-        if self.tooltipTitle then
-            TT:ShowText(self, "ANCHOR_TOP", self.tooltipTitle, self.tooltipText, { symbol = self.tooltipSymbol })
+        -- Titles and texts are locale keys (plain text passes through L unchanged) or functions
+        local title, text = self.tooltipTitle, self.tooltipText
+        if type(title) == "function" then title = title() end
+        if type(text) == "function" then text = text() end
+        if title then
+            TT:ShowText(self, "ANCHOR_TOP", L(title), text and L(text), { symbol = self.tooltipSymbol })
         end
     end)
     b:SetScript("OnLeave", function(self) TT:Hide(self) end)
@@ -209,7 +215,7 @@ local function CreateFlatButton(parent, w, h, text)
     b.label:SetPoint("LEFT", 6, 0)
     b.label:SetPoint("RIGHT", -6, 0)
     b.label:SetWordWrap(false)
-    b.label:SetText(text or "")
+    Loc:Bind(b.label, text or "")
 
     AddTooltipScripts(b)
     return b
@@ -222,7 +228,7 @@ local function CreatePanelButton(parent, w, h, text)
     b:SetNormalFontObject("GameFontNormalSmall")
     b:SetHighlightFontObject("GameFontHighlightSmall")
     b:SetDisabledFontObject("GameFontDisableSmall")
-    b:SetText(text or "")
+    Loc:Bind(b, text or "")
     b.label = b:GetFontString()
     AddTooltipScripts(b)
     return b
@@ -291,7 +297,7 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
-title:SetText("Deckbuilder")
+Loc:Bind(title, "db.title")
 
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -2, -2)
@@ -344,7 +350,7 @@ scaleGrip:SetScript("OnHide", function(self)
     self:SetScript("OnUpdate", nil)
 end)
 scaleGrip:SetScript("OnEnter", function(self)
-    TT:ShowText(self, "ANCHOR_TOP", "Drag to scale the window")
+    TT:ShowText(self, "ANCHOR_TOP", L("db.dragScale"))
 end)
 scaleGrip:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
@@ -395,9 +401,9 @@ end
 local function UnlockHint(card)
     if card.isReward then
         local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
-        return "Win the " .. (enc and enc.name or "solo") .. " encounter in Solo mode"
+        return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
-    return "Defeat " .. card.name
+    return L("link.defeat", TTS:CardName(card))
 end
 
 local function IsCardUnlocked(cardId, card)
@@ -428,7 +434,9 @@ local function CardPassesFilters(cardId, card)
     if factionFilter and GetTypeGroup(card) == "Creature" and card.faction ~= factionFilter then return false end
     if creatureTypeFilter and GetTypeGroup(card) == "Creature" and card.creatureType ~= creatureTypeFilter then return false end
     if searchText ~= "" then
-        local hay = string.lower((card.name or "") .. "\n" .. (card.text or ""))
+        -- Search the shown (translated) name and text, and the English ones
+        local hay = string.lower((card.name or "") .. "\n" .. (card.text or "") .. "\n"
+            .. (TTS:CardName(card) or "") .. "\n" .. (TTS:CardText(card) or ""))
         if not string.find(hay, searchText, 1, true) then return false end
     end
     return true
@@ -451,15 +459,8 @@ local SPHERE_RANK = IndexOf(SPHERE_ORDER)
 local TYPE_RANK   = { Creature = 1, Spell = 2, Prayer = 3 }
 
 local SORT_ORDER = { "COST", "COLOR", "TYPE", "CLASS", "FACTION", "ZONE", "CREATURETYPE" }
-local SORT_LABEL = {
-    COST         = "Cost",
-    COLOR        = "Colour",
-    TYPE         = "Card Type",
-    CLASS        = "Class",
-    FACTION      = "Faction",
-    ZONE         = "Zone",
-    CREATURETYPE = "Creature Type",
-}
+-- Shown as db.sort.<mode>
+local SORT_LABEL = setmetatable({}, { __index = function(_, mode) return L("db.sort." .. mode) end })
 
 -- Returns group rank, then a value to order by inside that rank, then the label
 -- shown next to the card (nil = no label)
@@ -473,21 +474,21 @@ local SORT_KEY = {
         return TYPE_RANK[GetTypeGroup(card)] or 4, 0, nil
     end,
     CLASS = function(card)
-        if card.class then return 1, CLASS_RANK[card.class] or 99, card.class end
+        if card.class then return 1, CLASS_RANK[card.class] or 99, TTS:ClassName(card.class) end
         return 2, 0, nil
     end,
     FACTION = function(card)
-        if card.faction then return 1, card.faction, card.faction end
+        if card.faction then local s = Loc:Term("faction", card.faction); return 1, s, s end
         return 2, "", nil
     end,
     -- Zone creatures (A-Z by zone), then class spells (by class), then everything else
     ZONE = function(card)
-        if card.zone then return 1, card.zone, card.zone end
-        if card.class then return 2, card.class, card.class end
+        if card.zone then local s = Loc:Term("zone", card.zone); return 1, s, s end
+        if card.class then local s = TTS:ClassName(card.class); return 2, s, s end
         return 3, "", nil
     end,
     CREATURETYPE = function(card)
-        if card.creatureType then return 1, card.creatureType, card.creatureType end
+        if card.creatureType then local s = Loc:Term("creatureType", card.creatureType); return 1, s, s end
         return 2, "", nil
     end,
 }
@@ -503,7 +504,7 @@ local function CompareCards(a, b)
     end
     local ma, mb = ca.cmc or 0, cb.cmc or 0
     if ma ~= mb then return ma < mb end
-    local na, nb = ca.name or "", cb.name or ""
+    local na, nb = TTS:CardName(ca) or "", TTS:CardName(cb) or ""
     if na ~= nb then return na < nb end
     return a < b
 end
@@ -529,9 +530,9 @@ end
 local function ClassColored(className)
     local c = RAID_CLASS_COLORS and RAID_CLASS_COLORS[string.upper(className)]
     if c then
-        return string.format("|cFF%02X%02X%02X%s|r", math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255), className)
+        return string.format("|cFF%02X%02X%02X%s|r", math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255), TTS:ClassName(className))
     end
-    return className
+    return TTS:ClassName(className)
 end
 
 -- Every class that has at least one spell in the card database, in CLASS_ORDER first
@@ -565,7 +566,9 @@ local function BuildFieldList(field)
             table.insert(list, v)
         end
     end
-    table.sort(list)
+    -- In the order the player reads them (translated values sort differently)
+    local group = (field == "creatureType") and "creatureType" or field
+    table.sort(list, function(a, b) return Loc:Term(group, a) < Loc:Term(group, b) end)
     return list
 end
 
@@ -587,7 +590,7 @@ local function CheckAdd(cardId, card, deck)
         totalCards = totalCards + qty
     end
     if totalCards >= 50 then
-        return "|cFFFF2222[TTS]|r Maximum deck size reached (50 cards)."
+        return L("db.maxDeck")
     end
 
     -- Spell cap (TTS.MAX_DECK_SPELLS spells maximum)
@@ -600,7 +603,7 @@ local function CheckAdd(cardId, card, deck)
             end
         end
         if spellCards >= TTS.MAX_DECK_SPELLS then
-            return string.format("|cFFFF2222[TTS]|r Maximum %d spells per deck reached.", TTS.MAX_DECK_SPELLS)
+            return L("db.maxSpells", TTS.MAX_DECK_SPELLS)
         end
     end
 
@@ -609,25 +612,25 @@ local function CheckAdd(cardId, card, deck)
     if IsCollectible(card) then
         local kills = GetKillCount(cardId, card)
         if kills <= 0 then
-            return "|cFFFF2222[TTS]|r " .. UnlockHint(card) .. " to unlock this card!"
+            return L("db.toUnlock", UnlockHint(card))
         end
         local maxAllowed = math.min(4, kills)
         if current >= maxAllowed then
             if maxAllowed >= 4 then
-                return string.format("|cFFFF2222[TTS]|r Maximum 4 copies reached for %s.", card.name)
+                return L("db.max4", TTS:CardName(card))
             else
                 if card.isReward then
-                    return string.format("|cFFFF2222[TTS]|r You own %d cop%s of %s. %s again to earn more (max 4).", kills, kills == 1 and "y" or "ies", card.name, UnlockHint(card))
+                    return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
-                return string.format("|cFFFF2222[TTS]|r You have %d kill(s) for %s. Defeat them again to add more copies (max 4).", kills, card.name)
+                return L("db.kills", kills, TTS:CardName(card))
             end
         end
     else
         if not TTS:IsSpellUnlocked(cardId) then
-            return string.format("|cFFFF2222[TTS]|r %s unlocks at level %d.", card.name, TTS:GetSpellUnlockLevel(cardId))
+            return L("db.unlocksAt", TTS:CardName(card), TTS:GetSpellUnlockLevel(cardId))
         end
         if card.type ~= "Land" and current >= 4 then
-            return "|cFFFF2222[TTS]|r Maximum 4 copies allowed for " .. card.name
+            return L("db.max4Allowed", TTS:CardName(card))
         end
     end
 
@@ -728,7 +731,7 @@ local function PaintCardFrame(f, card, costSize)
         f.border:SetTexture("Interface\\Tooltips\\UI-Tooltip-Border")
     end
 
-    f.title:SetText(card.name or "")
+    f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
         f.cost:SetText(Sym(card.cost, costSize))
@@ -792,7 +795,7 @@ local function PrintCardRules(f, card, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(Sym(card.text, size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(Sym(TTS:CardText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -854,22 +857,22 @@ local function CardTooltip_OnEnter(self)
     -- 2. Tooltip at the mouse cursor, with the collection status under the name
     local cardId = self.cardId
     TT:ShowCard(self, "ANCHOR_CURSOR", cardId, {
-        hint = self.hint,
+        hint = self.hint and L(self.hint),
         header = function(tip)
             if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
                     if card.isReward then
-                        tip:AddLine("|cFFFF2222Locked: " .. UnlockHint(card) .. " to unlock!|r", 1, 0.2, 0.2, true)
+                        tip:AddLine("|cFFFF2222" .. L("db.lockedHow", UnlockHint(card)) .. "|r", 1, 0.2, 0.2, true)
                     else
-                        tip:AddLine("|cFFFF2222Locked: Defeat this creature to unlock!|r", 1, 0.2, 0.2)
+                        tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)
                     end
                 else
                     local maxAllowed = math.min(4, kills)
-                    tip:AddLine(string.format("|cFF00FF00Collected: %d (Max %d copies in deck)|r", kills, maxAllowed), 0.2, 1.0, 0.2)
+                    tip:AddLine("|cFF00FF00" .. L("db.collected", kills, maxAllowed) .. "|r", 0.2, 1.0, 0.2)
                 end
             elseif not TTS:IsSpellUnlocked(cardId) then
-                tip:AddLine(string.format("|cFFFF2222Locked: Unlocks at level %d|r", TTS:GetSpellUnlockLevel(cardId)), 1, 0.2, 0.2)
+                tip:AddLine("|cFFFF2222" .. L("db.lockedLevel", TTS:GetSpellUnlockLevel(cardId)) .. "|r", 1, 0.2, 0.2)
             end
         end,
     })
@@ -920,8 +923,10 @@ local function CreateDropdown(parent, width, allText, cfg)
     dd.label:SetPoint("RIGHT", dd.arrow, "LEFT", -2, 3)
     dd.label:SetJustifyH("LEFT")
 
+    -- allText is a locale key; cfg.display(v) (optional) is the shown form of a value
     local function Display(v)
         if cfg.colorize then return cfg.colorize(v) end
+        if cfg.display then return cfg.display(v) end
         return v
     end
 
@@ -931,10 +936,10 @@ local function CreateDropdown(parent, width, allText, cfg)
             -- Always has a value, so no "active filter" highlight
             self.label:SetText(cfg.buttonText and cfg.buttonText(v) or Display(v))
         elseif v then
-            self.label:SetText(cfg.colorize and cfg.colorize(v) or (GOLD .. v .. "|r"))
+            self.label:SetText(cfg.colorize and cfg.colorize(v) or (GOLD .. Display(v) .. "|r"))
             SetBorder(self, STYLE.accent[1], STYLE.accent[2], STYLE.accent[3], 0.8)
         else
-            self.label:SetText(GREY .. allText .. "|r")
+            self.label:SetText(GREY .. L(allText) .. "|r")
             SetBorder(self, STYLE.controlBorder[1], STYLE.controlBorder[2], STYLE.controlBorder[3], 1)
         end
     end
@@ -977,7 +982,7 @@ local function CreateDropdown(parent, width, allText, cfg)
             row.text:SetPoint("RIGHT", -2, 0)
             row.text:SetJustifyH("LEFT")
             row.text:SetWordWrap(false)
-            row.text:SetText(value and Display(value) or allText)
+            row.text:SetText(value and Display(value) or L(allText))
 
             row.value = value or nil
             row:SetScript("OnClick", function()
@@ -1056,7 +1061,7 @@ searchBox:SetTextInsets(8, 22, 0, 0)
 
 local searchPlaceholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 searchPlaceholder:SetPoint("LEFT", 8, 0)
-searchPlaceholder:SetText("Search name or text...")
+Loc:Bind(searchPlaceholder, "db.searchPlaceholder")
 
 local searchClear = CreateFrame("Button", nil, searchBox)
 searchClear:SetSize(18, 18)
@@ -1100,9 +1105,9 @@ searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
 -- Card type toggles
 local TYPE_DEFS = {
-    { key = "Creature", label = "Creatures" },
-    { key = "Spell",    label = "Spells" },
-    { key = "Prayer",   label = "Prayers" },
+    { key = "Creature", label = "db.creatures" },
+    { key = "Spell",    label = "db.spells" },
+    { key = "Prayer",   label = "db.prayers" },
 }
 for n, def in ipairs(TYPE_DEFS) do
     local b = CreateToggle(poolPanel, 74, def.label, STYLE.accent,
@@ -1119,8 +1124,8 @@ for n, key in ipairs(SPHERE_ORDER) do
         function() return colorOn[key] end,
         function(v) colorOn[key] = v end)
     b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 434 + (n - 1) * 49, -10)
-    b.tooltipTitle = RGBHex(rgb) .. SPHERE_NAME[key] .. "|r"
-    b.tooltipText = "Show or hide " .. SPHERE_NAME[key] .. " cards."
+    b.tooltipTitle = function() return RGBHex(rgb) .. TT:Def("symbol", key, "name") .. "|r" end
+    b.tooltipText = function() return L("db.showHideSphere", TT:Def("symbol", key, "name")) end
     b.tooltipSymbol = key
     sphereToggles[key] = b
 end
@@ -1136,42 +1141,45 @@ end
 -- FILTER BAR (row 2: class, zone, faction, creature type, sort, reset)
 -- Class applies to spells only; zone, faction and creature type to creatures only.
 -- =========================================================================
-local classDD = CreateDropdown(poolPanel, 104, "All Classes", {
+local classDD = CreateDropdown(poolPanel, 104, "db.allClasses", {
     values = BuildClassList,
     cols = 1,
     colorize = ClassColored,
     onSelect = function(v) classFilter = v; OnFiltersChanged() end,
 })
 classDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -42)
-classDD.tooltipTitle = "Class"
-classDD.tooltipText = "Only show spells from this class."
+classDD.tooltipTitle = "db.class"
+classDD.tooltipText = "db.class.desc"
 
-local zoneDD = CreateDropdown(poolPanel, 118, "All Zones", {
+local zoneDD = CreateDropdown(poolPanel, 118, "db.allZones", {
     values = function() return BuildFieldList("zone") end,
     cols = 3,
+    display = function(v) return Loc:Term("zone", v) end,
     onSelect = function(v) zoneFilter = v; OnFiltersChanged() end,
 })
 zoneDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 120, -42)
-zoneDD.tooltipTitle = "Zone"
-zoneDD.tooltipText = "Only show creatures from this zone."
+zoneDD.tooltipTitle = "db.zone"
+zoneDD.tooltipText = "db.zone.desc"
 
-local factionDD = CreateDropdown(poolPanel, 104, "All Factions", {
+local factionDD = CreateDropdown(poolPanel, 104, "db.allFactions", {
     values = function() return BuildFieldList("faction") end,
     cols = 2,
+    display = function(v) return Loc:Term("faction", v) end,
     onSelect = function(v) factionFilter = v; OnFiltersChanged() end,
 })
 factionDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 244, -42)
-factionDD.tooltipTitle = "Faction"
-factionDD.tooltipText = "Only show creatures of this faction."
+factionDD.tooltipTitle = "db.faction"
+factionDD.tooltipText = "db.faction.desc"
 
-local creatureTypeDD = CreateDropdown(poolPanel, 118, "All Creature Types", {
+local creatureTypeDD = CreateDropdown(poolPanel, 118, "db.allCreatureTypes", {
     values = function() return BuildFieldList("creatureType") end,
     cols = 1,
+    display = function(v) return Loc:Term("creatureType", v) end,
     onSelect = function(v) creatureTypeFilter = v; OnFiltersChanged() end,
 })
 creatureTypeDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 354, -42)
-creatureTypeDD.tooltipTitle = "Creature Type"
-creatureTypeDD.tooltipText = "Only show creatures of this type."
+creatureTypeDD.tooltipTitle = "db.creatureType"
+creatureTypeDD.tooltipText = "db.creatureType.desc"
 
 local sortDD = CreateDropdown(poolPanel, 118, "", {
     values = function() return SORT_ORDER end,
@@ -1179,7 +1187,7 @@ local sortDD = CreateDropdown(poolPanel, 118, "", {
     noAll = true,
     initial = sortMode,
     colorize = function(v) return SORT_LABEL[v] end,
-    buttonText = function(v) return GREY .. "Sort:|r " .. SORT_LABEL[v] end,
+    buttonText = function(v) return GREY .. L("db.sortPrefix") .. "|r " .. SORT_LABEL[v] end,
     onSelect = function(v)
         if not v or v == sortMode then return end
         sortMode = v
@@ -1189,13 +1197,13 @@ local sortDD = CreateDropdown(poolPanel, 118, "", {
     end,
 })
 sortDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 478, -42)
-sortDD.tooltipTitle = "Sort order"
-sortDD.tooltipText = "Groups cards by the chosen field, then by mana cost and name. Applies to the pool and the deck list."
+sortDD.tooltipTitle = "db.sortOrder"
+sortDD.tooltipText = "db.sortOrder.desc"
 
-local resetFiltersBtn = CreatePanelButton(poolPanel, 72, 24, "Reset")
+local resetFiltersBtn = CreatePanelButton(poolPanel, 72, 24, "db.reset")
 resetFiltersBtn:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 602, -42)
-resetFiltersBtn.tooltipTitle = "Reset Filters"
-resetFiltersBtn.tooltipText = "Clear the search and every filter."
+resetFiltersBtn.tooltipTitle = "db.resetFilters"
+resetFiltersBtn.tooltipText = "db.resetFilters.desc"
 resetFiltersBtn.label:SetJustifyH("CENTER")
 resetFiltersBtn:SetScript("OnClick", function()
     for k in pairs(colorOn) do colorOn[k] = true end
@@ -1225,7 +1233,7 @@ gridFrame:SetSize(GRID_COLS * TILE_W + (GRID_COLS - 1) * TILE_GAP_X, GRID_ROWS *
 
 local poolEmptyText = gridFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 poolEmptyText:SetPoint("CENTER")
-poolEmptyText:SetText("No cards match these filters.")
+Loc:Bind(poolEmptyText, "db.noMatch")
 poolEmptyText:Hide()
 
 local function ChangePoolPage(delta)
@@ -1290,7 +1298,7 @@ local function CreateTile(index)
     local hit = CreateFrame("Button", nil, t)
     hit:SetAllPoints(t)
     hit:SetFrameLevel(card:GetFrameLevel() + 30)
-    hit.hint = "Left-click to add to deck\nRight-click to remove from deck"
+    hit.hint = "db.poolHint"
     t.hit = hit
 
     -- Dimmed when the card can't be added right now
@@ -1313,7 +1321,7 @@ local function CreateTile(index)
     t.newText = hit:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     t.newText:SetDrawLayer("OVERLAY", 7)
     t.newText:SetPoint("CENTER", t.newBadge, "CENTER", 0, 0)
-    t.newText:SetText("NEW")
+    Loc:Bind(t.newText, "db.new")
     t.newText:SetTextColor(0.3, 1, 0.3)
     t.newBadge:Hide()
     t.newText:Hide()
@@ -1380,7 +1388,7 @@ local function UpdateTileState(t, deck)
     local limit = GetCopyLimit(id, card)
     if limit == nil then
         for p = 1, 4 do t.pips[p]:Hide() end
-        t.copyText:SetText(inDeck > 0 and (GOLD .. inDeck .. "|r in deck") or (GREY .. "Unlimited|r"))
+        t.copyText:SetText(inDeck > 0 and L("db.inDeck", GOLD .. inDeck .. "|r") or (GREY .. L("db.unlimited") .. "|r"))
         t.copyText:Show()
     else
         t.copyText:Hide()
@@ -1449,9 +1457,7 @@ collectionLabel:SetJustifyH("LEFT")
 
 local function UpdateCollectionProgress()
     local score, collected, mastered, total = TTS:GetCollectionScore()
-    collectionLabel:SetText(string.format(
-        "|cFFFFFFFF%d/%d|r Creatures Collected     |cFFFFFFFF%d/%d|r Creatures Mastered     Score |cFFFFFFFF%s|r",
-        collected, total, mastered, total, TTS:FormatScore(score)))
+    collectionLabel:SetText(L("db.collection", collected, total, mastered, total, TTS:FormatScore(score)))
 end
 
 -- =========================================================================
@@ -1490,7 +1496,7 @@ local function ApplyDeckRename(index, text)
 end
 
 StaticPopupDialogs["TTS_RENAME_DECK"] = {
-    text = "Rename deck:",
+    text = L("db.renameDeck"),
     button1 = ACCEPT or "Accept",
     button2 = CANCEL or "Cancel",
     hasEditBox = true,
@@ -1520,6 +1526,7 @@ StaticPopupDialogs["TTS_RENAME_DECK"] = {
     hideOnEscape = true,
     preferredIndex = 3,
 }
+Loc:OnReady(function() StaticPopupDialogs["TTS_RENAME_DECK"].text = L("db.renameDeck") end)
 
 local TAB_W = math.floor((LIST_W - (TTS.MAX_DECK_SLOTS - 1) * 7) / TTS.MAX_DECK_SLOTS)
 
@@ -1537,8 +1544,8 @@ for i = 1, TTS.MAX_DECK_SLOTS do
     tab.label:SetJustifyH("LEFT")
     tab.label:SetWordWrap(false)
 
-    tab.tooltipTitle = "Deck slot " .. i
-    tab.tooltipText = "Left-click to switch to this deck.\nRight-click to rename it."
+    tab.tooltipTitle = function() return L("db.deckSlot", i) end
+    tab.tooltipText = "db.deckSlot.desc"
 
     tab:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     tab:SetScript("OnClick", function(_, button)
@@ -1554,7 +1561,7 @@ for i = 1, TTS.MAX_DECK_SLOTS do
         TTS_ActiveDeckIndex = i
         CardTooltip_OnLeave()
         D:RefreshDeck()
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTS]|r Loaded deck: |cFFFFD200%s|r.", TTS_SavedDecks[i].name))
+        DEFAULT_CHAT_FRAME:AddMessage(L("db.loadedDeck", TTS_SavedDecks[i].name))
     end)
     deckTabs[i] = tab
 end
@@ -1568,7 +1575,7 @@ countLabel:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 12, -48)
 local statusHint = deckPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 statusHint:SetPoint("LEFT", countLabel, "RIGHT", 8, -1)
 
-local clearBtn = CreatePanelButton(deckPanel, 84, 22, "Clear Deck")
+local clearBtn = CreatePanelButton(deckPanel, 84, 22, "db.clearDeck")
 clearBtn:SetPoint("TOPRIGHT", deckPanel, "TOPRIGHT", -10, -43)
 clearBtn.label:SetJustifyH("CENTER")
 clearBtn:SetScript("OnClick", function()
@@ -1593,10 +1600,11 @@ listArea:SetSize(LIST_W, LIST_H)
 local deckEmptyText = listArea:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 deckEmptyText:SetPoint("CENTER", 0, 20)
 deckEmptyText:SetWidth(LIST_W - 40)
-deckEmptyText:SetText("This deck is empty.\nClick cards on the left to add them.")
+Loc:Bind(deckEmptyText, "db.deckEmpty")
 
 local GROUP_ORDER = { "Creature", "Spell", "Prayer" }
-local GROUP_LABEL = { Creature = "CREATURES", Spell = "SPELLS", Prayer = "PRAYERS" }
+-- Deck list group headers: db.group.<group>
+local GROUP_LABEL = setmetatable({}, { __index = function(_, group) return L("db.group." .. group) end })
 
 local deckRows = {}
 
@@ -1649,7 +1657,7 @@ local function GetDeckRow(i)
     r.headerLine:SetHeight(1)
     r.headerLine:SetColorTexture(1, 0.82, 0, 0.30)
 
-    r.hint = "Click to remove one copy"
+    r.hint = "db.deckRowHint"
 
     r:SetScript("OnEnter", function(self)
         if self.cardId then CardTooltip_OnEnter(self) end
@@ -1716,7 +1724,7 @@ local function SetupCardRow(r, cardId, card, count)
         r.cost:SetText("")
     end
     r.cost:Show()
-    r.name:SetText((card.name or cardId) .. SortSuffix(card))
+    r.name:SetText((TTS:CardName(card) or cardId) .. SortSuffix(card))
     r.name:Show()
     r.header:Hide()
     r.headerCount:Hide()
@@ -1743,7 +1751,7 @@ deckSummary:SetPoint("BOTTOMLEFT", statsFrame, "BOTTOMLEFT", 10, 7)
 
 local chartsNote = statsFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 chartsNote:SetPoint("BOTTOMRIGHT", statsFrame, "BOTTOMRIGHT", -8, 7)
-chartsNote:SetText("Prayers not charted")
+Loc:Bind(chartsNote, "db.prayersNotCharted")
 
 local BAR_BASE_Y = 36
 local BAR_MAX_H  = 48
@@ -1759,7 +1767,7 @@ curveFrame:SetSize(200, 118)
 
 local curveTitle = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 curveTitle:SetPoint("TOPLEFT", curveFrame, "TOPLEFT", 10, -8)
-curveTitle:SetText("MANA CURVE")
+Loc:Bind(curveTitle, "db.manaCurve")
 
 local curveAvg = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 curveAvg:SetPoint("TOPRIGHT", curveFrame, "TOPRIGHT", -10, -8)
@@ -1832,8 +1840,8 @@ function D:UpdateManaCurve(deck)
     end
 
     local avg = spellCount > 0 and (cmcSum / spellCount) or 0
-    curveAvg:SetText(string.format("avg %.1f", avg))
-    deckSummary:SetText(string.format("%d Creatures  ·  %d Spells  ·  %d Prayers", nCreature, nSpell, nPrayer))
+    curveAvg:SetText(L("db.avg", avg))
+    deckSummary:SetText(L("db.summary", nCreature, nSpell, nPrayer))
 end
 
 -- Sphere distribution
@@ -1846,7 +1854,7 @@ colorFrame:SetSize(LIST_W - 200, 118)
 
 local colorTitle = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 colorTitle:SetPoint("TOPLEFT", colorFrame, "TOPLEFT", 10, -8)
-colorTitle:SetText("COLOURS")
+Loc:Bind(colorTitle, "db.colours")
 
 local colorTotal = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 colorTotal:SetPoint("TOPRIGHT", colorFrame, "TOPRIGHT", -8, -8)
@@ -1913,7 +1921,7 @@ function D:UpdateColorDistribution(deck)
         end
     end
 
-    colorTotal:SetText(total .. " cards")
+    colorTotal:SetText(L("db.nCards", total))
 end
 
 -- =========================================================================
@@ -1966,8 +1974,8 @@ function D:RefreshPool()
     end
 
     poolEmptyText:SetShown(total == 0)
-    poolCountText:SetText(total == 1 and "1 card" or (total .. " cards"))
-    pageText:SetText(string.format("Page %d / %d", poolPage, pages))
+    poolCountText:SetText(total == 1 and L("db.oneCard") or L("db.nCards", total))
+    pageText:SetText(L("db.page", poolPage, pages))
     SetButtonEnabled(prevBtn, poolPage > 1)
     SetButtonEnabled(nextBtn, poolPage < pages)
 end
@@ -2036,14 +2044,14 @@ function D:RefreshDeck()
     deckEmptyText:SetShown(n == 0)
 
     if totalCards >= 40 and totalCards <= 50 then
-        countLabel:SetText(GREEN .. totalCards .. "|r" .. GREY .. " / 50 cards|r")
-        statusHint:SetText(GREEN .. "Legal deck size|r")
+        countLabel:SetText(GREEN .. totalCards .. "|r" .. GREY .. L("db.of50") .. "|r")
+        statusHint:SetText(GREEN .. L("db.legalSize") .. "|r")
     elseif totalCards > 50 then
-        countLabel:SetText(RED .. totalCards .. "|r" .. GREY .. " / 50 cards|r")
-        statusHint:SetText(RED .. "Max exceeded|r")
+        countLabel:SetText(RED .. totalCards .. "|r" .. GREY .. L("db.of50") .. "|r")
+        statusHint:SetText(RED .. L("db.maxExceeded") .. "|r")
     else
-        countLabel:SetText(RED .. totalCards .. "|r" .. GREY .. " / 50 cards|r")
-        statusHint:SetText(GREY .. "Need " .. (40 - totalCards) .. " more (min 40)|r")
+        countLabel:SetText(RED .. totalCards .. "|r" .. GREY .. L("db.of50") .. "|r")
+        statusHint:SetText(GREY .. L("db.needMore", 40 - totalCards) .. "|r")
     end
     SetButtonEnabled(clearBtn, totalCards > 0)
 
@@ -2104,7 +2112,7 @@ end
 local devBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
 devBtn:SetSize(115, 24)
 devBtn:SetPoint("BOTTOMLEFT", 20, 18)
-devBtn:SetText("|cFFFF4444Dev: Unlock|r")
+Loc:Bind(devBtn, "db.devUnlock")
 devBtn:SetScript("OnClick", function()
     if TTS.BossTracker and TTS.BossTracker.UnlockAllBosses then
         TTS.BossTracker:UnlockAllBosses()
@@ -2113,7 +2121,7 @@ devBtn:SetScript("OnClick", function()
         for cardId, card in pairs(TTS.Cards or {}) do
             if card.isBoss then TTS_KilledBosses[cardId] = 4 end
         end
-        DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00[TTS DEVMODE]|r All boss cards unlocked (4 copies)!")
+        DEFAULT_CHAT_FRAME:AddMessage(L("db.devUnlocked"))
         D:RefreshAll()
     end
 end)
@@ -2121,7 +2129,7 @@ end)
 local resetBtn = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
 resetBtn:SetSize(115, 24)
 resetBtn:SetPoint("LEFT", devBtn, "RIGHT", 6, 0)
-resetBtn:SetText("Reset / Scan")
+Loc:Bind(resetBtn, "db.resetScan")
 resetBtn:SetScript("OnClick", function()
     if TTS.BossTracker and TTS.BossTracker.ResetBosses then
         TTS.BossTracker:ResetBosses()
@@ -2144,7 +2152,7 @@ local function InMatch()
 end
 
 local function PrintInMatchWarning()
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The Deckbuilder can't be opened during a game.")
+    DEFAULT_CHAT_FRAME:AddMessage(L("db.noOpenInMatch"))
 end
 
 local function IsQueued()
@@ -2152,7 +2160,7 @@ local function IsQueued()
 end
 
 local function PrintQueuedWarning()
-    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTS]|r The Deckbuilder can't be opened while you're queued in the waiting room.")
+    DEFAULT_CHAT_FRAME:AddMessage(L("db.noOpenQueued"))
 end
 
 -- Use this instead of :Show(). Returns true if the Deckbuilder opened.
@@ -2202,9 +2210,8 @@ local function AnnounceSpellUnlocks(newLevel)
     for _, cardId in ipairs(unlocked) do
         local card = TTS.Cards[cardId]
         TTS:MarkCardNew(cardId)
-        local cardText = TTS.CardLink and TTS:CardLink(cardId) or ("|cFFFFD200" .. card.name .. "|r")
-        DEFAULT_CHAT_FRAME:AddMessage(string.format("|cFF00FF00[TTSE]|r Level %d reached! Spell Unlocked: %s (%s).",
-            newLevel, cardText, card.class and ClassColored(card.class) or "Spell"))
+        local cardText = TTS.CardLink and TTS:CardLink(cardId) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+        DEFAULT_CHAT_FRAME:AddMessage(L("db.levelUnlock", newLevel, cardText, card.class and ClassColored(card.class) or L("type.Spell")))
     end
 end
 

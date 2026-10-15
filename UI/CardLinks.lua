@@ -7,14 +7,17 @@
     Blizzard Entertainment, Inc. and are not claimed by this notice.
 ]]
 TTS = TTS or {}
+local L = TTS.L
 
 -- =========================================================================
 -- CARD LINKS IN CHAT
--- Shift-click a card while typing in chat to insert "[Forever CCG: <card name>]".
+-- Shift-click a card while typing in chat to insert "[Forever CCG: <card name> #<id>]".
 -- The server won't pass custom hyperlinks, so it travels as plain text: players
 -- without the addon see exactly that. With the addon, a chat filter turns it into
 -- a gold [Card Name] link (|Hgarrmission:ForeverCCG:card:<id>|h) that shows the card tooltip on hover and opens a card
--- preview window on click. Card names are unique, so the name alone identifies it.
+-- preview window on click. The id lets players using different languages read each
+-- other's links (each sees the card's name in their own language); tags from older
+-- versions carry only the English name, which is still recognised.
 -- =========================================================================
 local TAG_PATTERN = "%[Forever CCG: ([^%]]+)%]"
 -- Borrowed "garrmission" link type (as WeakAuras does): Blizzard's handler finds no valid
@@ -22,20 +25,22 @@ local TAG_PATTERN = "%[Forever CCG: ([^%]]+)%]"
 local LINK_PREFIX = "garrmission:ForeverCCG:card:"
 local LINK_COLOR = "|cFFFFD200"
 
-local cardIdByName -- [lower name] = card id, built on first use (all card files are loaded by then)
+local cardIdByName -- [lower name] = card id, built on first use (all card files and the language are loaded by then)
 
 local function FindCardByName(name)
     if not cardIdByName then
         cardIdByName = {}
         for id, card in pairs(TTS.Cards or {}) do
             if card.name then cardIdByName[card.name:lower()] = id end
+            local shown = TTS:CardName(card)
+            if shown then cardIdByName[shown:lower()] = id end
         end
     end
     return cardIdByName[name:lower()]
 end
 
 local function CardTag(card)
-    return "[Forever CCG: " .. card.name .. "]"
+    return "[Forever CCG: " .. TTS:CardName(card) .. " #" .. card.id .. "]"
 end
 
 -- Shift-clicking a card while a chat box is open inserts its tag. Returns true when it did,
@@ -57,11 +62,14 @@ end
 function TTS:CardLink(cardId)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not (card and card.name) then return tostring(cardId) end
-    return LINK_COLOR .. "|H" .. LINK_PREFIX .. cardId .. "|h[" .. card.name .. "]|h|r"
+    return LINK_COLOR .. "|H" .. LINK_PREFIX .. cardId .. "|h[" .. TTS:CardName(card) .. "]|h|r"
 end
 
-local function ReplaceTag(name)
-    local id = FindCardByName(name)
+local function ReplaceTag(inner)
+    local id = inner:match("#([%w_]+)%s*$")
+    if not (id and TTS.Cards and TTS.Cards[id]) then
+        id = FindCardByName(inner)
+    end
     if not id then return nil end -- not a card we know: leave the text as it is
     return TTS:CardLink(id)
 end
@@ -134,30 +142,30 @@ local previewCard
 -- How the player stands with this card: owned copies, or how to get it
 local function CollectionStatus(card)
     if card.type == "Land" then
-        return "|cFF00FF00Always available|r"
+        return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
     if card.isBoss or card.isReward then
         local copies = TTS:GetOwnedCopies(card) or 0
         if copies >= 4 then
-            return "|cFF00FF00You own 4/4 copies (Mastered)|r"
+            return "|cFF00FF00" .. L("link.mastered") .. "|r"
         elseif copies > 0 then
-            return string.format("|cFFFFFFFFYou own %d/4 copies|r", copies)
+            return "|cFFFFFFFF" .. L("link.owned", copies) .. "|r"
         end
         local how
         if card.isReward then
             local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
-            how = "Win " .. (enc and enc.name or "its encounter") .. " in Solo mode"
+            how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
         elseif card.zone then
-            how = "Defeat " .. card.name .. " (" .. card.zone .. ")"
+            how = L("link.defeatIn", TTS:CardName(card), TTS.Locale:Term("zone", card.zone))
         else
-            how = "Defeat " .. card.name
+            how = L("link.defeat", TTS:CardName(card))
         end
-        return "|cFFFF4444Not collected yet|r\n|cFFBBBBBB" .. how .. "|r"
+        return "|cFFFF4444" .. L("link.notCollected") .. "|r\n|cFFBBBBBB" .. how .. "|r"
     end
     if TTS.IsSpellUnlocked and not TTS:IsSpellUnlocked(card.id) then
-        return string.format("|cFFFF4444Unlocks at level %d|r", TTS:GetSpellUnlockLevel(card.id))
+        return "|cFFFF4444" .. L("link.unlocksAt", TTS:GetSpellUnlockLevel(card.id)) .. "|r"
     end
-    return "|cFF00FF00Unlocked|r"
+    return "|cFF00FF00" .. L("link.unlocked") .. "|r"
 end
 
 function TTS:ShowCardPreview(cardId)
