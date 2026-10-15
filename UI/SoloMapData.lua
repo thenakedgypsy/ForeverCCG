@@ -41,6 +41,10 @@ TTS.SoloMapPositions = {
     FEL = { "KAL", 0.4973, 0.3091 },
     FER = { "KAL", 0.4103, 0.7126 },
     GNO = { "EK", 0.4300, 0.5317 },
+    -- WoW Forever dungeons: entrances placed by hand from the Wowhead guides (approximate)
+    HOT = { "EK", 0.4790, 0.5230 },   -- under the High Seat of Ironforge
+    ROL = { "EK", 0.4490, 0.2400 },   -- the ruins above the Undercity
+    EXC = { "EK", 0.5065, 0.4690 },   -- western Wetlands
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
     LOC = { "EK", 0.5504, 0.5486 },

@@ -110,6 +110,8 @@ TTS.SoloDungeonZone = {
     RFC = "DUR", DMS = "WES", WCV = "BRN", SFK = "SIL", BFD = "ASH", STK = "ELW", GNO = "DUN",
     RFK = "BRN", SMO = "TIR", RFD = "BRN", ULD = "BAD", ZFK = "TAN", MAR = "DES", SUN = "SWA",
     BRD = "SEA", BRS = "BUR", DMA = "FER", SCH = "WPL", STR = "EPL",
+    -- WoW Forever dungeons
+    HOT = "DUN", ROL = "TIR", EXC = "WET",
 }
 
 local neighbours = {}
@@ -153,6 +155,10 @@ local DUNGEONS = {
     { "DMA", "Dire Maul",         { "BOSS21", "BOSS22", "BOSS23" },           35, { "NEXT_BOSS" },                      "DMA19", "expert",   "DireMaul",         "Feralas" },
     { "SCH", "Scholomance",       { "BOSS24" },                               35, { "REINFORCEMENTS", "ENRAGE" },       "SCH18", "expert",   "Scholomance",      "WesternPlaguelands" },
     { "STR", "Stratholme",        { "BOSS25", "BOSS26" },                     40, { "NEXT_BOSS", "ENRAGE" },            "STR21", "expert",   "Stratholme",       "EasternPlaguelands" },
+    -- WoW Forever dungeons
+    { "HOT", "The Hall of Thanes", { "BOSS27" },                              25, { "REINFORCEMENTS" },                 "HOT12", "tactical", "HallOfThanes",     "Ironforge" },
+    { "ROL", "Ruins of Lordaeron", { "BOSS28" },                              25, { "AWAKENING" },                      "ROL16", "tactical", "RuinsOfLordaeron", "Tirisfal" },
+    { "EXC", "Excavation Site",    { "BOSS29" },                              30, { "AWAKENING" },                      "EXC17", "expert",   "ExcavationSite",   "Wetlands" },
 }
 
 for i, d in ipairs(DUNGEONS) do

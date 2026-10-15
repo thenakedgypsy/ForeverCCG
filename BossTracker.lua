@@ -238,6 +238,9 @@ local BOSS_CARD_INSTANCES = {
     BOSS24 = "Scholomance",
     BOSS25 = "Stratholme",
     BOSS26 = "Stratholme",
+    BOSS27 = "The Hall of Thanes",
+    BOSS28 = "Ruins of Lordaeron",
+    BOSS29 = "Excavation Site",
 }
 
 -- Other names the client may report for the same instance (normalized form)
@@ -253,6 +256,7 @@ local INSTANCE_ALIASES = {
     ["scarlet monastery library"]   = "scarlet monastery",
     ["scarlet monastery armory"]    = "scarlet monastery",
     ["scarlet monastery cathedral"] = "scarlet monastery",
+    ["excavation site wetlands"]    = "excavation site",
 }
 
 local function InstanceKey(name)

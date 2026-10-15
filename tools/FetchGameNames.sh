@@ -20,18 +20,21 @@ n=0
 echo "$list" | while read -r kind id; do
   n=$((n + 1))
   for site in $SITES; do
+    # fvnpc / fvzone: WoW Forever's own creatures and dungeons, only on Wowhead's Forever pages
     case "$kind" in
-      zone)  f="$CACHE/$site/zone-$id.json" ;;
-      spell) f="$CACHE/$site/spell-$id.json" ;;
-      *)     f="$CACHE/$site/$id.json" ;;
+      zone)   f="$CACHE/$site/zone-$id.json";   type=zone;  game=classic ;;
+      spell)  f="$CACHE/$site/spell-$id.json";  type=spell; game=classic ;;
+      fvnpc)  f="$CACHE/$site/fv-$id.json";     type=npc;   game=forever ;;
+      fvzone) f="$CACHE/$site/fvzone-$id.json"; type=zone;  game=forever ;;
+      *)      f="$CACHE/$site/$id.json";        type=npc;   game=classic ;;
     esac
     [ -s "$f" ] && continue
     mkdir -p "$CACHE/$site"
-    # Classic has no Italian client: Italian names come from the retail site
-    case "$site" in
-      en) url="https://nether.wowhead.com/classic/tooltip/$kind/$id" ;;
-      it) url="https://nether.wowhead.com/it/tooltip/$kind/$id" ;;
-      *)  url="https://nether.wowhead.com/classic/$site/tooltip/$kind/$id" ;;
+    # Classic has no Italian client: Italian Classic names come from the retail site
+    case "$game/$site" in
+      */en)       url="https://nether.wowhead.com/$game/tooltip/$type/$id" ;;
+      classic/it) url="https://nether.wowhead.com/it/tooltip/$type/$id" ;;
+      *)          url="https://nether.wowhead.com/$game/$site/tooltip/$type/$id" ;;
     esac
     code=$(curl -s -m 20 -o "$f.tmp" -w "%{http_code}" "$url")
     if [ "$code" = "200" ]; then mv "$f.tmp" "$f"; else echo "failed: $site $kind $id (HTTP $code)"; rm -f "$f.tmp"; fi

@@ -15,6 +15,9 @@ return {
     BAD11 = 2921,
     BFD12 = 12876,
     BLA11 = 7363,
+    BOSS27 = 261319, -- Durgen Dirgehammer (WoW Forever, from Wowhead)
+    BOSS28 = 250657, -- Rath'mael (WoW Forever, from Wowhead)
+    BOSS29 = 260326, -- Relic Guardian (WoW Forever, from Wowhead)
     BOSS01 = 11519,
     BOSS02 = 639,
     BOSS03 = 3654,

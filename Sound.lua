@@ -137,6 +137,10 @@ TTS.CreatureSounds = {
     ["BOSS24"] = { aggro = 1263, death = 2944 }, -- Darkmaster Gandling
     ["BOSS25"] = { aggro = 3611, death = 3609 }, -- Baron Rivendare
     ["BOSS26"] = { aggro = 1095, death = 1094 }, -- Balnazzar
+    -- WoW Forever bosses (new models: sounds borrowed from a creature of the same kind)
+    ["BOSS27"] = { death = 2932 }, -- Durgen Dirgehammer (dark iron dwarf)
+    ["BOSS28"] = { aggro = 1357, death = 2936 }, -- Rath'mael (undead caster)
+    ["BOSS29"] = { aggro = 472, death = 468 }, -- Relic Guardian (golem)
     ["BRD01"] = { death = 2932 }, -- Anvilrage Guardsman
     ["BRD02"] = { aggro = 1288, death = 1286 }, -- Fireguard
     ["BRD03"] = { aggro = 1263, death = 2944 }, -- Twilight's Hammer Torturer
@@ -567,6 +571,52 @@ TTS.CreatureSounds = {
     ["STR19"] = { aggro = 1263, death = 2944 }, -- Maleki the Pallid
     ["STR20"] = { aggro = 1263, death = 2944 }, -- Grand Crusader Dathrohan
     ["STR21"] = { aggro = 1446, death = 1444 }, -- Ramstein the Gorger
+    -- WoW Forever dungeons: same sound as an existing card with the same model, else one of the same kind
+    ["HOT01"] = { aggro = 2511, death = 2509 }, -- Bloodhound Runt (hound)
+    ["HOT02"] = { aggro = 1288, death = 1286 }, -- Fiery Assistant
+    ["HOT03"] = { death = 2932 }, -- Dark Iron Looter
+    ["HOT04"] = { aggro = 1173, death = 1171 }, -- Enraged Apparition (spirit)
+    ["HOT05"] = { aggro = 1173, death = 1171 }, -- Tormented Soul (spirit)
+    ["HOT06"] = { death = 2932 }, -- Dark Iron Engineer
+    ["HOT07"] = { death = 2932 }, -- Dark Iron Summoner
+    ["HOT08"] = { aggro = 472, death = 468 }, -- Lesser Stone Golem
+    ["HOT09"] = { aggro = 1173, death = 1171 }, -- Faldrim Anvilmar (spirit)
+    ["HOT10"] = { aggro = 739, death = 738 }, -- Plunder (elemental)
+    ["HOT11"] = { aggro = 1288, death = 1286 }, -- Magmatus
+    ["HOT12"] = { aggro = 1173, death = 1171 }, -- Ghostly Attendant (spirit)
+    ["ROL01"] = { aggro = 422, death = 426 }, -- Broodling (spider)
+    ["ROL02"] = { aggro = 409, death = 413 }, -- Ragged Ghoul
+    ["ROL03"] = { aggro = 1016, death = 337 }, -- Skeletal Soldier
+    ["ROL04"] = { aggro = 422, death = 426 }, -- Broodwidow
+    ["ROL05"] = { aggro = 2517, death = 2515 }, -- Skeletal Mage
+    ["ROL06"] = { aggro = 1173, death = 1171 }, -- Wailing Banshee
+    ["ROL07"] = { aggro = 7139, death = 7137 }, -- Mangled Cadaver
+    ["ROL08"] = { aggro = 2517, death = 2515 }, -- Fallen Berserker
+    ["ROL09"] = { aggro = 2517, death = 2515 }, -- Fallen Necromancer
+    ["ROL10"] = { aggro = 422, death = 426 }, -- Witherfang (spider)
+    ["ROL11"] = { aggro = 1016, death = 337 }, -- Bjork
+    ["ROL12"] = { aggro = 1446, death = 1444 }, -- Flesh Golem
+    ["ROL13"] = { aggro = 1016, death = 337 }, -- The Baron
+    ["ROL14"] = { aggro = 7139, death = 7137 }, -- Viktor the Vile
+    ["ROL15"] = { aggro = 1357, death = 2936 }, -- The Abandoned
+    ["ROL16"] = { aggro = 1263, death = 2944 }, -- Captain Truman
+    ["EXC01"] = { aggro = 708, death = 707 }, -- Young Riptooth (raptor)
+    ["EXC02"] = { aggro = 422, death = 426 }, -- Highland Spider
+    ["EXC03"] = { death = 1322 }, -- Dragonmaw Saboteur
+    ["EXC04"] = { aggro = 570, death = 569 }, -- Marsh Crocolisk
+    ["EXC05"] = { aggro = 422, death = 426 }, -- Highland Lurker
+    ["EXC06"] = { death = 1322 }, -- Dragonmaw Warder
+    ["EXC07"] = { aggro = 708, death = 707 }, -- Thicket Stalker (raptor)
+    ["EXC08"] = { aggro = 1464, death = 1462 }, -- Highland Snapper
+    ["EXC09"] = { aggro = 708, death = 707 }, -- Thicket Hunter (raptor)
+    ["EXC10"] = { aggro = 570, death = 569 }, -- Elder Crocolisk
+    ["EXC11"] = { aggro = 739, death = 738 }, -- Highland Horror (elemental)
+    ["EXC12"] = { death = 1322 }, -- Dragonmaw Thaumaturgist
+    ["EXC13"] = { aggro = 1288, death = 1286 }, -- Captive Fire Elemental
+    ["EXC14"] = { aggro = 708, death = 707 }, -- Thicket Matriarch (raptor)
+    ["EXC15"] = { aggro = 570, death = 569 }, -- Saltspine
+    ["EXC16"] = { aggro = 708, death = 707 }, -- Shadetooth (raptor)
+    ["EXC17"] = { aggro = 1263, death = 2944 }, -- Deathstalker Agent
     ["STV01"] = { aggro = 647, death = 646 }, -- Young Panther
     ["STV02"] = { aggro = 1263, death = 2944 }, -- Kurzen Medicine Man
     ["STV03"] = { aggro = 647, death = 646 }, -- Stranglethorn Tiger

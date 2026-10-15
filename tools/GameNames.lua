@@ -46,6 +46,12 @@ local ZONE_IDS = {
     ["Zul'Farrak"] = 1176,
 }
 
+-- WoW Forever's new dungeons exist only on Wowhead's Forever pages: their zones, and the
+-- creatures of cards in them, are fetched from there (cache files fv-<id> / fvzone-<id>)
+local FOREVER_ZONE_IDS = {
+    ["The Hall of Thanes"] = 16919, ["Ruins of Lordaeron"] = 16611, ["Excavation Site"] = 16732,
+}
+
 TTS = {}
 function TTS:AddCards(t) for id, c in pairs(t) do TTS.Cards[id] = c end end
 CreateFrame = function() return setmetatable({}, { __index = function() return function() end end }) end
@@ -65,7 +71,8 @@ local function ReadName(site, file)
     if not f then return nil end
     local s = f:read("*a"); f:close()
     local raw = s:match('^{"name":"(.-[^\\])"')
-    if not raw then return nil end
+    -- Wowhead shows an untranslated name as "[English Name]"
+    if not raw or raw:match("^%[.*%]$") then return nil end
     raw = raw:gsub("\\u(%x%x%x%x)", function(h) return Utf8(tonumber(h, 16)) end)
     raw = raw:gsub('\\(["\\/])', "%1")
     return raw
@@ -76,9 +83,14 @@ local extraIds = dofile(dir .. "/tools/CreatureIds.lua")
 local cards, unmapped = {}, {}
 for id, card in pairs(TTS.Cards) do
     if card.type == "Creature" then
-        local npc = card.npcId or extraIds[id]
-        if npc then cards[#cards + 1] = { card = id, file = tostring(npc) }
-        else unmapped[#unmapped + 1] = id end
+        local npc = card.npcId or card.npcEntry or extraIds[id]
+        if not npc then
+            unmapped[#unmapped + 1] = id
+        elseif FOREVER_ZONE_IDS[card.zone] then
+            cards[#cards + 1] = { card = id, file = "fv-" .. npc, kind = "fvnpc", id = npc }
+        else
+            cards[#cards + 1] = { card = id, file = tostring(npc), kind = "npc", id = npc }
+        end
     end
 end
 table.sort(cards, function(a, b) return a.card < b.card end)
@@ -92,8 +104,13 @@ do
     end
     for name in pairs(ZONE_IDS) do seen[name] = true end
     for name in pairs(seen) do
-        if ZONE_IDS[name] then zones[#zones + 1] = { zone = name, file = "zone-" .. ZONE_IDS[name] }
-        else io.stderr:write("no area id for zone \"" .. name .. "\" (add it to ZONE_IDS)\n") end
+        if ZONE_IDS[name] then
+            zones[#zones + 1] = { zone = name, file = "zone-" .. ZONE_IDS[name], kind = "zone", id = ZONE_IDS[name] }
+        elseif FOREVER_ZONE_IDS[name] then
+            zones[#zones + 1] = { zone = name, file = "fvzone-" .. FOREVER_ZONE_IDS[name], kind = "fvzone", id = FOREVER_ZONE_IDS[name] }
+        else
+            io.stderr:write("no area id for zone \"" .. name .. "\" (add it to ZONE_IDS)\n")
+        end
     end
     table.sort(zones, function(a, b) return a.zone < b.zone end)
 end
@@ -112,9 +129,9 @@ table.sort(spells, function(a, b) return a.card < b.card end)
 if mode == "ids" then
     local seen = {}
     for _, c in ipairs(cards) do
-        if not seen[c.file] then seen[c.file] = true; print("npc " .. c.file) end
+        if not seen[c.file] then seen[c.file] = true; print(c.kind .. " " .. c.id) end
     end
-    for _, z in ipairs(zones) do print("zone " .. z.file:sub(6)) end
+    for _, z in ipairs(zones) do print(z.kind .. " " .. z.id) end
     for _, s in ipairs(spells) do print("spell " .. s.file:sub(7)) end
     for _, id in ipairs(unmapped) do io.stderr:write("no npc id for " .. id .. " (add it to tools/CreatureIds.lua)\n") end
     return

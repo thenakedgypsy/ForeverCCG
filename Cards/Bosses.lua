@@ -243,4 +243,38 @@ TTS:AddCards({
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
         text = "Airborne. When Balnazzar enters the battlefield, gain control of target opposing creature with power 4 or less."
     },
+
+    -- WoW Forever dungeons: their "achievements" are the kill statistics, so the same id
+    -- also goes in statisticId (BossTracker reads the kill count from it in any language)
+
+    -- The Hall of Thanes: Durgen Dirgehammer
+    ["BOSS27"] = {
+        id = "BOSS27", name = "Durgen Dirgehammer", cost = "{2}{R}{B}", cmc = 4, color = "R", type = "Creature",
+        power = 5, toughness = 5, firstStrike = true, isBoss = true, displayId = 142837,
+        achievementId = 63573, statisticId = 63573,
+        zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron",
+        anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
+        text = "Strikes-First. Other Dark Iron you control get +1/+1."
+    },
+
+    -- Ruins of Lordaeron: Rath'mael
+    ["BOSS28"] = {
+        id = "BOSS28", name = "Rath'mael", cost = "{3}{B}{R}", cmc = 5, color = "B", type = "Creature",
+        power = 6, toughness = 6, deathtouch = true, isBoss = true, displayId = 144175,
+        achievementId = 63571, statisticId = 63571,
+        zone = "Ruins of Lordaeron", creatureType = "Undead",
+        anthem = { tag = "type", value = "Undead", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
+        text = "Fatal. Other Undead you control get +1/+0."
+    },
+
+    -- Excavation Site: Relic Guardian (no kill statistic on Wowhead yet; tracked by statistic name)
+    ["BOSS29"] = {
+        id = "BOSS29", name = "Relic Guardian", cost = "{4}{G}{W}", cmc = 6, color = "G", type = "Creature",
+        power = 8, toughness = 9, trample = true, vigilance = true, isBoss = true, displayId = 144224,
+        zone = "Excavation Site", creatureType = "Elemental",
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "Brutish. Vigilant."
+    },
 })
