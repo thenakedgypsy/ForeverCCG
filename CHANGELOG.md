@@ -2,10 +2,6 @@
 
 *   add mulligan button
 
-## 0.14.4
-
-*   mulligan: once per game, before your first play, phase change or draw, shuffle your opening hand back into your deck and draw 7 new cards
-
 ## 0.14.3
 
 *   fix for default filters not showing in deckbuilder
