@@ -912,6 +912,8 @@ local MENU_ROW_H, MENU_COL_W = 18, 140
 -- cfg: values() -> list, cols, colorize(value) -> text, onSelect(value or nil)
 local function CreateDropdown(parent, width, allText, cfg)
     local dd = CreateFlatButton(parent, width, 24, "")
+    -- SetValue owns the label; a bound "" would blank it once the language loads
+    Loc:Unbind(dd.label)
 
     dd.arrow = dd:CreateTexture(nil, "OVERLAY")
     dd.arrow:SetTexture("Interface\\Buttons\\Arrow-Down-Up")
@@ -1010,6 +1012,7 @@ local function CreateDropdown(parent, width, allText, cfg)
     end)
 
     dd:SetValue(cfg.initial)
+    Loc:OnReady(function() dd:SetValue(dd.value) end)
     return dd
 end
 
