@@ -582,6 +582,7 @@ function E:EndTurn()
     end
 
     self.isMyTurn = false
+    self:CloseMulligan()
     self:CancelTargeting()
     self:EndTurnCleanup(false)
 
@@ -631,6 +632,7 @@ function E:BeginTurn(isRemote)
         self.remoteTurns = (self.remoteTurns or 0) + 1
     else
         self.landPlayedThisTurn = false
+        self:CloseMulligan()
     end
 
     self:UntapSide(isRemote)
@@ -730,6 +732,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.targeting = nil
     self.blockingState = nil
     self.pendingDiscard = nil
+    self.mulliganOpen = true
     self.stolenCreatures = {}
     self.remoteTurns = 0
     self.remoteLandPlayed = false
@@ -939,6 +942,66 @@ function E:DiscardForDraw(handIndex)
     self:RefreshUI()
 end
 
+-- =========================================================================
+-- MULLIGAN
+-- Once per game, before your first play, phase change or draw, the opening hand
+-- can go back into the deck for a fresh one. Hand and deck sizes come out the same,
+-- so the opponent's view of us doesn't change: ACTION:MULLIGAN only adds a log line
+-- (builds without it ignore the message).
+-- =========================================================================
+local MULLIGAN_HAND_SIZE = 7
+
+function E:CloseMulligan()
+    self.mulliganOpen = nil
+end
+
+-- Whether the mulligan button can be used now. Returns ok, reason (reason when not ok).
+function E:CanMulligan()
+    if not self.inMatch then return false end
+    if not self.mulliganOpen then return false, L("mulligan.closed") end
+    if self.targeting then return false, L("undo.targeting") end
+    if self.pendingDiscard then return false, L("undo.discard") end
+    if self.undo and self.undo.pending then return false, L("undo.waiting", self.opponent or L("undo.yourOpponent")) end
+    return true
+end
+
+function E:Mulligan()
+    if not self:CanMulligan() then return end
+    self:CloseMulligan()
+
+    local st = self.localState
+    for i = #st.hand, 1, -1 do
+        table.insert(st.deck, table.remove(st.hand, i))
+    end
+    for i = #st.deck, 2, -1 do
+        local j = math.random(i)
+        st.deck[i], st.deck[j] = st.deck[j], st.deck[i]
+    end
+    for _ = 1, math.min(MULLIGAN_HAND_SIZE, #st.deck) do
+        table.insert(st.hand, table.remove(st.deck, 1))
+    end
+
+    self:Log(L("log.mulligan", MULLIGAN_HAND_SIZE), "ACTION")
+    if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:MULLIGAN") end
+    self:RefreshUI()
+end
+
+StaticPopupDialogs["TTS_MULLIGAN"] = {
+    text = "%s",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    OnAccept = function() E:Mulligan() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+function E:ConfirmMulligan()
+    if not self:CanMulligan() then return end
+    StaticPopup_Show("TTS_MULLIGAN", L("mulligan.confirm", MULLIGAN_HAND_SIZE))
+end
+
 -- Phase as shown to the player (phase.<ID>; the ID itself when no translation exists)
 function E:PhaseName(phase)
     return TTS.Locale:Data("phase." .. tostring(phase), phase)
@@ -946,6 +1009,7 @@ end
 
 function E:SetPhase(newPhase)
     self.phase = newPhase
+    if self.isMyTurn and newPhase ~= "MAIN1" then self:CloseMulligan() end
     if TTS.BoardFrame and TTS.BoardFrame.phaseText then
         if self.targeting then
             TTS.BoardFrame.phaseText:SetText("|cFFFFD200" .. L("phase.targeting") .. "|r")

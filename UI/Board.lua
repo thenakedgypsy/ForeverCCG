@@ -504,6 +504,26 @@ B.undoBtn:SetScript("OnEnter", function(self)
 end)
 B.undoBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- Shuffles the opening hand back for a new one (shown until the hand is kept, CoreEngine.lua)
+B.mulliganBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
+B.mulliganBtn:SetSize(80, 24)
+B.mulliganBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
+Loc:Bind(B.mulliganBtn, "board.mulligan")
+StyleButton(B.mulliganBtn)
+if B.mulliganBtn.SetMotionScriptsWhileDisabled then B.mulliganBtn:SetMotionScriptsWhileDisabled(true) end
+B.mulliganBtn:SetScript("OnClick", function(self)
+    TT:Hide(self)
+    TTS.Engine:ConfirmMulligan()
+end)
+B.mulliganBtn:SetScript("OnEnter", function(self)
+    local ok, reason = TTS.Engine:CanMulligan()
+    local lines = { { L("board.mulliganDesc"), 1, 1, 1, true } }
+    if not ok and reason then table.insert(lines, { reason, 1, 0.4, 0.4, true }) end
+    TT:ShowText(self, "ANCHOR_TOP", L("board.mulligan"), nil, { r = 1, g = 0.82, b = 0, lines = lines })
+end)
+B.mulliganBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+B.mulliganBtn:Hide()
+
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 B.phaseText:SetPoint("TOP", 0, -22)
 Loc:Bind(B.phaseText, "phase.label", "SETUP")
@@ -518,6 +538,7 @@ function B:ShowMatchResult(headline)
     self.nextPhaseBtn:Disable()
     self.endTurnBtn:Disable()
     self.undoBtn:Disable()
+    self.mulliganBtn:Hide()
     concedeBtn:Disable()
 end
 
@@ -2044,6 +2065,8 @@ function B:UpdateDisplay()
 
     if E:CanUndo() then B.undoBtn:Enable() else B.undoBtn:Disable() end
     B.undoBtn:SetText((E.undo and E.undo.pending) and L("board.asking") or L("board.undo"))
+    B.mulliganBtn:SetShown(E.mulliganOpen and true or false)
+    if E:CanMulligan() then B.mulliganBtn:Enable() else B.mulliganBtn:Disable() end
 
     -- =====================================================================
     -- TOP PHASE TEXT

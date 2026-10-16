@@ -1235,6 +1235,11 @@ function TTS.Net:OnReceive(msg, sender)
             E:Log(L("log.oppDrew", sender), "ACTION")
             E:RefreshUI()
 
+        elseif actionType == "MULLIGAN" then
+            -- Their hand went back into their deck for a new one: both counts are unchanged
+            E:Log(L("log.oppMulligan", sender), "ACTION")
+            E:RefreshUI()
+
         elseif actionType == "DISCARD" then
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             local cardId = parts[3]

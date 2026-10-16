@@ -93,6 +93,7 @@ end
 -- board and CommitUndoablePlay once it has resolved.
 -- =========================================================================
 function E:BeginUndoablePlay()
+    self:CloseMulligan()   -- the opening hand is kept once a card is played
     return TakeSnapshot(self)
 end
 
@@ -110,6 +111,7 @@ end
 
 -- Anything that cannot be taken back (abilities, a new phase, the end of the turn)
 function E:LockInPlays()
+    self:CloseMulligan()
     if self.undo and not self.undo.pending then self.undo = nil end
 end
 
