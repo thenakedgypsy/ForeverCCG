@@ -304,6 +304,15 @@ function E:HandleCreatureDeath(perm, isRemote)
     end
 end
 
+-- Puts a card that left the battlefield into a graveyard, hand or library (front = on top).
+-- Tokens only exist on the battlefield, so one that would go anywhere else vanishes.
+function E:PutInZone(zone, cardId, front)
+    local c = TTS.Cards[cardId]
+    if c and c.isToken then return false end
+    if front then table.insert(zone, 1, cardId) else table.insert(zone, cardId) end
+    return true
+end
+
 -- Returns the first creature (isRemote, index, perm) with lethal damage, or nil
 local function FindLethalCreature(self)
     for _, isRemote in ipairs({ false, true }) do
@@ -342,7 +351,7 @@ function E:CheckStateBasedActions()
             end
         else
             table.remove(st.field, i)
-            table.insert(st.graveyard, perm.id)
+            self:PutInZone(st.graveyard, perm.id)
             if isRemote then
                 self:Log(L("log.destroyedOpp", self.opponent, TTS:CardName(card)), "COMBAT")
             else
@@ -362,7 +371,7 @@ function E:DestroyCreature(perm)
     if not idx then return end
     local st = isRemote and self.remoteState or self.localState
     table.remove(st.field, idx)
-    table.insert(st.graveyard, perm.id)
+    self:PutInZone(st.graveyard, perm.id)
     local card = TTS.Cards[perm.id]
     self:Log(L("log.destroyed", card and TTS:CardName(card) or perm.id), "COMBAT")
     self:HandleCreatureDeath(perm, isRemote)
@@ -552,7 +561,7 @@ SPELL_OPS.tuck = function(self, op, d, card, cr)
     local st = isRemote and self.remoteState or self.localState
     self:DetachAttachments(d.perm, isRemote)
     table.remove(st.field, idx)
-    table.insert(st.deck, 1, d.perm.id)
+    self:PutInZone(st.deck, d.perm.id, true)
     self:Log(L("log.tucked", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
 end
 
@@ -596,7 +605,11 @@ SPELL_OPS.dot = function(self, op, d, card, cr)
     end
     holder.dots = holder.dots or {}
     table.insert(holder.dots, { n = op.n, turns = op.turns, src = card.id, srcId = card.id, byRemote = cr })
-    self:Log(L("log.dot", TTS:CardName(card), TargetName(self, d), op.n, op.turns), "ACTION")
+    if d.kind == "PLAYER" then
+        self:Log(L("log.dot", TTS:CardName(card), TargetName(self, d), op.n, op.turns), "ACTION")
+    else
+        self:Log(L("log.dotCreature", TTS:CardName(card), TargetName(self, d), op.turns), "ACTION")
+    end
 end
 
 SPELL_OPS.hot = function(self, op, d, card, cr)
@@ -610,7 +623,11 @@ SPELL_OPS.hot = function(self, op, d, card, cr)
     end
     holder.hots = holder.hots or {}
     table.insert(holder.hots, { n = op.n, turns = op.turns, src = card.id, srcId = card.id, byRemote = cr })
-    self:Log(L("log.hot", TTS:CardName(card), TargetName(self, d), op.n, op.turns), "ACTION")
+    if d.kind == "PLAYER" then
+        self:Log(L("log.hot", TTS:CardName(card), TargetName(self, d), op.n, op.turns), "ACTION")
+    else
+        self:Log(L("log.hotCreature", TTS:CardName(card), TargetName(self, d), op.turns), "ACTION")
+    end
 end
 
 SPELL_OPS.shield = function(self, op, d, card, cr)
@@ -689,6 +706,17 @@ SPELL_GLOBAL_OPS.raise = function(self, op, card, cr)
         end
     end
     self:Log(L("log.reanimateNone", TTS:CardName(card)), "ERROR")
+end
+
+-- Creates op.n (default 1) copies of the token card op.id on the caster's battlefield
+SPELL_GLOBAL_OPS.token = function(self, op, card, cr)
+    local tok = TTS.Cards[op.id]
+    if not tok then return end
+    for _ = 1, op.n or 1 do
+        if not self.inMatch then break end
+        self:PutCreatureOntoBattlefield(op.id, cr)
+    end
+    self:Log(L(cr and "log.tokensOpp" or "log.tokensYou", TTS:CardName(card), op.n or 1, TTS:CardName(tok), self.opponent or L("side.opponent")), "ACTION")
 end
 
 function E:ApplySpellOp(op, tgt, card, casterIsRemote)
@@ -776,12 +804,15 @@ function E:TickOverTime(isRemoteTurn)
         end)
         for _, perm in ipairs(st.field) do
             if IsCreaturePerm(perm) then
+                -- Damage on creatures wears off each turn, so on a creature each tick is a
+                -- lasting +0/+1 (healing) or -0/-1 (damage) instead
                 TickList(perm.hots, isRemoteTurn, function(e)
-                    perm.damage = math.max(0, (perm.damage or 0) - e.n)
+                    perm.permToughness = (perm.permToughness or 0) + 1
+                    self:Log(L("log.hotToughness", TTS:ReasonText(e.src), CreatureName(perm)), "ACTION")
                 end)
                 TickList(perm.dots, isRemoteTurn, function(e)
-                    perm.damage = (perm.damage or 0) + e.n
-                    self:Log(L("log.dealtDamage", TTS:ReasonText(e.src), e.n, CreatureName(perm)), "COMBAT")
+                    perm.permToughness = (perm.permToughness or 0) - 1
+                    self:Log(L("log.dotToughness", TTS:ReasonText(e.src), CreatureName(perm)), "COMBAT")
                 end)
             end
         end
@@ -988,7 +1019,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
         if idx then
             self:DetachAttachments(tgt.perm, targetRemote)
             table.remove((targetRemote and self.remoteState or self.localState).field, idx)
-            table.insert((targetRemote and self.remoteState or self.localState).deck, 1, tgt.perm.id)
+            self:PutInZone((targetRemote and self.remoteState or self.localState).deck, tgt.perm.id, true)
             self:Log(L("log.boss.arugal", TTS:CardName(id)), "ACTION")
         end
 
@@ -1012,21 +1043,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
 
     elseif id == "BOSS22" then
         self:DrawCardFor(isRemote)
-        if isRemote then
-            if self.isSolo and #st.hand > 0 then
-                local worstIdx, worstVal
-                for i, cid in ipairs(st.hand) do
-                    local v = self:AICardValue(cid)
-                    if not worstVal or v < worstVal then worstIdx, worstVal = i, v end
-                end
-                table.insert(st.graveyard, table.remove(st.hand, worstIdx))
-                st.handCount = #st.hand
-            end
-        elseif #st.hand > 0 then
-            local cardId = table.remove(st.hand, 1)
-            table.insert(st.graveyard, cardId)
-            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
-        end
+        self:DiscardRandom(isRemote)
         perm.tempPower = (perm.tempPower or 0) + 1
         perm.tempToughness = (perm.tempToughness or 0) + 1
         self:Log(L("log.boss.tortheldrin", TTS:CardName(id)), "ACTION")
@@ -1352,6 +1369,91 @@ end
 -- =========================================================================
 -- BATTLEFIELD ACTIVATIONS & ATTACKS
 -- =========================================================================
+-- =========================================================================
+-- BLOCKS
+-- bs.blocks[blockerIdx] = attackerIdx holds each blocker's (first) block. A Bulwark X
+-- creature (bulwark = X) can block up to X attackers: the ones after the first are listed
+-- in bs.moreBlocks[blockerIdx]. Each attacker is blocked by at most one creature.
+-- =========================================================================
+
+-- How many attackers a creature can block at once
+function E:MaxBlocks(perm, isRemote)
+    local v = perm and self:HasKeyword(perm, isRemote, "bulwark")
+    if type(v) == "number" then return math.max(1, v) end
+    return v and 2 or 1
+end
+
+-- Every block as { blocker, attacker } pairs, first blocks before the rest
+function E:BlockPairs(bs)
+    local list = {}
+    if not bs then return list end
+    for b, a in pairs(bs.blocks or {}) do table.insert(list, { b, a }) end
+    for b, more in pairs(bs.moreBlocks or {}) do
+        for _, a in ipairs(more) do table.insert(list, { b, a }) end
+    end
+    return list
+end
+
+-- How many attackers a creature is blocking
+function E:BlockCount(bs, blockerIdx)
+    if not bs.blocks[blockerIdx] then return 0 end
+    return 1 + #((bs.moreBlocks and bs.moreBlocks[blockerIdx]) or {})
+end
+
+-- The creature blocking an attacker, or nil
+function E:BlockerOf(bs, atkIdx)
+    for _, p in ipairs(self:BlockPairs(bs)) do
+        if p[2] == atkIdx then return p[1] end
+    end
+end
+
+-- Takes back every block a creature has
+function E:ClearBlocks(bs, blockerIdx)
+    bs.blocks[blockerIdx] = nil
+    if bs.moreBlocks then bs.moreBlocks[blockerIdx] = nil end
+end
+
+-- Takes back whatever block is on an attacker; a Bulwark's next block moves up to first
+function E:ClearBlockOn(bs, atkIdx)
+    local b = self:BlockerOf(bs, atkIdx)
+    if not b then return end
+    local more = bs.moreBlocks and bs.moreBlocks[b]
+    if bs.blocks[b] == atkIdx then
+        bs.blocks[b] = more and table.remove(more, 1)
+    else
+        for i, a in ipairs(more) do
+            if a == atkIdx then table.remove(more, i); break end
+        end
+    end
+    if more and #more == 0 then bs.moreBlocks[b] = nil end
+    return b
+end
+
+-- Whether a creature that already blocks can take on another attacker
+function E:CanBlockMore(bs, blockerIdx, perm, isRemote)
+    local n = self:BlockCount(bs, blockerIdx)
+    return n > 0 and n < self:MaxBlocks(perm, isRemote)
+end
+
+-- Assigns a block: a Bulwark with room left blocks this attacker as well, any other
+-- creature moves its (last) block. Returns false if it was already blocking it.
+function E:AssignBlock(bs, blockerIdx, atkIdx, perm, isRemote)
+    for _, p in ipairs(self:BlockPairs(bs)) do
+        if p[1] == blockerIdx and p[2] == atkIdx then return false end
+    end
+    local more = bs.moreBlocks and bs.moreBlocks[blockerIdx]
+    if self:CanBlockMore(bs, blockerIdx, perm, isRemote) then
+        bs.moreBlocks = bs.moreBlocks or {}
+        bs.moreBlocks[blockerIdx] = more or {}
+        table.insert(bs.moreBlocks[blockerIdx], atkIdx)
+    elseif more and #more > 0 then
+        more[#more] = atkIdx
+    else
+        bs.blocks[blockerIdx] = atkIdx
+    end
+    return true
+end
+
 function E:TapCard(fieldIndex)
     local perm = self.localState.field[fieldIndex]
     if not perm then return end
@@ -1377,15 +1479,37 @@ function E:TapCard(fieldIndex)
             return
         end
 
-        if self.blockingState.selectedBlocker == fieldIndex then
-            self.blockingState.selectedBlocker = nil
-            self:Log(L("log.deselectedBlocker"), "SYSTEM")
+        local bs = self.blockingState
+        if bs.selectedBlocker == fieldIndex then
+            bs.selectedBlocker = nil
+            if bs.blocks[fieldIndex] then
+                -- A Bulwark picked for another block: a second click takes its blocks back
+                self:ClearBlocks(bs, fieldIndex)
+                self:Log(L("log.unblocked", TTS:CardName(card)), "COMBAT")
+            else
+                self:Log(L("log.deselectedBlocker"), "SYSTEM")
+            end
+            self:RefreshUI()
+            return
+        end
+
+        -- A Bulwark with room for another block can be picked again
+        if self:CanBlockMore(bs, fieldIndex, perm, false) then
+            bs.selectedBlocker = fieldIndex
+            self:Log(L("log.selectedSecondBlock", TTS:CardName(card)), "SYSTEM")
             self:RefreshUI()
             return
         end
 
         -- Clicking a creature that is already blocking takes the block back
-        local blocking = self.blockingState.blocks[fieldIndex]
+        local blocking = bs.blocks[fieldIndex]
+        if blocking and self:BlockCount(bs, fieldIndex) > 1 then
+            self:ClearBlocks(bs, fieldIndex)
+            bs.selectedBlocker = nil
+            self:Log(L("log.unblocked", TTS:CardName(card)), "COMBAT")
+            self:RefreshUI()
+            return
+        end
         if blocking then
             self.blockingState.blocks[fieldIndex] = nil
             self.blockingState.selectedBlocker = nil
@@ -1541,17 +1665,22 @@ function E:ClickOpponentCard(fieldIndex)
         end
 
         -- One blocker per attacker: the new blocker replaces the one already there
-        for otherBlocker, blockedAttacker in pairs(self.blockingState.blocks) do
-            if blockedAttacker == fieldIndex and otherBlocker ~= blockerIdx then
-                self.blockingState.blocks[otherBlocker] = nil
-                local other = self.localState.field[otherBlocker]
-                self:Log(L("log.noLongerBlocking",
-                    other and TTS.Cards[other.id] and TTS:CardName(other.id) or L("side.otherCreature"), TTS:CardName(attackerCard)), "SYSTEM")
-            end
+        local bs = self.blockingState
+        local otherBlocker = self:BlockerOf(bs, fieldIndex)
+        if otherBlocker == blockerIdx then
+            bs.selectedBlocker = nil
+            self:RefreshUI()
+            return
+        end
+        if otherBlocker then
+            self:ClearBlockOn(bs, fieldIndex)
+            local other = self.localState.field[otherBlocker]
+            self:Log(L("log.noLongerBlocking",
+                other and TTS.Cards[other.id] and TTS:CardName(other.id) or L("side.otherCreature"), TTS:CardName(attackerCard)), "SYSTEM")
         end
 
-        self.blockingState.blocks[blockerIdx] = fieldIndex
-        self.blockingState.selectedBlocker = nil
+        self:AssignBlock(bs, blockerIdx, fieldIndex, blockerPerm, false)
+        bs.selectedBlocker = nil
         self:Log(L("log.assignedBlock", TTS:CardName(blockerCard), TTS:CardName(attackerCard)), "COMBAT")
         self:RefreshUI()
         return
@@ -1576,24 +1705,23 @@ function E:ResolveCombatDamage()
         self:DamagePlayer(not isRemoteAttacking, amount, reason)
     end
 
+    -- A Bulwark blocking several attackers deals its full damage to each
+    local absorbed = {}   -- toughness of each blocker already soaked up this combat (Brutish)
+    local strikesFirstKilled = {}
+
     for _, atkIdx in ipairs(bs.attackers) do
         local atkPerm = atkField[atkIdx]
         if atkPerm then
             local atkCard = TTS.Cards[atkPerm.id]
             local atkPower, atkToughness = self:GetCreatureStats(atkPerm, isRemoteAttacking)
 
-            local assignedBlockerIdx = nil
-            for bIdx, aIdx in pairs(bs.blocks) do
-                if aIdx == atkIdx then
-                    assignedBlockerIdx = bIdx
-                    break
-                end
-            end
+            local assignedBlockerIdx = self:BlockerOf(bs, atkIdx)
 
             if assignedBlockerIdx and defField[assignedBlockerIdx] then
                 local defPerm = defField[assignedBlockerIdx]
                 local defCard = TTS.Cards[defPerm.id]
                 local defPower, defToughness = self:GetCreatureStats(defPerm, not isRemoteAttacking)
+                local defHit = defPower
 
                 local function Stats(p, t)
                     return TTS.FormatStats and TTS.FormatStats(p, t, 0, "|cFFFFFFFF", 12) or string.format("%d/%d", p, t)
@@ -1607,19 +1735,24 @@ function E:ResolveCombatDamage()
 
                     local atkDT = self:HasKeyword(atkPerm, isRemoteAttacking, "deathtouch")
                     local defDT = self:HasKeyword(defPerm, not isRemoteAttacking, "deathtouch")
+                    -- A Bulwark struck down first by its other attacker never strikes this one
+                    if strikesFirstKilled[assignedBlockerIdx] and not defFirst then defHit = 0 end
+                    local defDmg = (defDT and defHit > 0) and 999 or defHit
 
                     if atkFirst and not defFirst then
                         defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
                         if (defPerm.damage or 0) < defToughness then
-                            atkPerm.damage = (atkPerm.damage or 0) + (defDT and 999 or defPower)
+                            atkPerm.damage = (atkPerm.damage or 0) + defDmg
+                        else
+                            strikesFirstKilled[assignedBlockerIdx] = true
                         end
                     elseif defFirst and not atkFirst then
-                        atkPerm.damage = (atkPerm.damage or 0) + (defDT and 999 or defPower)
+                        atkPerm.damage = (atkPerm.damage or 0) + defDmg
                         if (atkPerm.damage or 0) < atkToughness then
                             defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
                         end
                     else
-                        atkPerm.damage = (atkPerm.damage or 0) + (defDT and 999 or defPower)
+                        atkPerm.damage = (atkPerm.damage or 0) + defDmg
                         defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
                     end
 
@@ -1632,8 +1765,11 @@ function E:ResolveCombatDamage()
                         atkPerm.freezeUntap = true
                     end
 
+                    -- Toughness another attacker already soaked up doesn't hold this one back
+                    local left = math.max(0, defToughness - (absorbed[assignedBlockerIdx] or 0))
+                    absorbed[assignedBlockerIdx] = (absorbed[assignedBlockerIdx] or 0) + math.min(atkPower, left)
                     if self:HasKeyword(atkPerm, isRemoteAttacking, "trample") then
-                        local excess = math.max(0, atkPower - defToughness)
+                        local excess = math.max(0, atkPower - left)
                         if excess > 0 then
                             DamageDefender(excess, atkCard.id .. "/trample")
                         end
@@ -1643,9 +1779,9 @@ function E:ResolveCombatDamage()
                         if isRemoteAttacking then self.remoteState.life = self.remoteState.life + atkPower
                         else self.localState.life = self.localState.life + atkPower end
                     end
-                    if self:HasKeyword(defPerm, not isRemoteAttacking, "lifelink") and defPower > 0 then
-                        if not isRemoteAttacking then self.remoteState.life = self.remoteState.life + defPower
-                        else self.localState.life = self.localState.life + defPower end
+                    if self:HasKeyword(defPerm, not isRemoteAttacking, "lifelink") and defHit > 0 then
+                        if not isRemoteAttacking then self.remoteState.life = self.remoteState.life + defHit
+                        else self.localState.life = self.localState.life + defHit end
                     end
                 end
             else

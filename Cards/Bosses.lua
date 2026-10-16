@@ -16,13 +16,13 @@ TTS:AddCards({
         power = 4, toughness = 4, isBoss = true, displayId = 2007, achievementId = 629,
         zone = "Ragefire Chasm", creatureType = "Demon", faction = "Burning Blade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "{T}: Target opponent loses 2 life and you gain 2 life."
+        text = "{T}: Deal 2 damage to target opponent and you gain 2 life."
     },
 
     -- Deadmines: Edwin VanCleef
     ["BOSS02"] = {
         id = "BOSS02", name = "Edwin VanCleef", cost = "{1}{R}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 5, toughness = 4, haste = true, firstStrike = true, isBoss = true, displayId = 2029, achievementId = 628,
+        power = 4, toughness = 3, haste = true, firstStrike = true, isBoss = true, displayId = 2029, achievementId = 628,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
         text = "Quick, Strikes-First."
@@ -34,13 +34,13 @@ TTS:AddCards({
         power = 7, toughness = 8, isBoss = true, displayId = 4088, achievementId = 630,
         zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Murloc",
         modelCam = { zoom = 0.55, camScale = 1.25, z = -0.18, rotation = 0.15 },
-        text = "Whenever Mutanus attacks, target opponent discards a card and loses 1 life."
+        text = "Whenever Mutanus attacks, the defending player discards a random card and takes 1 damage."
     },
 
     -- Shadowfang Keep: Archmage Arugal
     ["BOSS04"] = {
         id = "BOSS04", name = "Archmage Arugal", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 4, toughness = 6, isBoss = true, displayId = 2353, achievementId = 631,
+        power = 3, toughness = 5, isBoss = true, displayId = 2353, achievementId = 631,
         zone = "Shadowfang Keep", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "{T}: Put target tapped creature on top of its owner's library."
@@ -49,10 +49,10 @@ TTS:AddCards({
     -- Blackfathom Deeps: Aku'mai
     ["BOSS05"] = {
         id = "BOSS05", name = "Aku'mai", cost = "{4}{G}{U}", cmc = 6, color = "G", type = "Creature",
-        power = 8, toughness = 9, trample = true, isBoss = true, displayId = 2837, achievementId = 632,
+        power = 8, toughness = 9, trample = true, bulwark = 2, isBoss = true, displayId = 2837, achievementId = 632,
         zone = "Blackfathom Deeps", creatureType = "Beast",
         modelCam = { zoom = 0.20, camScale = 1.80, z = 0.00, rotation = -0.30 },
-        text = "Brutish. Aku'mai can block up to two creatures each combat."
+        text = "Brutish, Bulwark 2."
     },
 
     -- Stockade: Bazil Thredd
@@ -85,7 +85,7 @@ TTS:AddCards({
     -- SM Graveyard: Bloodmage Thalnos
     ["BOSS09"] = {
         id = "BOSS09", name = "Bloodmage Thalnos", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
-        power = 3, toughness = 3, deathtouch = true, isBoss = true, displayId = 11396, achievementId = 638,
+        power = 2, toughness = 2, deathtouch = true, isBoss = true, displayId = 11396, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "Fatal. When Bloodmage Thalnos dies, draw a card."
@@ -115,7 +115,7 @@ TTS:AddCards({
         power = 4, toughness = 6, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Drain. When Whitemane dies, return another target creature from your graveyard to the battlefield."
+        text = "Drain. When Whitemane dies, return the last other creature card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -124,7 +124,7 @@ TTS:AddCards({
         power = 6, toughness = 8, isBoss = true, displayId = 7971, achievementId = 637,
         zone = "Razorfen Downs", creatureType = "Undead",
         modelCam = { zoom = 0.65, camScale = 1.20, z = -0.15, rotation = 0.15 },
-        text = "Whenever Amnennar attacks, tap target creature. That creature does not untap during its controller's next untap step."
+        text = "Whenever Amnennar attacks, tap the untapped enemy creature with the highest power. It does not untap during its controller's next untap step."
     },
 
     -- Uldaman: Archaedas
@@ -151,7 +151,7 @@ TTS:AddCards({
         power = 9, toughness = 9, trample = true, isBoss = true, displayId = 12292, achievementId = 641,
         zone = "Maraudon", creatureType = "Elemental",
         modelCam = { zoom = 0.35, camScale = 1.60, z = -0.25, rotation = 0.10 },
-        text = "Brutish. Whenever Theradras deals combat damage to a player, destroy target non-basic land that player controls."
+        text = "Brutish. Whenever Theradras attacks and isn't blocked, destroy one of the defending player's Prayers."
     },
 
     -- Sunken Temple: Shade of Eranikus
@@ -205,7 +205,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isBoss = true, displayId = 11256, achievementId = 645,
         zone = "Dire Maul", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{2}{U}: Draw a card, then discard a card. Tortheldrin gains +1/+1 until end of turn."
+        text = "{2}{U}: Draw a card, then discard a random card. Tortheldrin gets +1/+1 until end of turn."
     },
 
     -- Dire Maul North: King Gordok
@@ -223,7 +223,7 @@ TTS:AddCards({
         power = 6, toughness = 7, isBoss = true, displayId = 11070, achievementId = 646,
         zone = "Scholomance", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "Whenever another creature dies, you draw a card."
+        text = "Whenever another creature you control dies, you draw a card."
     },
 
     -- Stratholme: Baron Rivendare
@@ -232,7 +232,7 @@ TTS:AddCards({
         power = 8, toughness = 8, lifelink = true, isBoss = true, displayId = 10729, achievementId = 633,
         zone = "Stratholme", creatureType = "Undead",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Drain. Whenever an opposing creature dies, its controller loses 2 life."
+        text = "Drain. Whenever an opposing creature dies, its controller takes 2 damage."
     },
 
     -- Stratholme: Balnazzar
@@ -241,7 +241,7 @@ TTS:AddCards({
         power = 8, toughness = 9, flying = true, isBoss = true, displayId = 10691, achievementId = 633,
         zone = "Stratholme", creatureType = "Demon",
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. When Balnazzar enters the battlefield, gain control of target opposing creature with power 4 or less."
+        text = "Airborne. When Balnazzar enters the battlefield, gain control of the opposing creature with the highest power of 4 or less."
     },
 
     -- WoW Forever dungeons: their "achievements" are the kill statistics, so the same id

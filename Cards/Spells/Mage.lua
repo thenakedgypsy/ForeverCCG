@@ -15,7 +15,7 @@ TTS:AddCards({
     -- MAGE
     ["MAG01"] = {
         id = "MAG01", name = "Fireball", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Mage",
-        text = "Deal 3 damage to target enemy creature or the opponent. It takes 1 more damage at the start of each of your turns for 2 turns.",
+        text = "Deal 3 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Fire_FlameBolt",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },

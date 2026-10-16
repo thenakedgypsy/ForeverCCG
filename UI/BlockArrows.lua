@@ -134,18 +134,13 @@ local function PredictDeaths(E, bs)
     local defRemote = not atkRemote
     local atkField = atkRemote and E.remoteState.field or E.localState.field
     local defField = atkRemote and E.localState.field or E.remoteState.field
+    local defTakenSoFar, struckDown = {}, {}
 
     for _, atkIdx in ipairs(bs.attackers or {}) do
         local atkPerm = atkField[atkIdx]
 
-        -- Combat pairs each attacker with the first blocker found for it
-        local defPerm
-        for bIdx, aIdx in pairs(bs.blocks) do
-            if aIdx == atkIdx then
-                defPerm = defField[bIdx]
-                break
-            end
-        end
+        local bIdx = E:BlockerOf(bs, atkIdx)
+        local defPerm = bIdx and defField[bIdx]
 
         if atkPerm and defPerm then
             local atkPower, atkToughness = E:GetCreatureStats(atkPerm, atkRemote)
@@ -154,20 +149,25 @@ local function PredictDeaths(E, bs)
             local defHit = E:HasKeyword(defPerm, defRemote, "deathtouch") and 999 or defPower
             local atkFirst = E:HasKeyword(atkPerm, atkRemote, "firstStrike")
             local defFirst = E:HasKeyword(defPerm, defRemote, "firstStrike")
+            -- A Bulwark struck down first by another attacker never strikes this one
+            if struckDown[defPerm] and not defFirst then defHit = 0 end
 
+            -- A Bulwark blocking two takes both attackers' damage
+            local before = (defPerm.damage or 0) + (defTakenSoFar[defPerm] or 0)
             local atkTaken, defTaken = 0, 0
             if atkFirst and not defFirst then
                 defTaken = atkHit
-                if (defPerm.damage or 0) + defTaken < defToughness then atkTaken = defHit end
+                if before + defTaken < defToughness then atkTaken = defHit else struckDown[defPerm] = true end
             elseif defFirst and not atkFirst then
                 atkTaken = defHit
                 if (atkPerm.damage or 0) + atkTaken < atkToughness then defTaken = atkHit end
             else
                 atkTaken, defTaken = defHit, atkHit
             end
+            defTakenSoFar[defPerm] = (defTakenSoFar[defPerm] or 0) + defTaken
 
             if WillDie(atkPerm, atkRemote, atkTaken) then dies[atkPerm] = true end
-            if WillDie(defPerm, defRemote, defTaken) then dies[defPerm] = true end
+            if WillDie(defPerm, defRemote, defTakenSoFar[defPerm]) then dies[defPerm] = true end
         end
     end
     return dies
@@ -183,9 +183,9 @@ local function UpdateBlockArrows()
         -- Defending: blockers are ours, attackers theirs. Attacking: the reverse.
         local blockerRemote = not bs.isRemoteAttacking
         if canDrawLines then
-            for blockerIdx, attackerIdx in pairs(bs.blocks) do
-                local fromFrame = FindFieldFrame(blockerRemote, blockerIdx)
-                local toFrame = FindFieldFrame(not blockerRemote, attackerIdx)
+            for _, p in ipairs(E:BlockPairs(bs)) do
+                local fromFrame = FindFieldFrame(blockerRemote, p[1])
+                local toFrame = FindFieldFrame(not blockerRemote, p[2])
                 if fromFrame and toFrame and DrawArrow(n + 1, fromFrame, toFrame) then
                     n = n + 1
                 end

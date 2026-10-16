@@ -15,7 +15,7 @@ TTS.WaitingRoom = TTS.WaitingRoom or {
 }
 
 local WR = TTS.WaitingRoom
-WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_SCORE; older builds don't send one)
+WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_QUEUED, LFM_HERE and LFM_CENSUS)
 WR.unitNames = WR.unitNames or {} -- [lowerName] = character name the announce came from, for party invites
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
@@ -365,9 +365,7 @@ end
 function WR:BroadcastPresence()
     if TTS.Net and TTS.Net.BroadcastLFM then
         local myName = GetPlayerFullName()
-        TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName)
-        -- Separate message so older builds, which read everything after LFM_ANNOUNCE: as the name, are unaffected
-        TTS.Net:BroadcastLFM("LFM_SCORE:" .. TTS.Net.MyScore() .. ":" .. myName)
+        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. myName)
     end
 end
 

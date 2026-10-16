@@ -68,7 +68,7 @@ end
 -- =========================================================================
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
-    "lifelink", "trample", "hexproof", "defender", "unblockable",
+    "lifelink", "trample", "hexproof", "defender", "unblockable", "bulwark",
 }
 
 TT.KEYWORDS = {
@@ -83,6 +83,7 @@ TT.KEYWORDS = {
     hexproof    = { name = "Warded",        text = "Can't be the target of your opponent's spells or abilities." },
     defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
     unblockable = { name = "Unblockable",   text = "Can't be blocked." },
+    bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
 }
 
 -- =========================================================================
@@ -126,13 +127,14 @@ TT.EFFECTS = {
     destroy    = { name = "Destroy",           tag = "Effect", text = "Puts the creature straight into its owner's graveyard, whatever its toughness." },
     tuck       = { name = "Return to Library", tag = "Effect", text = "Puts the creature on top of its owner's library, so they draw it again next. Anything attached to it falls off." },
     steal      = { name = "Mind Control",      tag = "Effect", text = "You take control of the enemy creature. It can't attack this turn unless it is only borrowed until end of turn." },
-    dot        = { name = "Damage over Time",  tag = "Effect", text = "Deals damage at the start of each of the caster's turns for a number of turns. Effects on players show on the effect bars beside the board." },
-    hot        = { name = "Healing over Time", tag = "Effect", text = "Restores health at the start of each of the caster's turns for a number of turns. Effects on players show on the effect bars beside the board." },
+    dot        = { name = "Damage over Time",  tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, deals damage (shown on the effect bars beside the board); on a creature, it permanently gets -0/-1, and it dies at 0 toughness." },
+    hot        = { name = "Healing over Time", tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, restores life (shown on the effect bars beside the board); on a creature, it permanently gets +0/+1." },
     shield     = { name = "Damage Shield",     tag = "Effect", text = "On a player: prevents the next points of damage they would take. On a creature: extra toughness until the end of the turn." },
     regen      = { name = "Regenerate",        tag = "Effect", text = "The next time the creature would die from damage it survives instead: its damage is removed and it becomes tapped. Destroy effects ignore this." },
     dispel     = { name = "Dispel",            tag = "Effect", text = "On an enemy creature: removes its buffs, granted keywords, regeneration and healing over time. On your own creature: removes weakening, damage over time and freeze." },
     draw       = { name = "Card Draw",         tag = "Effect", text = "Draw cards from your library. With 10 cards in hand you discard one first. Drawing from an empty library loses the game." },
     mana       = { name = "Mana Gain",         tag = "Effect", text = "Adds mana straight to your pool. Unspent mana empties at the end of your turn." },
+    token      = { name = "Token",             tag = "Effect", text = "A creature made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent creature card in a graveyard to the battlefield under your control." },
     targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy creatures can't be chosen." },
 
@@ -197,12 +199,15 @@ local function TagValue(tag, value) return Loc:Term(TAG_GROUP[tag] or tag, value
 -- A spec is { title, tag, color, lines }. lines: strings (wrapped, light
 -- grey) or { text, r, g, b }.
 -- =========================================================================
-function TT:KeywordPanel(key, note)
+-- amount: the X of a numbered keyword (Bulwark 2), shown after its name
+function TT:KeywordPanel(key, note, amount)
     local def = TT.KEYWORDS[key]
     if not def then return nil end
     local lines = { Sym(TT:Def("keyword", key, "text"), 14) }
     if note then table.insert(lines, { note, 0.6, 0.9, 0.6 }) end
-    return { title = TT:Def("keyword", key, "name"), tag = "Keyword", lines = lines }
+    local title = TT:Def("keyword", key, "name")
+    if type(amount) == "number" then title = title .. " " .. amount end
+    return { title = title, tag = "Keyword", lines = lines }
 end
 
 function TT:SymbolPanel(key, note)
@@ -561,7 +566,7 @@ local function KeywordPanels(card, ctx)
     local E = TTS.Engine
     local function add(kw, note)
         if seen[kw] then return end
-        local spec = TT:KeywordPanel(kw, note)
+        local spec = TT:KeywordPanel(kw, note, card[kw])
         if spec then
             seen[kw] = true
             table.insert(specs, spec)
@@ -615,18 +620,21 @@ local function StatusPanels(card, ctx)
         local blockerRemote = not bs.isRemoteAttacking
         local otherField = ctx.isRemote and E.localState.field or E.remoteState.field
         if (ctx.isRemote and true or false) == blockerRemote then
-            local atkIdx = bs.blocks and bs.blocks[ctx.fieldIndex]
-            local atk = atkIdx and otherField[atkIdx]
-            if atk and TTS.Cards[atk.id] then
-                table.insert(specs, TT:EffectPanel("blocking", { { L("tt.blockingX", TTS:CardName(atk.id)), 0.6, 0.9, 0.6 } }))
+            local names = {}
+            for _, p in ipairs(E:BlockPairs(bs)) do
+                local atk = p[1] == ctx.fieldIndex and otherField[p[2]]
+                if atk and TTS.Cards[atk.id] then table.insert(names, TTS:CardName(atk.id)) end
+            end
+            if #names > 0 then
+                table.insert(specs, TT:EffectPanel("blocking", { { L("tt.blockingX", table.concat(names, ", ")), 0.6, 0.9, 0.6 } }))
             end
             if not ctx.isRemote and bs.selectedBlocker == ctx.fieldIndex then
                 table.insert(specs, TT:EffectPanel("selected"))
             end
         elseif perm.isAttacking then
             local names = {}
-            for bIdx, aIdx in pairs(bs.blocks or {}) do
-                local b = aIdx == ctx.fieldIndex and otherField[bIdx]
+            for _, p in ipairs(E:BlockPairs(bs)) do
+                local b = p[2] == ctx.fieldIndex and otherField[p[1]]
                 if b and TTS.Cards[b.id] then table.insert(names, TTS:CardName(b.id)) end
             end
             if #names > 0 then
@@ -657,8 +665,9 @@ local function StatusPanels(card, ctx)
         if list and #list > 0 then
             local lines = {}
             for _, e in ipairs(list) do
-                table.insert(lines, { L(kind == "dot" and "tt.dotLine" or "tt.hotLine", TTS:ReasonText(e.src) or L("reason.effect"), e.n,
-                    Plural(e.turns, "tt.n.turn")), 1, 1, 1 })
+                local src = TTS:ReasonText(e.src) or L("reason.effect")
+                local line = L(kind == "dot" and "tt.dotLineCreature" or "tt.hotLineCreature", src, Plural(e.turns, "tt.n.turn"))
+                table.insert(lines, { line, 1, 1, 1 })
             end
             table.insert(specs, TT:EffectPanel(kind, lines))
         end
@@ -706,6 +715,9 @@ local function OpPanel(op, eff)
         table.insert(extra, op.untilEnd and L("tt.stealTemp") or L("tt.stealPerm"))
     elseif id == "raise" then
         table.insert(extra, op.src == "any" and L("tt.raiseAny") or L("tt.raiseOwn"))
+    elseif id == "token" then
+        local tok = TTS.Cards[op.id]
+        if tok then table.insert(extra, L("tt.creates", op.n or 1, TTS:CardName(tok), tok.power or 0, tok.toughness or 0)) end
     end
 
     if area then table.insert(extra, { L("tt.affects", area), 0.6, 0.9, 0.6 }) end
@@ -745,6 +757,18 @@ local function AbilityPanels(card)
         if text:match("^[{%w}]+:") then table.insert(specs, TT:EffectPanel("activated")) end
         if text:find("Whenever") or text:find("%f[%a]When%s") then
             table.insert(specs, TT:EffectPanel("triggered"))
+        end
+    end
+
+    -- Tokens: what this card is, or the tokens its triggers create
+    if card.isToken then table.insert(specs, TT:EffectPanel("token")) end
+    for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
+        for _, op in ipairs((card[key] and card[key].ops) or {}) do
+            local tok = op.op == "token" and TTS.Cards[op.id]
+            if tok then
+                table.insert(specs, TT:EffectPanel("token",
+                    { { L("tt.creates", op.n or 1, TTS:CardName(tok), tok.power or 0, tok.toughness or 0), 0.6, 0.9, 0.6 } }))
+            end
         end
     end
 

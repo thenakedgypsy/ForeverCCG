@@ -1,3 +1,13 @@
+## 0.15.0
+
+*   new keyword Bulwark X, Aku'mai now blocks two
+*   tokens: murlocs leave tadpoles when they die, kobolds bring diggers when played
+*   heal/damage over time on creatures now changes toughness
+*   card text fixes
+*   dungeon loading screens as solo backgrounds
+*   fix for card models not zooming correctly when played
+*   balance: Arugal 3/5, VanCleef 4/3, Thalnos 2/2, Gilnid 5/2, Goraluk 6/2, Ghamoo-ra 2/8, Polkelt 1/5 Strikes-First, Viscous Fallout 2/4, Roccor 6/5, Smolderweb 6/7, Panzor 3/11
+
 ## 0.14.4
 
 *   add mulligan button

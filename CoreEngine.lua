@@ -501,8 +501,8 @@ function E:NextPhase()
             elseif not bs.blocksDeclared then
                 -- Defending: send our blocks and hand control back to the attacker
                 bs.selectedBlocker = nil
-                for blockerIdx, attackerIdx in pairs(bs.blocks) do
-                    TTS.Net:Send(self.opponent, string.format("ACTION:ASSIGN_BLOCK:%d:%d", blockerIdx, attackerIdx))
+                for _, p in ipairs(self:BlockPairs(bs)) do
+                    TTS.Net:Send(self.opponent, string.format("ACTION:ASSIGN_BLOCK:%d:%d", p[1], p[2]))
                 end
                 TTS.Net:Send(self.opponent, "ACTION:BLOCKS_DECLARED")
                 bs.blocksDeclared = true
@@ -722,7 +722,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
 
     self.inMatch = true
     self.opponent = opponentName or L("side.opponentCap")
-    self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT, if their build sends it
+    self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
     self.turn = 1

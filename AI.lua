@@ -57,7 +57,7 @@ local function Name(perm) local c = Card(perm.id); return c and TTS:CardName(c) 
 -- =========================================================================
 local KEYWORD_VALUE = {
     flying = 1.5, unblockable = 1.5, deathtouch = 1.5, firstStrike = 1, lifelink = 1, hexproof = 1,
-    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5,
+    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1,
 }
 
 -- How much a creature is worth to its controller, as it stands on the battlefield
@@ -97,6 +97,7 @@ local function CreatureCardValue(self, c, isRemote)
         end
     end
     if c.etb then v = v + 1.5 end
+    if c.onDeath then v = v + 1 end
     if self:GetAbility(c.id) then v = v + 2 end
     return v
 end
@@ -428,10 +429,14 @@ function E:AIAssignBlocks()
         if IsCreature(perm) and not perm.tapped then table.insert(free, i) end
     end
 
+    -- A Bulwark stays free while it has room for another block
     local function Assign(blockerIdx, atkIdx)
-        bs.blocks[blockerIdx] = atkIdx
-        for k, i in ipairs(free) do
-            if i == blockerIdx then table.remove(free, k); break end
+        local b = self.remoteState.field[blockerIdx]
+        self:AssignBlock(bs, blockerIdx, atkIdx, b, true)
+        if not self:CanBlockMore(bs, blockerIdx, b, true) then
+            for k, i in ipairs(free) do
+                if i == blockerIdx then table.remove(free, k); break end
+            end
         end
         local b = self.remoteState.field[blockerIdx]
         local a = self.localState.field[atkIdx]
@@ -474,6 +479,15 @@ function E:AIAssignBlocks()
             local b = self.remoteState.field[bi]
             if self:AICanBlock(atk, false, b, true) then
                 local aDies, bDies = self:AISimFight(atk, false, b, true)
+                -- A Bulwark taking on another attacker also takes the ones it already blocks
+                local incoming = 0
+                for _, p in ipairs(self:BlockPairs(bs)) do
+                    if p[1] == bi then incoming = incoming + Damage(p[2]) end
+                end
+                if incoming > 0 then
+                    local _, bt = self:GetCreatureStats(b, true)
+                    if (b.damage or 0) + incoming + Damage(atkIdx) >= bt then bDies = true end
+                end
                 local bV = self:AIPermValue(b, true)
                 local score
                 if aDies and not bDies then
@@ -492,7 +506,7 @@ function E:AIAssignBlocks()
     -- 3: chump blocks while the unblocked damage would be lethal (or too much for this profile)
     local function Unblocked()
         local blocked = {}
-        for _, a in pairs(bs.blocks) do blocked[a] = true end
+        for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
         local dmg, list = 0, {}
         for _, atkIdx in ipairs(attackers) do
             if not blocked[atkIdx] then
@@ -576,8 +590,10 @@ local function ScoreOpOn(self, op, d, card, profile)
     elseif op.op == "tuck" then
         return enemy and v * 0.9 or -v
     elseif op.op == "dot" then
-        local kills = op.n * op.turns >= RemainingToughness(self, perm, d.isRemote)
-        if enemy then return kills and v * 0.6 or op.n * 0.2 end
+        -- On a creature: a lasting -0/-1 each turn
+        local _, t = self:GetCreatureStats(perm, d.isRemote)
+        local kills = op.turns >= t
+        if enemy then return kills and v * 0.6 or op.turns * 0.4 end
         return -1
     elseif op.op == "freeze" or op.op == "tap" then
         if perm.tapped then return 0 end
@@ -588,7 +604,10 @@ local function ScoreOpOn(self, op, d, card, profile)
         if op.perm then return enemy and -gain or gain end
         -- Temporary buffs are judged separately (only worth it before a fight)
         return 0
-    elseif op.op == "heal" or op.op == "hot" then
+    elseif op.op == "hot" then
+        -- On a creature: a lasting +0/+1 each turn
+        return enemy and -(op.turns or 1) or (op.turns or 1) * 0.6
+    elseif op.op == "heal" then
         if enemy then return 0 end
         return math.min(perm.damage or 0, op.n) * 0.3
     elseif op.op == "shield" then
@@ -620,6 +639,9 @@ function E:AIScoreEffect(eff, tgt, card, profile)
             total = total + best
         elseif op.op == "mana" then
             total = total + 0
+        elseif op.op == "token" then
+            local tok = Card(op.id)
+            if tok then total = total + (op.n or 1) * CreatureCardValue(self, tok, true) end
         else
             for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, true, op.filter)) do
                 total = total + ScoreOpOn(self, op, d, card, profile)

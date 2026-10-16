@@ -31,7 +31,8 @@ local L = TTS.L
 --   map         { continent, x, y } button position on the select map (UI\SoloMapData.lua)
 --   bosses      dungeon boss card ids
 --   rules       boss rule ids, see TTS.EncounterRules below
---   background  { map = "<WorldMap folder>" } or { file = "<Textures\Backgrounds file>", map = ..., tint = { r, g, b } }
+--   background  { map = "<WorldMap folder>" } or
+--               { loadscreen = "<Glues\LoadingScreens file>", wide = bool, map = ..., tint = { r, g, b } }
 -- =========================================================================
 TTS.SoloEncounters = {}
 local ENC = TTS.SoloEncounters
@@ -134,32 +135,33 @@ for i, z in ipairs(ZONES) do
     }
 end
 
--- id, dungeon (zone tag), boss cards, AI life, rules, reward, AI profile, custom art file, fallback map
+-- id, dungeon (zone tag), boss cards, AI life, rules, reward, AI profile, loading screen, fallback map
 local DUNGEONS = {
-    { "RFC", "Ragefire Chasm",    { "BOSS01" },                               20, { "HEAD_START" },                     "RFC08", "tactical", "RagefireChasm",    "Durotar" },
-    { "DMS", "The Deadmines",     { "BOSS02" },                               25, { "REINFORCEMENTS" },                 "DMS12", "tactical", "Deadmines",        "Westfall" },
-    { "WCV", "Wailing Caverns",   { "BOSS03" },                               25, { "AWAKENING" },                      "WCV13", "tactical", "WailingCaverns",   "Barrens" },
-    { "SFK", "Shadowfang Keep",   { "BOSS04" },                               25, { "OPENING_BOSS" },                   "SFK13", "tactical", "ShadowfangKeep",   "Silverpine" },
-    { "BFD", "Blackfathom Deeps", { "BOSS05" },                               25, { "REINFORCEMENTS" },                 "BFD12", "tactical", "BlackfathomDeeps", "Ashenvale" },
-    { "STK", "The Stockade",      { "BOSS06" },                               25, { "REINFORCEMENTS" },                 "STK08", "tactical", "Stockade",         "Elwynn" },
-    { "GNO", "Gnomeregan",        { "BOSS07" },                               30, { "HEAD_START" },                     "GNO09", "tactical", "Gnomeregan",       "DunMorogh" },
-    { "RFK", "Razorfen Kraul",    { "BOSS08" },                               25, { "OPENING_BOSS" },                   "RFK13", "tactical", "RazorfenKraul",    "Barrens" },
-    { "SMO", "Scarlet Monastery", { "BOSS09", "BOSS10", "BOSS11", "BOSS12" }, 30, { "NEXT_BOSS" },                      "SMO14", "expert",   "ScarletMonastery", "Tirisfal" },
-    { "RFD", "Razorfen Downs",    { "BOSS13" },                               30, { "ENRAGE" },                         "RFD08", "expert",   "RazorfenDowns",    "Barrens" },
-    { "ULD", "Uldaman",           { "BOSS14" },                               30, { "AWAKENING" },                      "ULD13", "expert",   "Uldaman",          "Badlands" },
-    { "ZFK", "Zul'Farrak",        { "BOSS15" },                               30, { "REINFORCEMENTS" },                 "ZFK12", "expert",   "ZulFarrak",        "Tanaris" },
-    { "MAR", "Maraudon",          { "BOSS16" },                               30, { "HEAD_START" },                     "MAR13", "expert",   "Maraudon",         "Desolace" },
-    { "SUN", "Sunken Temple",     { "BOSS17" },                               30, { "ENRAGE" },                         "SUN13", "expert",   "SunkenTemple",     "SwampOfSorrows" },
-    { "BRD", "Blackrock Depths",  { "BOSS18" },                               35, { "OPENING_BOSS", "REINFORCEMENTS" }, "BRD23", "expert",   "BlackrockDepths",  "SearingGorge" },
-    { "BRS", "Blackrock Spire",   { "BOSS19", "BOSS20" },                     35, { "NEXT_BOSS" },                      "BRS20", "expert",   "BlackrockSpire",   "BurningSteppes" },
-    { "DMA", "Dire Maul",         { "BOSS21", "BOSS22", "BOSS23" },           35, { "NEXT_BOSS" },                      "DMA19", "expert",   "DireMaul",         "Feralas" },
-    { "SCH", "Scholomance",       { "BOSS24" },                               35, { "REINFORCEMENTS", "ENRAGE" },       "SCH18", "expert",   "Scholomance",      "WesternPlaguelands" },
-    { "STR", "Stratholme",        { "BOSS25", "BOSS26" },                     40, { "NEXT_BOSS", "ENRAGE" },            "STR21", "expert",   "Stratholme",       "EasternPlaguelands" },
-    -- WoW Forever dungeons
-    { "HOT", "The Hall of Thanes", { "BOSS27" },                              25, { "REINFORCEMENTS" },                 "HOT12", "tactical", "HallOfThanes",     "Ironforge" },
-    { "ROL", "Ruins of Lordaeron", { "BOSS28" },                              25, { "AWAKENING" },                      "ROL16", "tactical", "RuinsOfLordaeron", "Tirisfal" },
-    { "EXC", "Excavation Site",    { "BOSS29" },                              30, { "AWAKENING" },                      "EXC17", "expert",   "ExcavationSite",   "Wetlands" },
+    { "RFC", "Ragefire Chasm",    { "BOSS01" },                               20, { "HEAD_START" },                     "RFC08", "tactical", "LoadScreenRagefireChasm",    "Durotar" },
+    { "DMS", "The Deadmines",     { "BOSS02" },                               25, { "REINFORCEMENTS" },                 "DMS12", "tactical", "LoadScreenDeadmines",        "Westfall" },
+    { "WCV", "Wailing Caverns",   { "BOSS03" },                               25, { "AWAKENING" },                      "WCV13", "tactical", "LoadScreenWailingCaverns",   "Barrens" },
+    { "SFK", "Shadowfang Keep",   { "BOSS04" },                               25, { "OPENING_BOSS" },                   "SFK13", "tactical", "LoadScreenShadowfangKeep",   "Silverpine" },
+    { "BFD", "Blackfathom Deeps", { "BOSS05" },                               25, { "REINFORCEMENTS" },                 "BFD12", "tactical", "LoadScreenBlackfathomDeeps", "Ashenvale" },
+    { "STK", "The Stockade",      { "BOSS06" },                               25, { "REINFORCEMENTS" },                 "STK08", "tactical", "LoadScreenStormwindStockade", "Elwynn" },
+    { "GNO", "Gnomeregan",        { "BOSS07" },                               30, { "HEAD_START" },                     "GNO09", "tactical", "LoadScreenGnomeregan",       "DunMorogh" },
+    { "RFK", "Razorfen Kraul",    { "BOSS08" },                               25, { "OPENING_BOSS" },                   "RFK13", "tactical", "LoadScreenRazorfenKraul",    "Barrens" },
+    { "SMO", "Scarlet Monastery", { "BOSS09", "BOSS10", "BOSS11", "BOSS12" }, 30, { "NEXT_BOSS" },                      "SMO14", "expert",   "LoadScreenMonastery",        "Tirisfal" },
+    { "RFD", "Razorfen Downs",    { "BOSS13" },                               30, { "ENRAGE" },                         "RFD08", "expert",   "LoadScreenRazorfenDowns",    "Barrens" },
+    { "ULD", "Uldaman",           { "BOSS14" },                               30, { "AWAKENING" },                      "ULD13", "expert",   "LoadScreenUldaman",          "Badlands" },
+    { "ZFK", "Zul'Farrak",        { "BOSS15" },                               30, { "REINFORCEMENTS" },                 "ZFK12", "expert",   "LoadScreenZulFarrak",        "Tanaris" },
+    { "MAR", "Maraudon",          { "BOSS16" },                               30, { "HEAD_START" },                     "MAR13", "expert",   "LoadScreenMaraudon",         "Desolace" },
+    { "SUN", "Sunken Temple",     { "BOSS17" },                               30, { "ENRAGE" },                         "SUN13", "expert",   "LoadScreenSunkenTemple",     "SwampOfSorrows" },
+    { "BRD", "Blackrock Depths",  { "BOSS18" },                               35, { "OPENING_BOSS", "REINFORCEMENTS" }, "BRD23", "expert",   "LoadScreenBlackrockDepths",  "SearingGorge" },
+    { "BRS", "Blackrock Spire",   { "BOSS19", "BOSS20" },                     35, { "NEXT_BOSS" },                      "BRS20", "expert",   "LoadScreenBlackrockSpire",   "BurningSteppes" },
+    { "DMA", "Dire Maul",         { "BOSS21", "BOSS22", "BOSS23" },           35, { "NEXT_BOSS" },                      "DMA19", "expert",   "LoadScreenDireMaul",         "Feralas" },
+    { "SCH", "Scholomance",       { "BOSS24" },                               35, { "REINFORCEMENTS", "ENRAGE" },       "SCH18", "expert",   "LoadScreenScholomance",      "WesternPlaguelands" },
+    { "STR", "Stratholme",        { "BOSS25", "BOSS26" },                     40, { "NEXT_BOSS", "ENRAGE" },            "STR21", "expert",   "LoadScreenStrathome",        "EasternPlaguelands" },
+    -- WoW Forever dungeons (16:9 loading screens)
+    { "HOT", "The Hall of Thanes", { "BOSS27" },                              25, { "REINFORCEMENTS" },                 "HOT12", "tactical", "Camelot160\\Main\\LoadScreen_Camelot_OldIronforge",      "Ironforge" },
+    { "ROL", "Ruins of Lordaeron", { "BOSS28" },                              25, { "AWAKENING" },                      "ROL16", "tactical", "Camelot160\\Main\\LoadScreen_Camelot_RuinsOfLordaeron", "Tirisfal" },
+    { "EXC", "Excavation Site",    { "BOSS29" },                              30, { "AWAKENING" },                      "EXC17", "expert",   "Camelot160\\Main\\LoadScreen_Camelot_Excavation",       "Wetlands" },
 }
+local WIDE_LOADSCREENS = { HOT = true, ROL = true, EXC = true }
 
 for i, d in ipairs(DUNGEONS) do
     local firstBoss = TTS.Cards[d[3][1]]
@@ -170,7 +172,7 @@ for i, d in ipairs(DUNGEONS) do
         reward = d[6],
         -- Opened by clearing the zone the dungeon sits in
         requires = { cleared = { TTS.SoloDungeonZone[d[1]] } },
-        background = { file = d[8], map = d[9], tint = { 0.6, 0.55, 0.5 } },
+        background = { loadscreen = d[8], wide = WIDE_LOADSCREENS[d[1]], map = d[9], tint = { 0.6, 0.55, 0.5 } },
     }
 end
 

@@ -50,7 +50,7 @@ TTS:AddCards({
     },
     ["DMS06"] = {
         id = "DMS06", name = "Gilnid", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 7124,
+        power = 5, toughness = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 7124,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1763,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."

@@ -88,8 +88,8 @@ TTS:AddCards({
         power = 5, toughness = 5, isReward = true, displayId = 8657,
         zone = "Felwood", creatureType = "Humanoid", npcEntry = 9528,
         anthem = { tag = "zone", value = "Felwood", p = 1 },
-        etb = { ops = { { op = "heal", to = "self_player", n = 5 }, { op = "heal", to = "friendly_creatures", n = 3 } } },
+        etb = { ops = { { op = "heal", to = "self_player", n = 5 }, { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arathandris Silversky enters the battlefield, you gain 5 life and each creature you control regains 3 health. Other Felwood creatures you control get +1/+0."
+        text = "When Arathandris Silversky enters the battlefield, you gain 5 life and creatures you control permanently get +0/+1. Other Felwood creatures you control get +1/+0."
     },
 })

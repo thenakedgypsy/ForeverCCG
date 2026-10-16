@@ -43,7 +43,7 @@ TTS:AddCards({
     },
     ["GNO05"] = {
         id = "GNO05", name = "Viscous Fallout", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 5, deathtouch = true, isMob = true, isBoss = true, displayId = 5497,
+        power = 2, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 5497,
         zone = "Gnomeregan", creatureType = "Elemental", npcId = 7079,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Fatal."

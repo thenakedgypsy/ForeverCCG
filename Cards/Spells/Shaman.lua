@@ -27,7 +27,7 @@ TTS:AddCards({
     },
     ["SHA03"] = {
         id = "SHA03", name = "Flame Shock", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy creature or the opponent. It takes 1 more damage at the start of each of your turns for 3 turns.",
+        text = "Deal 1 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 3 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },

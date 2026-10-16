@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["PRI02"] = {
         id = "PRI02", name = "Renew", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "You or target creature you control regains 2 health at the start of each of your turns for 3 turns.",
+        text = "You regain 2 health at the start of each of your turns for 3 turns, or target creature you control permanently gets +0/+1 at the start of each of your turns for 3 turns.",
         art = "Interface\\Icons\\Spell_Holy_Renew",
         effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 } } }
     },
@@ -45,13 +45,13 @@ TTS:AddCards({
     },
     ["PRI06"] = {
         id = "PRI06", name = "Holy Fire", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Priest",
-        text = "Deal 3 damage to target enemy creature or the opponent. It takes 1 more damage at the start of each of your turns for 2 turns.",
+        text = "Deal 3 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Holy_SearingLight",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["PRI07"] = {
         id = "PRI07", name = "Shadow Word: Pain", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Priest",
-        text = "Target enemy creature or the opponent takes 2 damage at the start of each of your turns for 3 turns.",
+        text = "Choose target enemy creature or the opponent. At the start of each of your turns for 3 turns, the opponent takes 2 damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },

@@ -38,7 +38,8 @@ TTS:AddCards({
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 2153,
         zone = "Stonetalon Mountains", creatureType = "Humanoid", faction = "Kobold", npcId = 3999,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        etb = { ops = { { op = "token", id = "TOK02", n = 1 } } },
+        text = "When Windshear Digger enters the battlefield, create a 1/1 Kobold Digger token."
     },
     ["STO05"] = {
         id = "STO05", name = "Pridewing Wyvern", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",

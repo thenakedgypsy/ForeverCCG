@@ -27,7 +27,7 @@ TTS:AddCards({
     },
     ["WAR03"] = {
         id = "WAR03", name = "Rend", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target enemy creature takes 1 damage at the start of each of your turns for 4 turns.",
+        text = "Target enemy creature permanently gets -0/-1 at the start of each of your turns for 4 turns.",
         art = "Interface\\Icons\\Ability_Gouge",
         effect = { target = "enemy_creature", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },

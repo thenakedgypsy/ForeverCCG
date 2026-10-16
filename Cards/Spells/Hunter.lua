@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["HUN02"] = {
         id = "HUN02", name = "Serpent Sting", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target enemy creature or the opponent takes 1 damage at the start of each of your turns for 4 turns.",
+        text = "Choose target enemy creature or the opponent. At the start of each of your turns for 4 turns, the opponent takes 1 damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Ability_Hunter_Quickshot",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
@@ -51,13 +51,13 @@ TTS:AddCards({
     },
     ["HUN07"] = {
         id = "HUN07", name = "Immolation Trap", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Hunter",
-        text = "Target enemy creature or the opponent takes 2 damage at the start of each of your turns for 3 turns.",
+        text = "Choose target enemy creature or the opponent. At the start of each of your turns for 3 turns, the opponent takes 2 damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["HUN08"] = {
         id = "HUN08", name = "Mend Pet", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target creature you control regains 3 health, then regains 1 health at the start of each of your turns for 3 turns.",
+        text = "Target creature you control regains 3 health, then permanently gets +0/+1 at the start of each of your turns for 3 turns.",
         art = "Interface\\Icons\\Ability_Hunter_MendPet",
         effect = { target = "friendly_creature", ops = { { op = "heal", to = "target", n = 3 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
     },

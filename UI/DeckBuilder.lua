@@ -426,6 +426,7 @@ local function GetCopyLimit(cardId, card)
 end
 
 local function CardPassesFilters(cardId, card)
+    if card.isToken then return false end   -- made by effects, never collected
     if not typeOn[GetTypeGroup(card)] then return false end
     if card.color and colorOn[card.color] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end

@@ -112,8 +112,7 @@ local function MyName()
     return NormalizeName(UnitName("player"))
 end
 
--- Our collection score. Sent as an optional trailing field (INVITE/ACCEPT) or in its own
--- LFM_SCORE message, so builds that don't know about it simply ignore it.
+-- Our collection score, sent in INVITE/ACCEPT and the waiting-room messages
 local function MyScore()
     return TTS.GetCollectionScore and (TTS:GetCollectionScore()) or 0
 end
@@ -928,9 +927,11 @@ function TTS.Net:OnReceive(msg, sender)
     -- =====================================================================
     -- WAITING ROOM / LFM HANDLERS
     -- =====================================================================
-    if cmd == "LFM_ANNOUNCE" then
-        -- Extract full text after "LFM_ANNOUNCE:" without splitting internal spaces
-        local pName = msg:match("^LFM_ANNOUNCE:(.+)$") or parts[2] or sender
+    if cmd == "LFM_QUEUED" then
+        -- LFM_QUEUED:<score>:<name>. (0.14 and earlier sent LFM_ANNOUNCE + LFM_SCORE; those
+        -- builds can't play this one, so their announcements are ignored.)
+        local score, pName = msg:match("^LFM_QUEUED:(%d+):(.+)$")
+        if not pName then return end
         pName = NormalizeName(pName)
         RememberCharName(pName, sender)
         TTS.Net:AddContact(pName)
@@ -939,19 +940,9 @@ function TTS.Net:OnReceive(msg, sender)
         s.queued = true
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
+            TTS.WaitingRoom.scores[pName:lower()] = tonumber(score)
             -- The chat sender is the character name, which is what a party invite needs
             TTS.WaitingRoom.unitNames[pName:lower()] = sender
-            if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
-                TTS.WaitingRoom:UpdateUI()
-            end
-        end
-        return
-
-    elseif cmd == "LFM_SCORE" then
-        -- LFM_SCORE:<score>:<name>, sent alongside LFM_ANNOUNCE (older builds don't send it)
-        local score, pName = msg:match("^LFM_SCORE:(%d+):(.+)$")
-        if score and TTS.WaitingRoom then
-            TTS.WaitingRoom.scores[NormalizeName(pName):lower()] = tonumber(score)
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
                 TTS.WaitingRoom:UpdateUI()
             end
@@ -1034,7 +1025,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         local theirVersion = parts[2]
         local theirMatchId = parts[3]
-        local theirScore = tonumber(parts[4])   -- nil from builds without collection scores
+        local theirScore = tonumber(parts[4])
         if not VersionsCompatible(theirVersion, TTS.VERSION) then
             TTS.Net:Send(sender, "DECLINE:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
@@ -1164,7 +1155,7 @@ function TTS.Net:OnReceive(msg, sender)
 
         Print(L("net.accepted", sender))
         TTS.Net:AddContact(sender)
-        local theirScore = tonumber(parts[4])   -- nil from builds without collection scores
+        local theirScore = tonumber(parts[4])
         -- They have started already and wait for our first turn while we pick a deck.
         -- The match id lets their messages in meanwhile (a concede, see ACTION below).
         TTS.Net.matchId = invite.matchId
@@ -1360,7 +1351,7 @@ function TTS.Net:OnReceive(msg, sender)
             if fieldIdx and E.localState.field[fieldIdx] then
                 local perm = table.remove(E.localState.field, fieldIdx)
                 E:DetachAttachments(perm, false)
-                table.insert(E.localState.hand, perm.id or cardId)
+                E:PutInZone(E.localState.hand, perm.id or cardId)
                 E:Log(L("log.bounced"), "ACTION")
                 E:RefreshUI()
             end
@@ -1414,13 +1405,11 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "ASSIGN_BLOCK" then
             local blockerIdx = tonumber(parts[3])
             local attackerIdx = tonumber(parts[4])
-            -- One blocker per attacker: a second block on the same attacker is ignored
-            local alreadyBlocked = false
-            for _, a in pairs(E.blockingState and E.blockingState.blocks or {}) do
-                if a == attackerIdx then alreadyBlocked = true end
-            end
-            if E.blockingState and blockerIdx and attackerIdx and not alreadyBlocked then
-                E.blockingState.blocks[blockerIdx] = attackerIdx
+            -- One blocker per attacker: a second block on the same attacker is ignored.
+            -- A Bulwark sends one ASSIGN_BLOCK per attacker it blocks.
+            local bs = E.blockingState
+            if bs and blockerIdx and attackerIdx and not E:BlockerOf(bs, attackerIdx) then
+                E:AssignBlock(bs, blockerIdx, attackerIdx, E.remoteState.field[blockerIdx], true)
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
                 E:Log(L("log.oppAssignedBlock", sender, blockerCard and TTS:CardName(blockerCard) or L("type.Creature"), attackerCard and TTS:CardName(attackerCard) or L("type.Creature")), "COMBAT")

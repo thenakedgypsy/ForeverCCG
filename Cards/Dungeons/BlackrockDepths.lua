@@ -50,7 +50,7 @@ TTS:AddCards({
     },
     ["BRD06"] = {
         id = "BRD06", name = "Lord Roccor", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 5781,
+        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 5781,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9025,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
@@ -149,7 +149,7 @@ TTS:AddCards({
     },
     ["BRD20"] = {
         id = "BRD20", name = "Panzor the Invincible", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 7, toughness = 11, hexproof = true, isMob = true, isBoss = true, displayId = 8270,
+        power = 3, toughness = 11, hexproof = true, isMob = true, isBoss = true, displayId = 8270,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 8923,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Warded."
@@ -176,8 +176,8 @@ TTS:AddCards({
         power = 3, toughness = 5, lifelink = true, isReward = true, displayId = 8705,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcEntry = 8929,
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
-        etb = { ops = { { op = "heal", to = "friendly_creatures", n = 4 } } },
+        etb = { ops = { { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. When Princess Moira Bronzebeard enters the battlefield, each creature you control regains 4 health. Other Dark Iron you control get +1/+1."
+        text = "Drain. When Princess Moira Bronzebeard enters the battlefield, creatures you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
     },
 })

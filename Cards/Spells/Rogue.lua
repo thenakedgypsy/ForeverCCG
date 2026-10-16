@@ -69,7 +69,7 @@ TTS:AddCards({
     },
     ["ROG10"] = {
         id = "ROG10", name = "Garrote", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target enemy creature takes 2 damage at the start of each of your turns for 3 turns.",
+        text = "Target enemy creature permanently gets -0/-1 at the start of each of your turns for 3 turns.",
         art = "Interface\\Icons\\Ability_Rogue_Garrote",
         effect = { target = "enemy_creature", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },

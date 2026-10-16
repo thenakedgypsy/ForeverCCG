@@ -24,7 +24,8 @@ TTS:AddCards({
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10912,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Kobold", npcId = 257,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        etb = { ops = { { op = "token", id = "TOK02", n = 1 } } },
+        text = "When Kobold Worker enters the battlefield, create a 1/1 Kobold Digger token."
     },
     ["ELW03"] = {
         id = "ELW03", name = "Defias Thug", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -74,7 +75,8 @@ TTS:AddCards({
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 983,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Murloc", npcId = 732,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        onDeath = { ops = { { op = "token", id = "TOK01", n = 2 } } },
+        text = "When Murloc Lurker dies, create two 1/1 Murloc Tadpole tokens."
     },
     ["ELW10"] = {
         id = "ELW10", name = "Gruff Swiftbite", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

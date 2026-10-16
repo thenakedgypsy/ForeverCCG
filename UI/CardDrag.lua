@@ -234,7 +234,7 @@ local function DropBlocker(E, d, target)
         if bs.selectedBlocker == idx then E:ClickOpponentCard(target.fieldIndex) end
         if bs.selectedBlocker == idx then bs.selectedBlocker = nil end   -- refused
     elseif bs.blocks[idx] then
-        bs.blocks[idx] = nil
+        E:ClearBlocks(bs, idx)
         local card = TTS.Cards[d.perm.id]
         E:Log(L("log.unblocked", card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
     end

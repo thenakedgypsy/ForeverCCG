@@ -557,7 +557,7 @@ local function InstallHooks()
                 before = state.life
 
                 local blocked = {}
-                for _, atkIdx in pairs(bs.blocks or {}) do blocked[atkIdx] = true end
+                for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
                 local atkField = (atkRemote and self.remoteState or self.localState).field
                 local dst = Pos(defRemote and B.oppLifeBtn or B.myLifeBtn)
                 for _, atkIdx in ipairs(bs.attackers or {}) do

@@ -66,7 +66,8 @@ TTS:AddCards({
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 346,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Murloc", npcId = 1545,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        onDeath = { ops = { { op = "token", id = "TOK01", n = 2 } } },
+        text = "When Vile Fin Muckdweller dies, create two 1/1 Murloc Tadpole tokens."
     },
     ["TIR09"] = {
         id = "TIR09", name = "Scarlet Vanguard", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

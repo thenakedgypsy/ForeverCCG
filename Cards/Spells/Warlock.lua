@@ -21,13 +21,13 @@ TTS:AddCards({
     },
     ["WLK02"] = {
         id = "WLK02", name = "Corruption", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Target enemy creature or the opponent takes 2 damage at the start of each of your turns for 3 turns.",
+        text = "Choose target enemy creature or the opponent. At the start of each of your turns for 3 turns, the opponent takes 2 damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Shadow_AbominationExplosion",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["WLK03"] = {
         id = "WLK03", name = "Curse of Agony", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Target enemy creature or the opponent takes 1 damage at the start of each of your turns for 4 turns.",
+        text = "Choose target enemy creature or the opponent. At the start of each of your turns for 4 turns, the opponent takes 1 damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Shadow_CurseOfSargeras",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
@@ -45,13 +45,13 @@ TTS:AddCards({
     },
     ["WLK06"] = {
         id = "WLK06", name = "Death Coil", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Destroy target non-black enemy creature.",
+        text = "Destroy target non-Shadow enemy creature.",
         art = "Interface\\Icons\\Spell_Shadow_DeathCoil",
         effect = { target = "enemy_creature", ops = { { op = "destroy", to = "target", nonColor = "B" } } }
     },
     ["WLK07"] = {
         id = "WLK07", name = "Immolate", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warlock",
-        text = "Deal 2 damage to target enemy creature or the opponent. It takes 1 more damage at the start of each of your turns for 2 turns.",
+        text = "Deal 2 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Fire_Immolation",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },

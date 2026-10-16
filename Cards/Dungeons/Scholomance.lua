@@ -85,10 +85,10 @@ TTS:AddCards({
     },
     ["SCH11"] = {
         id = "SCH11", name = "Lorekeeper Polkelt", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 11492,
+        power = 1, toughness = 5, deathtouch = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11492,
         zone = "Scholomance", creatureType = "Undead", npcId = 10901,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Fatal, Strikes-First."
     },
     ["SCH12"] = {
         id = "SCH12", name = "Doctor Theolen Krastinov", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

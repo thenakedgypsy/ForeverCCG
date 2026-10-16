@@ -45,7 +45,8 @@ TTS:AddCards({
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 441,
         zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Murloc", npcId = 1767,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        onDeath = { ops = { { op = "token", id = "TOK01", n = 1 } } },
+        text = "When Vile Fin Shredder dies, create a 1/1 Murloc Tadpole token."
     },
     ["SIL06"] = {
         id = "SIL06", name = "Giant Grizzled Bear", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

@@ -1142,14 +1142,15 @@ midLine:SetColorTexture(1, 0.82, 0, 0.25)
 -- border and under the cards and the gold line, with a black overlay so cards stay readable.
 --   { map = "Elwynn" }   the client's world map: 12 tiles of 256 px (4 x 3) holding one
 --                        1002 x 668 map, scaled to the panel's width and cropped top and bottom
---   { file = "Deadmines", map = "Westfall", tint = { r, g, b } }
---                        custom 1024 x 512 art from Textures\Backgrounds, else the map, tinted
+--   { loadscreen = "LoadScreenDeadmines", wide = nil, map = "Westfall", tint = { r, g, b } }
+--                        the client's loading screen (4:3, or 16:9 when wide), cropped top and
+--                        bottom; else the map, tinted
 -- Every texture is checked after it is set; anything missing leaves the plain board.
 -- =========================================================================
 local BG_INSET = 4
 local BG_W, BG_H = 1028 - BG_INSET * 2, 496 - BG_INSET * 2
 local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
-local BG_ART_PATH = "Interface\\AddOns\\ForeverCCG\\Textures\\Backgrounds\\"
+local LOADSCREEN_PATH = "Interface\\Glues\\LoadingScreens\\"
 local BG_OVERLAY_ALPHA = 0.55
 local PANEL_BG_DIMMED = 0.25
 
@@ -1178,11 +1179,12 @@ local function HideBackground()
     battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], STYLE.panelBg[4])
 end
 
--- Custom art, cropped top and bottom to the panel's shape. Returns false if the file is missing.
-local function ShowArt(file)
-    bgArt:SetTexture(BG_ART_PATH .. file)
-    if not bgArt:GetTexture() then return false end
-    local scaledH = 512 * (BG_W / 1024)
+-- A loading screen, cropped top and bottom to the panel's shape. Classic ones are stored
+-- square but drawn at 4:3. Returns false if the file is missing.
+local function ShowLoadScreen(file, wide)
+    local loaded = bgArt:SetTexture(LOADSCREEN_PATH .. file)
+    if loaded == false or not bgArt:GetTexture() then return false end
+    local scaledH = BG_W / (wide and 16 / 9 or 4 / 3)
     local crop = math.max(0, (scaledH - BG_H) / 2) / scaledH
     bgArt:SetTexCoord(0, 1, crop, 1 - crop)
     bgArt:SetVertexColor(1, 1, 1)
@@ -1278,7 +1280,7 @@ function B:SetBackground(spec)
     HideBackground()
     if not spec then return end
     if TTS.Options and TTS.Options:Get("boardBackgrounds") == false then return end
-    local ok = (spec.file and ShowArt(spec.file)) or (spec.map and ShowMap(spec.map, spec.file and spec.tint))
+    local ok = (spec.loadscreen and ShowLoadScreen(spec.loadscreen, spec.wide)) or (spec.map and ShowMap(spec.map, spec.tint))
     if not ok then
         HideBackground()
         return
@@ -1381,7 +1383,7 @@ local function MyNonLand_OnClick(self, btn)
             local idx = bs.selectedBlocker
             bs.selectedBlocker = nil
             if bs.blocks[idx] then
-                bs.blocks[idx] = nil
+                TTS.Engine:ClearBlocks(bs, idx)
                 local perm = TTS.Engine.localState.field[idx]
                 local card = perm and TTS.Cards[perm.id]
                 TTS.Engine:Log(L("log.unblocked", card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
@@ -1519,6 +1521,23 @@ oppDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
 -- =========================================================================
 -- 3D MODEL VISUAL HELPER
 -- =========================================================================
+-- The card's camera (zoom, distance, position, facing) on its model. The client loads a
+-- model a moment after SetDisplayInfo, and a camera set before that can be lost, so it is
+-- also re-applied shortly after a creature comes onto the battlefield (ReapplyModelCameras).
+local function ApplyModelCamera(f, card)
+    local cam = card.modelCam or {}
+    if f.model.SetPortraitZoom then f.model:SetPortraitZoom(cam.zoom or 0.75) end
+    if f.model.SetCamDistanceScale then f.model:SetCamDistanceScale(cam.camScale or 1.0) end
+
+    local baseZ = cam.z or -0.10
+    local currentScale = B:GetScale() or 1.0
+    local zComp = (currentScale - 1.0) * 0.18
+    local adjZ = baseZ + zComp
+
+    if f.model.SetPosition then f.model:SetPosition(cam.x or 0, cam.y or 0, adjZ) end
+    if f.model.SetRotation then f.model:SetRotation(cam.rotation or 0.15) end
+end
+
 local function SetupCardVisual(f, card)
     f.currentCard = card
     if card and card.displayId then
@@ -1526,18 +1545,7 @@ local function SetupCardVisual(f, card)
         f.model:Show()
         f.model:ClearModel()
         f.model:SetDisplayInfo(card.displayId)
-
-        local cam = card.modelCam or {}
-        if f.model.SetPortraitZoom then f.model:SetPortraitZoom(cam.zoom or 0.75) end
-        if f.model.SetCamDistanceScale then f.model:SetCamDistanceScale(cam.camScale or 1.0) end
-
-        local baseZ = cam.z or -0.10
-        local currentScale = B:GetScale() or 1.0
-        local zComp = (currentScale - 1.0) * 0.18
-        local adjZ = baseZ + zComp
-
-        if f.model.SetPosition then f.model:SetPosition(cam.x or 0, cam.y or 0, adjZ) end
-        if f.model.SetRotation then f.model:SetRotation(cam.rotation or 0.15) end
+        ApplyModelCamera(f, card)
     else
         if f.model then f.model:Hide() end
         f.art:Show()
@@ -1561,6 +1569,31 @@ RefreshAllModelCameras = function()
             end
         end
     end
+end
+
+-- Full camera again on every battlefield model that is showing
+local function ReapplyModelCameras()
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+        for _, f in ipairs(group) do
+            if f:IsShown() and f.currentCard and f.currentCard.displayId and f.model and f.model:IsShown() then
+                ApplyModelCamera(f, f.currentCard)
+            end
+        end
+    end
+end
+
+-- A creature just came onto the battlefield (either side): fix its camera once the model has
+-- loaded, and again when its flight from the hand has landed
+local MODEL_SETTLE_DELAY = 0.05
+local MODEL_LANDED_DELAY = 0.35   -- just after a played card's 0.3 s flight (FLY_TIME)
+local function ScheduleModelCameraFix()
+    if B.cameraFixPending then return end
+    B.cameraFixPending = true
+    TTS:SafeAfter(MODEL_SETTLE_DELAY, function()
+        B.cameraFixPending = nil
+        ReapplyModelCameras()
+    end)
+    TTS:SafeAfter(MODEL_LANDED_DELAY, ReapplyModelCameras)
 end
 
 RefreshCardText = function()
@@ -1764,11 +1797,80 @@ local function StartFlights(E)
                     oppLeft, oppSlot = oppLeft - 1, oppSlot - 1
                 end
                 if sx and animate then flights[perm] = { x = sx, y = sy, t = 0 } end
+                local card = TTS.Cards[perm.id]
+                if card and card.displayId then ScheduleModelCameraFix() end
+                -- Marked on the permanent itself, so an undo (which restores copies) doesn't replay it
+                if card and card.isToken and not perm.spawnShown then
+                    perm.spawnShown = true
+                    B.StartSpawn(perm, animate)
+                end
             end
         end
     end
     oldOppHandCount = E.remoteState.handCount or 0
 end
+
+-- =========================================================================
+-- TOKEN SPAWNS
+-- A token (Cards\Tokens.lua) is on the battlefield from the moment its effect resolves;
+-- only its card waits a moment, then fades in with the spell sound.
+-- Each client draws this for every token on either side, so both PvP players see it.
+-- Tokens made together come in one after another; one sound plays for the group.
+-- =========================================================================
+local SPAWN_DELAY = 0.45     -- seconds before the first token of a group shows
+local SPAWN_STAGGER = 0.15   -- between tokens made together
+local SPAWN_FADE = 0.35      -- fade-in
+local spawns = setmetatable({}, { __mode = "k" })   -- perm -> { t = seconds since made, at = when it shows }
+local groupUntil = 0          -- tokens made before this joins the current group
+local groupNext = 0           -- when the next token in the group shows
+
+function B.StartSpawn(perm, animate)
+    if not animate then
+        if TTS.Engine.PlaySpellCastSound then TTS.Engine:PlaySpellCastSound() end
+        return
+    end
+    local now = GetTime()
+    if now > groupUntil then groupNext = SPAWN_DELAY end
+    groupUntil = now + 0.05
+    spawns[perm] = { t = 0, at = groupNext, sound = (groupNext == SPAWN_DELAY) }
+    groupNext = groupNext + SPAWN_STAGGER
+end
+
+-- Sets each spawning token's card alpha; cards no longer spawning are reset. Models ignore
+-- their parent's alpha (as in MobTooltip.lua), so the model's own alpha fades with the card,
+-- on top of its tapped / summoning-sick shade (f.modelAlpha, set by the redraw).
+local function ApplySpawns()
+    for _, group in ipairs({ myNonLandFrames, oppNonLandFrames }) do
+        for _, f in ipairs(group) do
+            local sp = f:IsShown() and f.perm and spawns[f.perm]
+            if sp then
+                local a = math.max(0, math.min(1, (sp.t - sp.at) / SPAWN_FADE))   -- 0 while still waiting
+                f:SetAlpha(a)
+                if f.model then f.model:SetAlpha((f.modelAlpha or 1) * a) end
+                f.spawning = true
+            elseif f.spawning then
+                f.spawning = nil
+                f:SetAlpha(1)
+                if f.model then f.model:SetAlpha(f.modelAlpha or 1) end
+            end
+        end
+    end
+end
+B.ApplySpawns = ApplySpawns
+
+local spawnTicker = CreateFrame("Frame", nil, B)
+spawnTicker:SetScript("OnUpdate", function(_, dt)
+    if not next(spawns) then return end
+    for perm, sp in pairs(spawns) do
+        local before = sp.t
+        sp.t = sp.t + dt
+        if sp.sound and before < sp.at and sp.t >= sp.at and TTS.Engine.PlaySpellCastSound then
+            TTS.Engine:PlaySpellCastSound()
+        end
+        if sp.t >= sp.at + SPAWN_FADE then spawns[perm] = nil end
+    end
+    ApplySpawns()
+end)
 
 -- Offsets each flying card from its slot by what is left of its flight
 local function ApplyFlights()
@@ -2015,8 +2117,7 @@ function B:UpdateDisplay()
             else
                 -- Local player is defending: enabled to confirm blocks
                 B.nextPhaseBtn:Enable()
-                local numBlocks = 0
-                for _ in pairs(E.blockingState.blocks) do numBlocks = numBlocks + 1 end
+                local numBlocks = #E:BlockPairs(E.blockingState)
                 if numBlocks > 0 then
                     B.nextPhaseBtn:SetText(L("board.btn.confirmBlocks"))
                 else
@@ -2198,7 +2299,8 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
-                f.model:SetAlpha(ModelAlpha(shade))
+                f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
+                f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
@@ -2270,7 +2372,8 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 f.art:SetVertexColor(shade, shade, shade)
-                f.model:SetAlpha(ModelAlpha(shade))
+                f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
+                f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
                 f:Show()
@@ -2300,6 +2403,7 @@ function B:UpdateDisplay()
 
     StartFlights(E)
     ApplyFlights()
+    B.ApplySpawns()
 end
 
 -- =========================================================================
