@@ -198,6 +198,12 @@ S["wr.joined"] = "|cFF00FF00[TTSE]|r You joined the waiting room as %s."
 S["wr.left"] = "|cFFFF4444[TTSE]|r You left the waiting room."
 S["wr.needPlayableDeck"] = "|cFFFF2222[TTSE]|r You need a deck with 40-50 cards to join the waiting room."
 S["wr.noPlayableDeckLeft"] = "|cFFFF2222[TTSE]|r None of your decks has 40-50 cards any more."
+S["wr.community"] = "Community"
+S["wr.communityTip"] = "Join the Forever CCG community to find players on every server shard. When you join the waiting room, the community is told you're looking for a match."
+
+-- COMMUNITY
+S["community.lookingForMatch"] = "%s is looking for a match (collection score %s)."
+S["community.linkPopup"] = "Open this link in your browser to join the Forever CCG community (Ctrl-C to copy). Members can see each other's BattleTag."
 
 -- SOLO OPPONENT (AI)
 S["log.aiPlayedPrayer"] = "%s played prayer: |cFFFFD200%s|r."

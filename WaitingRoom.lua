@@ -228,6 +228,25 @@ refreshBtn:SetSize(100, 22)
 refreshBtn:SetPoint("BOTTOM", 0, 14)
 Loc:Bind(refreshBtn, "wr.refresh")
 
+-- Invite link to the Forever CCG community, for players who haven't joined (Community.lua)
+local communityBtn = CreateFrame("Button", nil, F, "UIPanelButtonTemplate")
+communityBtn:SetSize(100, 22)
+communityBtn:SetPoint("BOTTOMLEFT", 16, 14)
+Loc:Bind(communityBtn, "wr.community")
+communityBtn:SetScript("OnClick", function()
+    if TTS.Community then TTS.Community:ShowInvite() end
+end)
+communityBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(L("wr.communityTip"), 1, 1, 1, 1, true)
+    GameTooltip:Show()
+end)
+communityBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+local function UpdateCommunityButton()
+    communityBtn:SetShown(TTS.Community and not TTS.Community:IsMember() or false)
+end
+
 -- Addon version (from the .toc), bottom-right corner
 local versionText = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 versionText:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -16, 18)
@@ -366,6 +385,9 @@ function WR:BroadcastPresence()
     if TTS.Net and TTS.Net.BroadcastLFM then
         local myName = GetPlayerFullName()
         TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. myName)
+        -- 0.14 and earlier only list LFM_ANNOUNCE; without it they never see us, and a
+        -- challenge (which reports the version mismatch) is never sent
+        TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName)
     end
 end
 
@@ -382,6 +404,8 @@ function WR:ToggleQueue()
 
     if self.isQueued then
         self:BroadcastPresence()
+        -- Reaches players on other backend realms, who FCCGTTSE doesn't (Community.lua)
+        if TTS.Community then TTS.Community:AnnounceQueued() end
         DEFAULT_CHAT_FRAME:AddMessage(L("wr.joined", myName))
     else
         if TTS.Net and TTS.Net.BroadcastLFM then
@@ -416,6 +440,7 @@ F:SetScript("OnShow", function(self)
         return
     end
     UpdateVersionText()
+    UpdateCommunityButton()
     if TTS.Net and TTS.Net.BroadcastLFM then
         TTS.Net:BroadcastLFM("LFM_QUERY")
     end
@@ -426,7 +451,26 @@ F:SetScript("OnShow", function(self)
     WR:UpdateUI()
 end)
 
--- Heartbeat broadcast every 10 seconds
+-- Presence heartbeat every 10 seconds while queued. On its own frame because a queued
+-- player can close the window (e.g. to use the Deckbuilder); others drop anyone not
+-- heard from in 25 seconds (UpdateUI).
+local heartbeat = CreateFrame("Frame")
+local heartbeatTicker = 0
+heartbeat:SetScript("OnUpdate", function(self, elapsed)
+    heartbeatTicker = heartbeatTicker + elapsed
+    if heartbeatTicker < 10 then return end
+    heartbeatTicker = 0
+    if not WR.isQueued then return end
+    -- Safety net: cards lost from the collection can leave no deck playable
+    if TTS.Engine and not TTS.Engine:HasPlayableDeck() then
+        DEFAULT_CHAT_FRAME:AddMessage(L("wr.noPlayableDeckLeft"))
+        WR:ToggleQueue()
+        return
+    end
+    WR:BroadcastPresence()
+end)
+
+-- Pings, census and list refresh every 10 seconds while the window is open
 local ticker = 0
 local buttonTicker = 0
 F:SetScript("OnUpdate", function(self, elapsed)
@@ -444,14 +488,6 @@ F:SetScript("OnUpdate", function(self, elapsed)
     end
     if ticker >= 10 then
         ticker = 0
-        -- Safety net: cards lost from the collection can leave no deck playable
-        if WR.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
-            DEFAULT_CHAT_FRAME:AddMessage(L("wr.noPlayableDeckLeft"))
-            WR:ToggleQueue()
-        end
-        if WR.isQueued then
-            WR:BroadcastPresence()
-        end
         if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
         if TTS.Net and TTS.Net.RunCensus then TTS.Net:RunCensus() end
         WR:UpdateUI()

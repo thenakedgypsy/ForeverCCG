@@ -1,3 +1,9 @@
+## 0.15.1
+
+*   waiting room can now find players on other server shards through the Forever CCG community: joining the waiting room posts once in the community (at most every 10 minutes), and members of your faction on the same realm type (PvE, PvP, RP) see you in their waiting room. Use the Community button in the waiting room to get the invite link (this )
+*   fix for players on 0.14 and 0.15 not seeing each other in the waiting room at all (they now see each other and are told to update when they challenge)
+*   fix for queued players disappearing from others' waiting rooms when they close the waiting room window (e.g. to edit a deck)
+
 ## 0.15.0
 
 *   new keyword Bulwark X, Aku'mai now blocks two

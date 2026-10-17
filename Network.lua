@@ -728,6 +728,8 @@ local function NotePresence(name, charName, queued, score)
         TTS.WaitingRoom:UpdateUI()
     end
 end
+-- Community.lua reports the players it finds the same way
+TTS.Net.NotePresence = NotePresence
 
 -- Called by the waiting room (on open and every tick), and with background = true by the
 -- background rounds whether or not it is open. Only asks when it is our turn to.
@@ -927,10 +929,16 @@ function TTS.Net:OnReceive(msg, sender)
     -- =====================================================================
     -- WAITING ROOM / LFM HANDLERS
     -- =====================================================================
-    if cmd == "LFM_QUEUED" then
-        -- LFM_QUEUED:<score>:<name>. (0.14 and earlier sent LFM_ANNOUNCE + LFM_SCORE; those
-        -- builds can't play this one, so their announcements are ignored.)
-        local score, pName = msg:match("^LFM_QUEUED:(%d+):(.+)$")
+    if cmd == "LFM_QUEUED" or cmd == "LFM_ANNOUNCE" then
+        -- LFM_QUEUED:<score>:<name>. 0.14 and earlier send LFM_ANNOUNCE:<name> instead; they
+        -- can't play this build, but are still listed so a challenge reports the version
+        -- mismatch rather than the two players never seeing each other.
+        local score, pName
+        if cmd == "LFM_QUEUED" then
+            score, pName = msg:match("^LFM_QUEUED:(%d+):(.+)$")
+        else
+            pName = msg:match("^LFM_ANNOUNCE:(.+)$")
+        end
         if not pName then return end
         pName = NormalizeName(pName)
         RememberCharName(pName, sender)
@@ -940,7 +948,7 @@ function TTS.Net:OnReceive(msg, sender)
         s.queued = true
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
-            TTS.WaitingRoom.scores[pName:lower()] = tonumber(score)
+            if score then TTS.WaitingRoom.scores[pName:lower()] = tonumber(score) end
             -- The chat sender is the character name, which is what a party invite needs
             TTS.WaitingRoom.unitNames[pName:lower()] = sender
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
