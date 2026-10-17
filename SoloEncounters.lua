@@ -488,6 +488,36 @@ function TTS:FormatScore(n)
     return BreakUpLargeNumbers and BreakUpLargeNumbers(n) or tostring(n)
 end
 
+-- FormatScore coloured by how far it is towards the best possible score, in item-quality
+-- colours (grey -> white -> green -> blue -> purple -> orange), red when complete. The score grows
+-- quadratically, so the square root of score/max tracks how much of the collection is done.
+local SCORE_TIERS = {
+    { 0.10, "9D9D9D" }, { 0.25, "FFFFFF" }, { 0.45, "1EFF00" },
+    { 0.65, "0070DD" }, { 0.85, "A335EE" }, { 1, "FF8000" },
+    { math.huge, "FF2020" },   -- red only when complete
+}
+-- text in the tier colour for a completion fraction (0..1)
+function TTS:TierColored(f, text)
+    for _, tier in ipairs(SCORE_TIERS) do
+        if f < tier[1] then return "|cFF" .. tier[2] .. text .. "|r" end
+    end
+end
+
+local maxScore
+function TTS:ColoredScore(n)
+    if not n then return "|cFF888888?|r" end
+    if not maxScore then
+        local _, _, _, total, _, _, hTotal = self:GetCollectionScore()
+        maxScore = (hTotal + total) * (hTotal + total + 1)
+    end
+    return self:TierColored(maxScore > 0 and math.sqrt(n / maxScore) or 0, self:FormatScore(n))
+end
+
+-- "n/max" coloured by n/max (collection counters)
+function TTS:ColoredCount(n, max)
+    return self:TierColored(max > 0 and n / max or 0, n .. "/" .. max)
+end
+
 -- Returns unlocked, reason (the reason says what is still needed)
 function TTS:IsEncounterUnlocked(enc)
     local req = enc and enc.requires

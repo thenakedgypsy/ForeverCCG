@@ -227,7 +227,7 @@ end)
 -- =========================================================================
 function M:UpdatePlayState()
     if TTS.GetCollectionScore then
-        scoreLabel:SetText(L("main.score", TTS:FormatScore((TTS:GetCollectionScore()))))
+        scoreLabel:SetText(L("main.score", TTS:ColoredScore((TTS:GetCollectionScore()))))
     end
 
     local inMatch = TTS.Engine and TTS.Engine.inMatch

@@ -1500,8 +1500,9 @@ collectionLabel:SetJustifyH("LEFT")
 local function UpdateCollectionProgress()
     local score, collected, mastered, total, hCollected, hMastered, hTotal = TTS:GetCollectionScore()
     -- In the order of the score: (Hearthstones + creatures collected) x (Hearthstones + creatures mastered + 1)
-    collectionLabel:SetText(L("db.collection", hCollected, hTotal, collected, total,
-        hMastered, hTotal, mastered, total, TTS:FormatScore(score)))
+    collectionLabel:SetText(L("db.collection", TTS:ColoredCount(hCollected, hTotal),
+        TTS:ColoredCount(collected, total), TTS:ColoredCount(hMastered, hTotal),
+        TTS:ColoredCount(mastered, total), TTS:ColoredScore(score)))
 end
 
 -- =========================================================================

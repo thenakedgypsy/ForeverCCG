@@ -206,7 +206,7 @@ local function UpdateOnlineList()
             row:Show()
         elseif entry then
             row.nameText:SetText(entry.name)
-            row.scoreText:SetText(entry.score and TTS:FormatScore(entry.score) or "-")
+            row.scoreText:SetText(entry.score and TTS:ColoredScore(entry.score) or "-")
             row:Show()
         else
             row:Hide()
@@ -356,14 +356,14 @@ function WR:UpdateUI()
         if entry then
             if entry.isSelf then
                 row.nameText:SetText("|cFF00FF00" .. L("wr.you", entry.name) .. "|r")
-                row.scoreText:SetText("|cFFFFFFFF" .. TTS:FormatScore(TTS.Net.MyScore()) .. "|r")
+                row.scoreText:SetText(TTS:ColoredScore(TTS.Net.MyScore()))
                 row.inviteBtn:SetText(L("wr.queued"))
                 row.inviteBtn:Disable()
                 row.partyBtn:Hide()
             else
                 row.nameText:SetText(entry.name)
                 local score = WR.scores[entry.name:lower()]
-                row.scoreText:SetText(score and ("|cFFFFFFFF" .. TTS:FormatScore(score) .. "|r") or "|cFF888888-|r")
+                row.scoreText:SetText(score and TTS:ColoredScore(score) or "|cFF888888-|r")
                 -- A challenge just went out: no spamming (Network.lua, INVITE_COOLDOWN)
                 local Net = TTS.Net
                 local wait = Net and Net.InviteCooldownLeft and Net:InviteCooldownLeft() or 0

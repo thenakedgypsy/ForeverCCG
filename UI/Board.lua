@@ -631,7 +631,7 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
         tip:AddLine(L("board.oppStats", TTS.Engine.remoteState.life,
             TTS.Engine.remoteState.handCount, TTS.Engine:RemoteDeckCount() or "?"), 1, 1, 1)
         if TTS.Engine.opponentScore then
-            tip:AddLine(L("board.score", TTS:FormatScore(TTS.Engine.opponentScore)), 1, 1, 1)
+            tip:AddLine(L("board.score", TTS:ColoredScore(TTS.Engine.opponentScore)), 1, 1, 1)
         end
         local enc = TTS.Engine.isSolo and TTS.Engine.encounter
         if enc and TTS.GetEncounterRuleLines then
@@ -674,7 +674,7 @@ B.myLifeBtn:SetScript("OnEnter", function(self)
         tip:AddLine(L("board.you"), 1, 0.82, 0)
         tip:AddLine(L("board.life", TTS.Engine.localState.life), 1, 1, 1)
         if TTS.GetCollectionScore then
-            tip:AddLine(L("board.score", TTS:FormatScore((TTS:GetCollectionScore()))), 1, 1, 1)
+            tip:AddLine(L("board.score", TTS:ColoredScore((TTS:GetCollectionScore()))), 1, 1, 1)
         end
         if IsTargetingPlayer(false) then
             tip:AddLine(" ")
@@ -2143,7 +2143,7 @@ function B:UpdateDisplay()
     end
     B.oppRulesText:SetText(#ruleNames > 0 and L("board.rules", table.concat(ruleNames, ", ")) or "")
     if not E.isSolo and E.opponentScore then
-        B.oppScoreText:SetText(L("main.score", TTS:FormatScore(E.opponentScore)))
+        B.oppScoreText:SetText(L("main.score", TTS:ColoredScore(E.opponentScore)))
     else
         B.oppScoreText:SetText("")
     end

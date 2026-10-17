@@ -3,7 +3,7 @@
 *   new to Forever: CCG? A Quick Start walkthrough greets you the first time you open the addon, and a short guided tutorial game teaches you the basics turn by turn (Play Tutorial in Rules & Guide, or /tragic tutorial)
 *   Rules & Guide rewritten to be friendlier and up to date
 *   new keyword `Support`: the creature can block an attacker alongside other blockers, and every creature in that fight deals its full combat damage to each creature on the other side
-*   Support added to Kurzen Medicine Man, Crimson Initiate, Defias Watchman, Crimson Gallant, Hillsbrad Miner, Scarlet Vanguard, Porcine Entourage, Palemane Tanner and Razorfen Geomancer
+*   `Support` added to Kurzen Medicine Man, Crimson Initiate, Defias Watchman, Crimson Gallant, Hillsbrad Miner, Scarlet Vanguard, Porcine Entourage, Palemane Tanner and Razorfen Geomancer
 *   solo opponents gang-block with Support creatures when that kills the attacker without losing any of them
 *   Brutish damage against several blockers carries over beyond their combined toughness
 *   new: hearthstones - dual-colour prayers. Clicking one asks which mana to make; auto-pay and the AI pick the colour that's needed
@@ -16,6 +16,7 @@
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside creatures
+*   collection scores are coloured by how close they are to the best possible score: grey, white, green, blue, purple, orange, and red once complete (deckbuilder, main window, waiting room, board and minimap tooltips). The deckbuilder's collected/mastered counters use the same colours
 
 ## 0.15.6
 

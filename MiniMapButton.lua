@@ -144,7 +144,7 @@ local function BuildMinimapTooltip(tip)
     tip:AddLine(" ")
 
     if TTS.GetCollectionScore then
-        tip:AddDoubleLine(L("minimap.score"), TTS:FormatScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
+        tip:AddDoubleLine(L("minimap.score"), TTS:ColoredScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
     end
 
     if TTS.Engine and TTS.Engine.inMatch then
