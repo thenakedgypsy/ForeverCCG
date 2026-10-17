@@ -51,10 +51,10 @@ TTS:AddCards({
     },
     ["ELW06"] = {
         id = "ELW06", name = "Porcine Entourage", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 377,
+        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 377,
         zone = "Elwynn Forest", creatureType = "Beast", npcId = 390,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["ELW07"] = {
         id = "ELW07", name = "Defias Rogue Wizard", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",

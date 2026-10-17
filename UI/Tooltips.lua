@@ -68,7 +68,7 @@ end
 -- =========================================================================
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
-    "lifelink", "trample", "hexproof", "defender", "unblockable", "bulwark",
+    "lifelink", "trample", "hexproof", "defender", "unblockable", "bulwark", "support",
 }
 
 TT.KEYWORDS = {
@@ -84,6 +84,7 @@ TT.KEYWORDS = {
     defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
     unblockable = { name = "Unblockable",   text = "Can't be blocked." },
     bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
+    support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Every creature in that fight deals its full combat damage to each creature on the other side." },
 }
 
 -- =========================================================================

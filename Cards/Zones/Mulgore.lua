@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["MUL05"] = {
         id = "MUL05", name = "Palemane Tanner", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 550,
+        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 550,
         zone = "Mulgore", creatureType = "Humanoid", npcId = 2949,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["MUL06"] = {
         id = "MUL06", name = "Prairie Wolf", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

@@ -241,7 +241,7 @@ local function ShowMobCard(tooltip, card)
     if TTS.SetupCardVisual then TTS.SetupCardVisual(f, card) end
     if TTS.ApplyFrameTexture then TTS.ApplyFrameTexture(f.border, card) end
     f.border:SetVertexColor(1, 1, 1)
-    f.art:SetVertexColor(1, 1, 1)
+    if TTS.TintArt then TTS.TintArt(f.art, card) else f.art:SetVertexColor(1, 1, 1) end
     f.title:SetText(TTS:CardName(card) or "")
 
     -- 3D model goes in the ModelScene instead of the card's PlayerModel

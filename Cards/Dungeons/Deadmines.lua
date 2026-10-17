@@ -22,10 +22,10 @@ TTS:AddCards({
     },
     ["DMS02"] = {
         id = "DMS02", name = "Defias Watchman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 184,
+        power = 2, toughness = 4, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 184,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Vigilant, Support."
     },
     ["DMS03"] = {
         id = "DMS03", name = "Goblin Engineer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",

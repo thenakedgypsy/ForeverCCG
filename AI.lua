@@ -57,7 +57,7 @@ local function Name(perm) local c = Card(perm.id); return c and TTS:CardName(c) 
 -- =========================================================================
 local KEYWORD_VALUE = {
     flying = 1.5, unblockable = 1.5, deathtouch = 1.5, firstStrike = 1, lifelink = 1, hexproof = 1,
-    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1,
+    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1, support = 0.5,
 }
 
 -- How much a creature is worth to its controller, as it stands on the battlefield
@@ -102,6 +102,17 @@ local function CreatureCardValue(self, c, isRemote)
     return v
 end
 
+-- The creature card option ({ cardId }) the AI would most like on its battlefield
+function E:AIChooseCreatureCard(options)
+    local best, bestV
+    for _, o in ipairs(options) do
+        local c = Card(o.cardId)
+        local v = c and CreatureCardValue(self, c, true) or 0
+        if not bestV or v > bestV then best, bestV = o, v end
+    end
+    return best
+end
+
 -- How much the AI wants to keep a card in hand (higher = keep); used to pick discards
 function E:AICardValue(cardId)
     local c = Card(cardId)
@@ -141,12 +152,14 @@ function E:AIPlanLandTaps(costString)
 end
 
 -- Taps one of the AI's prayers and adds its mana to the AI's pool
-function E:AITapLand(perm)
+-- (col: the colour a dual prayer makes, from E:AIPlanLandTaps)
+function E:AITapLand(perm, col)
     local card = Card(perm.id)
     perm.tapped = true
     if TTS.Sound then TTS.Sound:PlayUI("tap") end
-    if card and card.color then
-        self.remoteState.mana[card.color] = (self.remoteState.mana[card.color] or 0) + 1
+    col = col or (card and self:ManaColorsOf(card)[1])
+    if col then
+        self.remoteState.mana[col] = (self.remoteState.mana[col] or 0) + 1
     end
 end
 
@@ -159,7 +172,11 @@ local function LandCounts(self)
     local n = { W = 0, U = 0, B = 0, R = 0, G = 0 }
     for _, p in ipairs(self.remoteState.field) do
         local c = Card(p.id)
-        if c and c.type == "Land" and n[c.color] then n[c.color] = n[c.color] + 1 end
+        if c and c.type == "Land" then
+            for _, col in ipairs(self:ManaColorsOf(c)) do
+                if n[col] then n[col] = n[col] + 1 end
+            end
+        end
     end
     return n
 end
@@ -169,7 +186,11 @@ function E:AIChoosePrayer(profile)
     local landIdx = {}
     for i, id in ipairs(hand) do
         local c = Card(id)
-        if c and c.type == "Land" and not landIdx[c.color] then landIdx[c.color] = i end
+        if c and c.type == "Land" then
+            for _, col in ipairs(self:ManaColorsOf(c)) do
+                if not landIdx[col] then landIdx[col] = i end
+            end
+        end
     end
     if not next(landIdx) then return nil end
     if not profile.smartPrayer then
@@ -501,6 +522,45 @@ function E:AIAssignBlocks()
             end
         end
         if bestIdx then Assign(bestIdx, atkIdx) end
+    end
+
+    -- 2b: Support creatures gang up on an attacker nothing kills on its own, as long as
+    -- each of them lives through the fight
+    local function Dies(plan, perm)
+        local t = plan.taken[perm]
+        return t and not perm.regenerateShield and (perm.damage or 0) + t >= plan.info[perm].t
+    end
+    for _, atkIdx in ipairs(attackers) do
+        local atk = self.localState.field[atkIdx]
+        if not Dies(self:PlanCombatDamage(bs), atk) then
+            local helpers = {}
+            for _, bi in ipairs(free) do
+                local b = self.remoteState.field[bi]
+                if self:HasKeyword(b, true, "support") and self:BlockCount(bs, bi) == 0
+                    and self:AICanBlock(atk, false, b, true) then
+                    table.insert(helpers, bi)
+                end
+            end
+            -- Hardest hitters first, so as few as possible are needed
+            table.sort(helpers, function(a, b)
+                return self:GetCreatureStats(self.remoteState.field[a], true) > self:GetCreatureStats(self.remoteState.field[b], true)
+            end)
+            local joined, kills = {}, false
+            for _, bi in ipairs(helpers) do
+                self:AssignBlock(bs, bi, atkIdx, self.remoteState.field[bi], true)
+                local plan = self:PlanCombatDamage(bs)
+                if Dies(plan, self.remoteState.field[bi]) then
+                    self:ClearBlock(bs, bi, atkIdx)
+                else
+                    table.insert(joined, bi)
+                    if Dies(plan, atk) then kills = true; break end
+                end
+            end
+            for _, bi in ipairs(joined) do
+                self:ClearBlock(bs, bi, atkIdx)
+                if kills then Assign(bi, atkIdx) end
+            end
+        end
     end
 
     -- 3: chump blocks while the unblocked damage would be lethal (or too much for this profile)
@@ -927,7 +987,8 @@ function E:AITakeTurn()
             after()
             return
         end
-        local taps = action.cost and E:AIPlanLandTaps(action.cost) or {}
+        local taps, tapColor = {}, {}
+        if action.cost then taps, tapColor = E:AIPlanLandTaps(action.cost) end
         local function TapNext(i)
             if i > #taps then
                 if not E:AIExecute(action) then
@@ -940,7 +1001,7 @@ function E:AITakeTurn()
                 Next(function() MainStep(phase, after, skip) end, action.kind == "spell" and SPELL_DELAY or nil)
                 return
             end
-            E:AITapLand(taps[i])
+            E:AITapLand(taps[i], tapColor[taps[i]])
             E:RefreshUI()
             Next(function() TapNext(i + 1) end, TAP_DELAY)
         end

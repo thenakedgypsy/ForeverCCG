@@ -378,6 +378,9 @@ local classFilter = nil      -- nil = all classes; otherwise only spells of this
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
 local creatureTypeFilter = nil -- nil = all creature types; otherwise only creatures of this type are shown
+-- Keyword filter, kept in one table (this file is near Lua's 200-locals limit):
+-- value = nil (any) or a TT.KEYWORDS key; Name(k), List() and dd (its dropdown) below
+local Keyword = {}
 local searchText = ""        -- lower-case; matched against card name and rules text
 local sortMode = "COST"      -- a key of SORT_LABEL: COST, COLOR, TYPE, CLASS, FACTION, ZONE, CREATURETYPE
 local poolPage = 1
@@ -386,10 +389,11 @@ local cardPoolKeys = {}
 -- =========================================================================
 -- UNLOCK HELPERS
 -- Collectible cards are owned in copies (max 4 in a deck): isBoss cards by killing the
--- creature, isReward cards by winning their solo encounter (TTS:GetOwnedCopies).
+-- creature, isReward cards by winning their solo encounter, isGift cards from an NPC
+-- (TTS:GetOwnedCopies).
 -- =========================================================================
 local function IsCollectible(card)
-    return card and (card.isBoss or card.isReward) and true or false
+    return card and (card.isBoss or card.isReward or card.isGift) and true or false
 end
 
 local function GetKillCount(cardId, card)
@@ -403,6 +407,7 @@ local function UnlockHint(card)
         local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
         return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
+    if card.isGift then return L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow") end
     return L("link.defeat", TTS:CardName(card))
 end
 
@@ -434,6 +439,7 @@ local function CardPassesFilters(cardId, card)
     if zoneFilter and GetTypeGroup(card) == "Creature" and card.zone ~= zoneFilter then return false end
     if factionFilter and GetTypeGroup(card) == "Creature" and card.faction ~= factionFilter then return false end
     if creatureTypeFilter and GetTypeGroup(card) == "Creature" and card.creatureType ~= creatureTypeFilter then return false end
+    if Keyword.value and not card[Keyword.value] then return false end
     if searchText ~= "" then
         -- Search the shown (translated) name and text, and the English ones
         local hay = string.lower((card.name or "") .. "\n" .. (card.text or "") .. "\n"
@@ -573,6 +579,19 @@ local function BuildFieldList(field)
     return list
 end
 
+-- Keywords at least one collectable card has, by their shown name
+function Keyword.Name(k) return TT:Def("keyword", k, "name") end
+function Keyword.List()
+    local list = {}
+    for _, k in ipairs(TT.KEYWORD_ORDER) do
+        for _, card in pairs(TTS.Cards or {}) do
+            if card[k] and not card.isToken then table.insert(list, k); break end
+        end
+    end
+    table.sort(list, function(a, b) return Keyword.Name(a) < Keyword.Name(b) end)
+    return list
+end
+
 -- =========================================================================
 -- ACTIVE DECK & ADD RULES
 -- =========================================================================
@@ -620,7 +639,7 @@ local function CheckAdd(cardId, card, deck)
             if maxAllowed >= 4 then
                 return L("db.max4", TTS:CardName(card))
             else
-                if card.isReward then
+                if card.isReward or card.isGift then
                     return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
                 return L("db.kills", kills, TTS:CardName(card))
@@ -723,6 +742,7 @@ local function PaintCardFrame(f, card, costSize)
             if f.model then f.model:Hide() end
             f.art:Show()
             f.art:SetTexture(card.art or QUESTION_ICON)
+            if TTS.TintArt then TTS.TintArt(f.art, card) end
         end
     end
 
@@ -863,7 +883,7 @@ local function CardTooltip_OnEnter(self)
             if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
-                    if card.isReward then
+                    if card.isReward or card.isGift then
                         tip:AddLine("|cFFFF2222" .. L("db.lockedHow", UnlockHint(card)) .. "|r", 1, 0.2, 0.2, true)
                     else
                         tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)
@@ -1142,10 +1162,10 @@ local function UpdateSphereToggleLabels()
 end
 
 -- =========================================================================
--- FILTER BAR (row 2: class, zone, faction, creature type, sort, reset)
+-- FILTER BAR (row 2: class, zone, faction, creature type, keyword, sort, reset)
 -- Class applies to spells only; zone, faction and creature type to creatures only.
 -- =========================================================================
-local classDD = CreateDropdown(poolPanel, 104, "db.allClasses", {
+local classDD = CreateDropdown(poolPanel, 92, "db.allClasses", {
     values = BuildClassList,
     cols = 1,
     colorize = ClassColored,
@@ -1155,37 +1175,47 @@ classDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -42)
 classDD.tooltipTitle = "db.class"
 classDD.tooltipText = "db.class.desc"
 
-local zoneDD = CreateDropdown(poolPanel, 118, "db.allZones", {
+local zoneDD = CreateDropdown(poolPanel, 100, "db.allZones", {
     values = function() return BuildFieldList("zone") end,
     cols = 3,
     display = function(v) return Loc:Term("zone", v) end,
     onSelect = function(v) zoneFilter = v; OnFiltersChanged() end,
 })
-zoneDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 120, -42)
+zoneDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 106, -42)
 zoneDD.tooltipTitle = "db.zone"
 zoneDD.tooltipText = "db.zone.desc"
 
-local factionDD = CreateDropdown(poolPanel, 104, "db.allFactions", {
+local factionDD = CreateDropdown(poolPanel, 92, "db.allFactions", {
     values = function() return BuildFieldList("faction") end,
     cols = 2,
     display = function(v) return Loc:Term("faction", v) end,
     onSelect = function(v) factionFilter = v; OnFiltersChanged() end,
 })
-factionDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 244, -42)
+factionDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 210, -42)
 factionDD.tooltipTitle = "db.faction"
 factionDD.tooltipText = "db.faction.desc"
 
-local creatureTypeDD = CreateDropdown(poolPanel, 118, "db.allCreatureTypes", {
+local creatureTypeDD = CreateDropdown(poolPanel, 100, "db.allCreatureTypes", {
     values = function() return BuildFieldList("creatureType") end,
     cols = 1,
     display = function(v) return Loc:Term("creatureType", v) end,
     onSelect = function(v) creatureTypeFilter = v; OnFiltersChanged() end,
 })
-creatureTypeDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 354, -42)
+creatureTypeDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 306, -42)
 creatureTypeDD.tooltipTitle = "db.creatureType"
 creatureTypeDD.tooltipText = "db.creatureType.desc"
 
-local sortDD = CreateDropdown(poolPanel, 118, "", {
+Keyword.dd = CreateDropdown(poolPanel, 92, "db.allKeywords", {
+    values = Keyword.List,
+    cols = 1,
+    display = Keyword.Name,
+    onSelect = function(v) Keyword.value = v; OnFiltersChanged() end,
+})
+Keyword.dd:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 410, -42)
+Keyword.dd.tooltipTitle = "db.keyword"
+Keyword.dd.tooltipText = "db.keyword.desc"
+
+local sortDD = CreateDropdown(poolPanel, 106, "", {
     values = function() return SORT_ORDER end,
     cols = 1,
     noAll = true,
@@ -1200,12 +1230,12 @@ local sortDD = CreateDropdown(poolPanel, 118, "", {
         D:RefreshAll()
     end,
 })
-sortDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 478, -42)
+sortDD:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 506, -42)
 sortDD.tooltipTitle = "db.sortOrder"
 sortDD.tooltipText = "db.sortOrder.desc"
 
-local resetFiltersBtn = CreatePanelButton(poolPanel, 72, 24, "db.reset")
-resetFiltersBtn:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 602, -42)
+local resetFiltersBtn = CreatePanelButton(poolPanel, 58, 24, "db.reset")
+resetFiltersBtn:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 616, -42)
 resetFiltersBtn.tooltipTitle = "db.resetFilters"
 resetFiltersBtn.tooltipText = "db.resetFilters.desc"
 resetFiltersBtn.label:SetJustifyH("CENTER")
@@ -1216,10 +1246,12 @@ resetFiltersBtn:SetScript("OnClick", function()
     zoneFilter = nil
     factionFilter = nil
     creatureTypeFilter = nil
+    Keyword.value = nil
     classDD:SetValue(nil)
     zoneDD:SetValue(nil)
     factionDD:SetValue(nil)
     creatureTypeDD:SetValue(nil)
+    Keyword.dd:SetValue(nil)
     CloseMenus()
     for _, b in ipairs(filterToggles) do b:Sync() end
     searchBox:SetText("")   -- triggers a refresh if the search changed
@@ -1453,15 +1485,17 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 
 -- =========================================================================
 -- COLLECTION PROGRESS (bottom-left)
--- Collected = at least 1 copy of a creature card, Mastered = all 4 copies.
+-- Collected = at least 1 copy of a creature card, Mastered = all 4 copies,
+-- and the same for Hearthstones (the innkeepers' gift prayers).
 -- =========================================================================
 local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 13)
 collectionLabel:SetJustifyH("LEFT")
 
 local function UpdateCollectionProgress()
-    local score, collected, mastered, total = TTS:GetCollectionScore()
-    collectionLabel:SetText(L("db.collection", collected, total, mastered, total, TTS:FormatScore(score)))
+    local score, collected, mastered, total, hCollected, hMastered, hTotal = TTS:GetCollectionScore()
+    collectionLabel:SetText(L("db.collection", collected, total, mastered, total,
+        hCollected, hTotal, hMastered, hTotal, TTS:FormatScore(score)))
 end
 
 -- =========================================================================

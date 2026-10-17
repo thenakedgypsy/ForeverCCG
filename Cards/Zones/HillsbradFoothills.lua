@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["HIL08"] = {
         id = "HIL08", name = "Hillsbrad Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 3629,
+        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 3629,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2269,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["HIL09"] = {
         id = "HIL09", name = "Witherbark Headhunter", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",

@@ -34,7 +34,7 @@ TTS:AddCards({
         power = 7, toughness = 8, isBoss = true, displayId = 4088, achievementId = 630,
         zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Murloc",
         modelCam = { zoom = 0.55, camScale = 1.25, z = -0.18, rotation = 0.15 },
-        text = "Whenever Mutanus attacks, the defending player discards a random card and takes 1 damage."
+        text = "Whenever Mutanus attacks, the defending player discards a card and takes 1 damage."
     },
 
     -- Shadowfang Keep: Archmage Arugal
@@ -205,7 +205,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isBoss = true, displayId = 11256, achievementId = 645,
         zone = "Dire Maul", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{2}{U}: Draw a card, then discard a random card. Tortheldrin gets +1/+1 until end of turn."
+        text = "{2}{U}: Draw a card, then discard a card. Tortheldrin gets +1/+1 until end of turn."
     },
 
     -- Dire Maul North: King Gordok

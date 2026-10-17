@@ -1292,6 +1292,24 @@ function TTS.Net:OnReceive(msg, sender)
             E:Log(L("log.oppDiscardedCard", sender), "ACTION")
             E:RefreshUI()
 
+        elseif actionType == "RAISE" then
+            -- They picked a creature card to return (SPELL_GLOBAL_OPS.raise): MINE = from
+            -- their graveyard, THEIRS = from ours. Our copy of the effect waited for this.
+            local side, cardId, sourceId = parts[3], parts[4], parts[5]
+            local gy = (side == "THEIRS") and E.localState.graveyard or E.remoteState.graveyard
+            local idx
+            for i = #gy, 1, -1 do
+                if gy[i] == cardId then idx = i; break end
+            end
+            if idx and TTS.Cards[cardId] then
+                table.remove(gy, idx)
+                E:Log(L("log.reanimatedOpp", sourceId and TTS.Cards[sourceId] and TTS:CardName(sourceId) or sender,
+                    TTS:CardName(cardId), sender), "ACTION")
+                E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
+                E:CheckStateBasedActions()
+                E:RefreshUI()
+            end
+
         elseif actionType == "PLAY_LAND" then
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
@@ -1459,11 +1477,12 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "ASSIGN_BLOCK" then
             local blockerIdx = tonumber(parts[3])
             local attackerIdx = tonumber(parts[4])
-            -- One blocker per attacker: a second block on the same attacker is ignored.
+            -- A second blocker on the same attacker is ignored unless one of them has Support.
             -- A Bulwark sends one ASSIGN_BLOCK per attacker it blocks.
             local bs = E.blockingState
-            if bs and blockerIdx and attackerIdx and not E:BlockerOf(bs, attackerIdx) then
-                E:AssignBlock(bs, blockerIdx, attackerIdx, E.remoteState.field[blockerIdx], true)
+            if bs and blockerIdx and attackerIdx and E.remoteState.field[blockerIdx]
+                and not E:BlockInTheWay(bs, attackerIdx, blockerIdx, true)
+                and E:AssignBlock(bs, blockerIdx, attackerIdx, E.remoteState.field[blockerIdx], true) then
                 local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
                 local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
                 E:Log(L("log.oppAssignedBlock", sender, blockerCard and TTS:CardName(blockerCard) or L("type.Creature"), attackerCard and TTS:CardName(attackerCard) or L("type.Creature")), "COMBAT")

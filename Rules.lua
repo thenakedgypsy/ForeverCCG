@@ -148,6 +148,7 @@ local function SetupRuleCard(f, cardId)
             if f.model then f.model:Hide() end
             f.art:Show()
             f.art:SetTexture(card.art or "Interface\\Icons\\INV_Misc_QuestionMark")
+            if TTS.TintArt then TTS.TintArt(f.art, card) end
         end
     end
 

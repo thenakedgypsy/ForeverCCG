@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["RFK03"] = {
         id = "RFK03", name = "Razorfen Geomancer", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 4647,
+        power = 4, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 4647,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4520,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["RFK04"] = {
         id = "RFK04", name = "Kraul Bat", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",

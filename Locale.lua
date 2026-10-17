@@ -142,7 +142,15 @@ local function CardField(card, field)
     return Loc:Data("card." .. card.id .. "." .. field, card[field])
 end
 
-function TTS:CardName(card) return CardField(card, "name") end
+-- A card with a Horde name (nameHorde, e.g. the innkeeper Hearths) shows it to Horde
+-- players. It's display only: everything else, chat links included, goes by the card id.
+function TTS:CardName(card)
+    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
+    if card and card.nameHorde and card.id and UnitFactionGroup and UnitFactionGroup("player") == "Horde" then
+        return Loc:Data("card." .. card.id .. ".nameHorde", card.nameHorde)
+    end
+    return CardField(card, "name")
+end
 function TTS:CardText(card) return CardField(card, "text") end
 
 -- Damage / healing sources travel (and are stored) as "<cardId>" or "<cardId>/<kind>"

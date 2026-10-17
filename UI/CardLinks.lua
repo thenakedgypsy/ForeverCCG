@@ -32,6 +32,7 @@ local function FindCardByName(name)
         cardIdByName = {}
         for id, card in pairs(TTS.Cards or {}) do
             if card.name then cardIdByName[card.name:lower()] = id end
+            if card.nameHorde then cardIdByName[card.nameHorde:lower()] = id end
             local shown = TTS:CardName(card)
             if shown then cardIdByName[shown:lower()] = id end
         end
@@ -141,10 +142,10 @@ local previewCard
 
 -- How the player stands with this card: owned copies, or how to get it
 local function CollectionStatus(card)
-    if card.type == "Land" then
+    if card.type == "Land" and not card.isGift then
         return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
-    if card.isBoss or card.isReward then
+    if card.isBoss or card.isReward or card.isGift then
         local copies = TTS:GetOwnedCopies(card) or 0
         if copies >= 4 then
             return "|cFF00FF00" .. L("link.mastered") .. "|r"
@@ -155,6 +156,8 @@ local function CollectionStatus(card)
         if card.isReward then
             local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
             how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
+        elseif card.isGift then
+            how = L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow")
         elseif card.zone then
             how = L("link.defeatIn", TTS:CardName(card), TTS.Locale:Term("zone", card.zone))
         else

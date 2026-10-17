@@ -21,10 +21,10 @@ TTS:AddCards({
     },
     ["STV02"] = {
         id = "STV02", name = "Kurzen Medicine Man", cost = "{W}", cmc = 1, color = "W", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 4436,
+        power = 1, toughness = 2, support = true, isMob = true, isBoss = true, displayId = 4436,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 940,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["STV03"] = {
         id = "STV03", name = "Stranglethorn Tiger", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",

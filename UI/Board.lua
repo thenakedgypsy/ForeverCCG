@@ -234,6 +234,8 @@ end
 
 local B = CreateFrame("Frame", "TTS_BoardFrame", UIParent, backdropTemplate)
 TTS.BoardFrame = B
+-- A choice left open (UI\Choice.lua) goes with the board
+B:HookScript("OnHide", function() if TTS.Choice then TTS.Choice:Cancel() end end)
 B:SetSize(1160, 820)
 B:SetPoint("CENTER")
 Skin(B, "dialog")
@@ -816,6 +818,9 @@ local function Card_OnEnter(self)
         ctx.perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
         ctx.isRemote = self.isRemote
         ctx.fieldIndex = self.fieldIndex
+        if card.colors and not self.isRemote then
+            ctx.hint = L("hint.dualPrayer", TT:Def("symbol", card.colors[1], "name"), TT:Def("symbol", card.colors[2], "name"))
+        end
     end
     TT:ShowCard(self, "ANCHOR_TOP", self.cardId, ctx)
 end
@@ -835,7 +840,10 @@ local SPHERE_FILE = { W = "holy", U = "arcane", B = "shadow", R = "fire", G = "n
 
 local function DualFrameTexture(card)
     local spheres = {}
-    for _, col in ipairs({ "W", "U", "B", "R", "G" }) do
+    if card.colors then
+        for _, col in ipairs(card.colors) do table.insert(spheres, SPHERE_FILE[col]) end
+    end
+    for _, col in ipairs(card.colors and {} or { "W", "U", "B", "R", "G" }) do
         if card.cost and card.cost:find("{" .. col .. "}", 1, true) then table.insert(spheres, SPHERE_FILE[col]) end
     end
     if #spheres ~= 2 then return nil end
@@ -1372,7 +1380,17 @@ local function MyLand_OnClick(self, btn)
         if self.fieldIndex then TTS.Engine:ResolveTarget("LAND", false, self.fieldIndex) end
         return
     end
-    if self.fieldIndex then TTS.Engine:TapCard(self.fieldIndex) end
+    -- An untapped dual prayer asks which colour to make (TapCard re-checks it can still tap)
+    local idx = self.fieldIndex
+    local perm = idx and TTS.Engine.localState.field[idx]
+    local card = perm and TTS.Cards[perm.id]
+    if card and card.colors and not perm.tapped and TTS.Engine.isMyTurn and TTS.Choice then
+        TTS.Choice:ChooseMana(card.colors, self, function(col)
+            if TTS.Engine.localState.field[idx] == perm then TTS.Engine:TapCard(idx, col) end
+        end)
+        return
+    end
+    if idx then TTS.Engine:TapCard(idx) end
 end
 
 local function MyNonLand_OnClick(self, btn)
@@ -1538,6 +1556,31 @@ local function ApplyModelCamera(f, card)
     if f.model.SetRotation then f.model:SetRotation(cam.rotation or 0.15) end
 end
 
+-- Card art colour. A dual prayer's art (the hearthstone icon) is tinted left to right
+-- with the colours it can make; any other art keeps its own colours. shade (default 1)
+-- darkens it, e.g. for a tapped card.
+local MANA_TINT = {
+    W = { 1.00, 0.92, 0.62 }, U = { 0.50, 0.72, 1.00 }, B = { 0.72, 0.50, 0.92 },
+    R = { 1.00, 0.45, 0.30 }, G = { 0.48, 1.00, 0.45 },
+}
+local function TintArt(tex, card, shade)
+    shade = shade or 1
+    local colors = card and card.colors
+    local a, b = colors and MANA_TINT[colors[1]], colors and MANA_TINT[colors[2]]
+    if a and b then
+        local ok = tex.SetGradient and CreateColor and pcall(tex.SetGradient, tex, "HORIZONTAL",
+            CreateColor(a[1] * shade, a[2] * shade, a[3] * shade, 1),
+            CreateColor(b[1] * shade, b[2] * shade, b[3] * shade, 1))
+        -- No gradient on this client: the two colours mixed
+        if not ok then
+            tex:SetVertexColor((a[1] + b[1]) / 2 * shade, (a[2] + b[2]) / 2 * shade, (a[3] + b[3]) / 2 * shade)
+        end
+    else
+        tex:SetVertexColor(shade, shade, shade)
+    end
+end
+TTS.TintArt = TintArt
+
 local function SetupCardVisual(f, card)
     f.currentCard = card
     if card and card.displayId then
@@ -1550,6 +1593,7 @@ local function SetupCardVisual(f, card)
         if f.model then f.model:Hide() end
         f.art:Show()
         f.art:SetTexture((card and card.art) or "Interface\\Icons\\INV_Misc_QuestionMark")
+        TintArt(f.art, card)
     end
 end
 
@@ -1630,7 +1674,7 @@ local function PaintPreviewCard(f, card)
     SetupCardVisual(f, card)
     ApplyFrameTexture(f.border, card)
     f.border:SetVertexColor(1, 1, 1)
-    f.art:SetVertexColor(1, 1, 1)
+    TintArt(f.art, card)
     f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
@@ -2103,8 +2147,20 @@ function B:UpdateDisplay()
     -- =====================================================================
     -- PHASE & COMBAT BUTTON STATE
     -- =====================================================================
+    -- While our attack waits on blocks or on Resolve, End Turn becomes "End Turn After
+    -- Combat" (a toggle, see E:ToggleEndAfterCombat); otherwise it's the normal button
+    local attackingCombat = E.phase == "COMBAT_BLOCK" and E.blockingState and not E.blockingState.isRemoteAttacking
+    if attackingCombat then
+        B.endTurnBtn:SetText(L(E.endAfterCombat and "board.btn.endingAfterCombat" or "board.btn.endAfterCombat"))
+        B.endTurnBtn:SetWidth(math.max(90, B.endTurnBtn:GetTextWidth() + 24))
+    elseif B.endTurnBtn:GetWidth() ~= 90 then
+        B.endTurnBtn:SetText(L("board.endTurn"))
+        B.endTurnBtn:SetWidth(90)
+    end
+
     if E.phase == "COMBAT_BLOCK" and E.blockingState then
         B.endTurnBtn:Disable()
+        if attackingCombat then B.endTurnBtn:Enable() end
         if E.blockingState.isRemoteAttacking then
             if E.blockingState.blocksDeclared then
                 -- Local player is defending and has declared: the attacker resolves
@@ -2298,7 +2354,7 @@ function B:UpdateDisplay()
                 else
                     f.border:SetVertexColor(shade, shade, shade)
                 end
-                f.art:SetVertexColor(shade, shade, shade)
+                TintArt(f.art, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
@@ -2371,7 +2427,7 @@ function B:UpdateDisplay()
                 else
                     f.border:SetVertexColor(shade, shade, shade)
                 end
-                f.art:SetVertexColor(shade, shade, shade)
+                TintArt(f.art, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end

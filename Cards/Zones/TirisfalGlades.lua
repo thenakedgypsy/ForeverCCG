@@ -71,10 +71,10 @@ TTS:AddCards({
     },
     ["TIR09"] = {
         id = "TIR09", name = "Scarlet Vanguard", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
+        power = 5, toughness = 6, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Vigilant, Support."
     },
     ["TIR10"] = {
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

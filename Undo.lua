@@ -127,6 +127,7 @@ function E:CanUndo()
     if self.phase ~= u.phase then return false, L("undo.phase") end
     if self.targeting then return false, L("undo.targeting") end
     if self.pendingDiscard then return false, L("undo.discard") end
+    if self:HasPendingChoice() then return false, L("undo.choice") end
     if self.blockingState then return false, L("undo.combat") end
     return true
 end

@@ -202,6 +202,7 @@ function E:EndMatch(outcome, reason)
         if B:IsShown() then self:RefreshUI() else B:Show() end
     end
     self.inMatch = false
+    self:ClearChoices()
 
     -- A solo encounter win records progress and grants the encounter's reward card
     local rewardText, rewardCard
@@ -368,56 +369,83 @@ end
 -- the player does when auto-pay is ticked on the board.
 -- =========================================================================
 
--- One side's untapped prayers by colour: { W = { perm, ... }, ... }
+-- The colours a prayer can make: { "W" }, or both colours of a dual prayer (colors = { "W", "R" })
+function E:ManaColorsOf(card)
+    return (card and card.colors) or { card and card.color }
+end
+
+-- One side's untapped prayers: basics by colour { W = { perm, ... }, ... } and the
+-- prayers that can make more than one colour in a list of their own
 function E:UntappedLands(isRemote)
     local lands = { W = {}, U = {}, B = {}, R = {}, G = {} }
+    local duals = {}
     for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
         local card = TTS.Cards[perm.id]
-        if card and card.type == "Land" and not perm.tapped and lands[card.color] then
-            table.insert(lands[card.color], perm)
+        if card and card.type == "Land" and not perm.tapped then
+            if card.colors then
+                table.insert(duals, perm)
+            elseif lands[card.color] then
+                table.insert(lands[card.color], perm)
+            end
         end
     end
-    return lands
+    return lands, duals
 end
 
--- True if the mana pool plus untapped prayers could pay costString
-function E:CanAffordWithLands(costString, isRemote)
-    local req = self:ParseCost(costString)
-    local pool = (isRemote and self.remoteState or self.localState).mana
-    local lands = self:UntappedLands(isRemote)
-    local spare = 0
-    for _, col in ipairs(MANA_COLORS) do
-        local have = (pool[col] or 0) + #lands[col]
-        if have < req[col] then return false end
-        spare = spare + have - req[col]
-    end
-    return spare >= req.Generic
-end
-
--- Which prayers to tap to pay costString, using mana already in the pool first.
--- Returns them in tap order; nothing is tapped yet.
+-- Which prayers to tap (and the colour each makes) to pay costString, using mana already
+-- in the pool first. Returns the prayers in tap order, the colour of each
+-- (colorOf[perm]) and whether that pays the whole cost; nothing is tapped yet.
 function E:PlanLandTaps(costString, isRemote)
     local req = self:ParseCost(costString)
-    local lands = self:UntappedLands(isRemote)
+    local lands, duals = self:UntappedLands(isRemote)
     local mana = (isRemote and self.remoteState or self.localState).mana
     local pool = {}
     for _, col in ipairs(MANA_COLORS) do pool[col] = mana[col] or 0 end
-    local plan = {}
+    local plan, colorOf = {}, {}
 
-    local function Tap(col)
-        table.insert(plan, table.remove(lands[col]))
+    local function Tap(perm, col)
+        table.insert(plan, perm)
+        colorOf[perm] = col
         pool[col] = pool[col] + 1
     end
 
-    -- Coloured pips first
+    -- Coloured pips: basics first, then the dual prayers
+    local short = {}
     for _, col in ipairs(MANA_COLORS) do
-        while (pool[col] or 0) < req[col] and #lands[col] > 0 do Tap(col) end
+        while pool[col] < req[col] and #lands[col] > 0 do Tap(table.remove(lands[col]), col) end
+        for _ = 1, req[col] - pool[col] do table.insert(short, col) end
+    end
+    -- Each pip still short goes to a dual prayer that makes its colour (a small search,
+    -- so a W/R prayer is kept for the W when another dual can make the R)
+    local used = {}
+    local function Assign(k)
+        if k > #short then return true end
+        for _, perm in ipairs(duals) do
+            if not used[perm] then
+                for _, c in ipairs(self:ManaColorsOf(TTS.Cards[perm.id])) do
+                    if c == short[k] then
+                        used[perm] = c
+                        if Assign(k + 1) then return true end
+                        used[perm] = nil
+                        break
+                    end
+                end
+            end
+        end
+        return false
+    end
+    local paysColours = Assign(1)
+    if paysColours then
+        for _, perm in ipairs(duals) do
+            if used[perm] then Tap(perm, used[perm]) end
+        end
     end
 
-    -- Then generic: spare pool mana first, then prayers of the colour there are most of
+    -- Then generic: spare pool mana first, then basics of the colour there are most of,
+    -- then dual prayers
     local spare = 0
     for _, col in ipairs(MANA_COLORS) do
-        spare = spare + math.max(0, (pool[col] or 0) - req[col])
+        spare = spare + math.max(0, pool[col] - req[col])
     end
     local need = req.Generic - spare
     while need > 0 do
@@ -425,11 +453,25 @@ function E:PlanLandTaps(costString, isRemote)
         for _, col in ipairs(MANA_COLORS) do
             if #lands[col] > 0 and (not best or #lands[col] > #lands[best]) then best = col end
         end
-        if not best then break end
-        Tap(best)
+        if best then
+            Tap(table.remove(lands[best]), best)
+        else
+            local perm
+            for _, d in ipairs(duals) do
+                if not colorOf[d] then perm = d; break end
+            end
+            if not perm then break end
+            Tap(perm, self:ManaColorsOf(TTS.Cards[perm.id])[1])
+        end
         need = need - 1
     end
-    return plan
+    return plan, colorOf, paysColours and need <= 0
+end
+
+-- True if the mana pool plus untapped prayers could pay costString
+function E:CanAffordWithLands(costString, isRemote)
+    local _, _, pays = self:PlanLandTaps(costString, isRemote)
+    return pays
 end
 
 function E:AutoPayEnabled()
@@ -448,9 +490,10 @@ end
 function E:AutoPayMana(costString)
     if not costString or costString == "" or self:CanPayMana(costString) then return end
     if not (self:AutoPayEnabled() and self:CanAffordWithLands(costString, false)) then return end
-    for _, perm in ipairs(self:PlanLandTaps(costString, false)) do
+    local plan, colorOf = self:PlanLandTaps(costString, false)
+    for _, perm in ipairs(plan) do
         for i, p in ipairs(self.localState.field) do
-            if p == perm then self:TapCard(i); break end
+            if p == perm then self:TapCard(i, colorOf[perm]); break end
         end
     end
 end
@@ -562,14 +605,38 @@ function E:NextPhase()
     self:RefreshUI()
 end
 
+-- While our attack waits on blocks (or on our Resolve), End Turn instead asks for the turn
+-- to end as soon as combat is over; a second click takes that back.
+function E:ToggleEndAfterCombat()
+    self.endAfterCombat = not self.endAfterCombat or nil
+    self:Log(L(self.endAfterCombat and "log.endAfterCombat" or "log.endAfterCombatOff"), "SYSTEM")
+    self:RefreshUI()
+end
+
+-- Ends the turn asked for during combat, once combat and any choices it brought are done
+function E:TryEndAfterCombat()
+    if not self.endAfterCombat then return end
+    if not (self.inMatch and self.isMyTurn and self.phase == "MAIN2") then return end
+    if self.pendingDiscard or self:HasPendingChoice() or self.targeting then return end
+    self.endAfterCombat = nil
+    self:EndTurn()
+end
+
 function E:EndTurn()
     if not self.isMyTurn then return end
     if self:UndoBlocksAction() then return end
+    -- Our attack is still being blocked or resolved: end the turn once it's over
+    local bs = self.blockingState
+    if self.phase == "COMBAT_BLOCK" and bs and not bs.isRemoteAttacking then
+        self:ToggleEndAfterCombat()
+        return
+    end
     -- Declared attackers have to be resolved first
     if self.phase == "COMBAT_BLOCK" or (self.blockingState and #(self.blockingState.attackers or {}) > 0) then
         self:Log(L("err.finishCombat"), "ERROR")
         return
     end
+    self.endAfterCombat = nil
 
     for _, perm in ipairs(self.localState.field) do
         local mustAttack = (perm.id == "BOSS11")
@@ -732,6 +799,8 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.targeting = nil
     self.blockingState = nil
     self.pendingDiscard = nil
+    self.choiceQueue = nil
+    self.endAfterCombat = nil
     self.mulliganOpen = true
     self.stolenCreatures = {}
     self.remoteTurns = 0
@@ -907,19 +976,103 @@ function E:DrawCardFor(isRemote)
     self:RefreshUI()
 end
 
--- Removes a random card from a side's hand to its graveyard (forced discards)
-function E:DiscardRandom(isRemote)
+-- =========================================================================
+-- CHOICES
+-- Effects that let the player pick (a card to discard, a creature to return...) queue a
+-- choice; the popup (UI\Choice.lua) asks them one at a time and can't be dismissed.
+-- spec = { title, options = { { value, cardId?, text? }, ... }, onChoose = fn(value, option) }
+-- Without the popup (headless tests) the first option is taken at once.
+-- =========================================================================
+function E:AskChoice(spec)
+    self.choiceQueue = self.choiceQueue or {}
+    table.insert(self.choiceQueue, spec)
+    if #self.choiceQueue == 1 then self:ShowNextChoice() end
+end
+
+function E:ShowNextChoice()
+    local spec = self.choiceQueue and self.choiceQueue[1]
+    if not spec then return end
+    local asked = TTS.Choice and TTS.Choice.frame and true or false
+    local function Done(value, option)
+        if not (self.choiceQueue and self.choiceQueue[1] == spec) then return end
+        table.remove(self.choiceQueue, 1)
+        if self.inMatch then
+            spec.onChoose(value, option)
+            -- Picked later from the popup: the effect has finished, so check for deaths now
+            if asked then
+                self:SyncEffects()
+                self:CheckStateBasedActions()
+            end
+            self:RefreshUI()
+        end
+        self:ShowNextChoice()
+        -- The last choice made: a turn waiting to end after combat can end now
+        if not self:HasPendingChoice() then self:TryEndAfterCombat() end
+    end
+    if asked then
+        TTS.Choice:Show({ title = spec.title, options = spec.options, required = true, onChoose = Done })
+    else
+        Done(spec.options[1].value, spec.options[1])
+    end
+end
+
+function E:HasPendingChoice()
+    return self.choiceQueue ~= nil and #self.choiceQueue > 0
+end
+
+-- Drops every waiting choice (the match is over)
+function E:ClearChoices()
+    self.choiceQueue = nil
+    if TTS.Choice and TTS.Choice.Cancel then TTS.Choice:Cancel(true) end
+end
+
+-- One option per different card in ids (a hand or graveyard holds duplicates)
+local function CardOptions(ids, keep)
+    local options, seen = {}, {}
+    for _, id in ipairs(ids) do
+        if not seen[id] and (not keep or keep(id)) then
+            seen[id] = true
+            table.insert(options, { value = id, cardId = id })
+        end
+    end
+    return options
+end
+E.CardOptions = CardOptions
+
+-- A side discards a card of its choice (forced discards). The player picks it, the AI
+-- drops its least useful card. PvP: their client discards and sends ACTION:DISCARD,
+-- which updates their hand count.
+function E:DiscardChosen(isRemote)
     local st = isRemote and self.remoteState or self.localState
-    -- PvP: their client discards and sends ACTION:DISCARD, which updates their hand count
     if isRemote and not self.isSolo then return end
     if #st.hand == 0 then return end
-    local cardId = table.remove(st.hand, math.random(#st.hand))
-    table.insert(st.graveyard, cardId)
-    if isRemote then st.handCount = #st.hand end
-    local card = TTS.Cards[cardId]
-    local shown = card and TTS:CardName(card) or cardId
-    self:Log(isRemote and L("log.oppDiscarded", self.opponent, shown) or L("log.youDiscarded", shown), "ACTION")
-    if not isRemote and not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
+
+    local function Discard(cardId)
+        local idx
+        for i, id in ipairs(st.hand) do
+            if id == cardId then idx = i; break end
+        end
+        if not idx then return end
+        table.remove(st.hand, idx)
+        table.insert(st.graveyard, cardId)
+        if isRemote then st.handCount = #st.hand end
+        local card = TTS.Cards[cardId]
+        local shown = card and TTS:CardName(card) or cardId
+        self:Log(isRemote and L("log.oppDiscarded", self.opponent, shown) or L("log.youDiscarded", shown), "ACTION")
+        if not isRemote and not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:DISCARD:" .. cardId) end
+    end
+
+    if isRemote then
+        local worst, worstVal
+        for _, id in ipairs(st.hand) do
+            local v = self:AICardValue(id)
+            if not worstVal or v < worstVal then worst, worstVal = id, v end
+        end
+        Discard(worst)
+    else
+        self:AskChoice({ title = L("choice.discard"), options = CardOptions(st.hand),
+            onChoose = function(cardId) Discard(cardId) end })
+    end
 end
 
 -- Discards the hand card the player clicked to make room, then makes the waiting draw(s)

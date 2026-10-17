@@ -15,10 +15,10 @@ TTS:AddCards({
     -- STRATHOLME
     ["STR01"] = {
         id = "STR01", name = "Crimson Initiate", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 10496,
+        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 10496,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10420,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["STR02"] = {
         id = "STR02", name = "Plague Ghoul", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["STR03"] = {
         id = "STR03", name = "Crimson Gallant", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
+        power = 3, toughness = 4, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Vigilant, Support."
     },
     ["STR04"] = {
         id = "STR04", name = "Rockwing Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",

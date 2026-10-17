@@ -130,45 +130,10 @@ local function PredictDeaths(E, bs)
     local dies = {}
     if E.preventCombatDamage then return dies end
 
-    local atkRemote = bs.isRemoteAttacking and true or false
-    local defRemote = not atkRemote
-    local atkField = atkRemote and E.remoteState.field or E.localState.field
-    local defField = atkRemote and E.localState.field or E.remoteState.field
-    local defTakenSoFar, struckDown = {}, {}
-
-    for _, atkIdx in ipairs(bs.attackers or {}) do
-        local atkPerm = atkField[atkIdx]
-
-        local bIdx = E:BlockerOf(bs, atkIdx)
-        local defPerm = bIdx and defField[bIdx]
-
-        if atkPerm and defPerm then
-            local atkPower, atkToughness = E:GetCreatureStats(atkPerm, atkRemote)
-            local defPower, defToughness = E:GetCreatureStats(defPerm, defRemote)
-            local atkHit = E:HasKeyword(atkPerm, atkRemote, "deathtouch") and 999 or atkPower
-            local defHit = E:HasKeyword(defPerm, defRemote, "deathtouch") and 999 or defPower
-            local atkFirst = E:HasKeyword(atkPerm, atkRemote, "firstStrike")
-            local defFirst = E:HasKeyword(defPerm, defRemote, "firstStrike")
-            -- A Bulwark struck down first by another attacker never strikes this one
-            if struckDown[defPerm] and not defFirst then defHit = 0 end
-
-            -- A Bulwark blocking two takes both attackers' damage
-            local before = (defPerm.damage or 0) + (defTakenSoFar[defPerm] or 0)
-            local atkTaken, defTaken = 0, 0
-            if atkFirst and not defFirst then
-                defTaken = atkHit
-                if before + defTaken < defToughness then atkTaken = defHit else struckDown[defPerm] = true end
-            elseif defFirst and not atkFirst then
-                atkTaken = defHit
-                if (atkPerm.damage or 0) + atkTaken < atkToughness then defTaken = atkHit end
-            else
-                atkTaken, defTaken = defHit, atkHit
-            end
-            defTakenSoFar[defPerm] = (defTakenSoFar[defPerm] or 0) + defTaken
-
-            if WillDie(atkPerm, atkRemote, atkTaken) then dies[atkPerm] = true end
-            if WillDie(defPerm, defRemote, defTakenSoFar[defPerm]) then dies[defPerm] = true end
-        end
+    -- The same damage E:ResolveCombatDamage deals (Strikes-First, Bulwark, Support)
+    local plan = E:PlanCombatDamage(bs)
+    for perm, taken in pairs(plan.taken) do
+        if WillDie(perm, plan.info[perm].isRemote, taken) then dies[perm] = true end
     end
     return dies
 end

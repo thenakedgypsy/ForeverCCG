@@ -434,22 +434,38 @@ function TTS:GetOwnedCopies(card)
     if card.isBoss then
         return KillCount(card.id)
     end
+    if card.isGift then
+        -- Handed out by an NPC (UI\NpcGossip.lua): TTS_NpcGifts.copies[cardId]
+        if TTS_DevModeActive then return MAX_REWARD_COPIES end
+        local copies = TTS_NpcGifts and TTS_NpcGifts.copies and TTS_NpcGifts.copies[card.id]
+        return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
+    end
     return nil
 end
 
--- Collection score: creature cards collected (1+ copies) x (creature cards mastered (all 4) + 1).
--- Returns score, collected, mastered, total.
+-- Collection score: (creature cards + Hearthstones collected (1+ copies)) x (creature cards
+-- mastered (all 4) + every Hearthstone copy owned + 1). Hearthstones are the innkeepers'
+-- gift prayers; each copy raises the multiplier, so a new one never lowers the score.
+-- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
+    local hTotal, hCollected, hMastered, hCopies = 0, 0, 0, 0
     for _, card in pairs(TTS.Cards or {}) do
         if card.type == "Creature" and (card.isBoss or card.isReward) then
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end
             if copies >= 4 then mastered = mastered + 1 end
+        elseif card.type == "Land" and card.isGift then
+            hTotal = hTotal + 1
+            local copies = self:GetOwnedCopies(card) or 0
+            hCopies = hCopies + copies
+            if copies >= 1 then hCollected = hCollected + 1 end
+            if copies >= MAX_REWARD_COPIES then hMastered = hMastered + 1 end
         end
     end
-    return collected * (mastered + 1), collected, mastered, total
+    local score = (collected + hCollected) * (mastered + hCopies + 1)
+    return score, collected, mastered, total, hCollected, hMastered, hTotal
 end
 
 -- "1,234,567" (falls back to plain digits if the client lacks BreakUpLargeNumbers)

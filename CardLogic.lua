@@ -691,21 +691,59 @@ SPELL_GLOBAL_OPS.mana = function(self, op, card, cr)
     self:Log(L(cr and "log.manaAddedOpp" or "log.manaAddedYou", TTS:CardName(card), op.n, op.color, self.opponent or L("side.opponent")), "MANA")
 end
 
+-- Returns a creature card of the caster's choice from its graveyard (op.src = "any": or the
+-- opponent's) to the battlefield. The player picks it, the AI takes its best. PvP: the
+-- caster's client picks and sends ACTION:RAISE:<MINE|THEIRS>:<cardId>:<sourceCardId>.
 SPELL_GLOBAL_OPS.raise = function(self, op, card, cr)
-    local sources = { cr and self.remoteState.graveyard or self.localState.graveyard }
-    if op.src == "any" then table.insert(sources, cr and self.localState.graveyard or self.remoteState.graveyard) end
-    for _, gy in ipairs(sources) do
-        for idx = #gy, 1, -1 do
-            local c = TTS.Cards[gy[idx]]
-            if c and c.type == "Creature" then
-                local cId = table.remove(gy, idx)
-                self:Log(L(cr and "log.reanimatedOpp" or "log.reanimatedYou", TTS:CardName(card), TTS:CardName(c), self.opponent or L("side.opponent")), "ACTION")
-                self:PutCreatureOntoBattlefield(cId, cr)
-                return
-            end
+    if cr and not self.isSolo then return end
+    local mine = cr and self.remoteState.graveyard or self.localState.graveyard
+    local theirs = cr and self.localState.graveyard or self.remoteState.graveyard
+    local function IsCreature(id) local c = TTS.Cards[id]; return c and c.type == "Creature" end
+    -- Most recently put there first
+    local function Newest(gy)
+        local list = {}
+        for i = #gy, 1, -1 do table.insert(list, gy[i]) end
+        return list
+    end
+
+    local options = self.CardOptions(Newest(mine), IsCreature)
+    if op.src == "any" then
+        for _, o in ipairs(self.CardOptions(Newest(theirs), IsCreature)) do
+            o.fromTheirs = true
+            o.value = "THEIRS:" .. o.cardId
+            o.text = L("choice.theirs", TTS:CardName(o.cardId))
+            table.insert(options, o)
         end
     end
-    self:Log(L("log.reanimateNone", TTS:CardName(card)), "ERROR")
+    if #options == 0 then
+        self:Log(L("log.reanimateNone", TTS:CardName(card)), "ERROR")
+        return
+    end
+
+    local function Raise(o)
+        local gy = o.fromTheirs and theirs or mine
+        local idx
+        for i = #gy, 1, -1 do
+            if gy[i] == o.cardId then idx = i; break end
+        end
+        if not idx then
+            self:Log(L("log.reanimateNone", TTS:CardName(card)), "ERROR")
+            return
+        end
+        table.remove(gy, idx)
+        self:Log(L(cr and "log.reanimatedOpp" or "log.reanimatedYou", TTS:CardName(card), TTS:CardName(o.cardId), self.opponent or L("side.opponent")), "ACTION")
+        if not cr and not self.isSolo then
+            TTS.Net:Send(self.opponent, string.format("ACTION:RAISE:%s:%s:%s", o.fromTheirs and "THEIRS" or "MINE", o.cardId, card.id))
+        end
+        self:PutCreatureOntoBattlefield(o.cardId, cr)
+    end
+
+    if cr then
+        Raise(self:AIChooseCreatureCard(options))
+    else
+        self:AskChoice({ title = L("choice.raise", TTS:CardName(card)), options = options,
+            onChoose = function(_, o) Raise(o) end })
+    end
 end
 
 -- Creates op.n (default 1) copies of the token card op.id on the caster's battlefield
@@ -919,7 +957,7 @@ function E:OnCreatureAttack(perm, isRemote)
     if not card then return end
 
     if perm.id == "BOSS03" then
-        self:DiscardRandom(not isRemote)
+        self:DiscardChosen(not isRemote)
         self:DamagePlayer(not isRemote, 1, "BOSS03")
         self:Log(L("log.boss.mutanus", TTS:CardName(perm.id)), "ACTION")
     elseif perm.id == "BOSS13" then
@@ -1043,7 +1081,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
 
     elseif id == "BOSS22" then
         self:DrawCardFor(isRemote)
-        self:DiscardRandom(isRemote)
+        self:DiscardChosen(isRemote)
         perm.tempPower = (perm.tempPower or 0) + 1
         perm.tempToughness = (perm.tempToughness or 0) + 1
         self:Log(L("log.boss.tortheldrin", TTS:CardName(id)), "ACTION")
@@ -1373,7 +1411,8 @@ end
 -- BLOCKS
 -- bs.blocks[blockerIdx] = attackerIdx holds each blocker's (first) block. A Bulwark X
 -- creature (bulwark = X) can block up to X attackers: the ones after the first are listed
--- in bs.moreBlocks[blockerIdx]. Each attacker is blocked by at most one creature.
+-- in bs.moreBlocks[blockerIdx]. An attacker can be blocked by several creatures as long
+-- as all but one of them have Support.
 -- =========================================================================
 
 -- How many attackers a creature can block at once
@@ -1400,10 +1439,30 @@ function E:BlockCount(bs, blockerIdx)
     return 1 + #((bs.moreBlocks and bs.moreBlocks[blockerIdx]) or {})
 end
 
--- The creature blocking an attacker, or nil
-function E:BlockerOf(bs, atkIdx)
+-- Every creature blocking an attacker, lowest field index first
+function E:BlockersOf(bs, atkIdx)
+    local list = {}
     for _, p in ipairs(self:BlockPairs(bs)) do
-        if p[2] == atkIdx then return p[1] end
+        if p[2] == atkIdx then table.insert(list, p[1]) end
+    end
+    table.sort(list)
+    return list
+end
+
+-- The (first) creature blocking an attacker, or nil
+function E:BlockerOf(bs, atkIdx)
+    return self:BlockersOf(bs, atkIdx)[1]
+end
+
+-- The creature that keeps this blocker from joining the block on an attacker: when neither
+-- has Support, only one of them can block it. nil if it can join.
+function E:BlockInTheWay(bs, atkIdx, blockerIdx, isRemote)
+    local field = isRemote and self.remoteState.field or self.localState.field
+    local perm = field[blockerIdx]
+    if perm and self:HasKeyword(perm, isRemote, "support") then return nil end
+    for _, b in ipairs(self:BlockersOf(bs, atkIdx)) do
+        local other = field[b]
+        if b ~= blockerIdx and not (other and self:HasKeyword(other, isRemote, "support")) then return b end
     end
 end
 
@@ -1413,20 +1472,17 @@ function E:ClearBlocks(bs, blockerIdx)
     if bs.moreBlocks then bs.moreBlocks[blockerIdx] = nil end
 end
 
--- Takes back whatever block is on an attacker; a Bulwark's next block moves up to first
-function E:ClearBlockOn(bs, atkIdx)
-    local b = self:BlockerOf(bs, atkIdx)
-    if not b then return end
-    local more = bs.moreBlocks and bs.moreBlocks[b]
-    if bs.blocks[b] == atkIdx then
-        bs.blocks[b] = more and table.remove(more, 1)
-    else
+-- Takes back one creature's block on an attacker; a Bulwark's next block moves up to first
+function E:ClearBlock(bs, blockerIdx, atkIdx)
+    local more = bs.moreBlocks and bs.moreBlocks[blockerIdx]
+    if bs.blocks[blockerIdx] == atkIdx then
+        bs.blocks[blockerIdx] = more and table.remove(more, 1)
+    elseif more then
         for i, a in ipairs(more) do
             if a == atkIdx then table.remove(more, i); break end
         end
     end
-    if more and #more == 0 then bs.moreBlocks[b] = nil end
-    return b
+    if more and #more == 0 then bs.moreBlocks[blockerIdx] = nil end
 end
 
 -- Whether a creature that already blocks can take on another attacker
@@ -1454,7 +1510,8 @@ function E:AssignBlock(bs, blockerIdx, atkIdx, perm, isRemote)
     return true
 end
 
-function E:TapCard(fieldIndex)
+-- manaColor (optional): the colour a dual prayer makes (it makes its first colour otherwise)
+function E:TapCard(fieldIndex, manaColor)
     local perm = self.localState.field[fieldIndex]
     if not perm then return end
     local card = TTS.Cards and TTS.Cards[perm.id]
@@ -1533,9 +1590,14 @@ function E:TapCard(fieldIndex)
     if self:UndoBlocksAction() then return end
 
     if card.type == "Land" and not perm.tapped then
+        local colors = self:ManaColorsOf(card)
+        local col = colors[1]
+        for _, c in ipairs(colors) do
+            if c == manaColor then col = c end
+        end
         perm.tapped = true
-        self.localState.mana[card.color] = (self.localState.mana[card.color] or 0) + 1
-        self:Log(L("log.tappedPrayer", TTS:CardName(card), card.color), "MANA")
+        self.localState.mana[col] = (self.localState.mana[col] or 0) + 1
+        self:Log(L("log.tappedPrayer", TTS:CardName(card), col), "MANA")
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex) end
         self:RefreshUI()
         return
@@ -1664,16 +1726,19 @@ function E:ClickOpponentCard(fieldIndex)
             return
         end
 
-        -- One blocker per attacker: the new blocker replaces the one already there
+        -- Creatures with Support join a block. Without it, the new blocker takes the place
+        -- of the one already there that has no Support either.
         local bs = self.blockingState
-        local otherBlocker = self:BlockerOf(bs, fieldIndex)
-        if otherBlocker == blockerIdx then
-            bs.selectedBlocker = nil
-            self:RefreshUI()
-            return
+        for _, b in ipairs(self:BlockersOf(bs, fieldIndex)) do
+            if b == blockerIdx then
+                bs.selectedBlocker = nil
+                self:RefreshUI()
+                return
+            end
         end
+        local otherBlocker = self:BlockInTheWay(bs, fieldIndex, blockerIdx, false)
         if otherBlocker then
-            self:ClearBlockOn(bs, fieldIndex)
+            self:ClearBlock(bs, otherBlocker, fieldIndex)
             local other = self.localState.field[otherBlocker]
             self:Log(L("log.noLongerBlocking",
                 other and TTS.Cards[other.id] and TTS:CardName(other.id) or L("side.otherCreature"), TTS:CardName(attackerCard)), "SYSTEM")
@@ -1690,13 +1755,91 @@ end
 -- =========================================================================
 -- COMBAT RESOLUTION
 -- =========================================================================
+
+-- Works out the combat damage of the current blocks without dealing it. Strikes-First
+-- creatures strike first, and a creature they kill never strikes back. A Bulwark deals its
+-- full damage to each attacker it blocks; an attacker blocked by several creatures (Support)
+-- deals its full damage to each of them, and each of them deals its full damage to it.
+-- Returns { fights = { { atkIdx, blkIdx, atk, blk } } in attack order, info[perm] = the
+-- stats it fought with, taken[perm] = damage marked on it, dealt[perm] = damage it dealt
+-- (for Drain), trample[atkPerm] = damage that carries over to the defending player }.
+function E:PlanCombatDamage(bs)
+    local atkRemote = bs.isRemoteAttacking and true or false
+    local defRemote = not atkRemote
+    local atkField = atkRemote and self.remoteState.field or self.localState.field
+    local defField = atkRemote and self.localState.field or self.remoteState.field
+
+    local fights, info = {}, {}
+    local function Info(perm, isRemote)
+        if info[perm] then return end
+        local p, t = self:GetCreatureStats(perm, isRemote)
+        info[perm] = { p = p, t = t, isRemote = isRemote,
+            first = self:HasKeyword(perm, isRemote, "firstStrike") and true or false,
+            fatal = self:HasKeyword(perm, isRemote, "deathtouch") and true or false }
+    end
+    for _, atkIdx in ipairs(bs.attackers or {}) do
+        local atk = atkField[atkIdx]
+        for _, blkIdx in ipairs(atk and self:BlockersOf(bs, atkIdx) or {}) do
+            local blk = defField[blkIdx]
+            if blk then
+                Info(atk, atkRemote)
+                Info(blk, defRemote)
+                table.insert(fights, { atkIdx = atkIdx, blkIdx = blkIdx, atk = atk, blk = blk })
+            end
+        end
+    end
+
+    local taken, dealt, struck = {}, {}, {}
+    local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
+    -- Strikes-First damage lands first, then everyone still standing strikes
+    for _, firstStep in ipairs({ true, false }) do
+        local hits = {}
+        for _, f in ipairs(fights) do
+            for _, h in ipairs({ { f.atk, f.blk }, { f.blk, f.atk } }) do
+                local src = info[h[1]]
+                if src.first == firstStep and src.p > 0 and (firstStep or not Down(h[1])) then
+                    table.insert(hits, h)
+                end
+            end
+        end
+        for _, h in ipairs(hits) do
+            local src = info[h[1]]
+            taken[h[2]] = (taken[h[2]] or 0) + (src.fatal and 999 or src.p)
+            dealt[h[1]] = (dealt[h[1]] or 0) + src.p
+            struck[h[1]] = true
+        end
+    end
+
+    -- Brutish: what its blockers' toughness can't soak up carries over. Toughness another
+    -- attacker already soaked up (a Bulwark's) doesn't hold this one back.
+    local trample, absorbed, done = {}, {}, {}
+    for _, f in ipairs(fights) do
+        local atk = f.atk
+        if not done[atk] then
+            done[atk] = true
+            local p, left = info[atk].p, 0
+            for _, g in ipairs(fights) do
+                if g.atk == atk then
+                    local l = math.max(0, info[g.blk].t - (absorbed[g.blk] or 0))
+                    absorbed[g.blk] = (absorbed[g.blk] or 0) + math.min(p, l)
+                    left = left + l
+                end
+            end
+            if struck[atk] and p > left and self:HasKeyword(atk, atkRemote, "trample") then
+                trample[atk] = p - left
+            end
+        end
+    end
+
+    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample }
+end
+
 function E:ResolveCombatDamage()
     if not self.blockingState then return end
     local bs = self.blockingState
     local isRemoteAttacking = bs.isRemoteAttacking
 
     local atkField = isRemoteAttacking and self.remoteState.field or self.localState.field
-    local defField = isRemoteAttacking and self.localState.field or self.remoteState.field
 
     -- In a 2-player match both clients resolve combat. Damage to the defending player is
     -- applied once: the attacker's client sends it (through the defender's damage shield).
@@ -1705,84 +1848,53 @@ function E:ResolveCombatDamage()
         self:DamagePlayer(not isRemoteAttacking, amount, reason)
     end
 
-    -- A Bulwark blocking several attackers deals its full damage to each
-    local absorbed = {}   -- toughness of each blocker already soaked up this combat (Brutish)
-    local strikesFirstKilled = {}
+    -- Blocked creatures all deal their damage at once (see E:PlanCombatDamage)
+    local plan = self:PlanCombatDamage(bs)
+    local info = plan.info
+    if not self.preventCombatDamage then
+        for perm, n in pairs(plan.taken) do perm.damage = (perm.damage or 0) + n end
+        for perm, n in pairs(plan.dealt) do
+            local isRemote = info[perm].isRemote
+            if n > 0 and self:HasKeyword(perm, isRemote, "lifelink") then
+                local state = isRemote and self.remoteState or self.localState
+                state.life = state.life + n
+            end
+        end
+    end
+
+    local function Stats(p, t)
+        return TTS.FormatStats and TTS.FormatStats(p, t, 0, "|cFFFFFFFF", 12) or string.format("%d/%d", p, t)
+    end
 
     for _, atkIdx in ipairs(bs.attackers) do
         local atkPerm = atkField[atkIdx]
         if atkPerm then
             local atkCard = TTS.Cards[atkPerm.id]
-            local atkPower, atkToughness = self:GetCreatureStats(atkPerm, isRemoteAttacking)
+            local atkPower = self:GetCreatureStats(atkPerm, isRemoteAttacking)
 
-            local assignedBlockerIdx = self:BlockerOf(bs, atkIdx)
-
-            if assignedBlockerIdx and defField[assignedBlockerIdx] then
-                local defPerm = defField[assignedBlockerIdx]
-                local defCard = TTS.Cards[defPerm.id]
-                local defPower, defToughness = self:GetCreatureStats(defPerm, not isRemoteAttacking)
-                local defHit = defPower
-
-                local function Stats(p, t)
-                    return TTS.FormatStats and TTS.FormatStats(p, t, 0, "|cFFFFFFFF", 12) or string.format("%d/%d", p, t)
+            local blocked = false
+            for _, f in ipairs(plan.fights) do
+                if f.atk == atkPerm then
+                    blocked = true
+                    local a, d = info[f.atk], info[f.blk]
+                    self:Log(L("log.clash", TTS:CardName(atkCard), Stats(a.p, a.t),
+                        TTS:CardName(f.blk.id), Stats(d.p, d.t)), "COMBAT")
+                    if not self.preventCombatDamage then
+                        if atkPerm.id == "BOSS17" and a.p > 0 then
+                            f.blk.tapped = true
+                            f.blk.freezeUntap = true
+                        end
+                        if f.blk.id == "BOSS17" and d.p > 0 then
+                            atkPerm.tapped = true
+                            atkPerm.freezeUntap = true
+                        end
+                    end
                 end
-                self:Log(L("log.clash",
-                    TTS:CardName(atkCard), Stats(atkPower, atkToughness), TTS:CardName(defCard), Stats(defPower, defToughness)), "COMBAT")
+            end
 
-                if not self.preventCombatDamage then
-                    local atkFirst = self:HasKeyword(atkPerm, isRemoteAttacking, "firstStrike")
-                    local defFirst = self:HasKeyword(defPerm, not isRemoteAttacking, "firstStrike")
-
-                    local atkDT = self:HasKeyword(atkPerm, isRemoteAttacking, "deathtouch")
-                    local defDT = self:HasKeyword(defPerm, not isRemoteAttacking, "deathtouch")
-                    -- A Bulwark struck down first by its other attacker never strikes this one
-                    if strikesFirstKilled[assignedBlockerIdx] and not defFirst then defHit = 0 end
-                    local defDmg = (defDT and defHit > 0) and 999 or defHit
-
-                    if atkFirst and not defFirst then
-                        defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
-                        if (defPerm.damage or 0) < defToughness then
-                            atkPerm.damage = (atkPerm.damage or 0) + defDmg
-                        else
-                            strikesFirstKilled[assignedBlockerIdx] = true
-                        end
-                    elseif defFirst and not atkFirst then
-                        atkPerm.damage = (atkPerm.damage or 0) + defDmg
-                        if (atkPerm.damage or 0) < atkToughness then
-                            defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
-                        end
-                    else
-                        atkPerm.damage = (atkPerm.damage or 0) + defDmg
-                        defPerm.damage = (defPerm.damage or 0) + (atkDT and 999 or atkPower)
-                    end
-
-                    if atkPerm.id == "BOSS17" and atkPower > 0 then
-                        defPerm.tapped = true
-                        defPerm.freezeUntap = true
-                    end
-                    if defPerm.id == "BOSS17" and defPower > 0 then
-                        atkPerm.tapped = true
-                        atkPerm.freezeUntap = true
-                    end
-
-                    -- Toughness another attacker already soaked up doesn't hold this one back
-                    local left = math.max(0, defToughness - (absorbed[assignedBlockerIdx] or 0))
-                    absorbed[assignedBlockerIdx] = (absorbed[assignedBlockerIdx] or 0) + math.min(atkPower, left)
-                    if self:HasKeyword(atkPerm, isRemoteAttacking, "trample") then
-                        local excess = math.max(0, atkPower - left)
-                        if excess > 0 then
-                            DamageDefender(excess, atkCard.id .. "/trample")
-                        end
-                    end
-
-                    if self:HasKeyword(atkPerm, isRemoteAttacking, "lifelink") and atkPower > 0 then
-                        if isRemoteAttacking then self.remoteState.life = self.remoteState.life + atkPower
-                        else self.localState.life = self.localState.life + atkPower end
-                    end
-                    if self:HasKeyword(defPerm, not isRemoteAttacking, "lifelink") and defHit > 0 then
-                        if not isRemoteAttacking then self.remoteState.life = self.remoteState.life + defHit
-                        else self.localState.life = self.localState.life + defHit end
-                    end
+            if blocked then
+                if not self.preventCombatDamage and plan.trample[atkPerm] then
+                    DamageDefender(plan.trample[atkPerm], atkCard.id .. "/trample")
                 end
             else
                 if not self.preventCombatDamage then
@@ -1826,4 +1938,6 @@ function E:ResolveCombatDamage()
         self:Log(L("log.main2"), "SYSTEM")
     end
     self:RefreshUI()
+    -- "End Turn After Combat" was pressed while this combat waited (CoreEngine.lua)
+    if not isRemoteAttacking then self:TryEndAfterCombat() end
 end
