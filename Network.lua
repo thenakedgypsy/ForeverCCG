@@ -397,6 +397,16 @@ TTS.Net.routes = {}
 
 function TTS.Net:BroadcastLFM(msg)
     SendChannel(msg, true)
+    -- Party (or raid) and guild also reach players the channel misses, e.g. someone in
+    -- another copy of it. Every build reads LFM_ messages whatever route they arrive by.
+    if IsInRaid and IsInRaid(LE_PARTY_CATEGORY_HOME) then
+        QueueSend(msg, "RAID", nil, true)
+    elseif IsInGroup and IsInGroup(LE_PARTY_CATEGORY_HOME) then
+        QueueSend(msg, "PARTY", nil, true)
+    end
+    if IsInGuild and IsInGuild() then
+        QueueSend(msg, "GUILD", nil, true)
+    end
 end
 
 -- Seconds until another challenge can be sent (0 = now)
@@ -1016,6 +1026,9 @@ function TTS.Net:OnReceive(msg, sender)
         return
 
     elseif cmd == "LFM_QUERY" then
+        -- One query can arrive by channel, party and guild at once: answer it once
+        if GetTime() - (self.lastQueryAnswer or -10) < 3 then return end
+        self.lastQueryAnswer = GetTime()
         if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then
             if TTS.WaitingRoom.BroadcastPresence then
                 TTS.WaitingRoom:BroadcastPresence()
