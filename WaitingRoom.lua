@@ -245,7 +245,7 @@ end)
 communityBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 -- Above the button, always shown
-local communityNote = F:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
+local communityNote = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 communityNote:SetPoint("BOTTOM", communityBtn, "TOP", 0, 4)
 communityNote:SetWidth(120)
 communityNote:SetJustifyH("CENTER")
@@ -253,23 +253,15 @@ do
     local font, size, flags = communityNote:GetFont()
     communityNote:SetFont(font, size - 1, flags)
 end
-Loc:Bind(communityNote, "wr.communityRequired")
+Loc:Bind(communityNote, "wr.communityOptional")
 
--- Joining the waiting room needs the community (leaving never does)
-local function CanJoinQueue()
-    return WR.isQueued or not TTS.Community or TTS.Community:IsMember()
-end
-
--- Leave in red, Join in green, Join greyed out until the community is joined
+-- Leave in red, Join in green
 local function UpdateToggleButton()
     if WR.isQueued then
         toggleBtn:SetText("|cFFFF4444" .. L("wr.leave") .. "|r")
-    elseif CanJoinQueue() then
-        toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
     else
-        toggleBtn:SetText(L("wr.join"))
+        toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
     end
-    toggleBtn:SetEnabled(CanJoinQueue())
 end
 
 -- Greyed out once joined
@@ -278,11 +270,6 @@ local function UpdateCommunityButton()
     local joined = not TTS.Community or TTS.Community:IsMember()
     communityBtn:SetEnabled(not joined)
     Loc:Bind(communityBtn, joined and "wr.communityJoined" or "wr.community")
-    if joined then
-        communityNote:SetTextColor(0.5, 0.5, 0.5)
-    else
-        communityNote:SetTextColor(1, 0.1, 0.1)
-    end
 end
 -- Grey the button out as soon as an in-game join goes through
 if TTS.Community then TTS.Community.onMembershipChanged = UpdateCommunityButton end
@@ -427,7 +414,6 @@ function WR:BroadcastPresence()
 end
 
 function WR:ToggleQueue()
-    if not CanJoinQueue() then return end
     -- The deck is picked when a game starts, so any playable deck will do (and the
     -- Deckbuilder keeps at least one playable while queued)
     if not self.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then

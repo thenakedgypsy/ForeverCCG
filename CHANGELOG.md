@@ -1,3 +1,7 @@
+## 0.15.6
+
+*   joining the Forever CCG community is no longer required to join the waiting room; it's still recommended, as it's how the addon finds players on other server shards
+
 ## 0.15.5
 
 *   the waiting room now also announces you to your party (or raid) and guild, so players there see you even if the addon's channel doesn't reach them
