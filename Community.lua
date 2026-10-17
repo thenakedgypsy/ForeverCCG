@@ -31,7 +31,9 @@ TTS.Community = C
 -- The Battle.net community (clubType 0, so both factions); by id, so a rename doesn't matter.
 -- Compared with tostring, so it matches whether the client gives ids as numbers or strings.
 local COMMUNITY_ID = "23144891"
-local INVITE_LINK = "https://blizzard.com/invite/MMoX03SMMn"
+-- The invite's ticket, posted as a clickable chat link; the browser link is the fallback
+local INVITE_TICKET = "MMoX03SMMn"
+local INVITE_LINK = "https://blizzard.com/invite/" .. INVITE_TICKET
 local POST_COOLDOWN = 600
 
 local TAG_PATTERN = "%[FCCG:Q:(%d+):(%a?):(%a*):([^:%]]+):([^%]]+)%]%s*$"
@@ -123,8 +125,16 @@ end
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("CLUB_MESSAGE_ADDED")
+f:RegisterEvent("CLUB_ADDED")
 f:SetScript("OnEvent", function(_, event, ...)
-    if event == "CLUB_MESSAGE_ADDED" then OnMessageAdded(...) end
+    if event == "CLUB_MESSAGE_ADDED" then OnMessageAdded(...)
+    elseif event == "CLUB_ADDED" then
+        local clubId = ...
+        if tostring(clubId) == COMMUNITY_ID then
+            DEFAULT_CHAT_FRAME:AddMessage(L("community.joined"))
+            if C.onMembershipChanged then C.onMembershipChanged() end
+        end
+    end
 end)
 
 -- The popup's edit box, under whichever name this client's popups use
@@ -164,8 +174,27 @@ StaticPopupDialogs["TTS_COMMUNITY_LINK"] = {
     preferredIndex = 3,
 }
 
-function C:ShowInvite()
+function C:ShowLink()
     -- The message is set here, so OnShow doesn't depend on the popup's text field name
     StaticPopupDialogs["TTS_COMMUNITY_LINK"].text = L("community.linkPopup")
     StaticPopup_Show("TTS_COMMUNITY_LINK")
+end
+
+-- The in-game invite as a chat hyperlink. Redeeming a ticket is protected, so the addon
+-- can't join for the player; clicking this link runs Blizzard's own join dialog instead.
+local function TicketChatLink()
+    if GetClubTicketLink then
+        local ok, link = pcall(GetClubTicketLink, INVITE_TICKET, "Forever CCG", 0)
+        if ok and type(link) == "string" and link ~= "" then return link end
+    end
+    return "|cff82c5ff|HclubTicket:" .. INVITE_TICKET .. "|h[" .. L("community.linkText") .. "]|h|r"
+end
+
+-- The Community button: a clickable join link in chat, else the browser link
+function C:ShowInvite()
+    if not C_Club then
+        self:ShowLink()
+        return
+    end
+    DEFAULT_CHAT_FRAME:AddMessage(L("community.clickToJoin", TicketChatLink()))
 end

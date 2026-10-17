@@ -246,6 +246,8 @@ communityBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 local function UpdateCommunityButton()
     communityBtn:SetShown(TTS.Community and not TTS.Community:IsMember() or false)
 end
+-- Hide the button as soon as an in-game join goes through
+if TTS.Community then TTS.Community.onMembershipChanged = UpdateCommunityButton end
 
 -- Addon version (from the .toc), bottom-right corner
 local versionText = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")

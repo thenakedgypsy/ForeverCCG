@@ -1,6 +1,11 @@
+## 0.15.2
+
+*   the Community button in the waiting room now puts a clickable join link in your chat window: click it to join the Forever CCG community in-game 
+*   the waiting room now explains that the community runs in the background (the addon posts for you), so there's no need to chat in it
+
 ## 0.15.1
 
-*   waiting room can now find players on other server shards through the Forever CCG community: joining the waiting room posts once in the community (at most every 10 minutes), and members of your faction on the same realm type (PvE, PvP, RP) see you in their waiting room. Use the Community button in the waiting room to get the invite link (this )
+*   waiting room can now find players on other server shards through the Forever CCG community: joining the waiting room posts once in the community (at most every 10 minutes), and members of your faction on the same realm type (PvE, PvP, RP) see you in their waiting room. Use the Community button in the waiting room to get the invite link (this should not spam your in-game chat and can be muted if it does)
 *   fix for players on 0.14 and 0.15 not seeing each other in the waiting room at all (they now see each other and are told to update when they challenge)
 *   fix for queued players disappearing from others' waiting rooms when they close the waiting room window (e.g. to edit a deck)
 

@@ -199,11 +199,14 @@ S["wr.left"] = "|cFFFF4444[TTSE]|r You left the waiting room."
 S["wr.needPlayableDeck"] = "|cFFFF2222[TTSE]|r You need a deck with 40-50 cards to join the waiting room."
 S["wr.noPlayableDeckLeft"] = "|cFFFF2222[TTSE]|r None of your decks has 40-50 cards any more."
 S["wr.community"] = "Community"
-S["wr.communityTip"] = "Join the Forever CCG community to find players on every server shard. When you join the waiting room, the community is told you're looking for a match."
+S["wr.communityTip"] = "Join the Forever CCG community to find players on every server shard.\n\nClick this button to get a join link in your chat window, then click the link to join.\n\nThe community runs in the background: when you join the waiting room, the addon posts there for you so other players can find you. You don't need to chat in it, and you can mute it."
 
 -- COMMUNITY
 S["community.lookingForMatch"] = "%s is looking for a match (collection score %s)."
 S["community.linkPopup"] = "Open this link in your browser to join the Forever CCG community (Ctrl-C to copy). Members can see each other's BattleTag."
+S["community.clickToJoin"] = "|cFF00FF00[TTSE]|r Click to join the Forever CCG community: %s It runs in the background so the addon can find players on every server shard; there's no need to chat in it. Members can see each other's BattleTag."
+S["community.linkText"] = "Join: Forever CCG"
+S["community.joined"] = "|cFF00FF00[TTSE]|r You joined the Forever CCG community. The addon uses it in the background to find players, so there's no need to chat in it (you can mute it)."
 
 -- SOLO OPPONENT (AI)
 S["log.aiPlayedPrayer"] = "%s played prayer: |cFFFFD200%s|r."
