@@ -10,7 +10,7 @@
 *   some innkeepers around Azeroth may have spare cards for travellers who ask nicely. They can't spare them often, but they'll give you an idea of when to come back. Rumour has it the innkeepers of the great cities keep something special behind the bar too.
 *   cards that return a creature card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
 *   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo opponents drop their least useful one)
-*   winning a solo dungeon now announces it with an emote (and a cheer) when you accept the result
+*   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and your turn ends by itself once combat is resolved (click again to cancel)
 *   Concede and Clear Deck now ask you to confirm first
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
