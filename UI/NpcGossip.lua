@@ -71,19 +71,35 @@ local function Gifts()
     return TTS_NpcGifts
 end
 
--- The gift card an NPC hands out, or nil
-local function GiftCardOf(npcId)
+-- What an NPC hands out, or nil: { key, cards }. Either its own card (card.giftNpcs; the
+-- wait is the card's, key = card id) or a random card of a pool it belongs to
+-- (TTS.GIFT_POOLS, cards with giftPool = <pool>; one wait for the whole pool,
+-- key = "pool:<pool>"). Cards are in id order.
+local function GiftSource(npcId)
     if not npcId then return nil end
+    for pool, def in pairs(TTS.GIFT_POOLS or {}) do
+        for _, id in pairs(def.npcs) do
+            if id == npcId then
+                local cards = {}
+                for _, card in pairs(TTS.Cards or {}) do
+                    if card.isGift and card.giftPool == pool then table.insert(cards, card) end
+                end
+                table.sort(cards, function(a, b) return a.id < b.id end)
+                return { key = "pool:" .. pool, cards = cards }
+            end
+        end
+    end
     for _, card in pairs(TTS.Cards or {}) do
         if card.isGift and card.giftNpcs then
             for _, id in pairs(card.giftNpcs) do
-                if id == npcId then return card end
+                if id == npcId then return { key = card.id, cards = { card } } end
             end
         end
     end
 end
+local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
 
--- The NPC that hands out a gift card to the player's faction (for "where to get it")
+-- The NPC that hands out a gift card to the player's faction, or nil for a pool card
 function TTS:GiftNpcFor(card)
     local npcs = card and card.giftNpcs
     if not npcs then return nil end
@@ -91,11 +107,19 @@ function TTS:GiftNpcFor(card)
     return npcs[faction] or npcs.Alliance or npcs.Horde
 end
 
--- When the next copy of a card can be handed out (server time), or nil if it can now.
--- Older saves only kept when it was last given (per card, or per NPC before that): 24 hours on.
-local function NextGift(g, card)
-    local nextAt = tonumber(g.next[card.id])
+-- How to get a gift card (collection hints): "Ask Innkeeper ... for spare cards"
+function TTS:GiftHow(card)
+    if card and card.giftPool then return L("gift." .. card.giftPool .. ".how") end
+    return L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow")
+end
+
+-- When the next gift from a source can be handed out (server time), or nil if it can now.
+-- Older saves only kept when a card was last given (per card, or per NPC before that): 24 hours on.
+local function NextGift(g, source)
+    local nextAt = tonumber(g.next[source.key])
     if nextAt then return nextAt end
+    local card = source.cards[1]
+    if #source.cards ~= 1 or not card then return nil end
     local last = tonumber(g.last[card.id])
     for _, id in pairs(card.giftNpcs or {}) do
         local old = tonumber(g.last[id])
@@ -104,17 +128,20 @@ local function NextGift(g, card)
     return last and last + MIN_WAIT_HOURS * HOUR
 end
 
--- Gives the player a copy of the NPC's card once its wait is over.
--- Returns which line the NPC answers with: "give", "comeBack" or "allOut", and for
--- "comeBack" the npc.wait.<key> hint at how long is left.
+-- Gives the player a copy of the NPC's card (a random one not yet complete, for a pool)
+-- once its wait is over. Returns which line the NPC answers with: "give", "comeBack" or
+-- "allOut", and for "comeBack" the npc.wait.<key> hint at how long is left.
 function TTS:AskNpcForCard(npcId)
-    local card = GiftCardOf(npcId)
-    if not card then return "allOut" end
-    local copies = TTS:GetOwnedCopies(card) or 0
-    if copies >= MAX_GIFT_COPIES then return "allOut" end
+    local source = GiftSource(npcId)
+    if not source then return "allOut" end
+    local open = {}
+    for _, c in ipairs(source.cards) do
+        if (TTS:GetOwnedCopies(c) or 0) < MAX_GIFT_COPIES then table.insert(open, c) end
+    end
+    if #open == 0 then return "allOut" end
 
     local g = Gifts()
-    local nextAt = NextGift(g, card)
+    local nextAt = NextGift(g, source)
     if nextAt and Now() < nextAt then
         local hoursLeft = (nextAt - Now()) / HOUR
         for _, h in ipairs(WAIT_HINTS) do
@@ -122,9 +149,10 @@ function TTS:AskNpcForCard(npcId)
         end
     end
 
-    copies = copies + 1
+    local card = open[math.random(#open)]
+    local copies = (TTS:GetOwnedCopies(card) or 0) + 1
     g.copies[card.id] = copies
-    g.next[card.id] = Now() + math.random(MIN_WAIT_HOURS, MAX_WAIT_HOURS) * HOUR
+    g.next[source.key] = Now() + math.random(MIN_WAIT_HOURS, MAX_WAIT_HOURS) * HOUR
     g.last[card.id] = nil
     for _, id in pairs(card.giftNpcs or {}) do g.last[id] = nil end   -- older saves' entries
     TTS:MarkCardNew(card.id)
@@ -134,6 +162,8 @@ function TTS:AskNpcForCard(npcId)
     local npcName = UnitName("npc")
     if npcName and not IsSecret(npcName) and npcName ~= "" then
         pcall(SendChatMessage, L("emote.gifted", npcName), "EMOTE")
+        -- then a thank-you /bow, a moment later so it doesn't collide with the text above
+        TTS:SafeAfter(0.5, function() DoEmote("BOW") end)
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()
@@ -148,10 +178,70 @@ end
 
 -- The NPC's answer to "Any spare cards?", or nil before the player has asked
 -- (until then the window shows only the NPC's own greeting)
+-- Whether the player still has copies to collect from an NPC's gifts; ready = and its
+-- wait is over, so it would give one right now
+local function HasMoreToGive(npcId, ready)
+    local source = GiftSource(npcId)
+    local open = false
+    for _, c in ipairs(source and source.cards or {}) do
+        if (TTS:GetOwnedCopies(c) or 0) < MAX_GIFT_COPIES then open = true; break end
+    end
+    if not open or not ready then return open end
+    local nextAt = NextGift(Gifts(), source)
+    return not nextAt or Now() >= nextAt
+end
+
+-- Where an all-out town innkeeper sends the player next (TTS.GIFT_TRAIL): the next inn
+-- on its faction's trail that still has cards for them (going round to the start for
+-- any skipped), else the capitals. A capital innkeeper sends them to the first inn on
+-- their own faction's trail that still has cards. Only places with a card ready right now
+-- are named (so the player isn't sent round in circles): with cards left but none ready
+-- anywhere the NPC says so (npc.trail.none), and with nothing left at all, that the player
+-- has them all (npc.trail.done, only once the NPC itself is all out).
+local function TrailHint(npcId)
+    local capital = TTS.GIFT_POOLS and TTS.GIFT_POOLS.capital
+    -- Where this NPC could send the player, in order: npc ids, "capital" for the rumour
+    local places
+    for _, id in ipairs(capital and capital.npcs or {}) do
+        if id == npcId then
+            local faction = UnitFactionGroup and UnitFactionGroup("player")
+            places = { unpack(TTS.GIFT_TRAIL and TTS.GIFT_TRAIL[faction] or {}) }
+        end
+    end
+    if not places then
+        for _, trail in pairs(TTS.GIFT_TRAIL or {}) do
+            for i, id in ipairs(trail) do
+                if id == npcId then
+                    places = {}
+                    for step = 1, #trail - 1 do table.insert(places, trail[(i - 1 + step) % #trail + 1]) end
+                    if capital then table.insert(places, "capital") end
+                end
+            end
+        end
+    end
+
+    local anyLeft = HasMoreToGive(npcId)
+    for _, p in ipairs(places or {}) do
+        local id = (p == "capital") and capital.npcs[1] or p
+        if HasMoreToGive(id, true) then
+            if p == "capital" then return L("npc.trail.capital") end
+            return L("npc.trail", L("place." .. p))
+        end
+        anyLeft = anyLeft or HasMoreToGive(id)
+    end
+    if not places then return nil end
+    return L(anyLeft and "npc.trail.none" or "npc.trail.done")
+end
+
+-- The NPC's answer, then (when it has nothing for the player) where else to try
 local function Said(npcId)
     if not (replyNpc == npcId and reply) then return nil end
     local said = L("npc." .. npcId .. "." .. reply)
     if reply == "comeBack" and waitHint then said = said .. " " .. L("npc.wait." .. waitHint) end
+    if reply == "comeBack" or reply == "allOut" then
+        local hint = TrailHint(npcId)
+        if hint then said = said .. " " .. hint end
+    end
     return said
 end
 

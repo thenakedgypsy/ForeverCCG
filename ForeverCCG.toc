@@ -111,3 +111,5 @@ UI\SoloMapData.lua
 UI\SoloSelect.lua
 UI\CardLinks.lua
 UI\NpcGossip.lua
+UI\QuickStart.lua
+UI\Tutorial.lua

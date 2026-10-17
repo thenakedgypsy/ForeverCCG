@@ -164,8 +164,12 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     text = "%s\n\n%s",
     button1 = ACCEPT or "Accept",
     OnAccept = function(self, data)
-        -- No public emote for games against the AI
+        -- No public emote for games against the AI, except for clearing a solo dungeon
         if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent) end
+        if data and data.dungeon then
+            SendChatMessage(L("emote.dungeon", data.dungeon), "EMOTE")
+            TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
+        end
         -- Leave the final board (unless a new match has already started on it)
         if not E.inMatch then E:CloseMatchBoard() end
     end,
@@ -218,7 +222,11 @@ function E:EndMatch(outcome, reason)
     local headline = outcome and RESULT_HEADLINES[outcome] and L("result." .. outcome)
     if outcome and opponentName ~= "" then
         if headline then
-            StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""), { outcome = outcome, opponent = opponentName, isSolo = self.isSolo })
+            -- A won solo dungeon is announced with an emote when the popup is accepted
+            local dungeon = outcome == "won" and self.isSolo and self.encounter and self.encounter.kind == "dungeon"
+                and TTS:EncounterName(self.encounter) or nil
+            StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
+                { outcome = outcome, opponent = opponentName, isSolo = self.isSolo, dungeon = dungeon })
             if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
@@ -251,6 +259,23 @@ function E:ConcedeMatch()
         TTS.Net:Send(self.opponent, "ACTION:CONCEDE")
     end
     self:EndMatch("conceded", L("end.conceded"))
+end
+
+StaticPopupDialogs["TTS_CONCEDE"] = {
+    text = "%s",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    OnAccept = function() if E.inMatch then E:ConcedeMatch() end end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+-- The board's Concede button asks first
+function E:ConfirmConcede()
+    if not self.inMatch then return end
+    StaticPopup_Show("TTS_CONCEDE", L("board.concedeConfirm"))
 end
 
 -- =========================================================================
@@ -374,33 +399,121 @@ function E:ManaColorsOf(card)
     return (card and card.colors) or { card and card.color }
 end
 
--- One side's untapped prayers: basics by colour { W = { perm, ... }, ... } and the
--- prayers that can make more than one colour in a list of their own
+-- One side's untapped prayers: basics by colour { W = { perm, ... }, ... }, the prayers
+-- that make one of two colours (duals), and those that make both at once when another
+-- untapped prayer is tapped with them (doubles, card.makesBoth)
 function E:UntappedLands(isRemote)
     local lands = { W = {}, U = {}, B = {}, R = {}, G = {} }
-    local duals = {}
+    local duals, doubles = {}, {}
     for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
         local card = TTS.Cards[perm.id]
         if card and card.type == "Land" and not perm.tapped then
-            if card.colors then
+            if card.makesBoth then
+                table.insert(doubles, perm)
+            elseif card.colors then
                 table.insert(duals, perm)
             elseif lands[card.color] then
                 table.insert(lands[card.color], perm)
             end
         end
     end
-    return lands, duals
+    return lands, duals, doubles
 end
+
+-- The other untapped prayers that could be tapped with a double prayer (perm)
+function E:DoublePartners(perm, isRemote)
+    local list = {}
+    for i, p in ipairs((isRemote and self.remoteState or self.localState).field) do
+        local c = TTS.Cards[p.id]
+        if p ~= perm and c and c.type == "Land" and not p.tapped then table.insert(list, i) end
+    end
+    return list
+end
+
+local BasePlan
 
 -- Which prayers to tap (and the colour each makes) to pay costString, using mana already
 -- in the pool first. Returns the prayers in tap order, the colour of each
--- (colorOf[perm]) and whether that pays the whole cost; nothing is tapped yet.
+-- (colorOf[perm]; "BOTH" for a double prayer), whether that pays the whole cost, and for
+-- each double prayer the other prayer tapped with it (partnerOf[perm]); nothing is tapped yet.
+-- Double prayers are tried with each possible partner, keeping the plan that pays with
+-- the fewest prayers tapped.
 function E:PlanLandTaps(costString, isRemote)
     local req = self:ParseCost(costString)
-    local lands, duals = self:UntappedLands(isRemote)
+    local lands, duals, doubles = self:UntappedLands(isRemote)
     local mana = (isRemote and self.remoteState or self.localState).mana
     local pool = {}
     for _, col in ipairs(MANA_COLORS) do pool[col] = mana[col] or 0 end
+
+    -- Shallow copies (the prayers themselves stay the same tables)
+    local function Copy(t)
+        local c = {}
+        for k, v in pairs(t) do c[k] = v end
+        return c
+    end
+    local function CopyLands(t)
+        local c = {}
+        for col, list in pairs(t) do c[col] = { unpack(list) } end
+        return c
+    end
+    local function Remove(list, perm)
+        for i, p in ipairs(list) do if p == perm then table.remove(list, i); return true end end
+    end
+
+    local best
+    local function Consider(plan, colorOf, pays, partnerOf, used)
+        local taps = #plan
+        for _ in pairs(partnerOf) do taps = taps + 1 end
+        if not best or (pays and not best.pays) or (pays == best.pays and (taps < best.taps
+            or (taps == best.taps and used < best.used))) then
+            best = { plan = plan, colorOf = colorOf, pays = pays, partnerOf = partnerOf, taps = taps, used = used }
+        end
+    end
+
+    -- doubles[i..]: skip it, or tap it with each prayer still free
+    local function Try(i, lands, duals, doubles, pool, front, partnerOf, used)
+        if i > #doubles then
+            local plan, colorOf, pays = BasePlan(self, req, CopyLands(lands), { unpack(duals) }, Copy(pool))
+            local full, colors = {}, {}
+            for _, p in ipairs(front) do table.insert(full, p); colors[p] = "BOTH" end
+            for _, p in ipairs(plan) do table.insert(full, p); colors[p] = colorOf[p] end
+            Consider(full, colors, pays, partnerOf, used)
+            return
+        end
+        local d = doubles[i]
+        Try(i + 1, lands, duals, doubles, pool, front, partnerOf, used)   -- not used
+        if d.planPartner then return end   -- already the partner of an earlier double
+        local c = TTS.Cards[d.id]
+        local partners = {}
+        for _, col in ipairs(MANA_COLORS) do
+            if lands[col][1] then table.insert(partners, lands[col][1]) end   -- one of each colour is enough
+        end
+        for _, p in ipairs(duals) do table.insert(partners, p) end
+        for j = i + 1, #doubles do table.insert(partners, doubles[j]) end
+        for _, p in ipairs(partners) do
+            local l2, d2, p2 = CopyLands(lands), { unpack(duals) }, Copy(pool)
+            local card = TTS.Cards[p.id]
+            if not (card.colors and not card.makesBoth and Remove(d2, p)) then
+                Remove(l2[card.color] or {}, p)
+            end
+            p2[c.colors[1]] = p2[c.colors[1]] + 1
+            p2[c.colors[2]] = p2[c.colors[2]] + 1
+            local f2 = { unpack(front) }
+            table.insert(f2, d)
+            local po2 = Copy(partnerOf)
+            po2[d] = p
+            if card.makesBoth then p.planPartner = true end
+            Try(i + 1, l2, d2, doubles, p2, f2, po2, used + 1)
+            p.planPartner = nil
+        end
+    end
+    Try(1, lands, duals, doubles, pool, {}, {}, 0)
+    return best.plan, best.colorOf, best.pays, best.partnerOf
+end
+
+-- Taps for costString from basics and duals only (see E:PlanLandTaps); lands, duals and
+-- pool are the caller's copies and get used up
+BasePlan = function(self, req, lands, duals, pool)
     local plan, colorOf = {}, {}
 
     local function Tap(perm, col)
@@ -490,10 +603,17 @@ end
 function E:AutoPayMana(costString)
     if not costString or costString == "" or self:CanPayMana(costString) then return end
     if not (self:AutoPayEnabled() and self:CanAffordWithLands(costString, false)) then return end
-    local plan, colorOf = self:PlanLandTaps(costString, false)
-    for _, perm in ipairs(plan) do
+    local plan, colorOf, _, partnerOf = self:PlanLandTaps(costString, false)
+    local function IndexOf(perm)
         for i, p in ipairs(self.localState.field) do
-            if p == perm then self:TapCard(i, colorOf[perm]); break end
+            if p == perm then return i end
+        end
+    end
+    for _, perm in ipairs(plan) do
+        local i = IndexOf(perm)
+        if i then
+            local partner = partnerOf[perm]
+            self:TapCard(i, colorOf[perm], partner and IndexOf(partner))
         end
     end
 end
@@ -827,18 +947,29 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.localState.hots = {}
     self.localState.mirror = nil
 
-    local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex] and TTS_SavedDecks[TTS_ActiveDeckIndex].cards
-    if activeDeck then
-        for cardId, qty in pairs(activeDeck) do
-            if TTS.Cards[cardId] then
-                for _ = 1, qty do table.insert(self.localState.deck, cardId) end
+    -- A scripted solo game (the tutorial) brings the player's deck too: encounter.playerDeck,
+    -- top card first; encounter.fixedOrder keeps both decks in the order given
+    local scripted = isSolo and encounter
+    if scripted and scripted.playerDeck then
+        for _, cardId in ipairs(scripted.playerDeck) do
+            if TTS.Cards[cardId] then table.insert(self.localState.deck, cardId) end
+        end
+    else
+        local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex] and TTS_SavedDecks[TTS_ActiveDeckIndex].cards
+        if activeDeck then
+            for cardId, qty in pairs(activeDeck) do
+                if TTS.Cards[cardId] then
+                    for _ = 1, qty do table.insert(self.localState.deck, cardId) end
+                end
             end
         end
     end
 
-    for i = #self.localState.deck, 2, -1 do
-        local j = math.random(i)
-        self.localState.deck[i], self.localState.deck[j] = self.localState.deck[j], self.localState.deck[i]
+    if not (scripted and scripted.fixedOrder) then
+        for i = #self.localState.deck, 2, -1 do
+            local j = math.random(i)
+            self.localState.deck[i], self.localState.deck[j] = self.localState.deck[j], self.localState.deck[i]
+        end
     end
 
     for _ = 1, 7 do self:DrawCard(true) end
@@ -870,9 +1001,11 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
         local enc = self.encounter
 
         self.remoteState.deck = self:BuildEncounterDeck(enc)
-        for i = #self.remoteState.deck, 2, -1 do
-            local j = math.random(i)
-            self.remoteState.deck[i], self.remoteState.deck[j] = self.remoteState.deck[j], self.remoteState.deck[i]
+        if not enc.fixedOrder then
+            for i = #self.remoteState.deck, 2, -1 do
+                local j = math.random(i)
+                self.remoteState.deck[i], self.remoteState.deck[j] = self.remoteState.deck[j], self.remoteState.deck[i]
+            end
         end
 
         for _ = 1, 7 do

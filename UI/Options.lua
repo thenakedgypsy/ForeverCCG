@@ -24,6 +24,7 @@ local DEFAULTS = {
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
     animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
     autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
+    gameLogFolded = false,   -- the board's game log folded up to its title (Board.lua)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -164,6 +165,11 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 local title = F:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
 Loc:Bind(title, "options.title")
+do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
+    local tag = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    tag:SetPoint("LEFT", title, "RIGHT", 10, -1)
+    tag:SetText("Forever: CCG")
+end
 
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -2, -2)

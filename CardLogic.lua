@@ -1510,8 +1510,10 @@ function E:AssignBlock(bs, blockerIdx, atkIdx, perm, isRemote)
     return true
 end
 
--- manaColor (optional): the colour a dual prayer makes (it makes its first colour otherwise)
-function E:TapCard(fieldIndex, manaColor)
+-- manaColor (optional): the colour a dual prayer makes (it makes its first colour otherwise).
+-- partnerIndex (optional): for a double prayer (card.makesBoth), the other untapped prayer
+-- tapped with it; without one the player picks it (or the only one there is is used).
+function E:TapCard(fieldIndex, manaColor, partnerIndex)
     local perm = self.localState.field[fieldIndex]
     if not perm then return end
     local card = TTS.Cards and TTS.Cards[perm.id]
@@ -1588,6 +1590,46 @@ function E:TapCard(fieldIndex, manaColor)
         return
     end
     if self:UndoBlocksAction() then return end
+
+    if card.type == "Land" and not perm.tapped and card.makesBoth then
+        local field = self.localState.field
+        local partner = partnerIndex and field[partnerIndex]
+        local pc = partner and TTS.Cards[partner.id]
+        if not (partner and partner ~= perm and pc and pc.type == "Land" and not partner.tapped) then
+            local options = {}
+            for _, i in ipairs(self:DoublePartners(perm, false)) do
+                table.insert(options, { value = i, cardId = field[i].id })
+            end
+            if #options == 0 then
+                self:Log(L("err.needPartnerPrayer", TTS:CardName(card)), "ERROR")
+            elseif #options == 1 or not (TTS.Choice and TTS.Choice.frame) then
+                self:TapCard(fieldIndex, nil, options[1].value)
+            else
+                -- One option per kind of prayer: which copy is tapped makes no difference
+                local seen, shown = {}, {}
+                for _, o in ipairs(options) do
+                    if not seen[o.cardId] then seen[o.cardId] = true; table.insert(shown, o) end
+                end
+                TTS.Choice:Show({ title = L("choice.partnerPrayer", TTS:CardName(card)), options = shown,
+                    onChoose = function(i)
+                        if field[fieldIndex] == perm then self:TapCard(fieldIndex, nil, i) end
+                    end })
+            end
+            return
+        end
+        perm.tapped = true
+        partner.tapped = true
+        for _, col in ipairs(card.colors) do
+            self.localState.mana[col] = (self.localState.mana[col] or 0) + 1
+        end
+        self:Log(L("log.tappedDouble", TTS:CardName(card), TTS:CardName(pc), card.colors[1], card.colors[2]), "MANA")
+        if not self.isSolo then
+            TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex)
+            TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. partnerIndex)
+        end
+        self:RefreshUI()
+        return
+    end
 
     if card.type == "Land" and not perm.tapped then
         local colors = self:ManaColorsOf(card)

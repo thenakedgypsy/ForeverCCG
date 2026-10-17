@@ -114,6 +114,53 @@ TTS.Cards = {
         text = "{T}: Add {U} or {R}.",
         art = "Interface\\Icons\\INV_Misc_Rune_01"
     },
+
+    -- =========================================================================
+    -- GREATER HEARTHSTONES: make both colours at once (makesBoth), but another untapped
+    -- prayer of yours is tapped with them. Any capital city innkeeper (TTS.GIFT_POOLS.capital)
+    -- hands out a random one the player doesn't have all 4 of; one wait for the whole pool.
+    -- =========================================================================
+    ["PRY11"] = { id = "PRY11", name = "Hearth of Dawn", cost = "", cmc = 0, color = "W", colors = { "W", "U" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{U}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY12"] = { id = "PRY12", name = "Hearth of Embers", cost = "", cmc = 0, color = "W", colors = { "W", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY13"] = { id = "PRY13", name = "Hearth of Twilight", cost = "", cmc = 0, color = "W", colors = { "W", "B" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{B}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY14"] = { id = "PRY14", name = "Hearth of Blossoms", cost = "", cmc = 0, color = "W", colors = { "W", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY15"] = { id = "PRY15", name = "Hearth of Moonshadow", cost = "", cmc = 0, color = "U", colors = { "U", "B" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{B}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY16"] = { id = "PRY16", name = "Hearth of Storms", cost = "", cmc = 0, color = "U", colors = { "U", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY17"] = { id = "PRY17", name = "Hearth of Tides", cost = "", cmc = 0, color = "U", colors = { "U", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY18"] = { id = "PRY18", name = "Hearth of Cinders", cost = "", cmc = 0, color = "B", colors = { "B", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY19"] = { id = "PRY19", name = "Hearth of Thorns", cost = "", cmc = 0, color = "B", colors = { "B", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY20"] = { id = "PRY20", name = "Hearth of the Wilds", cost = "", cmc = 0, color = "R", colors = { "R", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {R}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+}
+
+-- The trail of town innkeepers for each faction, by level: once one has given all its
+-- copies, it points the player to the next one still worth visiting (place.<npcId>), and
+-- after the last to the capitals (UI\NpcGossip.lua)
+TTS.GIFT_TRAIL = {
+    Alliance = { 295, 1247, 6736, 6734, 6737, 6727, 6790, 2352, 6272, 7744 },
+    Horde = { 6928, 6747, 5688, 3934, 6739, 7731, 12196, 2388, 9356, 14731 },
+}
+
+-- NPCs that share one pool of gift cards (cards with giftPool = <key>): each gift is a
+-- random card of the pool, with one wait for the whole pool (UI\NpcGossip.lua)
+TTS.GIFT_POOLS = {
+    capital = { npcs = {
+        6740,   -- Innkeeper Allison, Stormwind
+        5111,   -- Innkeeper Firebrew, Ironforge
+        6735,   -- Innkeeper Saelienne, Darnassus
+        6929,   -- Innkeeper Gryshka, Orgrimmar
+        6741,   -- Innkeeper Norman, Undercity
+        6746,   -- Innkeeper Pala, Thunder Bluff
+    } },
 }
 
 -- Adds a batch of cards; warns in chat when an ID is defined twice.

@@ -1,14 +1,19 @@
 ## 1.0.0
 
+*   new to Forever: CCG? A Quick Start walkthrough greets you the first time you open the addon, and a short guided tutorial game teaches you the basics turn by turn (Play Tutorial in Rules & Guide, or /tragic tutorial)
+*   Rules & Guide rewritten to be friendlier and up to date
 *   new keyword `Support`: the creature can block an attacker alongside other blockers, and every creature in that fight deals its full combat damage to each creature on the other side
 *   Support added to Kurzen Medicine Man, Crimson Initiate, Defias Watchman, Crimson Gallant, Hillsbrad Miner, Scarlet Vanguard, Porcine Entourage, Palemane Tanner and Razorfen Geomancer
 *   solo opponents gang-block with Support creatures when that kills the attacker without losing any of them
 *   Brutish damage against several blockers carries over beyond their combined toughness
-*   new: dual-colour prayers. Clicking one asks which mana to make; auto-pay and the AI pick the colour that's needed
-*   some innkeepers around Azeroth may have spare cards for travellers who ask nicely. They can't spare them often, but they'll give you an idea of when to come back
+*   new: hearthstones - dual-colour prayers. Clicking one asks which mana to make; auto-pay and the AI pick the colour that's needed
+*   some innkeepers around Azeroth may have spare cards for travellers who ask nicely. They can't spare them often, but they'll give you an idea of when to come back. Rumour has it the innkeepers of the great cities keep something special behind the bar too.
 *   cards that return a creature card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
 *   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo opponents drop their least useful one)
+*   winning a solo dungeon now announces it with an emote (and a cheer) when you accept the result
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and your turn ends by itself once combat is resolved (click again to cancel)
+*   Concede and Clear Deck now ask you to confirm first
+*   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside creatures
 

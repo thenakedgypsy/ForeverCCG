@@ -369,6 +369,33 @@ StyleButton(bottomLogBtn)
 Loc:Bind(bottomLogBtn, "board.bottom")
 bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 
+-- Minimising the log folds it up to its title strip (remembered between games)
+do
+    local logParts = { logPanel, logMsg, clearLogBtn, bottomLogBtn }
+    local foldBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
+    foldBtn:SetSize(24, 24)
+    foldBtn:SetPoint("TOPRIGHT", -16, -9)
+
+    function sideLog:SetFolded(folded)
+        for _, part in ipairs(logParts) do part:SetShown(not folded) end
+        self:SetHeight(folded and 44 or 820)
+        foldBtn:SetText(folded and "+" or "-")
+        if TTS.Options then TTS.Options:Set("gameLogFolded", folded) end
+    end
+
+    foldBtn:SetScript("OnClick", function()
+        sideLog:SetFolded(not (TTS.Options and TTS.Options:Get("gameLogFolded")))
+    end)
+    foldBtn:SetScript("OnEnter", function(self)
+        local folded = TTS.Options and TTS.Options:Get("gameLogFolded")
+        TT:ShowText(self, "ANCHOR_TOP", L(folded and "board.restore" or "board.minimize"))
+    end)
+    foldBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+    sideLog:SetScript("OnShow", function(self)
+        self:SetFolded(TTS.Options and TTS.Options:Get("gameLogFolded") or false)
+    end)
+end
+
 -- =========================================================================
 -- MINIMIZE / RESTORE
 -- Minimizing hides the board (and its game log) and shows a small restore bar.
@@ -426,7 +453,7 @@ concedeBtn:SetSize(80, 24)
 concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
 Loc:Bind(concedeBtn, "board.concede")
 StyleButton(concedeBtn)
-concedeBtn:SetScript("OnClick", function() TTS.Engine:ConcedeMatch() end)
+concedeBtn:SetScript("OnClick", function() TTS.Engine:ConfirmConcede() end)
 
 local soundCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
 soundCheck:SetSize(24, 24)
@@ -819,7 +846,8 @@ local function Card_OnEnter(self)
         ctx.isRemote = self.isRemote
         ctx.fieldIndex = self.fieldIndex
         if card.colors and not self.isRemote then
-            ctx.hint = L("hint.dualPrayer", TT:Def("symbol", card.colors[1], "name"), TT:Def("symbol", card.colors[2], "name"))
+            ctx.hint = L(card.makesBoth and "hint.doublePrayer" or "hint.dualPrayer",
+                TT:Def("symbol", card.colors[1], "name"), TT:Def("symbol", card.colors[2], "name"))
         end
     end
     TT:ShowCard(self, "ANCHOR_TOP", self.cardId, ctx)
@@ -1384,7 +1412,7 @@ local function MyLand_OnClick(self, btn)
     local idx = self.fieldIndex
     local perm = idx and TTS.Engine.localState.field[idx]
     local card = perm and TTS.Cards[perm.id]
-    if card and card.colors and not perm.tapped and TTS.Engine.isMyTurn and TTS.Choice then
+    if card and card.colors and not card.makesBoth and not perm.tapped and TTS.Engine.isMyTurn and TTS.Choice then
         TTS.Choice:ChooseMana(card.colors, self, function(col)
             if TTS.Engine.localState.field[idx] == perm then TTS.Engine:TapCard(idx, col) end
         end)

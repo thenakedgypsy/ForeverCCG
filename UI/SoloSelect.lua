@@ -79,6 +79,11 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 local title = S:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
 Loc:Bind(title, "main.soloEncounters")
+do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
+    local tag = S:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    tag:SetPoint("LEFT", title, "RIGHT", 10, -1)
+    tag:SetText("Forever: CCG")
+end
 
 local closeBtn = CreateFrame("Button", nil, S, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -2, -2)

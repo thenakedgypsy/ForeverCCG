@@ -311,6 +311,8 @@ SlashCmdList["TRAGIC"] = function(msg)
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("options.language") .. ": " .. Loc:GetChoice() .. " (" .. Loc.code .. ")")
         end
+    elseif cmd == "tutorial" then
+        if TTS.StartTutorial then TTS:StartTutorial() end
     elseif cmd == "solo" or cmd == "encounters" then
         if TTS.SoloSelectFrame then
             if TTS.SoloSelectFrame:IsShown() then

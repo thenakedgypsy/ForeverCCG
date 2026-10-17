@@ -152,11 +152,20 @@ function E:AIPlanLandTaps(costString)
 end
 
 -- Taps one of the AI's prayers and adds its mana to the AI's pool
--- (col: the colour a dual prayer makes, from E:AIPlanLandTaps)
-function E:AITapLand(perm, col)
+-- (col: the colour a dual prayer makes, from E:AIPlanLandTaps; partner: the prayer a
+-- double prayer is tapped with)
+function E:AITapLand(perm, col, partner)
     local card = Card(perm.id)
+    if perm.tapped then return end
     perm.tapped = true
     if TTS.Sound then TTS.Sound:PlayUI("tap") end
+    if card and card.makesBoth then
+        if partner then partner.tapped = true end
+        for _, c in ipairs(card.colors) do
+            self.remoteState.mana[c] = (self.remoteState.mana[c] or 0) + 1
+        end
+        return
+    end
     col = col or (card and self:ManaColorsOf(card)[1])
     if col then
         self.remoteState.mana[col] = (self.remoteState.mana[col] or 0) + 1
@@ -987,8 +996,8 @@ function E:AITakeTurn()
             after()
             return
         end
-        local taps, tapColor = {}, {}
-        if action.cost then taps, tapColor = E:AIPlanLandTaps(action.cost) end
+        local taps, tapColor, tapPays, tapPartner = {}, {}, nil, {}
+        if action.cost then taps, tapColor, tapPays, tapPartner = E:AIPlanLandTaps(action.cost) end
         local function TapNext(i)
             if i > #taps then
                 if not E:AIExecute(action) then
@@ -1001,7 +1010,7 @@ function E:AITakeTurn()
                 Next(function() MainStep(phase, after, skip) end, action.kind == "spell" and SPELL_DELAY or nil)
                 return
             end
-            E:AITapLand(taps[i], tapColor[taps[i]])
+            E:AITapLand(taps[i], tapColor[taps[i]], tapPartner[taps[i]])
             E:RefreshUI()
             Next(function() TapNext(i + 1) end, TAP_DELAY)
         end

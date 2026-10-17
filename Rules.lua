@@ -468,7 +468,7 @@ local function LayoutRules()
 
     -- Section 4: Keywords & Mechanics, with keyword creatures
     y = PlaceHeading(h4, y)
-    y = PlaceParagraph(p4, y)
+    y = PlaceParagraph(p4, y) - 14   -- a line's space between "Hover any card..." and the cards
     y = PlaceCardRow(kwFrames, { "WES04", "WES02", "DSK06", "WES05" }, y) - SECTION_GAP
 
     -- Section 5: Solo Mode, with a zone reward and a dungeon reward

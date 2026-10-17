@@ -252,7 +252,9 @@ local function DropFieldCreature(E, d, target, y)
     if d.ability and target and E:IsValidTargetNow(target.kind, target.isRemote, target.perm, d.ability) then
         useAbility()
     elseif d.attack and onEnemy then
+        E.dragAttack = true   -- the tutorial tells this apart from pressing To Combat
         if E.phase == "MAIN1" then E:NextPhase() end
+        E.dragAttack = nil
         if E.phase == "COMBAT_ATTACK" then E:TapCard(idx) end
     elseif d.ability and target then
         useAbility()   -- not a legal target: the engine says why

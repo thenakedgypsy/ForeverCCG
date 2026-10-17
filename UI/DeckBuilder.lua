@@ -298,6 +298,11 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 local title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
 Loc:Bind(title, "db.title")
+do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
+    local tag = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    tag:SetPoint("LEFT", title, "RIGHT", 10, -1)
+    tag:SetText("Forever: CCG")
+end
 
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -2, -2)
@@ -407,7 +412,7 @@ local function UnlockHint(card)
         local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
         return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
-    if card.isGift then return L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow") end
+    if card.isGift then return TTS:GiftHow(card) end
     return L("link.defeat", TTS:CardName(card))
 end
 
@@ -1494,8 +1499,9 @@ collectionLabel:SetJustifyH("LEFT")
 
 local function UpdateCollectionProgress()
     local score, collected, mastered, total, hCollected, hMastered, hTotal = TTS:GetCollectionScore()
-    collectionLabel:SetText(L("db.collection", collected, total, mastered, total,
-        hCollected, hTotal, hMastered, hTotal, TTS:FormatScore(score)))
+    -- In the order of the score: (Hearthstones + creatures collected) x (Hearthstones + creatures mastered + 1)
+    collectionLabel:SetText(L("db.collection", hCollected, hTotal, collected, total,
+        hMastered, hTotal, mastered, total, TTS:FormatScore(score)))
 end
 
 -- =========================================================================
@@ -1617,7 +1623,7 @@ local clearBtn = CreatePanelButton(deckPanel, 84, 22, "db.clearDeck")
 clearBtn:SetPoint("TOPRIGHT", deckPanel, "TOPRIGHT", -10, -43)
 clearBtn.label:SetJustifyH("CENTER")
 clearBtn:SetScript("OnClick", function()
-    D:ClearDeck()
+    D:ConfirmClearDeck()
 end)
 
 local listDivider = deckPanel:CreateTexture(nil, "ARTWORK")
@@ -2152,6 +2158,27 @@ function D:ClearDeck()
     if BreaksLastPlayableDeck(deck, 0) then return end
     deck.cards = {}
     D:RefreshDeck()
+end
+
+StaticPopupDialogs["TTS_CLEAR_DECK"] = {
+    text = "%s",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    -- Still the deck that was asked about (the player may have switched tabs meanwhile)
+    OnAccept = function(_, deck) if deck and deck == GetActiveDeck() then D:ClearDeck() end end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+-- The Clear Deck button asks first (an empty deck has nothing to lose)
+function D:ConfirmClearDeck()
+    local deck = GetActiveDeck()
+    if not (deck and deck.cards and next(deck.cards)) then return end
+    if BreaksLastPlayableDeck(deck, 0) then return end
+    local popup = StaticPopup_Show("TTS_CLEAR_DECK", L("db.clearDeckConfirm", deck.name or ""))
+    if popup then popup.data = deck end
 end
 
 -- =========================================================================

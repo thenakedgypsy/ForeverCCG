@@ -176,6 +176,21 @@ for i, d in ipairs(DUNGEONS) do
     }
 end
 
+-- The tutorial (UI\Tutorial.lua): a short scripted game. Both decks are drawn in this
+-- order (top first; the first 7 are the opening hands) and the dummy AI plays them
+-- predictably, so the coach's steps line up turn by turn:
+--   you 1: Prayer of Light, Burning Blade Augur   them 1: Ragged Young Wolf (Quick) attacks, you block
+--   you 2: Prayer, Primitive Owlbeast, attack       them 2: Groddoc Ape
+--   you 3: Prayer of Fire, Fire Blast the Ape, attack with both for the win (they start on 4 life)
+ENC.TUTORIAL = {
+    id = "TUTORIAL", kind = "practice", name = "Tutorial", opponent = "Training Partner",
+    life = 4, ai = "dummy", fixedOrder = true, isTutorial = true,
+    playerDeck = { "W01", "DES01", "W01", "HIN04", "R01", "MAG02", "W01",
+                   "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01" },
+    deck = { "G01", "DUN01", "G01", "FER03", "G01", "G01", "G01",
+             "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01" },
+}
+
 -- The sandbox: today's fixed dummy deck and simple AI
 ENC.PRACTICE = {
     id = "PRACTICE", kind = "practice", name = "Practice vs Dummy", opponent = "Target Dummy",
@@ -443,13 +458,13 @@ function TTS:GetOwnedCopies(card)
     return nil
 end
 
--- Collection score: (creature cards + Hearthstones collected (1+ copies)) x (creature cards
--- mastered (all 4) + every Hearthstone copy owned + 1). Hearthstones are the innkeepers'
--- gift prayers; each copy raises the multiplier, so a new one never lowers the score.
+-- Collection score: (Hearthstones collected + creature cards collected (1+ copies)) x
+-- (Hearthstones mastered + creature cards mastered (all 4) + 1). Hearthstones are the
+-- innkeepers' gift prayers.
 -- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
-    local hTotal, hCollected, hMastered, hCopies = 0, 0, 0, 0
+    local hTotal, hCollected, hMastered = 0, 0, 0
     for _, card in pairs(TTS.Cards or {}) do
         if card.type == "Creature" and (card.isBoss or card.isReward) then
             total = total + 1
@@ -459,12 +474,11 @@ function TTS:GetCollectionScore()
         elseif card.type == "Land" and card.isGift then
             hTotal = hTotal + 1
             local copies = self:GetOwnedCopies(card) or 0
-            hCopies = hCopies + copies
             if copies >= 1 then hCollected = hCollected + 1 end
             if copies >= MAX_REWARD_COPIES then hMastered = hMastered + 1 end
         end
     end
-    local score = (collected + hCollected) * (mastered + hCopies + 1)
+    local score = (hCollected + collected) * (hMastered + mastered + 1)
     return score, collected, mastered, total, hCollected, hMastered, hTotal
 end
 
