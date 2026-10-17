@@ -16,7 +16,6 @@ TTS.WaitingRoom = TTS.WaitingRoom or {
 
 local WR = TTS.WaitingRoom
 WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_QUEUED, LFM_HERE and LFM_CENSUS)
-WR.unitNames = WR.unitNames or {} -- [lowerName] = character name the announce came from, for party invites
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
 -- =========================================================================
@@ -235,6 +234,8 @@ communityBtn:SetPoint("BOTTOMLEFT", 16, 14)
 Loc:Bind(communityBtn, "wr.community")
 communityBtn:SetScript("OnClick", function()
     if TTS.Community then TTS.Community:ShowInvite() end
+    -- Until the window is reopened (OnShow) or the community joined (UpdateCommunityButton)
+    Loc:Bind(communityBtn, "wr.communityLinked")
 end)
 communityBtn:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -243,10 +244,47 @@ communityBtn:SetScript("OnEnter", function(self)
 end)
 communityBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-local function UpdateCommunityButton()
-    communityBtn:SetShown(TTS.Community and not TTS.Community:IsMember() or false)
+-- Above the button, always shown
+local communityNote = F:CreateFontString(nil, "OVERLAY", "GameFontRedSmall")
+communityNote:SetPoint("BOTTOM", communityBtn, "TOP", 0, 4)
+communityNote:SetWidth(120)
+communityNote:SetJustifyH("CENTER")
+do
+    local font, size, flags = communityNote:GetFont()
+    communityNote:SetFont(font, size - 1, flags)
 end
--- Hide the button as soon as an in-game join goes through
+Loc:Bind(communityNote, "wr.communityRequired")
+
+-- Joining the waiting room needs the community (leaving never does)
+local function CanJoinQueue()
+    return WR.isQueued or not TTS.Community or TTS.Community:IsMember()
+end
+
+-- Leave in red, Join in green, Join greyed out until the community is joined
+local function UpdateToggleButton()
+    if WR.isQueued then
+        toggleBtn:SetText("|cFFFF4444" .. L("wr.leave") .. "|r")
+    elseif CanJoinQueue() then
+        toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
+    else
+        toggleBtn:SetText(L("wr.join"))
+    end
+    toggleBtn:SetEnabled(CanJoinQueue())
+end
+
+-- Greyed out once joined
+local function UpdateCommunityButton()
+    UpdateToggleButton()
+    local joined = not TTS.Community or TTS.Community:IsMember()
+    communityBtn:SetEnabled(not joined)
+    Loc:Bind(communityBtn, joined and "wr.communityJoined" or "wr.community")
+    if joined then
+        communityNote:SetTextColor(0.5, 0.5, 0.5)
+    else
+        communityNote:SetTextColor(1, 0.1, 0.1)
+    end
+end
+-- Grey the button out as soon as an in-game join goes through
 if TTS.Community then TTS.Community.onMembershipChanged = UpdateCommunityButton end
 
 -- Addon version (from the .toc), bottom-right corner
@@ -273,10 +311,9 @@ CreateColumnHeader("wr.colChallenge", "BOTTOM", "TOPRIGHT", -51)    -- centred o
 -- =========================================================================
 -- PARTY INVITES
 -- =========================================================================
--- The character name to invite: the one their announce came from, else the first word
--- of their waiting-room name ("Firstname Surname" -> "Firstname")
+-- The name to invite: the full "Firstname Surname", like whispers (Network.lua, CharName)
 local function PartyName(name)
-    return WR.unitNames[name:lower()] or name:match("^(%S+)") or name
+    return TTS.Net.CharName(name)
 end
 
 local function InGroupWith(unitName)
@@ -300,11 +337,7 @@ function WR:UpdateUI()
     local myFullName = GetPlayerFullName()
     local myKey = myFullName:lower()
 
-    if self.isQueued then
-        toggleBtn:SetText("|cFFFF4444" .. L("wr.leave") .. "|r")
-    else
-        toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
-    end
+    UpdateToggleButton()
 
     local now = time()
     local displayList = {}
@@ -394,6 +427,7 @@ function WR:BroadcastPresence()
 end
 
 function WR:ToggleQueue()
+    if not CanJoinQueue() then return end
     -- The deck is picked when a game starts, so any playable deck will do (and the
     -- Deckbuilder keeps at least one playable while queued)
     if not self.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
@@ -443,6 +477,8 @@ F:SetScript("OnShow", function(self)
     end
     UpdateVersionText()
     UpdateCommunityButton()
+    -- In case a shard move left us in an old copy of FCCGTTSE (Network.lua); it asks again once rejoined
+    if TTS.Net and TTS.Net.RejoinLFMChannel then TTS.Net.RejoinLFMChannel() end
     if TTS.Net and TTS.Net.BroadcastLFM then
         TTS.Net:BroadcastLFM("LFM_QUERY")
     end

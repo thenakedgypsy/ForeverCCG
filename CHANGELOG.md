@@ -1,3 +1,14 @@
+## 0.15.4
+
+*   fix for players who moved server shard (e.g. by joining a party) being stuck in an old copy of the addon's channel and not seeing anyone: the addon now rejoins it when your party changes and when you open the waiting room
+
+## 0.15.3
+
+*   joining the Forever CCG community is now required to join the waiting room: the Join button stays greyed out until you're a member
+*   the Community button shows "Link in chat!" after posting the join link, and greys out as "Joined" once you're a member
+*   fix for players on different server shards not seeing each other in the waiting room: whispers, challenges and party invites now always use the full first name and surname
+*   joining the waiting room can now post in the community every 45 seconds (was 10 minutes), so players on other shards find you sooner
+
 ## 0.15.2
 
 *   the Community button in the waiting room now puts a clickable join link in your chat window: click it to join the Forever CCG community in-game 

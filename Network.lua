@@ -81,26 +81,10 @@ local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage(msg)
 end
 
--- Waiting-room names can be "Firstname Surname" (or carry a PvP rank title), but whispers
--- and group checks need the character name. Learned from every message that arrives, and
--- kept with saved contacts. [lower waiting-room name] = character name
-local charNames = {}
-
-local function RememberCharName(fullName, charName)
-    if not fullName or not charName or charName == "" then return end
-    local key = NormalizeName(fullName):lower()
-    charNames[key] = charName
-    local c = type(TTS_Contacts) == "table" and TTS_Contacts[key]
-    if type(c) == "table" then c.unit = charName end
-end
-
+-- Whispers and party invites go to the full "Firstname Surname" name: the first name
+-- alone doesn't reach players on other server shards
 local function CharName(name)
-    local key = NormalizeName(name):lower()
-    local c = type(TTS_Contacts) == "table" and TTS_Contacts[key]
-    return charNames[key]
-        or (TTS.WaitingRoom and TTS.WaitingRoom.unitNames and TTS.WaitingRoom.unitNames[key])
-        or (type(c) == "table" and c.unit)
-        or NormalizeName(name):match("^(%S+)") or name
+    return NormalizeName(name)
 end
 TTS.Net.CharName = CharName
 
@@ -157,6 +141,49 @@ local function JoinLFMChannel()
     else
         JoinChannelByName(LFM_CHANNEL)
     end
+end
+
+-- A player moved to another shard without a loading screen (a party invite can do it) stays
+-- in the copy of FCCGTTSE they joined before and stops hearing everyone around them, so the
+-- channel is left and joined again when the party changes and when the waiting room opens.
+-- Not during a PvP match, whose messages may be using the channel.
+local REJOIN_COOLDOWN = 30
+local REJOIN_GAP = 2           -- seconds between leaving and joining again
+local lastRejoin = -REJOIN_COOLDOWN
+
+local function RejoinLFMChannel()
+    local E = TTS.Engine
+    if E and E.inMatch and not E.isSolo then return end
+    if GetTime() - lastRejoin < REJOIN_COOLDOWN then return end
+    lastRejoin = GetTime()
+    if not (GetLFMChannelId() and LeaveChannelByName) then
+        JoinLFMChannel()
+        return
+    end
+    LeaveChannelByName(LFM_CHANNEL)
+    TTS:SafeAfter(REJOIN_GAP, function()
+        JoinLFMChannel()
+        -- Ask the new copy who is waiting, as opening the waiting room does
+        local WR = TTS.WaitingRoom
+        if WR and WR.frame and WR.frame:IsShown() then
+            TTS:SafeAfter(1, function() TTS.Net:BroadcastLFM("LFM_QUERY") end)
+        end
+    end)
+end
+TTS.Net.RejoinLFMChannel = RejoinLFMChannel
+
+-- Hides the channel's left/joined lines while rejoining, so it doesn't look like chat spam
+local function RejoinNoticeFilter(_, _, notice, ...)
+    if GetTime() - lastRejoin > REJOIN_GAP + 5 then return false, notice, ... end
+    local baseName = select(8, ...)
+    local channelName = select(3, ...)
+    if baseName == LFM_CHANNEL or (type(channelName) == "string" and channelName:find(LFM_CHANNEL, 1, true)) then
+        return true
+    end
+    return false, notice, ...
+end
+if ChatFrame_AddMessageEventFilter then
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL_NOTICE", RejoinNoticeFilter)
 end
 
 -- =========================================================================
@@ -309,7 +336,7 @@ local function NameMatchesUnit(name, unit)
     local want = NormalizeName(name):lower()
     local n = NormalizeName(UnitName(unit)):lower()
     -- The waiting-room name may be "Firstname Surname" while UnitName is just "Firstname"
-    return n ~= "" and (want == n or want:sub(1, #n + 1) == n .. " " or CharName(name):lower() == n)
+    return n ~= "" and (want == n or want:sub(1, #n + 1) == n .. " ")
 end
 
 -- True if the named player is in our party (or our subgroup, when in a raid)
@@ -604,7 +631,7 @@ function TTS.Net:AddContact(name)
     local key = name:lower()
     local before = db[key]
     local becameDirect = type(before) ~= "table" or before.shared
-    db[key] = { name = name, seen = time(), unit = charNames[key] or (type(before) == "table" and before.unit or nil) }
+    db[key] = { name = name, seen = time() }
     PruneContacts()
 
     local s = ContactState(key)
@@ -712,10 +739,9 @@ local lastCensusSeen = 0
 local lastCensusReply = 0
 
 -- Someone on the channel is online: remember them like an answered ping
-local function NotePresence(name, charName, queued, score)
+local function NotePresence(name, queued, score)
     name = NormalizeName(name or "")
     if name == "" or SameName(name, MyName()) then return end
-    RememberCharName(name, charName)
     TTS.Net:AddContact(name)
     local s = ContactState(name:lower())
     s.lastReached = time()
@@ -748,7 +774,7 @@ local function OnCensus(msg, sender)
     lastCensusSeen = time()
     local score, name = msg:match("^LFM_CENSUS:(%d+):(.+)$")
     -- The asker has their waiting room open and isn't queued
-    if name then NotePresence(name, sender, false, tonumber(score)) end
+    if name then NotePresence(name, false, tonumber(score)) end
     local E = TTS.Engine
     if (E and E.inMatch) or time() - lastCensusReply < CENSUS_REPLY_COOLDOWN then return end
     lastCensusReply = time()
@@ -759,7 +785,7 @@ end
 
 local function OnHere(msg, sender)
     local queued, score, name = msg:match("^LFM_HERE:(%d):(%d+):(.+)$")
-    if name then NotePresence(name, sender, queued == "1", tonumber(score)) end
+    if name then NotePresence(name, queued == "1", tonumber(score)) end
 end
 
 -- Slow background rounds from login on. The waiting room pings faster while it is open,
@@ -791,11 +817,9 @@ local function OfflinePingFilter(_, _, msg, ...)
     local lower = msg:lower()
     local named = notFoundPattern and msg:match(notFoundPattern)
     for key, expires in pairs(pendingPings) do
-        -- The error names the character we whispered, which may differ from the waiting-room name
-        local char = CharName(key):lower()
         local namedKey = named and NormalizeName(named):lower()
-        if expires >= time() and ((namedKey and (namedKey == key or namedKey == char))
-            or (not named and (lower:find(key, 1, true) or lower:find(char, 1, true)))) then
+        if expires >= time() and ((namedKey and namedKey == key)
+            or (not named and lower:find(key, 1, true))) then
             pendingPings[key] = nil
             ContactState(key).offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
             return true
@@ -827,7 +851,6 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
     end
 
     if from then
-        RememberCharName(from, sender)
         local key = NormalizeName(from):lower()
         if ROUTE_LABELS[chatType] then
             self.routes[key] = chatType
@@ -845,8 +868,21 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("CHAT_MSG_ADDON")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("GROUP_ROSTER_UPDATE")
+
+-- The roster changes several times while a party forms: rejoin once it has settled
+local ROSTER_SETTLE = 5
+local rosterChange = 0
 
 f:SetScript("OnEvent", function(self, event, ...)
+    if event == "GROUP_ROSTER_UPDATE" then
+        rosterChange = rosterChange + 1
+        local this = rosterChange
+        TTS:SafeAfter(ROSTER_SETTLE, function()
+            if this == rosterChange then RejoinLFMChannel() end
+        end)
+        return
+    end
     if event == "ADDON_LOADED" then
         local loadedName = ...
         if loadedName == ADDON_NAME then
@@ -941,7 +977,6 @@ function TTS.Net:OnReceive(msg, sender)
         end
         if not pName then return end
         pName = NormalizeName(pName)
-        RememberCharName(pName, sender)
         TTS.Net:AddContact(pName)
         local s = ContactState(pName:lower())
         s.lastReached = time()
@@ -949,8 +984,6 @@ function TTS.Net:OnReceive(msg, sender)
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
             if score then TTS.WaitingRoom.scores[pName:lower()] = tonumber(score) end
-            -- The chat sender is the character name, which is what a party invite needs
-            TTS.WaitingRoom.unitNames[pName:lower()] = sender
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
                 TTS.WaitingRoom:UpdateUI()
             end

@@ -199,6 +199,9 @@ S["wr.left"] = "|cFFFF4444[TTSE]|r You left the waiting room."
 S["wr.needPlayableDeck"] = "|cFFFF2222[TTSE]|r You need a deck with 40-50 cards to join the waiting room."
 S["wr.noPlayableDeckLeft"] = "|cFFFF2222[TTSE]|r None of your decks has 40-50 cards any more."
 S["wr.community"] = "Community"
+S["wr.communityJoined"] = "Joined"
+S["wr.communityLinked"] = "Link in chat!"
+S["wr.communityRequired"] = "Joining the community is required for waiting room functionality."
 S["wr.communityTip"] = "Join the Forever CCG community to find players on every server shard.\n\nClick this button to get a join link in your chat window, then click the link to join.\n\nThe community runs in the background: when you join the waiting room, the addon posts there for you so other players can find you. You don't need to chat in it, and you can mute it."
 
 -- COMMUNITY

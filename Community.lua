@@ -14,9 +14,10 @@ local L = TTS.L
 -- FCCGTTSE only reaches players on our own backend realm; community chat reaches
 -- every member. Joining the waiting room posts one readable line there, ending in
 -- a tag the addon reads:
---   <sentence> [FCCG:Q:<score>:<A/H faction>:<ruleset>:<character name>:<waiting-room name>]
--- The character name (what whispers need) travels in the tag because a Battle.net
--- community shows authors by BattleTag. A Battle.net community spans every realm and both
+--   <sentence> [FCCG:Q:<score>:<A/H faction>:<ruleset>:<whisper name>:<waiting-room name>]
+-- Both names are the full "Firstname Surname". 0.15.2 and earlier put the first name alone
+-- in the whisper name and whisper whatever it holds, so the field stays for them; newer
+-- builds ignore it and whisper the waiting-room name. A Battle.net community spans every realm and both
 -- factions, but whispers cross neither, so only clients of the same faction and realm
 -- ruleset (PVE, PVP, RP, RPPVP) take the post: they add the poster as a contact and list
 -- them as waiting. The ruleset is compared rather than the realm name, as the shards of
@@ -34,7 +35,7 @@ local COMMUNITY_ID = "23144891"
 -- The invite's ticket, posted as a clickable chat link; the browser link is the fallback
 local INVITE_TICKET = "MMoX03SMMn"
 local INVITE_LINK = "https://blizzard.com/invite/" .. INVITE_TICKET
-local POST_COOLDOWN = 600
+local POST_COOLDOWN = 45
 
 local TAG_PATTERN = "%[FCCG:Q:(%d+):(%a?):(%a*):([^:%]]+):([^%]]+)%]%s*$"
 local lastPost = -POST_COOLDOWN
@@ -55,12 +56,6 @@ local function MyRuleset()
     if words.PVP then return "PVP" end
     if words.PVE then return "PVE" end
     return ""
-end
-
--- Our character name, as whispers to us need it (no realm tag)
-local function MyCharName()
-    local name = UnitName("player") or ""
-    return name:match("^([^%-]+)") or name
 end
 
 -- clubId, streamId of the community's first channel, or nil when we're not a member
@@ -96,21 +91,21 @@ function C:AnnounceQueued()
     lastPost = GetTime()
     local name, score = TTS.GetPlayerFullName(), TTS.Net.MyScore()
     local text = L("community.lookingForMatch", name, TTS:FormatScore(score))
-        .. " [FCCG:Q:" .. score .. ":" .. MyFaction() .. ":" .. MyRuleset() .. ":" .. MyCharName() .. ":" .. name .. "]"
+        .. " [FCCG:Q:" .. score .. ":" .. MyFaction() .. ":" .. MyRuleset() .. ":" .. name .. ":" .. name .. "]"
     -- pcall: a client that refuses addon posts shouldn't break joining the queue
     pcall(C_Club.SendMessage, clubId, streamId, text)
 end
 
 -- Someone else's community post (also callable with a made-up post, to test alone)
 function C:OnPost(content)
-    local score, faction, ruleset, charName, name = content:match(TAG_PATTERN)
+    local score, faction, ruleset, _, name = content:match(TAG_PATTERN)
     if not name then return end
     -- Other factions and realms can't be whispered, so couldn't be reached or challenged
     -- (either side unknown: let it through)
     local myFaction, myRuleset = MyFaction(), MyRuleset()
     if faction ~= "" and myFaction ~= "" and faction ~= myFaction then return end
     if ruleset ~= "" and myRuleset ~= "" and ruleset ~= myRuleset then return end
-    TTS.Net.NotePresence(name, charName, true, tonumber(score))
+    TTS.Net.NotePresence(name, true, tonumber(score))
 end
 
 -- A message arrived in one of our communities
