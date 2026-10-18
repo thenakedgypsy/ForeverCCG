@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Tanaris", p = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Marin Noggenfogger enters the battlefield, draw a card. Other Tanaris denizens you control get +1/+0."
+        text = "Arrival: Draw 1. Other Tanaris denizens you control get +1/+0."
     },
 })

@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Winterspring", creatureType = "Humanoid", npcEntry = 9298,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Donova Snowden enters the battlefield, Exhaust each enemy denizen."
+        text = "Arrival: Exhaust each enemy denizen."
     },
 })

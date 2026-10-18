@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["HUN02"] = {
         id = "HUN02", name = "Serpent Sting", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Choose target enemy denizen or the opponent. At the start of each of your turns for 4 turns, the opponent takes 1 damage, or the denizen permanently gets -0/-1.",
+        text = "Target enemy denizen or the opponent: DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Ability_Hunter_Quickshot",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
@@ -45,19 +45,19 @@ TTS:AddCards({
     },
     ["HUN06"] = {
         id = "HUN06", name = "Freezing Trap", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Hunter",
-        text = "Exhaust target enemy denizen. It does not Recover during its controller's next Recover step.",
+        text = "Freeze target enemy denizen.",
         art = "Interface\\Icons\\Spell_Frost_ChainsOfIce",
         effect = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } }
     },
     ["HUN07"] = {
         id = "HUN07", name = "Immolation Trap", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Hunter",
-        text = "Choose target enemy denizen or the opponent. At the start of each of your turns for 3 turns, the opponent takes 2 damage, or the denizen permanently gets -0/-1.",
+        text = "Target enemy denizen or the opponent: DoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["HUN08"] = {
         id = "HUN08", name = "Mend Pet", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target denizen you control permanently gets +0/+1, then +0/+1 more at the start of each of your turns for 3 turns.",
+        text = "Target denizen you control permanently gets +0/+1, then HoT 1 for 3 turns.",
         art = "Interface\\Icons\\Ability_Hunter_MendPet",
         effect = { target = "friendly_creature", ops = { { op = "heal", to = "target", n = 3, t = 1 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
     },

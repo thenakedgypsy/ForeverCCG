@@ -446,7 +446,7 @@ local function CardPassesFilters(cardId, card)
     if zoneFilter and GetTypeGroup(card) == "Creature" and card.zone ~= zoneFilter then return false end
     if factionFilter and GetTypeGroup(card) == "Creature" and card.faction ~= factionFilter then return false end
     if creatureTypeFilter and GetTypeGroup(card) == "Creature" and card.creatureType ~= creatureTypeFilter then return false end
-    if Keyword.value and not card[Keyword.value] then return false end
+    if Keyword.value and not Keyword.Has(card, Keyword.value) then return false end
     if searchText ~= "" then
         -- Search the shown (translated) name and text, and the English ones
         local hay = string.lower((card.name or "") .. "\n" .. (card.text or "") .. "\n"
@@ -586,13 +586,37 @@ local function BuildFieldList(field)
     return list
 end
 
--- Keywords at least one collectable card has, by their shown name
-function Keyword.Name(k) return TT:Def("keyword", k, "name") end
+-- Keywords at least one collectable card has, by their shown name, plus the card
+-- abilities listed with them (filter value -> TT.EFFECTS id)
+Keyword.ABILITIES = { aura = "anthem", spawn = "spawn" }
+function Keyword.Name(k)
+    local effect = Keyword.ABILITIES[k]
+    if effect then return TT:Def("effect", effect, "name") end
+    return TT:Def("keyword", k, "name")
+end
+-- Kinsmanship is the card's rally, not a keyword field; Aura its anthem; Spawn an Arrival,
+-- Martyrdom or Aggro that puts Adds onto the battlefield
+function Keyword.Has(card, k)
+    if k == "kinsmanship" then return card.rally ~= nil end
+    if k == "aura" then return card.anthem ~= nil end
+    if k == "spawn" then
+        for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
+            for _, op in ipairs((card[key] and card[key].ops) or {}) do
+                if op.op == "token" then return true end
+            end
+        end
+        return false
+    end
+    return card[k] and true or false
+end
 function Keyword.List()
     local list = {}
-    for _, k in ipairs(TT.KEYWORD_ORDER) do
+    local keys = {}
+    for _, k in ipairs(TT.KEYWORD_ORDER) do keys[#keys + 1] = k end
+    for k in pairs(Keyword.ABILITIES) do keys[#keys + 1] = k end
+    for _, k in ipairs(keys) do
         for _, card in pairs(TTS.Cards or {}) do
-            if card[k] and not card.isToken then table.insert(list, k); break end
+            if Keyword.Has(card, k) and not card.isToken then table.insert(list, k); break end
         end
     end
     table.sort(list, function(a, b) return Keyword.Name(a) < Keyword.Name(b) end)
@@ -827,7 +851,7 @@ local function PrintCardRules(f, card, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(Sym(TTS:CardRulesText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(Sym(TTS:CardRulesText(card, true), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -851,6 +875,54 @@ local function EnsurePreviewFrame()
     return previewCard
 end
 
+-- The Adds a card spawns (and the Adds those spawn), as small cards stacked under the preview,
+-- each labelled "3x Add" over its tags. Kept on D: this file is at Lua's 200-locals limit.
+D.ADD_PREVIEW = { w = 106, h = 150, gap = 52, rules = { fontMax = 9, fontMin = 6 } }
+function D:UpdateAddPreviews(f, card)
+    f.adds = f.adds or {}
+    local list, seen = {}, {}
+    local function Collect(c, depth)
+        for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
+            for _, op in ipairs((c[key] and c[key].ops) or {}) do
+                local tok = op.op == "token" and TTS.Cards[op.id]
+                if tok and not seen[op.id] then
+                    seen[op.id] = true
+                    list[#list + 1] = { card = tok, n = op.n or 1 }
+                    if depth < 2 then Collect(tok, depth + 1) end
+                end
+            end
+        end
+    end
+    Collect(card, 1)
+
+    local size, anchor = self.ADD_PREVIEW, f
+    for i, e in ipairs(list) do
+        local a = f.adds[i]
+        if not a then
+            a = CreateCardDesign(f, size.w, size.h, nil)
+            a:SetSize(size.w, size.h)
+            a:SetFrameStrata("DIALOG")
+            a:SetFrameLevel((f:GetFrameLevel() or 10) + 1)
+            a:EnableMouse(false)
+            a.addLabel = a.overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            a.addLabel:SetPoint("TOP", a, "BOTTOM", 0, -3)
+            a.addLabel:SetJustifyH("CENTER")
+            f.adds[i] = a
+        end
+        a:ClearAllPoints()
+        -- room for the previous card's label and this card's name and cost above it
+        a:SetPoint("TOP", anchor, "BOTTOM", 0, -(anchor == f and size.gap - 16 or size.gap))
+        PaintCardFrame(a, e.card, 14)
+        local tags = TTS.GetCardTagLine and TTS:GetCardTagLine(e.card)
+        a.addLabel:SetText(string.format("|cFFFFFFFF%dx|r %s", e.n, TT:Def("effect", "token", "name"))
+            .. (tags and ("\n" .. tags) or ""))
+        a:Show()
+        PrintCardRules(a, e.card, size.rules)
+        anchor = a
+    end
+    for i = #list + 1, #f.adds do f.adds[i]:Hide() end
+end
+
 -- Shows the full card docked outside the left edge of the Deckbuilder
 local function UpdateCardPreview(cardId)
     local f = EnsurePreviewFrame()
@@ -872,6 +944,7 @@ local function UpdateCardPreview(cardId)
 
     f:Show()
     PrintCardRules(f, card, PREVIEW_RULES)
+    D:UpdateAddPreviews(f, card)
     return f
 end
 

@@ -99,6 +99,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Zul'Farrak", p = 1, t = 1 },
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "When Gahz'rilla enters the battlefield, Exhaust each enemy denizen. Other Zul'Farrak denizens you control get +1/+1."
+        text = "Arrival: Exhaust each enemy denizen. Other Zul'Farrak denizens you control get +1/+1."
     },
 })

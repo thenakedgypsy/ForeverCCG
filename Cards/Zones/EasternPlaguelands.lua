@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Eastern Plaguelands", creatureType = "Humanoid", npcEntry = 11039,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 3, filter = { tag = "type", value = "Undead" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. When Duke Nicholas Zverenhoff enters the battlefield, deal 3 damage to each enemy Undead."
+        text = "Vigilant. Arrival: Deal 3 damage to each enemy Undead."
     },
 })

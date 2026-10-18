@@ -39,13 +39,13 @@ TTS:AddCards({
     },
     ["ROG05"] = {
         id = "ROG05", name = "Cheap Shot", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Exhaust target enemy denizen. It does not Recover during its controller's next Recover step.",
+        text = "Freeze target enemy denizen.",
         art = "Interface\\Icons\\Ability_CheapShot",
         effect = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } }
     },
     ["ROG06"] = {
         id = "ROG06", name = "Sprint", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target denizen you control gains Quick and Unblockable until end of turn.",
+        text = "Target denizen you control gains Quick and Invisible until end of turn.",
         art = "Interface\\Icons\\Ability_Rogue_Sprint",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", kw = { "haste", "unblockable" } } } }
     },
@@ -69,7 +69,7 @@ TTS:AddCards({
     },
     ["ROG10"] = {
         id = "ROG10", name = "Garrote", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target enemy denizen permanently gets -0/-1 at the start of each of your turns for 3 turns.",
+        text = "Target enemy denizen: DoT 1 for 3 turns.",
         art = "Interface\\Icons\\Ability_Rogue_Garrote",
         effect = { target = "enemy_creature", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
     },

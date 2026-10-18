@@ -27,13 +27,13 @@ TTS:AddCards({
     },
     ["SHA03"] = {
         id = "SHA03", name = "Flame Shock", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 3 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
+        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 1 for 3 turns.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
     ["SHA04"] = {
         id = "SHA04", name = "Frost Shock", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy denizen and Exhaust it. It does not Recover during its controller's next Recover step.",
+        text = "Deal 1 damage to target enemy denizen and Freeze it.",
         art = "Interface\\Icons\\Spell_Frost_FrostShock",
         effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 1 }, { op = "freeze", to = "target" } } }
     },

@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 130223,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 247001,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["DAL06"] = {
         id = "DAL06", name = "Phantasm", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -68,7 +68,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Humanoid", faction = "Kirin Tor", npcId = 269134,
         etb = { ops = { { op = "token", id = "TOK03", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Kirin Tor Necromancer enters the battlefield, create three 1/1 Skeleton tokens."
+        text = "Arrival: Spawn: 3 Skeleton Adds (1/1)."
     },
     ["DAL09"] = {
         id = "DAL09", name = "Arcane Echo", cost = "{3}{U}", cmc = 4, color = "U", type = "Creature",
@@ -119,7 +119,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 245999,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arcane Anomaly enters the battlefield, deal 2 damage to each enemy denizen."
+        text = "Arrival: Deal 2 damage to each enemy denizen."
     },
     ["DAL16"] = {
         id = "DAL16", name = "Arcanic Enigma", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -127,7 +127,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246016,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arcanic Enigma enters the battlefield, Exhaust each enemy denizen."
+        text = "Arrival: Exhaust each enemy denizen."
     },
     ["DAL17"] = {
         id = "DAL17", name = "Unstable Sentinel", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -135,7 +135,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246017,
         onDeath = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Unstable Sentinel dies, deal 2 damage to each enemy denizen."
+        text = "Martyrdom: Deal 2 damage to each enemy denizen."
     },
     ["DAL18"] = {
         id = "DAL18", name = "Mana Devourer", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -150,7 +150,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Humanoid", npcId = 247032,
         etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lyn the Ignored enters the battlefield, return a denizen card from your graveyard to the battlefield."
+        text = "Arrival: Return a denizen card from your graveyard to the battlefield."
     },
     ["DAL20"] = {
         id = "DAL20", name = "Fel Ancient", cost = "{4}{G}{B}", cmc = 6, color = "G", type = "Creature",
@@ -158,7 +158,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Demon", npcId = 246003,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Fel Ancient enters the battlefield, Exhaust each enemy denizen."
+        text = "Arrival: Exhaust each enemy denizen."
     },
     ["DAL21"] = {
         id = "DAL21", name = "Atrexis the Grave Knight", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -167,7 +167,7 @@ TTS:AddCards({
         etb = { ops = { { op = "token", id = "TOK03", n = 2 } } },
         anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Atrexis the Grave Knight enters the battlefield, create two 1/1 Skeleton tokens. Undead you control get +1/+0."
+        text = "Arrival: Spawn: 2 Skeleton Adds (1/1). Undead you control get +1/+0."
     },
     -- Solo reward
     ["DAL22"] = {

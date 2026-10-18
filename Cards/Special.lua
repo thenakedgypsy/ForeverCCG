@@ -33,6 +33,6 @@ TTS:AddCards({
         enterSound = "Interface\\AddOns\\ForeverCCG\\Audio\\leeroy_jenkins.mp3",   -- only when he arrives (Sound.lua)
         etb = { ops = { { op = "token", id = "TOK04", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Upon entering the field, create three 0/1 Dragon Egg tokens with Blocker. At the start of your turn, Leeroy Jenkins dies."
+        text = "Arrival: Spawn: 3 Dragon Egg Adds (0/1, Blocker). Dies at the start of your turn."
     },
 })

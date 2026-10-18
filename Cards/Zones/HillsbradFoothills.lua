@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Hillsbrad Foothills", p = 1 },
         etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills denizens you control get +1/+0."
+        text = "Vigilant. Arrival: Prevent the next 4 damage to you. Other Hillsbrad Foothills denizens you control get +1/+0."
     },
 })

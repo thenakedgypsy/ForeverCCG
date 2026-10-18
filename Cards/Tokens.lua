@@ -41,7 +41,7 @@ TTS:AddCards({
         creatureType = "Dragonkin",
         onDeath = { ops = { { op = "token", id = "TOK05", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker. When Dragon Egg dies, create a 1/1 Rookery Whelp token with Airborne."
+        text = "Blocker. Martyrdom: Spawn: 1 Rookery Whelp Add (1/1, Airborne)."
     },
     ["TOK05"] = {
         id = "TOK05", name = "Rookery Whelp", cost = "", cmc = 0, color = "R", type = "Creature",

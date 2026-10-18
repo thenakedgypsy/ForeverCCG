@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 4629,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6427,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["SMO06"] = {
         id = "SMO06", name = "Scarlet Myrmidon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -115,6 +115,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Scarlet Monastery", p = 1, t = 1 },
         onDeath = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Scarlet Monastery denizens you control get +1/+1. When Azshir the Sleepless dies, return a denizen card from your graveyard to the battlefield."
+        text = "Martyrdom: Return a denizen card from your graveyard to the battlefield. Other Scarlet Monastery denizens you control get +1/+1."
     },
 })

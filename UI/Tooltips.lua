@@ -69,7 +69,7 @@ end
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
     "lifelink", "trample", "hexproof", "shielded", "defender", "unblockable", "bulwark", "support",
-    "unique",
+    "kinsmanship", "unique",
 }
 
 TT.KEYWORDS = {
@@ -84,9 +84,11 @@ TT.KEYWORDS = {
     hexproof    = { name = "Warded",        text = "Can't be the target of your opponent's spells or abilities." },
     shielded    = { name = "Shielded",      text = "The next instance of damage this denizen would take is negated, and it loses Shielded." },
     defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
-    unblockable = { name = "Unblockable",   text = "Can't be blocked." },
+    unblockable = { name = "Invisible",     text = "Can't be blocked." },
     bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
     support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Every denizen in that fight deals its full combat damage to each denizen on the other side." },
+    -- Shown for cards with a rally (card.rally); on the card it reads "Defias Kinsmanship:" over "+1/+1"
+    kinsmanship = { name = "Kinsmanship",   text = "Gets the bonus once for each other denizen you control that shares its tag." },
     unique      = { name = "Unique",        text = "You can have only one copy of it on your battlefield. You can't cast another while it's there, and if another arrives by an effect, the one already there is destroyed." },
 }
 
@@ -129,25 +131,29 @@ TT.EFFECTS = {
     tap        = { name = "Exhaust",          tag = "Effect", text = "Exhausts the denizen. An Exhausted denizen can't attack or block until it Recovers at the start of its controller's turn." },
     freeze     = { name = "Freeze",            tag = "Effect", text = "Exhausts the denizen, and it doesn't Recover during its controller's next Recover step." },
     destroy    = { name = "Destroy",           tag = "Effect", text = "Puts the denizen straight into its owner's graveyard, whatever its toughness." },
-    tuck       = { name = "Return to Library", tag = "Effect", text = "Puts the denizen on top of its owner's library, so they draw it again next. Anything attached to it falls off." },
+    tuck       = { name = "Return to Deck",    tag = "Effect", text = "Puts the denizen on top of its owner's deck, so they draw it again next. Anything attached to it falls off." },
     steal      = { name = "Mind Control",      tag = "Effect", text = "You take control of the enemy denizen. It can't attack this turn unless it is only borrowed until end of turn." },
-    dot        = { name = "Damage over Time",  tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, deals damage (shown on the effect bars beside the board); on a denizen, it permanently gets -0/-1, and it dies at 0 toughness." },
-    hot        = { name = "Healing over Time", tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, restores life (shown on the effect bars beside the board); on a denizen, it permanently gets +0/+1." },
+    dot        = { name = "DoT (Damage over Turns)",  tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, deals damage (shown on the effect bars beside the board); on a denizen, it permanently gets -0/-1, and it dies at 0 toughness." },
+    hot        = { name = "HoT (Heal over Turns)", tag = "Effect", text = "At the start of each of the caster's turns for a number of turns: on a player, restores life (shown on the effect bars beside the board); on a denizen, it permanently gets +0/+1." },
     shield     = { name = "Damage Shield",     tag = "Effect", text = "On a player: prevents the next points of damage they would take. On a denizen: extra toughness until the end of the turn." },
     regen      = { name = "Soulstone",         tag = "Effect", text = "The next time the denizen would die from damage it survives instead: its damage is removed and it becomes Exhausted. Destroy effects ignore this." },
-    dispel     = { name = "Dispel",            tag = "Effect", text = "On an enemy denizen: removes its buffs, granted keywords, Soulstones and healing over time. On your own denizen: removes weakening, damage over time and freeze." },
-    draw       = { name = "Card Draw",         tag = "Effect", text = "Draw cards from your library. With 10 cards in hand you discard one first. Drawing from an empty library loses the game." },
+    dispel     = { name = "Dispel",            tag = "Effect", text = "On an enemy denizen: removes its buffs, granted keywords, Soulstones and HoT. On your own denizen: removes weakening, DoT and freeze." },
+    draw       = { name = "Draw",              tag = "Effect", text = "Draw X: draw X cards from your deck. With 10 cards in hand you discard one first. Drawing from an empty deck loses the game." },
     mana       = { name = "Mana Gain",         tag = "Effect", text = "Adds mana straight to your pool. Unspent mana empties at the end of your turn." },
-    token      = { name = "Token",             tag = "Effect", text = "A denizen made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
+    token      = { name = "Add",               tag = "Effect", text = "A denizen made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent denizen card in a graveyard to the battlefield under your control." },
     targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy denizens can't be chosen." },
 
     -- Creature and Prayer abilities
     prayer     = { name = "Prayer",            tag = "Ability", text = "Click a ready Prayer to Exhaust it for one mana of its colour. You can play one Prayer per turn, during a main phase." },
-    anthem     = { name = "Anthem",            tag = "Ability", text = "While this denizen is on the battlefield, your other denizens that share the tag get the bonus." },
+    anthem     = { name = "Aura",            tag = "Ability", text = "While this denizen is on the battlefield, your other denizens that share the tag get the bonus." },
     rally      = { name = "Rally",             tag = "Ability", text = "This denizen grows for each other denizen you control that shares the tag." },
     activated  = { name = "Activated Ability", tag = "Ability", text = "Click this card during your main phase to use it. If the cost includes {T}, the card must be ready and free of Rez Sickness." },
     triggered  = { name = "Triggered Ability", tag = "Ability", text = "Happens on its own whenever its condition is met." },
+    arrival    = { name = "Arrival",           tag = "Ability", text = "Happens when this denizen enters the battlefield." },
+    aggro      = { name = "Aggro",             tag = "Ability", text = "Happens each time this denizen attacks." },
+    martyrdom  = { name = "Martyrdom",         tag = "Ability", text = "Happens when this denizen dies." },
+    spawn      = { name = "Spawn",             tag = "Ability", text = "Puts Adds onto the battlefield under your control. An Add is a denizen made by an effect: it is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
 
     -- States of a card on the battlefield
     sick       = { name = "Rez Sickness",       tag = "Status", text = "Entered the battlefield this turn: it can't attack or use {T} abilities until its controller's next turn." },
@@ -214,35 +220,133 @@ local function Sentences(text)
     return list
 end
 
--- Rules text as printed on the card: an anthem's sentence ("Other Undead you control get +1/+1.")
--- becomes a line of its own, "Anthem: +1{PT}+1 - Undead", {PT} being the power/toughness emblem.
--- The sentence is found in the English text and taken out at the same place in the translation;
--- if the two don't split alike, the text is left as it is.
-function TTS:CardRulesText(card)
-    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
-    local text = TTS:CardText(card)
-    local a = card and card.anthem
-    if not (text and a and card.text) then return text end
-    local en, shown = Sentences(card.text), Sentences(text)
-    local at
-    for i, s in ipairs(en) do
-        if s:find("you control get") or s:find("you control gain") or s:find("you control have") then at = i end
-    end
-    if not at or #en ~= #shown then return text end
-
+-- "Undead Aura:\n+1{PT}+1, Quick": a tagged bonus as printed on the card
+local function BonusLine(bonus, name)
     local parts = {}
-    if (a.p or 0) ~= 0 or (a.t or 0) ~= 0 then parts[1] = Signed(a.p) .. "{PT}" .. Signed(a.t) end
-    for _, kw in ipairs(a.kw or {}) do
+    if (bonus.p or 0) ~= 0 or (bonus.t or 0) ~= 0 then parts[1] = Signed(bonus.p) .. "{PT}" .. Signed(bonus.t) end
+    for _, kw in ipairs(bonus.kw or {}) do
         if TT.KEYWORDS[kw] then parts[#parts + 1] = TT:Def("keyword", kw, "name") end
     end
-    table.remove(shown, at)
+    local prefix = TagValue(bonus.tag, bonus.value)
+    return (prefix ~= "" and (prefix .. " ") or "") .. name .. ":\n" .. table.concat(parts, ", ")
+end
+
+-- Rules text as printed on the card: an anthem's sentence ("Other Undead you control get +1/+1.")
+-- becomes a line of its own, "Undead Aura:\n+1{PT}+1", and a rally's ("Gets +1/+1 for each other
+-- Defias you control.") "Defias Kinsmanship:\n+1{PT}+1", {PT} being the power/toughness emblem.
+-- The sentences are found in the English text and taken out at the same place in the translation;
+-- if the two don't split alike, the text is left as it is.
+local function PlainRulesText(card)
+    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
+    local text = TTS:CardText(card)
+    if not (text and card.text and (card.anthem or card.rally)) then return text end
+    local en, shown = Sentences(card.text), Sentences(text)
+    if #en ~= #shown then return text end
+    local anthemAt, rallyAt
+    for i, s in ipairs(en) do
+        if s:find("for each other") then rallyAt = i
+        elseif s:find("you control get") or s:find("you control gain") or s:find("you control have") then anthemAt = i end
+    end
+    if not card.anthem then anthemAt = nil end
+    if not card.rally then rallyAt = nil end
+    if not (anthemAt or rallyAt) then return text end
+
+    local lines = {}
+    if rallyAt then lines[#lines + 1] = BonusLine(card.rally, TT:Def("keyword", "kinsmanship", "name")) end
+    if anthemAt then lines[#lines + 1] = BonusLine(card.anthem, TT:Def("effect", "anthem", "name")) end
+    -- the later sentence first, so the earlier one keeps its place
+    if (anthemAt or 0) > (rallyAt or 0) then table.remove(shown, anthemAt); anthemAt = nil end
+    if rallyAt then table.remove(shown, rallyAt) end
+    if anthemAt then table.remove(shown, anthemAt) end
     local rest = table.concat(shown, text:find("。", 1, true) and "" or " ")
+    if rest ~= "" then table.insert(lines, 1, rest) end
+    return table.concat(lines, "\n")
+end
 
-    local prefix = TagValue(a.tag, a.value)
-    local anthemName = TT:Def("effect", "anthem", "name")
-    local line = (prefix ~= "" and (prefix .. " ") or "") .. anthemName .. ":\n" .. table.concat(parts, ", ")
+-- =========================================================================
+-- COLOURED KEYWORDS (readability test; false shows rules text as before)
+-- Keyword and card-term names in rules text take a colour. In an Aura or Kinsmanship line
+-- ("Undead Aura:") the type before it shares that colour; types elsewhere stay plain.
+-- A keyword right after another (only a ", " or ": " between, as in
+-- "Arrival: Spawn:" or "Drain, Shielded") takes the second colour, so the two stand apart.
+-- Dark colours on the printed card face, light ones in tooltips (TTS:CardRulesText's onCard).
+-- =========================================================================
+TTS.COLOR_KEYWORDS = true
+TT.TEXT_COLORS = {
+    card = { kw = "|cFF8A2A00", kw2 = "|cFF1E4FA0" },   -- rust, blue on the light card
+    tip  = { kw = "|cFF80D0FF", kw2 = "|cFFFFB060" },   -- light blue, orange on the dark tooltip
+}
 
-    return rest ~= "" and (rest .. "\n" .. line) or line
+-- { name, kind } to colour, longest first (so "Anti-Air" wins over a shorter name inside it).
+-- Built once per language (the language is fixed until a /reload).
+local coloredNames, coloredFor
+local function ColoredNames()
+    if coloredNames and coloredFor == Loc.code then return coloredNames end
+    local list, seen = {}, {}
+    local function add(name, kind)
+        if name and name ~= "" and not seen[name] then seen[name] = true; list[#list + 1] = { name = name, kind = kind } end
+    end
+    -- the two bonus-line names first, so they are the ones marked as "bonus"
+    add(TT:Def("effect", "anthem", "name"), "bonus")
+    add(TT:Def("keyword", "kinsmanship", "name"), "bonus")
+    for _, kw in ipairs(TT.KEYWORD_ORDER) do add(TT:Def("keyword", kw, "name"), "kw") end
+    for _, id in ipairs({ "arrival", "aggro", "martyrdom", "spawn", "freeze", "draw" }) do add(TT:Def("effect", id, "name"), "kw") end
+    add("DoT", "kw"); add("HoT", "kw")
+    table.sort(list, function(a, b) return #a.name > #b.name end)
+    coloredNames, coloredFor = list, Loc.code
+    return list
+end
+
+local function ColorNames(text, colors)
+    local names, found = ColoredNames(), {}
+    -- First mark every match, so a shorter name can't match inside one already found
+    for _, e in ipairs(names) do
+        local pat = e.name:gsub("[%.%-%(%)%[%]%*%+%?%^%$%%]", "%%%0")
+        if e.name:match("^%w") then pat = "%f[%w]" .. pat end        -- whole words where the name starts with a letter
+        if e.name:match("%w$") then pat = pat .. "%f[%W]" end
+        text = text:gsub(pat, function(m)
+            found[#found + 1] = { text = m, kind = e.kind }
+            return "\1" .. #found .. "\2"
+        end)
+    end
+    -- An Aura / Kinsmanship line ("Undead Aura:") takes its type into the same colour
+    local lines = {}
+    for line in (text .. "\n"):gmatch("(.-)\n") do
+        local prefix, i = line:match("^([^\1\2]+) \1(%d+)\2:$")
+        local m = i and found[tonumber(i)]
+        if m and m.kind == "bonus" then
+            m.text = prefix .. " " .. m.text
+            line = "\1" .. i .. "\2:"
+        end
+        lines[#lines + 1] = line
+    end
+    text = table.concat(lines, "\n")
+    -- Then colour them in reading order, alternating keywords that follow one another
+    local out, pos, lastKwEnd, alt = {}, 1, nil, false
+    while true do
+        local a, b, i = text:find("\1(%d+)\2", pos)
+        if not a then break end
+        local gap = text:sub(pos, a - 1)
+        local m = found[tonumber(i)]
+        local sep = gap:gsub("，", ""):gsub("：", ""):gsub("；", "")
+        alt = (lastKwEnd == pos and sep:match("^[,:;%s]*$") ~= nil) and not alt or false
+        local color = alt and colors.kw2 or colors.kw
+        lastKwEnd = b + 1
+        out[#out + 1] = gap .. color .. m.text .. "|r"
+        pos = b + 1
+    end
+    out[#out + 1] = text:sub(pos)
+    return table.concat(out)
+end
+
+-- Rules text as the card shows it (see PlainRulesText), keywords coloured.
+-- onCard: the printed card face (dark colours) rather than a tooltip (light colours).
+function TTS:CardRulesText(card, onCard)
+    local text = PlainRulesText(card)
+    if not text or text == "" then return text end
+    text = text:gsub("([%+%-]?%d+)/([%+%-]?%d+)", "%1{PT}%2")
+    if not TTS.COLOR_KEYWORDS then return text end
+    return ColorNames(text, onCard and TT.TEXT_COLORS.card or TT.TEXT_COLORS.tip)
 end
 
 -- =========================================================================
@@ -318,9 +422,9 @@ local function RenderPanel(spec)
     end
     for _, line in ipairs(spec.lines or {}) do
         if type(line) == "table" then
-            p:AddLine(line[1], line[2] or 0.9, line[3] or 0.9, line[4] or 0.9, true)
+            p:AddLine(Sym(line[1], 14), line[2] or 0.9, line[3] or 0.9, line[4] or 0.9, true)
         else
-            p:AddLine(line, 0.9, 0.9, 0.9, true)
+            p:AddLine(Sym(line, 14), 0.9, 0.9, 0.9, true)
         end
     end
     p:Show()
@@ -629,7 +733,11 @@ local function KeywordPanels(card, ctx)
     end
 
     for _, kw in ipairs(TT.KEYWORD_ORDER) do
-        if ctx.perm and E and E.HasKeyword then
+        if kw == "kinsmanship" then
+            -- a card ability (card.rally), not a keyword the engine tracks
+            local r = card.rally
+            if r then add(kw, L("tt.rally", Signed(r.p) .. "/" .. Signed(r.t), TagValue(r.tag, r.value))) end
+        elseif ctx.perm and E and E.HasKeyword then
             if E:HasKeyword(ctx.perm, ctx.isRemote, kw) then
                 add(kw, (not card[kw]) and L("tt.kwGranted") or nil)
             elseif card[kw] then
@@ -799,47 +907,49 @@ local function AbilityPanels(card)
         table.insert(specs, TT:EffectPanel("anthem", { { line, 1, 0.82, 0 }, { L("tt.matchesBy", TagFieldLabel(a.tag)), 0.6, 0.6, 0.6 } }))
     end
 
-    local r = card.rally
-    if r then
-        table.insert(specs, TT:EffectPanel("rally", {
-            { L("tt.rally", Signed(r.p) .. "/" .. Signed(r.t), TagValue(r.tag, r.value)), 1, 0.82, 0 },
-            { L("tt.matchesBy", TagFieldLabel(r.tag)), 0.6, 0.6, 0.6 },
-        }))
-    end
-
     -- The English rules text is the data here (it is the same whatever the language)
     local text = card.text or ""
     if card.type == "Creature" and text ~= "" then
-        if text:match("^[{%w}]+:") then table.insert(specs, TT:EffectPanel("activated")) end
-        if text:find("Whenever") or text:find("%f[%a]When%s") then
-            table.insert(specs, TT:EffectPanel("triggered"))
+        if text:match("^{[^:]*}:") then table.insert(specs, TT:EffectPanel("activated")) end
+        for _, term in ipairs({ { "arrival", "Arrival:" }, { "aggro", "Aggro:" }, { "martyrdom", "Martyrdom:" } }) do
+            if text:find(term[2], 1, true) then table.insert(specs, TT:EffectPanel(term[1])) end
         end
+        if text:find("Whenever") then table.insert(specs, TT:EffectPanel("triggered")) end
     end
 
-    -- Tokens: what this card is, or the tokens its triggers create
+    -- Adds: what this card is, or the Adds its abilities spawn
     if card.isToken then table.insert(specs, TT:EffectPanel("token")) end
     for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
         for _, op in ipairs((card[key] and card[key].ops) or {}) do
             local tok = op.op == "token" and TTS.Cards[op.id]
             if tok then
-                table.insert(specs, TT:EffectPanel("token",
-                    { { L("tt.creates", op.n or 1, TTS:CardName(tok), tok.power or 0, tok.toughness or 0), 0.6, 0.9, 0.6 } }))
+                table.insert(specs, TT:EffectPanel("spawn",
+                    { { (L("tt.creates", op.n or 1, TTS:CardName(tok), tok.power or 0, tok.toughness or 0):gsub("%((%d+)/(%d+)%)", "(%1{PT}%2)")), 0.6, 0.9, 0.6 } }))
             end
         end
     end
 
+    local seen = {}
     local eff = card.effect
     if eff then
         if eff.target and TARGET_TEXT[eff.target] then
             table.insert(specs, TT:EffectPanel("targeting", { { L("tt.choose", Target(eff.target)), 0.6, 0.9, 0.6 } }))
         end
-        local seen = {}
         for _, op in ipairs(eff.ops or {}) do
             local panel = OpPanel(op, eff)
             if panel and not seen[panel.key] then
                 seen[panel.key] = true
                 table.insert(specs, panel)
             end
+            seen[op.op] = true
+        end
+    end
+    -- Terms the rules text uses that no effect above explained yet
+    for _, term in ipairs({ { "dot", "%f[%a]DoT%f[%A]" }, { "hot", "%f[%a]HoT%f[%A]" }, { "freeze", "%f[%a]Freeze" }, { "frozen", "%f[%a]Frozen" }, { "draw", "%f[%a]Draw %d" } }) do
+        local key = term[1]
+        if not seen[key] and not (key == "frozen" and seen.freeze) and text:find(term[2]) then
+            seen[key] = true
+            table.insert(specs, TT:EffectPanel(key))
         end
     end
     return specs

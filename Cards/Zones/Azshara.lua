@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, unblockable = true, isMob = true, isBoss = true, displayId = 10702,
         zone = "Azshara", creatureType = "Undead", npcId = 6116,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["AZS02"] = {
         id = "AZS02", name = "Mosshoof Runner", cost = "{G}", cmc = 1, color = "G", type = "Creature",

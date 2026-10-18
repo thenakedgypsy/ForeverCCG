@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 2, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2021,
         zone = "Maraudon", creatureType = "Demon", faction = "Satyr", npcId = 11792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["MAR02"] = {
         id = "MAR02", name = "Barbed Lasher", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

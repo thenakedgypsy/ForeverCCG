@@ -15,13 +15,13 @@ TTS:AddCards({
     -- PRIEST
     ["PRI01"] = {
         id = "PRI01", name = "Power Word: Shield", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "Prevent the next 4 damage that would be dealt to you, or target denizen you control gains Shielded.",
+        text = "Prevent the next 4 damage to you, or target denizen you control gains Shielded.",
         art = "Interface\\Icons\\Spell_Holy_PowerWordShield",
         effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4, playerOnly = true }, { op = "shielded", to = "target" } } }
     },
     ["PRI02"] = {
         id = "PRI02", name = "Renew", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "You regain 2 health at the start of each of your turns for 3 turns, or target denizen you control permanently gets +0/+1 at the start of each of your turns for 3 turns.",
+        text = "You or target denizen you control: HoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Holy_Renew",
         effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 } } }
     },
@@ -45,13 +45,13 @@ TTS:AddCards({
     },
     ["PRI06"] = {
         id = "PRI06", name = "Holy Fire", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Priest",
-        text = "Deal 3 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
+        text = "Deal 3 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Spell_Holy_SearingLight",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["PRI07"] = {
         id = "PRI07", name = "Shadow Word: Pain", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Priest",
-        text = "Choose target enemy denizen or the opponent. At the start of each of your turns for 4 turns, the opponent takes 1 damage, or the denizen permanently gets -0/-1.",
+        text = "Target enemy denizen or the opponent: DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
         effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },

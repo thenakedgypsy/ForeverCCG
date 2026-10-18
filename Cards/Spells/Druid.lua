@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["DRU02"] = {
         id = "DRU02", name = "Moonfire", cost = "{U}", cmc = 1, color = "U", type = "Sorcery", class = "Druid",
-        text = "Deal 1 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
+        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Spell_Nature_StarFall",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
@@ -33,13 +33,13 @@ TTS:AddCards({
     },
     ["DRU04"] = {
         id = "DRU04", name = "Rejuvenation", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Druid",
-        text = "You regain 2 health at the start of each of your turns for 3 turns, or target denizen you control permanently gets +0/+1 at the start of each of your turns for 3 turns.",
+        text = "You or target denizen you control: HoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Nature_Rejuvenation",
         effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 } } }
     },
     ["DRU05"] = {
         id = "DRU05", name = "Regrowth", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "You regain 3 health, then 1 health at the start of each of your turns for 3 turns. Or target denizen you control permanently gets +0/+1, then +0/+1 more at the start of each of your turns for 3 turns.",
+        text = "You regain 3 health, or target denizen you control permanently gets +0/+1. Then HoT 1 for 3 turns.",
         art = "Interface\\Icons\\Spell_Nature_ResistNature",
         effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 3, t = 1 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
     },
@@ -51,7 +51,7 @@ TTS:AddCards({
     },
     ["DRU07"] = {
         id = "DRU07", name = "Entangling Roots", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "Exhaust target enemy denizen. It does not Recover during its controller's next Recover step.",
+        text = "Freeze target enemy denizen.",
         art = "Interface\\Icons\\Spell_Nature_StrangleVines",
         effect = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } }
     },

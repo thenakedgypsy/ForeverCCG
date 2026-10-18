@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 143689,
         zone = "The Hall of Thanes", creatureType = "Undead", npcId = 263389,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["HOT05"] = {
         id = "HOT05", name = "Tormented Soul", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",

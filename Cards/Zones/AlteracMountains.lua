@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Alterac Mountains", t = 2 },
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Archmage Ansirem Runeweaver enters the battlefield, Exhaust each enemy denizen. Other Alterac Mountains denizens you control get +0/+2."
+        text = "Arrival: Exhaust each enemy denizen. Other Alterac Mountains denizens you control get +0/+2."
     },
 })

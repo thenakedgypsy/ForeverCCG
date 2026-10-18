@@ -178,6 +178,6 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         etb = { ops = { { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. When Princess Moira Bronzebeard enters the battlefield, denizens you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
+        text = "Drain. Arrival: Denizens you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
     },
 })

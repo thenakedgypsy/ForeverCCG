@@ -92,6 +92,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Redridge Mountains", t = 2 },
         etb = { ops = { { op = "heal", to = "self_player", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Magistrate Solomon enters the battlefield, you gain 3 life. Other Redridge Mountains denizens you control get +0/+2."
+        text = "Arrival: You gain 3 life. Other Redridge Mountains denizens you control get +0/+2."
     },
 })

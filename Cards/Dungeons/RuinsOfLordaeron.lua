@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 8782,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250650,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["ROL07"] = {
         id = "ROL07", name = "Mangled Cadaver", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",

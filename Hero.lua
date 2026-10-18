@@ -31,7 +31,7 @@ H.MY_ID, H.OPP_ID = "HERO", "HEROOPP"
 -- Level 1-9 stats, the keyword (a card field) and the frame colour, by class file name
 H.CLASSES = {
     WARRIOR = { p = 2, t = 2, kw = "haste",       color = "R", text = "Quick." },
-    ROGUE   = { p = 2, t = 2, kw = "unblockable", color = "B", text = "Cannot be blocked." },
+    ROGUE   = { p = 2, t = 2, kw = "unblockable", color = "B", text = "Invisible." },
     HUNTER  = { p = 2, t = 2, kw = "reach",       color = "G", text = "Anti-Air." },
     PALADIN = { p = 1, t = 3, kw = "bulwark",     color = "W", text = "Bulwark 2.", kwValue = 2 },
     SHAMAN  = { p = 1, t = 3, kw = "support",     color = "G", text = "Support." },

@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Darkshore", t = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Thundris Windweaver enters the battlefield, draw a card. Other Darkshore denizens you control get +0/+1."
+        text = "Arrival: Draw 1. Other Darkshore denizens you control get +0/+1."
     },
 })

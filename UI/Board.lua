@@ -87,6 +87,10 @@ function TTS:FormatSymbols(str, size, tapSize)
     local s = size or 16
     local ts = tapSize or s
 
+    -- A signed pair ("+1/+1", "-0/-1") is a power/toughness change: drawn with the stats emblem.
+    -- Unsigned pairs stay (they can be counts, "2/4 copies"); rules text marks its own (TTS:CardRulesText).
+    str = str:gsub("([%+%-]%d+)/([%+%-]%d+)", "%1{PT}%2")
+
     local formatted = str:gsub("{(%w+)}", function(key)
         local upperKey = string.upper(key)
 
@@ -1219,7 +1223,7 @@ local function UpdateCardRules(f, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card, true), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -1689,6 +1693,17 @@ local function SetupCardVisual(f, card)
         -- the hero card (Hero.lua) shows the character itself
     elseif card and card.displayId and not card.isHero then
         f.art:Hide()
+        -- A model that finishes loading (or is shown again) resets to the default camera, however
+        -- long that takes: put the card's camera back each time (once per model frame)
+        if not f.model.ttsCameraHooked then
+            f.model.ttsCameraHooked = true
+            local function Refit()
+                local c = f.currentCard
+                if c and c.displayId and not c.isHero then ApplyModelCamera(f, c) end
+            end
+            if f.model.HasScript and f.model:HasScript("OnModelLoaded") then f.model:HookScript("OnModelLoaded", Refit) end
+            f.model:HookScript("OnShow", Refit)
+        end
         f.model:Show()
         f.model:ClearModel()
         f.model:SetDisplayInfo(card.displayId)
@@ -1737,7 +1752,7 @@ end
 -- A creature just came onto the battlefield (either side): fix its camera once the model has
 -- loaded, and again when its flight from the hand has landed
 local MODEL_SETTLE_DELAY = 0.05
-local MODEL_LANDED_DELAY = 0.35   -- just after a played card's 0.3 s flight (FLY_TIME)
+local MODEL_LANDED_DELAY = 0.8    -- well after a played card's 0.3 s flight (FLY_TIME), once the model has settled
 local function ScheduleModelCameraFix()
     if B.cameraFixPending then return end
     B.cameraFixPending = true

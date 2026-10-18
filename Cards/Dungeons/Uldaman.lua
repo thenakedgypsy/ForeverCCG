@@ -106,6 +106,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Uldaman", t = 2 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Vigilant. When Ironaya enters the battlefield, deal 2 damage to each enemy denizen. Other Uldaman denizens you control get +0/+2."
+        text = "Vigilant. Arrival: Deal 2 damage to each enemy denizen. Other Uldaman denizens you control get +0/+2."
     },
 })

@@ -15,7 +15,7 @@ TTS:AddCards({
     -- MAGE
     ["MAG01"] = {
         id = "MAG01", name = "Fireball", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Mage",
-        text = "Deal 3 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
+        text = "Deal 3 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Spell_Fire_FlameBolt",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
@@ -39,7 +39,7 @@ TTS:AddCards({
     },
     ["MAG05"] = {
         id = "MAG05", name = "Frostbolt", cost = "{2}{U}", cmc = 3, color = "U", type = "Sorcery", class = "Mage",
-        text = "Deal 3 damage to target enemy denizen or the opponent. If it is a denizen, Exhaust it; it does not Recover during its controller's next Recover step.",
+        text = "Deal 3 damage to target enemy denizen or the opponent. Freeze it if it is a denizen.",
         art = "Interface\\Icons\\Spell_Frost_FrostBolt02",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "freeze", to = "target" } } }
     },
@@ -57,7 +57,7 @@ TTS:AddCards({
     },
     ["MAG08"] = {
         id = "MAG08", name = "Polymorph", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Mage",
-        text = "Put target enemy denizen on top of its owner's library.",
+        text = "Put target enemy denizen on top of its owner's deck.",
         art = "Interface\\Icons\\Spell_Nature_Polymorph",
         effect = { target = "enemy_creature", ops = { { op = "tuck", to = "target" } } }
     },
@@ -69,7 +69,7 @@ TTS:AddCards({
     },
     ["MAG10"] = {
         id = "MAG10", name = "Arcane Intellect", cost = "{2}{U}", cmc = 3, color = "U", type = "Sorcery", class = "Mage",
-        text = "Draw 2 cards.",
+        text = "Draw 2.",
         art = "Interface\\Icons\\Spell_Holy_MagicalSentry",
         effect = { ops = { { op = "draw", n = 2 } } }
     },

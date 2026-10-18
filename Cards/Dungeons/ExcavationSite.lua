@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 545,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260804,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["EXC06"] = {
         id = "EXC06", name = "Dragonmaw Warder", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -135,6 +135,6 @@ TTS:AddCards({
         zone = "Excavation Site", creatureType = "Humanoid", npcEntry = 13155,
         anthem = { tag = "zone", value = "Excavation Site", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked. Other Excavation Site denizens you control get +1/+1."
+        text = "Invisible. Other Excavation Site denizens you control get +1/+1."
     },
 })

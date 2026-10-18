@@ -39,13 +39,13 @@ TTS:AddCards({
     },
     ["PAL05"] = {
         id = "PAL05", name = "Divine Shield", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Prevent the next 4 damage that would be dealt to you. Denizens you control gain Shielded.",
+        text = "Prevent the next 4 damage to you. Denizens you control gain Shielded.",
         art = "Interface\\Icons\\Spell_Holy_DivineIntervention",
         effect = { ops = { { op = "shield", to = "self_player", n = 4 }, { op = "shielded", to = "friendly_creatures" } } }
     },
     ["PAL06"] = {
         id = "PAL06", name = "Hammer of Justice", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Exhaust target enemy denizen. It does not Recover during its controller's next Recover step.",
+        text = "Freeze target enemy denizen.",
         art = "Interface\\Icons\\Spell_Holy_SealOfMight",
         effect = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } }
     },

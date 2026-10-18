@@ -106,6 +106,6 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Quilboar", p = 1, t = 1 },
         etb = { ops = { { op = "shield", to = "self_player", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Razorfen Totemic enters the battlefield, prevent the next 3 damage that would be dealt to you. Other Quilboar you control get +1/+1."
+        text = "Arrival: Prevent the next 3 damage to you. Other Quilboar you control get +1/+1."
     },
 })

@@ -27,7 +27,7 @@ TTS:AddCards({
     },
     ["WAR03"] = {
         id = "WAR03", name = "Rend", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target enemy denizen permanently gets -0/-1 at the start of each of your turns for 4 turns.",
+        text = "Target enemy denizen: DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Ability_Gouge",
         effect = { target = "enemy_creature", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
@@ -57,7 +57,7 @@ TTS:AddCards({
     },
     ["WAR08"] = {
         id = "WAR08", name = "Shield Wall", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Warrior",
-        text = "Prevent the next 6 damage that would be dealt to you.",
+        text = "Prevent the next 6 damage to you.",
         art = "Interface\\Icons\\Ability_Warrior_ShieldWall",
         effect = { ops = { { op = "shield", to = "self_player", n = 6 } } }
     },

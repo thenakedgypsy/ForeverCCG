@@ -1750,7 +1750,8 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
 
     if card.type == "Creature" and self.phase == "COMBAT_ATTACK" then
         if perm.isAttacking then
-            self:Log(L("err.alreadyAttacking", TTS:CardName(card)), "ERROR")
+            -- Not committed yet (Commit to Attacks moves on to COMBAT_BLOCK): take it back
+            self:WithdrawAttacker(perm, fieldIndex)
             return
         end
         if perm.tapped then
@@ -1766,6 +1767,8 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
             return
         end
 
+        -- Remembered so the attack can be taken back until it is committed (WithdrawAttacker)
+        perm.attackUndo = { tapped = perm.tapped, hasAttacked = perm.hasAttackedThisTurn }
         if not self:HasKeyword(perm, false, "vigilance") then
             perm.tapped = true
         end
@@ -1776,11 +1779,38 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         table.insert(self.blockingState.attackers, fieldIndex)
         if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
 
-        self:OnCreatureAttack(perm, false)
-
+        -- Its Aggro, and telling the opponent, wait for Commit to Attacks (E:CommitAttackers)
         self:Log(L("log.declaredAttacker", TTS:CardName(card)), "COMBAT")
-        if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:ATTACK:" .. fieldIndex) end
         self:RefreshUI()
+    end
+end
+
+-- An attacker picked this combat, before Commit to Attacks: no longer attacking, as it was before
+function E:WithdrawAttacker(perm, fieldIndex)
+    local undo = perm.attackUndo or {}
+    perm.isAttacking = nil
+    perm.tapped = undo.tapped
+    perm.hasAttackedThisTurn = undo.hasAttacked
+    perm.attackUndo = nil
+    local bs = self.blockingState
+    for i = #((bs and bs.attackers) or {}), 1, -1 do
+        if bs.attackers[i] == fieldIndex then table.remove(bs.attackers, i) end
+    end
+    self:Log(L("log.attackWithdrawn", TTS:CardName(perm.id)), "COMBAT")
+    self:RefreshUI()
+end
+
+-- Commit to Attacks: the attackers are final. Their Aggro happens now, and the opponent
+-- hears of each one (ACTION:ATTACK, then ACTION:ATTACKS_DONE from E:NextPhase).
+function E:CommitAttackers()
+    local bs = self.blockingState
+    for _, fieldIndex in ipairs((bs and bs.attackers) or {}) do
+        local perm = self.localState.field[fieldIndex]
+        if perm then
+            perm.attackUndo = nil
+            self:OnCreatureAttack(perm, false)
+            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:ATTACK:" .. fieldIndex) end
+        end
     end
 end
 

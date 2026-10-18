@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Badlands", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lotwil Veriatus enters the battlefield, deal 1 damage to each enemy denizen. Other Badlands denizens you control get +1/+0."
+        text = "Arrival: Deal 1 damage to each enemy denizen. Other Badlands denizens you control get +1/+0."
     },
 })

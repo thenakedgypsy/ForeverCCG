@@ -32,7 +32,7 @@ TTS:AddCards({
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2014,
         zone = "Blackfathom Deeps", creatureType = "Demon", faction = "Satyr", npcId = 4798,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["BFD04"] = {
         id = "BFD04", name = "Twilight Reaver", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -101,6 +101,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Blackfathom Deeps", p = 1, t = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "When Baron Aquanis enters the battlefield, draw a card. Other Blackfathom Deeps denizens you control get +1/+1."
+        text = "Arrival: Draw 1. Other Blackfathom Deeps denizens you control get +1/+1."
     },
 })

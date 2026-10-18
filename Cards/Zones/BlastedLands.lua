@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Blasted Lands", creatureType = "Humanoid", npcEntry = 7363,
         etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Kum'isha the Collector enters the battlefield, return a denizen card from your graveyard to the battlefield."
+        text = "Arrival: Return a denizen card from your graveyard to the battlefield."
     },
 })

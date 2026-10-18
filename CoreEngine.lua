@@ -717,6 +717,8 @@ function E:NextPhase()
         end
 
         if self.blockingState and #self.blockingState.attackers > 0 then
+            -- Commit to Attacks: Aggro happens and the opponent is told of every attacker
+            self:CommitAttackers()
             self:SetPhase("COMBAT_BLOCK")
             if self.isSolo then
                 self:AIAssignBlocks()

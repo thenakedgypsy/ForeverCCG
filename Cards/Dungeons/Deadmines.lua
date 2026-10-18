@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 2314,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 636,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Invisible."
     },
     ["DMS05"] = {
         id = "DMS05", name = "Defias Evoker", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",

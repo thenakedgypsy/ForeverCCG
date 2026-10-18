@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Stranglethorn Vale", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2, filter = { tag = "type", value = "Beast" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale denizens you control get +1/+0."
+        text = "Anti-Air. Arrival: Deal 2 damage to each enemy Beast. Other Stranglethorn Vale denizens you control get +1/+0."
     },
 })

@@ -45,6 +45,9 @@ local function FormatTextWithSymbols(str, size)
     str = str:gsub("{[tT]}", tapTexture)
     str = str:gsub("{[tT][aA][pP]}", tapTexture)
 
+    -- The Hero card's stat lines ("• 2/2: Warrior") are power/toughness
+    str = str:gsub("(%d+)/(%d+):", "%1{PT}%2:"):gsub("(%d+)/(%d+)：", "%1{PT}%2：")
+
     if TTS.FormatSymbols then
         return TTS:FormatSymbols(str, s)
     end

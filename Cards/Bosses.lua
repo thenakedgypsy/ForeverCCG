@@ -16,7 +16,7 @@ TTS:AddCards({
         power = 4, toughness = 4, isBoss = true, displayId = 2007, achievementId = 629,
         zone = "Ragefire Chasm", creatureType = "Demon", faction = "Burning Blade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "{T}: Deal 2 damage to target opponent and you gain 2 life."
+        text = "{T}: Deal 2 damage to the opponent. You gain 2 life."
     },
 
     -- Deadmines: Edwin VanCleef
@@ -35,7 +35,7 @@ TTS:AddCards({
         power = 7, toughness = 8, isBoss = true, displayId = 4088, achievementId = 630,
         zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Murloc",
         modelCam = { zoom = 0.55, camScale = 1.25, z = -0.18, rotation = 0.15 },
-        text = "Whenever Mutanus attacks, the defending player discards a card and takes 1 damage."
+        text = "Aggro: The defending player discards a card and takes 1 damage."
     },
 
     -- Shadowfang Keep: Archmage Arugal
@@ -44,7 +44,7 @@ TTS:AddCards({
         power = 3, toughness = 5, isBoss = true, displayId = 2353, achievementId = 631,
         zone = "Shadowfang Keep", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "{2}{U}, {T}: Put target Exhausted denizen on top of its owner's library."
+        text = "{2}{U}, {T}: Put target Exhausted denizen on top of its owner's deck."
     },
 
     -- Blackfathom Deeps: Aku'mai
@@ -72,7 +72,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isBoss = true, displayId = 6980, achievementId = 635,
         zone = "Gnomeregan", creatureType = "Humanoid",
         modelCam = { zoom = 0.70, camScale = 0.90, z = 0.05, rotation = 0.15 },
-        text = "{1}{R}, {T}: Deal 1 damage to each opposing denizen."
+        text = "{1}{R}, {T}: Deal 1 damage to each enemy denizen."
     },
 
     -- Razorfen Kraul: Charlga Razorflank
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 5, toughness = 6, reach = true, isBoss = true, displayId = 4642, achievementId = 636,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
-        text = "Anti-Air. {1}{G}, {T}: Exhaust target denizen. It does not Recover during its controller's next Recover step."
+        text = "{1}{G}, {T}: Freeze target denizen. Anti-Air."
     },
 
     -- SM Graveyard: Bloodmage Thalnos
@@ -90,7 +90,7 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isBoss = true, displayId = 11396, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Fatal. When Bloodmage Thalnos dies, draw a card."
+        text = "Fatal. Martyrdom: Draw 1."
     },
 
     -- SM Library: Arcanist Doan
@@ -99,7 +99,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isBoss = true, displayId = 5266, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{1}{R}, {T}: Deal 1 damage to each opposing denizen."
+        text = "{1}{R}, {T}: Deal 1 damage to each enemy denizen."
     },
 
     -- SM Armory: Herod
@@ -108,7 +108,7 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isBoss = true, displayId = 2041, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Quick. Herod attacks each combat if able. Whenever Herod attacks, he gets +2/+0 until end of turn."
+        text = "Quick. Attacks each combat if able. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- SM Cathedral: High Inquisitor Whitemane
@@ -117,7 +117,7 @@ TTS:AddCards({
         power = 4, toughness = 6, shielded = true, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Drain, Shielded. When Whitemane dies, return the last other denizen card put into your graveyard to the battlefield."
+        text = "Drain, Shielded. Martyrdom: Return the last other denizen card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -126,7 +126,7 @@ TTS:AddCards({
         power = 6, toughness = 8, isBoss = true, displayId = 7971, achievementId = 637,
         zone = "Razorfen Downs", creatureType = "Undead",
         modelCam = { zoom = 0.65, camScale = 1.20, z = -0.15, rotation = 0.15 },
-        text = "Whenever Amnennar attacks, Exhaust the ready enemy denizen with the highest power. It does not Recover during its controller's next Recover step."
+        text = "Aggro: Freeze the ready enemy denizen with the highest power."
     },
 
     -- Uldaman: Archaedas
@@ -135,7 +135,7 @@ TTS:AddCards({
         power = 8, toughness = 10, vigilance = true, hexproof = true, isBoss = true, displayId = 5988, achievementId = 639,
         zone = "Uldaman", creatureType = "Giant",
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
-        text = "Vigilant, Warded (Archaedas cannot be the target of spells or abilities your opponents control)."
+        text = "Vigilant, Warded."
     },
 
     -- Zul'Farrak: Chief Ukorz Sandscalp
@@ -144,7 +144,7 @@ TTS:AddCards({
         power = 8, toughness = 7, haste = true, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish, Quick. Ukorz gets +3/+0 as long as your life total is 10 or less."
+        text = "Brutish, Quick. Gets +3/+0 while your life is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -153,7 +153,7 @@ TTS:AddCards({
         power = 9, toughness = 9, trample = true, isBoss = true, displayId = 12292, achievementId = 641,
         zone = "Maraudon", creatureType = "Elemental",
         modelCam = { zoom = 0.35, camScale = 1.60, z = -0.25, rotation = 0.10 },
-        text = "Brutish. Whenever Theradras attacks and isn't blocked, destroy one of the defending player's Prayers."
+        text = "Brutish. Aggro: If unblocked, destroy one of the defending player's Prayers."
     },
 
     -- Sunken Temple: Shade of Eranikus
@@ -162,7 +162,7 @@ TTS:AddCards({
         power = 8, toughness = 8, flying = true, isBoss = true, displayId = 7806, achievementId = 642,
         zone = "Sunken Temple", creatureType = "Dragonkin",
         modelCam = { zoom = 0.25, camScale = 1.80, z = -0.05, rotation = -0.20 },
-        text = "Airborne. Whenever Eranikus deals combat damage to a denizen, Exhaust that denizen and it does not Recover during its controller's next Recover step."
+        text = "Airborne. Freezes any denizen it deals combat damage to."
     },
 
     -- BRD: Emperor Dagran Thaurissan
@@ -180,7 +180,7 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isBoss = true, displayId = 8711, achievementId = 644,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.50, camScale = 1.35, z = -0.20, rotation = 0.15 },
-        text = "Brutish. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing denizens."
+        text = "Brutish. Arrival: Deal 3 damage to each enemy denizen."
     },
 
     -- UBRS: General Drakkisath
@@ -198,7 +198,7 @@ TTS:AddCards({
         power = 7, toughness = 8, deathtouch = true, isBoss = true, displayId = 14416, achievementId = 645,
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Fatal. {T}: You gain 4 life."
+        text = "{T}: You gain 4 life. Fatal."
     },
 
     -- Dire Maul West: Prince Tortheldrin
@@ -207,7 +207,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isBoss = true, displayId = 11256, achievementId = 645,
         zone = "Dire Maul", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{2}{U}: Draw a card, then discard a card. Tortheldrin gets +1/+1 until end of turn."
+        text = "{2}{U}: Draw 1, then discard a card. Gets +1/+1 until end of turn."
     },
 
     -- Dire Maul North: King Gordok
@@ -216,7 +216,7 @@ TTS:AddCards({
         power = 10, toughness = 8, trample = true, isBoss = true, displayId = 11583, achievementId = 645,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre",
         modelCam = { zoom = 0.45, camScale = 1.45, z = -0.22, rotation = 0.15 },
-        text = "Brutish. Whenever King Gordok attacks, he gets +2/+0 until end of turn."
+        text = "Brutish. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- Scholomance: Darkmaster Gandling
@@ -225,7 +225,7 @@ TTS:AddCards({
         power = 6, toughness = 7, isBoss = true, displayId = 11070, achievementId = 646,
         zone = "Scholomance", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "Whenever another denizen you control dies, you draw a card."
+        text = "Whenever another denizen you control dies: Draw 1."
     },
 
     -- Stratholme: Baron Rivendare
@@ -243,7 +243,7 @@ TTS:AddCards({
         power = 8, toughness = 9, isBoss = true, displayId = 10691, achievementId = 633,
         zone = "Stratholme", creatureType = "Demon",
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "When Balnazzar enters the battlefield, gain control of the opposing denizen with the highest power of 4 or less."
+        text = "Arrival: Gain control of the enemy denizen with the highest power of 4 or less."
     },
 
     -- WoW Forever dungeons: their "achievements" are the kill statistics, so the same id
@@ -287,6 +287,6 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental",
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. When Shade of the Archmage enters the battlefield, Exhaust each enemy denizen."
+        text = "Airborne. Arrival: Exhaust each enemy denizen."
     },
 })

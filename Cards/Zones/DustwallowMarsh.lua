@@ -32,7 +32,7 @@ TTS:AddCards({
         zone = "Dustwallow Marsh", creatureType = "Humanoid", faction = "Murloc", npcId = 4359,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         onDeath = { ops = { { op = "token", id = "TOK01", n = 1 } } },
-        text = "When Mirefin Murloc dies, create a 1/1 Murloc Tadpole token."
+        text = "Martyrdom: Spawn: 1 Murloc Tadpole Add (1/1)."
     },
     ["DUS04"] = {
         id = "DUS04", name = "Drywallow Snapper", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcEntry = 4968,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 }, { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lady Jaina Proudmoore enters the battlefield, deal 2 damage to each enemy denizen and Exhaust them."
+        text = "Arrival: Deal 2 damage to each enemy denizen and Exhaust them."
     },
 })

@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Felwood", p = 1 },
         etb = { ops = { { op = "heal", to = "self_player", n = 5 }, { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arathandris Silversky enters the battlefield, you gain 5 life and denizens you control permanently get +0/+1. Other Felwood denizens you control get +1/+0."
+        text = "Arrival: You gain 5 life and denizens you control permanently get +0/+1. Other Felwood denizens you control get +1/+0."
     },
 })
