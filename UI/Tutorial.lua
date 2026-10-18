@@ -93,7 +93,7 @@ local STEPS = {
 }
 
 -- =========================================================================
--- COACH PANEL (top of the board)
+-- COACH PANEL (middle of the screen; draggable)
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local C = CreateFrame("Frame", "TTS_TutorialCoach", UIParent, backdropTemplate)
@@ -130,11 +130,7 @@ local function Paint(key)
     C:SetHeight(math.max(72, text:GetStringHeight() + 48))
     if not C:IsShown() then
         C:ClearAllPoints()
-        if TTS.BoardFrame then
-            C:SetPoint("TOP", TTS.BoardFrame, "TOP", 0, -46)
-        else
-            C:SetPoint("TOP", UIParent, "TOP", 0, -120)
-        end
+        C:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         C:Show()
     end
 end
