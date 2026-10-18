@@ -101,6 +101,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Blackfathom Deeps", p = 1, t = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "When Baron Aquanis enters the battlefield, draw a card. Other Blackfathom Deeps creatures you control get +1/+1."
+        text = "When Baron Aquanis enters the battlefield, draw a card. Other Blackfathom Deeps denizens you control get +1/+1."
     },
 })

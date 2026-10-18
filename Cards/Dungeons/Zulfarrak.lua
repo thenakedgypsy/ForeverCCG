@@ -72,10 +72,10 @@ TTS:AddCards({
     },
     ["ZFK09"] = {
         id = "ZFK09", name = "Dustwraith", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 6, unblockable = true, isMob = true, isBoss = true, displayId = 9292,
+        power = 6, toughness = 6, hexproof = true, isMob = true, isBoss = true, displayId = 9292,
         zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 10081,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Cannot be blocked."
+        text = "Warded."
     },
     ["ZFK10"] = {
         id = "ZFK10", name = "Sandarr Dunereaver", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -97,8 +97,8 @@ TTS:AddCards({
         power = 6, toughness = 6, isReward = true, displayId = 7271,
         zone = "Zul'Farrak", creatureType = "Beast", npcEntry = 7273,
         anthem = { tag = "zone", value = "Zul'Farrak", p = 1, t = 1 },
-        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "When Gahz'rilla enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step. Other Zul'Farrak creatures you control get +1/+1."
+        text = "When Gahz'rilla enters the battlefield, Exhaust each enemy denizen. Other Zul'Farrak denizens you control get +1/+1."
     },
 })

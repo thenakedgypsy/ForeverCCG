@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["ASH08"] = {
         id = "ASH08", name = "Warsong Peon", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 11857,
+        power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 11857,
         zone = "Ashenvale", creatureType = "Humanoid", npcId = 11656,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["ASH09"] = {
         id = "ASH09", name = "Ghostpaw Alpha", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -78,10 +78,10 @@ TTS:AddCards({
     },
     ["ASH10"] = {
         id = "ASH10", name = "Terrowulf Packlord", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 522,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 522,
         zone = "Ashenvale", creatureType = "Humanoid", npcId = 3792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["ASH11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Ashenvale", creatureType = "Humanoid", npcEntry = 3691,
         anthem = { tag = "zone", value = "Ashenvale", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Ashenvale creatures you control get +1/+1."
+        text = "Quick. Other Ashenvale denizens you control get +1/+1."
     },
 })

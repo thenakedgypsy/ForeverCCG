@@ -850,9 +850,9 @@ end
 local ABILITY_EFFECTS = {
     BOSS01 = { target = "enemy_player", ops = { { op = "damage", to = "target", n = 2 } } },
     BOSS04 = { target = "creature", ops = { { op = "tuck", to = "target" } } },
-    BOSS07 = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
+    BOSS07 = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
     BOSS08 = { target = "creature", ops = { { op = "freeze", to = "target" } } },
-    BOSS10 = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
+    BOSS10 = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
 }
 
 local function ScoreAbility(self, perm, profile, phase)

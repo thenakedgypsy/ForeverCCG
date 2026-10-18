@@ -63,14 +63,14 @@ TTS:AddCards({
     },
     ["SWA08"] = {
         id = "SWA08", name = "Witherbark Sadist", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 6489,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 6489,
         zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Troll", npcId = 2653,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Strikes-First."
     },
     ["SWA09"] = {
         id = "SWA09", name = "Witherbark Broodguard", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 1157,
+        power = 5, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 1157,
         zone = "Swamp of Sorrows", creatureType = "Beast", faction = "Troll", npcId = 2686,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Fatal."
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Swamp of Sorrows", creatureType = "Humanoid", npcEntry = 7572,
         anthem = { tag = "zone", value = "Swamp of Sorrows", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Other Swamp of Sorrows creatures you control get +1/+1."
+        text = "Drain. Other Swamp of Sorrows denizens you control get +1/+1."
     },
 })

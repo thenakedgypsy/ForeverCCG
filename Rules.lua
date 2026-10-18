@@ -60,7 +60,7 @@ local function FormatTextWithSymbols(str, size)
     return str:gsub("{(%w+)}", function(key)
         local upperKey = string.upper(key)
         if tonumber(key) or upperKey == "X" then
-            return string.format("|cFF8E939B(|r|cFFFFFFFF%s|r|cFF8E939B)|r", upperKey)
+            return string.format("|cFF8E939B(|r%s|cFF8E939B)|r", upperKey)
         end
         local icon = defaultIcons[upperKey]
         if icon then

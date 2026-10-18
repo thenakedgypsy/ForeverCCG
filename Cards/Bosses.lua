@@ -25,7 +25,8 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, firstStrike = true, isBoss = true, displayId = 2029, achievementId = 628,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
-        text = "Quick, Strikes-First."
+        anthem = { tag = "faction", value = "Defias", p = 1 },
+        text = "Quick, Strikes-First. Other Defias you control get +1/+0."
     },
 
     -- Wailing Caverns: Mutanus the Devourer
@@ -43,7 +44,7 @@ TTS:AddCards({
         power = 3, toughness = 5, isBoss = true, displayId = 2353, achievementId = 631,
         zone = "Shadowfang Keep", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "{T}: Put target tapped creature on top of its owner's library."
+        text = "{2}{U}, {T}: Put target Exhausted denizen on top of its owner's library."
     },
 
     -- Blackfathom Deeps: Aku'mai
@@ -61,7 +62,8 @@ TTS:AddCards({
         power = 4, toughness = 4, isBoss = true, displayId = 1621, achievementId = 634,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "Other creatures you control get +1/+1."
+        anthem = { tag = "faction", value = "Defias", p = 1, t = 1 },
+        text = "Other Defias you control get +1/+1."
     },
 
     -- Gnomeregan: Mekgineer Thermaplugg
@@ -70,7 +72,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isBoss = true, displayId = 6980, achievementId = 635,
         zone = "Gnomeregan", creatureType = "Humanoid",
         modelCam = { zoom = 0.70, camScale = 0.90, z = 0.05, rotation = 0.15 },
-        text = "{T}: Deal 2 damage to each opposing creature."
+        text = "{1}{R}, {T}: Deal 1 damage to each opposing denizen."
     },
 
     -- Razorfen Kraul: Charlga Razorflank
@@ -79,7 +81,7 @@ TTS:AddCards({
         power = 5, toughness = 6, reach = true, isBoss = true, displayId = 4642, achievementId = 636,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar",
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
-        text = "Anti-Air. {T}: Tap target creature. It does not untap during its controller's next untap step."
+        text = "Anti-Air. {1}{G}, {T}: Exhaust target denizen. It does not Recover during its controller's next Recover step."
     },
 
     -- SM Graveyard: Bloodmage Thalnos
@@ -97,7 +99,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isBoss = true, displayId = 5266, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{T}: Deal 2 damage to all opposing creatures."
+        text = "{1}{R}, {T}: Deal 1 damage to each opposing denizen."
     },
 
     -- SM Armory: Herod
@@ -106,16 +108,16 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isBoss = true, displayId = 2041, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Quick. Herod attacks each combat if able."
+        text = "Quick. Herod attacks each combat if able. Whenever Herod attacks, he gets +2/+0 until end of turn."
     },
 
     -- SM Cathedral: High Inquisitor Whitemane
     ["BOSS12"] = {
         id = "BOSS12", name = "High Inquisitor Whitemane", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 4, toughness = 6, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
+        power = 4, toughness = 6, shielded = true, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Drain. When Whitemane dies, return the last other creature card put into your graveyard to the battlefield."
+        text = "Drain, Shielded. When Whitemane dies, return the last other denizen card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -124,7 +126,7 @@ TTS:AddCards({
         power = 6, toughness = 8, isBoss = true, displayId = 7971, achievementId = 637,
         zone = "Razorfen Downs", creatureType = "Undead",
         modelCam = { zoom = 0.65, camScale = 1.20, z = -0.15, rotation = 0.15 },
-        text = "Whenever Amnennar attacks, tap the untapped enemy creature with the highest power. It does not untap during its controller's next untap step."
+        text = "Whenever Amnennar attacks, Exhaust the ready enemy denizen with the highest power. It does not Recover during its controller's next Recover step."
     },
 
     -- Uldaman: Archaedas
@@ -139,10 +141,10 @@ TTS:AddCards({
     -- Zul'Farrak: Chief Ukorz Sandscalp
     ["BOSS15"] = {
         id = "BOSS15", name = "Chief Ukorz Sandscalp", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 8, toughness = 7, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
+        power = 8, toughness = 7, haste = true, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Ukorz gets +3/+0 as long as your life total is 10 or less."
+        text = "Brutish, Quick. Ukorz gets +3/+0 as long as your life total is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -160,7 +162,7 @@ TTS:AddCards({
         power = 8, toughness = 8, flying = true, isBoss = true, displayId = 7806, achievementId = 642,
         zone = "Sunken Temple", creatureType = "Dragonkin",
         modelCam = { zoom = 0.25, camScale = 1.80, z = -0.05, rotation = -0.20 },
-        text = "Airborne. Whenever Eranikus deals combat damage to a creature, tap that creature and it does not untap during its controller's next untap step."
+        text = "Airborne. Whenever Eranikus deals combat damage to a denizen, Exhaust that denizen and it does not Recover during its controller's next Recover step."
     },
 
     -- BRD: Emperor Dagran Thaurissan
@@ -169,7 +171,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isBoss = true, displayId = 8807, achievementId = 643,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron",
         modelCam = { zoom = 0.75, camScale = 0.95, z = 0.00, rotation = 0.15 },
-        text = "Other creatures you control gain +1/+1 and Vigilant."
+        text = "Other denizens you control gain +1/+1 and Vigilant."
     },
 
     -- LBRS: Overlord Wyrmthalak
@@ -178,16 +180,16 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isBoss = true, displayId = 8711, achievementId = 644,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.50, camScale = 1.35, z = -0.20, rotation = 0.15 },
-        text = "Brutish. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing creatures."
+        text = "Brutish. When Wyrmthalak enters the battlefield, deal 3 damage to all opposing denizens."
     },
 
     -- UBRS: General Drakkisath
     ["BOSS20"] = {
         id = "BOSS20", name = "General Drakkisath", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, trample = true, isBoss = true, displayId = 10115, achievementId = 1307,
+        power = 10, toughness = 9, hexproof = true, trample = true, isBoss = true, displayId = 10115, achievementId = 1307,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
-        text = "Brutish. All other creatures lose and cannot gain Quick."
+        text = "Brutish, Warded. All other denizens lose and cannot gain Quick."
     },
 
     -- Dire Maul East: Alzzin the Wildshaper
@@ -223,7 +225,7 @@ TTS:AddCards({
         power = 6, toughness = 7, isBoss = true, displayId = 11070, achievementId = 646,
         zone = "Scholomance", creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "Whenever another creature you control dies, you draw a card."
+        text = "Whenever another denizen you control dies, you draw a card."
     },
 
     -- Stratholme: Baron Rivendare
@@ -232,16 +234,16 @@ TTS:AddCards({
         power = 8, toughness = 8, lifelink = true, isBoss = true, displayId = 10729, achievementId = 633,
         zone = "Stratholme", creatureType = "Undead",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Drain. Whenever an opposing creature dies, its controller takes 2 damage."
+        text = "Drain. Whenever an opposing denizen dies, its controller takes 2 damage."
     },
 
     -- Stratholme: Balnazzar
     ["BOSS26"] = {
         id = "BOSS26", name = "Balnazzar", cost = "{4}{B}{U}", cmc = 6, color = "B", type = "Creature",
-        power = 8, toughness = 9, flying = true, isBoss = true, displayId = 10691, achievementId = 633,
+        power = 8, toughness = 9, isBoss = true, displayId = 10691, achievementId = 633,
         zone = "Stratholme", creatureType = "Demon",
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. When Balnazzar enters the battlefield, gain control of the opposing creature with the highest power of 4 or less."
+        text = "When Balnazzar enters the battlefield, gain control of the opposing denizen with the highest power of 4 or less."
     },
 
     -- WoW Forever dungeons: their "achievements" are the kill statistics, so the same id
@@ -250,23 +252,23 @@ TTS:AddCards({
     -- The Hall of Thanes: Durgen Dirgehammer
     ["BOSS27"] = {
         id = "BOSS27", name = "Durgen Dirgehammer", cost = "{2}{R}{B}", cmc = 4, color = "R", type = "Creature",
-        power = 5, toughness = 5, firstStrike = true, isBoss = true, displayId = 142837,
+        power = 5, toughness = 5, vigilance = true, firstStrike = true, isBoss = true, displayId = 142837,
         achievementId = 63573, statisticId = 63573,
         zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron",
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Dark Iron you control get +1/+1."
+        text = "Strikes-First, Vigilant. Other Dark Iron you control get +1/+1."
     },
 
     -- Ruins of Lordaeron: Rath'mael
     ["BOSS28"] = {
         id = "BOSS28", name = "Rath'mael", cost = "{3}{B}{R}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 6, deathtouch = true, isBoss = true, displayId = 144175,
+        power = 6, toughness = 6, lifelink = true, deathtouch = true, isBoss = true, displayId = 144175,
         achievementId = 63571, statisticId = 63571,
         zone = "Ruins of Lordaeron", creatureType = "Undead",
         anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Other Undead you control get +1/+0."
+        text = "Fatal, Drain. Other Undead you control get +1/+0."
     },
 
     -- Excavation Site: Relic Guardian (no kill statistic on Wowhead yet; tracked by statistic name)
@@ -283,8 +285,8 @@ TTS:AddCards({
         id = "BOSS30", name = "Shade of the Archmage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 7, flying = true, isBoss = true, displayId = 130061,
         zone = "City of Dalaran", creatureType = "Elemental",
-        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. When Shade of the Archmage enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step."
+        text = "Airborne. When Shade of the Archmage enters the battlefield, Exhaust each enemy denizen."
     },
 })

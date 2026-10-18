@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["MUL08"] = {
         id = "MUL08", name = "Venture Co. Worker", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 7247,
+        power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 7247,
         zone = "Mulgore", creatureType = "Humanoid", faction = "Venture Co.", npcId = 2978,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["MUL09"] = {
         id = "MUL09", name = "Venture Co. Supervisor", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -78,10 +78,10 @@ TTS:AddCards({
     },
     ["MUL10"] = {
         id = "MUL10", name = "Snagglespear", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 275,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 275,
         zone = "Mulgore", creatureType = "Humanoid", faction = "Quilboar", npcId = 5786,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["MUL11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Mulgore", creatureType = "Humanoid", npcEntry = 2993,
         anthem = { tag = "zone", value = "Mulgore", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Mulgore creatures you control get +1/+1."
+        text = "Other Mulgore denizens you control get +1/+1."
     },
 })

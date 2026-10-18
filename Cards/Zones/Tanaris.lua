@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["TAN08"] = {
         id = "TAN08", name = "Dunemaul Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 11545,
+        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 11545,
         zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 5474,
         modelCam = { zoom = 0.67, camScale = 1.13, z = -0.13, rotation = 0.15 },
         text = "Brutish."
     },
     ["TAN09"] = {
         id = "TAN09", name = "Surf Glider", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 4, toughness = 8, isMob = true, isBoss = true, displayId = 7114,
+        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 7114,
         zone = "Tanaris", creatureType = "Beast", npcId = 5431,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant, Support."
     },
     ["TAN10"] = {
         id = "TAN10", name = "Cyclok the Mad", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 11532,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 11532,
         zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 8202,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     -- Solo reward
     ["TAN11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Tanaris", p = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Marin Noggenfogger enters the battlefield, draw a card. Other Tanaris creatures you control get +1/+0."
+        text = "When Marin Noggenfogger enters the battlefield, draw a card. Other Tanaris denizens you control get +1/+0."
     },
 })

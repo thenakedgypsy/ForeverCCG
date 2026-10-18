@@ -119,15 +119,15 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 245999,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arcane Anomaly enters the battlefield, deal 2 damage to each enemy creature."
+        text = "When Arcane Anomaly enters the battlefield, deal 2 damage to each enemy denizen."
     },
     ["DAL16"] = {
         id = "DAL16", name = "Arcanic Enigma", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 129900,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246016,
-        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arcanic Enigma enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step."
+        text = "When Arcanic Enigma enters the battlefield, Exhaust each enemy denizen."
     },
     ["DAL17"] = {
         id = "DAL17", name = "Unstable Sentinel", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -135,7 +135,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246017,
         onDeath = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Unstable Sentinel dies, deal 2 damage to each enemy creature."
+        text = "When Unstable Sentinel dies, deal 2 damage to each enemy denizen."
     },
     ["DAL18"] = {
         id = "DAL18", name = "Mana Devourer", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -150,7 +150,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Humanoid", npcId = 247032,
         etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lyn the Ignored enters the battlefield, return a creature card from your graveyard to the battlefield."
+        text = "When Lyn the Ignored enters the battlefield, return a denizen card from your graveyard to the battlefield."
     },
     ["DAL20"] = {
         id = "DAL20", name = "Fel Ancient", cost = "{4}{G}{B}", cmc = 6, color = "G", type = "Creature",
@@ -158,7 +158,7 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Demon", npcId = 246003,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Fel Ancient enters the battlefield, tap each enemy creature."
+        text = "When Fel Ancient enters the battlefield, Exhaust each enemy denizen."
     },
     ["DAL21"] = {
         id = "DAL21", name = "Atrexis the Grave Knight", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -176,6 +176,6 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Humanoid", faction = "Kirin Tor", npcEntry = 246748,
         anthem = { tag = "zone", value = "City of Dalaran", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded. Other City of Dalaran creatures you control get +1/+1."
+        text = "Warded. Other City of Dalaran denizens you control get +1/+1."
     },
 })

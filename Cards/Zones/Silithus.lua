@@ -13,7 +13,7 @@
 TTS:AddCards({
     -- SILITHUS
     ["SLI01"] = {
-        id = "SLI01", name = "Tortured Druid", cost = "{B}", cmc = 1, color = "B", type = "Creature",
+        id = "SLI01", name = "Tortured Druid", cost = "{W}", cmc = 1, color = "W", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 12269,
         zone = "Silithus", creatureType = "Undead", npcId = 12178,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["SLI08"] = {
         id = "SLI08", name = "Twilight Avenger", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 11811,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 11811,
         zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11880,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Strikes-First."
     },
     ["SLI09"] = {
         id = "SLI09", name = "Twilight Geolord", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 11819,
+        power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 11819,
         zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11881,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Drain."
     },
     ["SLI10"] = {
         id = "SLI10", name = "Mistress Natalia Mar'alith", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Silithus", creatureType = "Humanoid", npcEntry = 14347,
         anthem = { tag = "zone", value = "Silithus", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Strikes-First. Other Silithus creatures you control get +1/+1."
+        text = "Vigilant, Strikes-First. Other Silithus denizens you control get +1/+1."
     },
 })

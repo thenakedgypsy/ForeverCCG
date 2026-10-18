@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["STV08"] = {
         id = "STV08", name = "Venture Co. Strip Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 7202,
+        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 7202,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", faction = "Venture Co.", npcId = 674,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Support."
     },
     ["STV09"] = {
         id = "STV09", name = "Southern Sand Crawler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 4, toughness = 8, isMob = true, isBoss = true, displayId = 9573,
+        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 9573,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 2544,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant, Support."
     },
     ["STV10"] = {
         id = "STV10", name = "Lord Sakrasis", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 4910,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 4910,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 2541,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     -- Solo reward
     ["STV11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Stranglethorn Vale", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2, filter = { tag = "type", value = "Beast" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale creatures you control get +1/+0."
+        text = "Anti-Air. When Hemet Nesingwary enters the battlefield, deal 2 damage to each enemy Beast. Other Stranglethorn Vale denizens you control get +1/+0."
     },
 })

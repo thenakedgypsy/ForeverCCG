@@ -82,7 +82,7 @@ TTS:AddCards({
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 4278,
         anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Shadowfang Keep creatures you control get +1/+1."
+        text = "Vigilant. Other Shadowfang Keep denizens you control get +1/+1."
     },
     ["SFK11"] = {
         id = "SFK11", name = "Wolf Master Nandos", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -107,6 +107,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
         onDeath = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Shadowfang Keep creatures you control get +1/+1. When Deathsworn Captain dies, deal 2 damage to each enemy creature."
+        text = "Other Shadowfang Keep denizens you control get +1/+1. When Deathsworn Captain dies, deal 2 damage to each enemy denizen."
     },
 })

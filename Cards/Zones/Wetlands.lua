@@ -63,14 +63,14 @@ TTS:AddCards({
     },
     ["WET08"] = {
         id = "WET08", name = "Rumbling Exile", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 4, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 9587,
+        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 9587,
         zone = "Wetlands", creatureType = "Elemental", npcId = 2592,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
     ["WET09"] = {
         id = "WET09", name = "Burning Exile", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 2172,
+        power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 2172,
         zone = "Wetlands", creatureType = "Elemental", npcId = 2760,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Wetlands", creatureType = "Humanoid", npcEntry = 2104,
         anthem = { tag = "zone", value = "Wetlands", p = 1, kw = { "trample" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Wetlands creatures you control get +1/+0 and Brutish."
+        text = "Brutish. Other Wetlands denizens you control get +1/+0 and Brutish."
     },
 })

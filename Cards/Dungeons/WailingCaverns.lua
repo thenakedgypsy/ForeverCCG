@@ -97,7 +97,7 @@ TTS:AddCards({
         zone = "Wailing Caverns", creatureType = "Elemental", npcId = 5775,
         anthem = { tag = "zone", value = "Wailing Caverns", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Wailing Caverns creatures you control get +1/+1."
+        text = "Brutish. Other Wailing Caverns denizens you control get +1/+1."
     },
     -- Solo reward
     ["WCV13"] = {
@@ -107,6 +107,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Wailing Caverns", p = 0, kw = { "lifelink" } },
         rally = { tag = "faction", value = "Druids of the Fang", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Gets +1/+1 for each other Druid of the Fang you control. Other Wailing Caverns creatures you control have Drain."
+        text = "Drain. Gets +1/+1 for each other Druid of the Fang you control. Other Wailing Caverns denizens you control have Drain."
     },
 })

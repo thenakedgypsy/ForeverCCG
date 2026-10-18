@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["ARA08"] = {
         id = "ARA08", name = "Boulderfist Shaman", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 416,
+        power = 5, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 416,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2570,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Vigilant."
     },
     ["ARA09"] = {
         id = "ARA09", name = "Darbel Montrose", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Arathi Highlands", creatureType = "Humanoid", npcEntry = 2700,
         rally = { tag = "zone", value = "Arathi Highlands", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Gets +1/+1 for each other Arathi Highlands creature you control."
+        text = "Strikes-First. Gets +1/+1 for each other Arathi Highlands denizen you control."
     },
 })

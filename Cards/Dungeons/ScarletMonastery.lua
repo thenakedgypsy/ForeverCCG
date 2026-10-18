@@ -14,7 +14,7 @@
 TTS:AddCards({
     -- SCARLET MONASTERY
     ["SMO01"] = {
-        id = "SMO01", name = "Scarlet Torturer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
+        id = "SMO01", name = "Scarlet Torturer", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2607,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4306,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
@@ -71,7 +71,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["SMO09"] = {
-        id = "SMO09", name = "Houndmaster Loksey", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
+        id = "SMO09", name = "Houndmaster Loksey", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 5, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 2040,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3974,
         anthem = { tag = "type", value = "Beast", kw = { "haste" } },
@@ -115,6 +115,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Scarlet Monastery", p = 1, t = 1 },
         onDeath = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Scarlet Monastery creatures you control get +1/+1. When Azshir the Sleepless dies, return a creature card from your graveyard to the battlefield."
+        text = "Other Scarlet Monastery denizens you control get +1/+1. When Azshir the Sleepless dies, return a denizen card from your graveyard to the battlefield."
     },
 })

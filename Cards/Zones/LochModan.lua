@@ -63,32 +63,32 @@ TTS:AddCards({
     },
     ["LOC08"] = {
         id = "LOC08", name = "Black Bear Patriarch", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 4, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 762,
+        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 762,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1189,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
     ["LOC09"] = {
         id = "LOC09", name = "Young Threshadon", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 867,
+        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 867,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1224,
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["LOC10"] = {
         id = "LOC10", name = "Large Loch Crocolisk", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 831,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 831,
         zone = "Loch Modan", creatureType = "Beast", npcId = 2476,
         modelCam = { zoom = 0.81, camScale = 1.03, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["LOC11"] = {
-        id = "LOC11", name = "Mountaineer Stormpike", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        id = "LOC11", name = "Mountaineer Stormpike", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 2, firstStrike = true, isReward = true, displayId = 1894,
         zone = "Loch Modan", creatureType = "Humanoid", npcEntry = 1343,
         rally = { tag = "zone", value = "Loch Modan", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Gets +1/+1 for each other Loch Modan creature you control."
+        text = "Strikes-First. Gets +1/+1 for each other Loch Modan denizen you control."
     },
 })

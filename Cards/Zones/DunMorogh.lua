@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["DUN08"] = {
         id = "DUN08", name = "Winter Wolf", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 6, toughness = 4, isMob = true, isBoss = true, displayId = 785,
+        power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 785,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1131,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["DUN09"] = {
         id = "DUN09", name = "Ice Claw Bear", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 4, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 8840,
+        power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 8840,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1196,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
     ["DUN10"] = {
         id = "DUN10", name = "Hammerspine", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 830,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 830,
         zone = "Dun Morogh", creatureType = "Humanoid", npcId = 1119,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["DUN11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Dun Morogh", p = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Senir Whitebeard enters the battlefield, draw a card. Other Dun Morogh creatures you control get +1/+0."
+        text = "When Senir Whitebeard enters the battlefield, draw a card. Other Dun Morogh denizens you control get +1/+0."
     },
 })

@@ -630,7 +630,7 @@ TTS.EncounterRules = {
     },
     REINFORCEMENTS = {
         name = "Reinforcements",
-        text = "At the start of every 3rd turn of the opponent, a random creature from its deck joins the battle.",
+        text = "At the start of every 3rd turn of the opponent, a random denizen from its deck joins the battle.",
         onAITurnStart = function(self, enc)
             if (self.remoteTurns or 0) % 3 ~= 0 then return end
             local options = {}
@@ -646,7 +646,7 @@ TTS.EncounterRules = {
     },
     ENRAGE = {
         name = "Enrage",
-        text = "From turn 10, the opponent's creatures get +2/+0.",
+        text = "From turn 10, the opponent's denizens get +2/+0.",
         onPlayerTurnStart = function(self, enc)
             if self.turn == 10 then
                 self:Log(L("solo.enraged", self.opponent), "SYSTEM")

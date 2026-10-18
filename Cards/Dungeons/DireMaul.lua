@@ -125,7 +125,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11489,
         anthem = { tag = "zone", value = "Dire Maul", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Dire Maul creatures you control get +1/+1."
+        text = "Brutish. Other Dire Maul denizens you control get +1/+1."
     },
     ["DMA17"] = {
         id = "DMA17", name = "Captain Kromcrush", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",

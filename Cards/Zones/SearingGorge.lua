@@ -64,24 +64,24 @@ TTS:AddCards({
     },
     ["SEA08"] = {
         id = "SEA08", name = "Heavy War Golem", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 1, toughness = 11, defender = true, isMob = true, isBoss = true, displayId = 10801,
+        power = 1, toughness = 11, bulwark = 2, defender = true, isMob = true, isBoss = true, displayId = 10801,
         zone = "Searing Gorge", creatureType = "Mechanical", npcId = 5854,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Blocker."
+        text = "Blocker, Bulwark 2."
     },
     ["SEA09"] = {
         id = "SEA09", name = "Incendosaur", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 8509,
+        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 8509,
         zone = "Searing Gorge", creatureType = "Beast", npcId = 9318,
         modelCam = { zoom = 0.75, camScale = 1.07, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["SEA10"] = {
         id = "SEA10", name = "Smoldar", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 8, toughness = 10, isMob = true, isBoss = true, displayId = 5781,
+        power = 8, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 5781,
         zone = "Searing Gorge", creatureType = "Elemental", npcId = 8278,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["SEA11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Searing Gorge", creatureType = "Dragonkin", npcEntry = 8479,
         anthem = { tag = "zone", value = "Searing Gorge", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Other Searing Gorge creatures you control get +1/+1."
+        text = "Airborne. Other Searing Gorge denizens you control get +1/+1."
     },
 })

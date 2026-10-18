@@ -77,6 +77,6 @@ TTS:AddCards({
         zone = "Gnomeregan", creatureType = "Humanoid", npcEntry = 7361,
         anthem = { tag = "zone", value = "Gnomeregan", p = 1, kw = { "trample" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Gnomeregan creatures you control get +1/+0 and Brutish."
+        text = "Brutish. Other Gnomeregan denizens you control get +1/+0 and Brutish."
     },
 })

@@ -71,7 +71,7 @@ TTS:AddCards({
     },
     ["TIR09"] = {
         id = "TIR09", name = "Scarlet Vanguard", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 5, toughness = 6, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
+        power = 6, toughness = 7, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant, Support."
@@ -89,8 +89,8 @@ TTS:AddCards({
         id = "TIR11", name = "Executor Zygand", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, isReward = true, displayId = 1649,
         zone = "Tirisfal Glades", creatureType = "Undead", npcEntry = 1515,
-        anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
+        anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Undead you control get +1/+1."
+        text = "Other Undead you control get +1/+0."
     },
 })

@@ -61,7 +61,7 @@ TTS:AddCards({
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1720,
         anthem = { tag = "zone", value = "The Stockade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Stockade creatures you control get +1/+1."
+        text = "Strikes-First. Other Stockade denizens you control get +1/+1."
     },
     -- Solo reward
     ["STK08"] = {
@@ -71,6 +71,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "The Stockade", p = 0, kw = { "haste" } },
         rally = { tag = "faction", value = "Defias", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Gets +1/+0 for each other Defias you control. Other Stockade creatures you control have Quick."
+        text = "Quick. Gets +1/+0 for each other Defias you control. Other Stockade denizens you control have Quick."
     },
 })

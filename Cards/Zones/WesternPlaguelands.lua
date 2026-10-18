@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["WPL08"] = {
         id = "WPL08", name = "Scarlet Worker", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 4, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 10303,
+        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 10303,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1883,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant."
     },
     ["WPL09"] = {
         id = "WPL09", name = "Haunting Vision", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 146,
+        power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 146,
         zone = "Western Plaguelands", creatureType = "Undead", npcId = 4472,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Drain."
     },
     ["WPL10"] = {
         id = "WPL10", name = "Scarlet High Clerist", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",

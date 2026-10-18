@@ -745,10 +745,16 @@ end
 function E:EndTurn()
     if not self.isMyTurn then return end
     if self:UndoBlocksAction() then return end
-    -- Our attack is still being blocked or resolved: end the turn once it's over
+    -- Our attack is still being blocked or resolved: end the turn once it's over. With the
+    -- blocks already in, that means resolving combat now (TryEndAfterCombat then ends the turn).
     local bs = self.blockingState
     if self.phase == "COMBAT_BLOCK" and bs and not bs.isRemoteAttacking then
-        self:ToggleEndAfterCombat()
+        if bs.blocksDeclared then
+            self.endAfterCombat = true
+            self:NextPhase()
+        else
+            self:ToggleEndAfterCombat()
+        end
         return
     end
     -- Declared attackers have to be resolved first

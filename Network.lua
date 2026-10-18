@@ -1514,7 +1514,12 @@ function TTS.Net:OnReceive(msg, sender)
             if E.blockingState then
                 E.blockingState.blocksDeclared = true
                 E:Log(L("log.oppBlockers", sender), "COMBAT")
-                E:RefreshUI()
+                -- End Turn After Combat was pressed while we waited: resolve straight away
+                if E.endAfterCombat and not E.blockingState.isRemoteAttacking then
+                    E:NextPhase()
+                else
+                    E:RefreshUI()
+                end
             end
 
         elseif actionType == "RESOLVE_COMBAT" then

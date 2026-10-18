@@ -145,7 +145,7 @@ TTS:AddCards({
         zone = "Stratholme", creatureType = "Humanoid", npcId = 10438,
         anthem = { tag = "zone", value = "Stratholme", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Stratholme creatures you control get +1/+1."
+        text = "Other Stratholme denizens you control get +1/+1."
     },
     ["STR20"] = {
         id = "STR20", name = "Grand Crusader Dathrohan", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
@@ -163,6 +163,6 @@ TTS:AddCards({
         anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Brutish. When Ramstein the Gorger enters the battlefield, deal 2 damage to each enemy creature. Other Undead you control get +1/+1."
+        text = "Brutish. When Ramstein the Gorger enters the battlefield, deal 2 damage to each enemy denizen. Other Undead you control get +1/+1."
     },
 })

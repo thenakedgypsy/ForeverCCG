@@ -96,7 +96,7 @@ TTS:AddCards({
         zone = "Maraudon", creatureType = "Giant", npcId = 12203,
         anthem = { tag = "zone", value = "Maraudon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Maraudon creatures you control get +1/+1."
+        text = "Brutish. Other Maraudon denizens you control get +1/+1."
     },
     -- Solo reward
     ["MAR13"] = {

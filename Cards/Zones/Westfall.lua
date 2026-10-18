@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["WES08"] = {
         id = "WES08", name = "Riverpaw Bandit", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 383,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 383,
         zone = "Westfall", creatureType = "Humanoid", faction = "Gnoll", npcId = 452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
     },
     ["WES09"] = {
         id = "WES09", name = "Shore Crawler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 4, toughness = 8, isMob = true, isBoss = true, displayId = 9570,
+        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 9570,
         zone = "Westfall", creatureType = "Beast", npcId = 1216,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant, Support."
     },
     ["WES10"] = {
         id = "WES10", name = "Vultros", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         zone = "Westfall", creatureType = "Beast", npcId = 462,
         anthem = { tag = "zone", value = "Westfall", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Airborne. Other Westfall creatures you control get +1/+0."
+        text = "Airborne. Other Westfall denizens you control get +1/+0."
     },
     -- Solo reward
     ["WES11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Westfall", creatureType = "Humanoid", npcEntry = 234,
         anthem = { tag = "zone", value = "Westfall", p = 1, t = 1, kw = { "vigilance" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Westfall creatures you control get +1/+1 and Vigilant."
+        text = "Vigilant. Other Westfall denizens you control get +1/+1 and Vigilant."
     },
 })

@@ -15,61 +15,61 @@ TTS:AddCards({
     -- SHAMAN
     ["SHA01"] = {
         id = "SHA01", name = "Lightning Bolt", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Deal 3 damage to target enemy creature or the opponent.",
+        text = "Deal 3 damage to target enemy denizen or the opponent.",
         art = "Interface\\Icons\\Spell_Nature_Lightning",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 } } }
     },
     ["SHA02"] = {
         id = "SHA02", name = "Earth Shock", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Deal 2 damage to target enemy creature.",
+        text = "Deal 2 damage to target enemy denizen.",
         art = "Interface\\Icons\\Spell_Nature_EarthShock",
         effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 2 } } }
     },
     ["SHA03"] = {
         id = "SHA03", name = "Flame Shock", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 3 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
+        text = "Deal 1 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 3 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
     ["SHA04"] = {
         id = "SHA04", name = "Frost Shock", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy creature and tap it. It does not untap during its controller's next untap step.",
+        text = "Deal 1 damage to target enemy denizen and Exhaust it. It does not Recover during its controller's next Recover step.",
         art = "Interface\\Icons\\Spell_Frost_FrostShock",
         effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 1 }, { op = "freeze", to = "target" } } }
     },
     ["SHA05"] = {
         id = "SHA05", name = "Chain Lightning", cost = "{3}{G}", cmc = 4, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Deal 2 damage to each enemy creature and to the opponent.",
+        text = "Deal 2 damage to each enemy denizen and to the opponent.",
         art = "Interface\\Icons\\Spell_Nature_ChainLightning",
         effect = { ops = { { op = "damage", to = "enemy_creatures", n = 2 }, { op = "damage", to = "enemy_player", n = 2 } } }
     },
     ["SHA06"] = {
         id = "SHA06", name = "Healing Wave", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Shaman",
-        text = "You or target creature you control regains 7 health.",
+        text = "You regain 7 health, or target denizen you control permanently gets +0/+2.",
         art = "Interface\\Icons\\Spell_Nature_MagicImmunity",
-        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 7 } } }
+        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 7, t = 2 } } }
     },
     ["SHA07"] = {
         id = "SHA07", name = "Rockbiter Weapon", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Target creature you control gets +2/+0 until end of turn.",
+        text = "Target denizen you control gets +2/+0 until end of turn.",
         art = "Interface\\Icons\\Spell_Nature_RockBiter",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2 } } }
     },
     ["SHA08"] = {
         id = "SHA08", name = "Stoneskin Totem", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Creatures you control get +0/+2 until end of turn.",
+        text = "Denizens you control get +0/+2 until end of turn.",
         art = "Interface\\Icons\\Spell_Nature_StoneSkinTotem",
         effect = { ops = { { op = "buff", to = "friendly_creatures", t = 2 } } }
     },
     ["SHA09"] = {
         id = "SHA09", name = "Purge", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Remove beneficial effects from target enemy creature, or harmful effects from target creature you control.",
+        text = "Remove beneficial effects from target enemy denizen, or harmful effects from target denizen you control.",
         art = "Interface\\Icons\\Spell_Holy_Dizzy",
         effect = { target = "creature", ops = { { op = "dispel", to = "target" } } }
     },
     ["SHA10"] = {
         id = "SHA10", name = "Ancestral Spirit", cost = "{4}{W}", cmc = 5, color = "W", type = "Sorcery", class = "Shaman",
-        text = "Return a creature card from any graveyard to the battlefield under your control.",
+        text = "Return a denizen card from any graveyard to the battlefield under your control.",
         art = "Interface\\Icons\\Spell_Nature_Regenerate",
         effect = { ops = { { op = "raise", src = "any" } } }
     },

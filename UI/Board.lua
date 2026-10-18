@@ -95,9 +95,10 @@ function TTS:FormatSymbols(str, size, tapSize)
             return string.format("|T%s:%d:%d:0:0|t", TAP_TEX, ts, ts)
         end
 
-        -- Generic / Numeric / X
+        -- Generic / Numeric / X: the number takes the text's own colour (black in printed
+        -- rules text, white on cost lines and in the log)
         if tonumber(key) or upperKey == "X" then
-            return string.format("|cFF8E939B(|r|cFFFFFFFF%s|r|cFF8E939B)|r", upperKey)
+            return string.format("|cFF8E939B(|r%s|cFF8E939B)|r", upperKey)
         end
 
         -- Colored Mana Colours

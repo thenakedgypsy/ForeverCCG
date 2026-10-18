@@ -99,6 +99,6 @@ TTS:AddCards({
         zone = "The Hall of Thanes", creatureType = "Undead", npcEntry = 265002,
         anthem = { tag = "zone", value = "The Hall of Thanes", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Hall of Thanes creatures you control get +1/+1."
+        text = "Vigilant. Other Hall of Thanes denizens you control get +1/+1."
     },
 })

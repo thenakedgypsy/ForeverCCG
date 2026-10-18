@@ -64,14 +64,14 @@ TTS:AddCards({
     },
     ["STO08"] = {
         id = "STO08", name = "Blackened Basilisk", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 2173,
+        power = 5, toughness = 6, isMob = true, isBoss = true, displayId = 2173,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 4044,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["STO09"] = {
         id = "STO09", name = "Bloodfury Windcaller", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 10282,
+        power = 6, toughness = 6, flying = true, isMob = true, isBoss = true, displayId = 10282,
         zone = "Stonetalon Mountains", creatureType = "Humanoid", npcId = 4026,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Airborne."
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Stonetalon Mountains", creatureType = "Humanoid", npcEntry = 3994,
         anthem = { tag = "zone", value = "Stonetalon Mountains", t = 2 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Anti-Air. Other Stonetalon Mountains creatures you control get +0/+2."
+        text = "Anti-Air. Other Stonetalon Mountains denizens you control get +0/+2."
     },
 })

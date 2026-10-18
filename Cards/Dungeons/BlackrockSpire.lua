@@ -129,7 +129,7 @@ TTS:AddCards({
     },
     ["BRS17"] = {
         id = "BRS17", name = "Goraluk Anvilcrack", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 10222,
+        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 10222,
         zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 10899,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
@@ -156,6 +156,6 @@ TTS:AddCards({
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcEntry = 10429,
         anthem = { tag = "zone", value = "Blackrock Spire", p = 1, kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick, Brutish. Other Blackrock Spire creatures you control get +1/+0 and Quick."
+        text = "Quick, Brutish. Other Blackrock Spire denizens you control get +1/+0 and Quick."
     },
 })

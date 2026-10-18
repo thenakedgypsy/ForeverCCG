@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["HIL08"] = {
         id = "HIL08", name = "Hillsbrad Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 3629,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 3629,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2269,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Support."
     },
     ["HIL09"] = {
         id = "HIL09", name = "Witherbark Headhunter", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 3997,
+        power = 6, toughness = 6, haste = true, isMob = true, isBoss = true, displayId = 3997,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Troll", npcId = 2556,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["HIL10"] = {
         id = "HIL10", name = "Zalas Witherbark", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 4003,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 4003,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2605,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["HIL11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Hillsbrad Foothills", p = 1 },
         etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills creatures you control get +1/+0."
+        text = "Vigilant. When Magistrate Henry Maleb enters the battlefield, prevent the next 4 damage that would be dealt to you. Other Hillsbrad Foothills denizens you control get +1/+0."
     },
 })

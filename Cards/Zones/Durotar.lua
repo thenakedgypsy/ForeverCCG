@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["DUR08"] = {
         id = "DUR08", name = "Bloodtalon Scythemaw", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 6, toughness = 4, isMob = true, isBoss = true, displayId = 1959,
+        power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 1959,
         zone = "Durotar", creatureType = "Beast", npcId = 3123,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["DUR09"] = {
         id = "DUR09", name = "Dreadmaw Crocolisk", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 1250,
+        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1250,
         zone = "Durotar", creatureType = "Beast", npcId = 3110,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["DUR10"] = {
         id = "DUR10", name = "Death Flayer", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         zone = "Durotar", creatureType = "Beast", npcId = 5823,
         anthem = { tag = "zone", value = "Durotar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Other Durotar creatures you control get +1/+1."
+        text = "Fatal. Other Durotar denizens you control get +1/+1."
     },
     -- Solo reward
     ["DUR11"] = {

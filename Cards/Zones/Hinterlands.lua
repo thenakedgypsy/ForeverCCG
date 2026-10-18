@@ -20,7 +20,7 @@ TTS:AddCards({
         text = "Quick."
     },
     ["HIN02"] = {
-        id = "HIN02", name = "Trained Razorbeak", cost = "{U}", cmc = 1, color = "U", type = "Creature",
+        id = "HIN02", name = "Trained Razorbeak", cost = "{W}", cmc = 1, color = "W", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 1149,
         zone = "The Hinterlands", creatureType = "Beast", npcId = 2657,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "The Hinterlands", creatureType = "Humanoid", npcEntry = 5635,
         anthem = { tag = "zone", value = "The Hinterlands", p = 1, t = 1, kw = { "flying" } },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Airborne, Vigilant. Other Hinterlands creatures you control get +1/+1 and Airborne."
+        text = "Airborne, Vigilant. Other Hinterlands denizens you control get +1/+1 and Airborne."
     },
 })

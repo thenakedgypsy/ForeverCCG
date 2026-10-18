@@ -64,24 +64,24 @@ TTS:AddCards({
     },
     ["DUS08"] = {
         id = "DUS08", name = "Muckshell Pincer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 2599,
+        power = 5, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 2599,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 4403,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant."
     },
     ["DUS09"] = {
         id = "DUS09", name = "Muckshell Scrabbler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 2600,
+        power = 6, toughness = 6, hexproof = true, isMob = true, isBoss = true, displayId = 2600,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 4404,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     ["DUS10"] = {
         id = "DUS10", name = "Lord Angler", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 14257,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 14257,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 14236,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     -- Solo reward
     ["DUS11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcEntry = 4968,
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 }, { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lady Jaina Proudmoore enters the battlefield, deal 2 damage to each enemy creature and tap them."
+        text = "When Lady Jaina Proudmoore enters the battlefield, deal 2 damage to each enemy denizen and Exhaust them."
     },
 })

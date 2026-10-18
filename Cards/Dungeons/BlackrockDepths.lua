@@ -168,7 +168,7 @@ TTS:AddCards({
         zone = "Blackrock Depths", creatureType = "Giant", npcId = 9938,
         anthem = { tag = "zone", value = "Blackrock Depths", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Blackrock Depths creatures you control get +1/+1."
+        text = "Brutish. Other Blackrock Depths denizens you control get +1/+1."
     },
     -- Solo reward
     ["BRD23"] = {
@@ -178,6 +178,6 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         etb = { ops = { { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. When Princess Moira Bronzebeard enters the battlefield, creatures you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
+        text = "Drain. When Princess Moira Bronzebeard enters the battlefield, denizens you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
     },
 })

@@ -63,14 +63,14 @@ TTS:AddCards({
     },
     ["BUR08"] = {
         id = "BUR08", name = "Firegut Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 10707,
+        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 10707,
         zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 7035,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
         text = "Brutish."
     },
     ["BUR09"] = {
         id = "BUR09", name = "War Reaver", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 10806,
+        power = 6, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 10806,
         zone = "Burning Steppes", creatureType = "Elemental", npcId = 7039,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = "Strikes-First."
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Burning Steppes", creatureType = "Humanoid", npcEntry = 9560,
         anthem = { tag = "zone", value = "Burning Steppes", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Burning Steppes creatures you control get +1/+1."
+        text = "Vigilant. Other Burning Steppes denizens you control get +1/+1."
     },
 })

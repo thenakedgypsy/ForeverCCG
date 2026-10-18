@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["UNG08"] = {
         id = "UNG08", name = "Frenzied Pterrordax", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 4, toughness = 4, flying = true, isMob = true, isBoss = true, displayId = 8412,
+        power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 8412,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 9167,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Airborne."
     },
     ["UNG09"] = {
         id = "UNG09", name = "Living Blaze", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 5488,
+        power = 5, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 5488,
         zone = "Un'Goro Crater", creatureType = "Elemental", npcId = 6521,
         modelCam = { zoom = 0.75, camScale = 1.07, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["UNG10"] = {
         id = "UNG10", name = "Uhk'loc", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",

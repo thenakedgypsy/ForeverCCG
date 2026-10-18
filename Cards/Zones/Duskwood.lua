@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["DSK08"] = {
         id = "DSK08", name = "Plague Spreader", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 4, toughness = 6, isMob = true, isBoss = true, displayId = 519,
+        power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 519,
         zone = "Duskwood", creatureType = "Undead", npcId = 604,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Fatal."
     },
     ["DSK09"] = {
         id = "DSK09", name = "Nightbane Dark Runner", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 736,
+        power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 736,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Worgen", npcId = 205,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
     },
     ["DSK10"] = {
         id = "DSK10", name = "Nefaru", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 11181,
+        power = 9, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 11181,
         zone = "Duskwood", creatureType = "Humanoid", npcId = 534,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Fatal."
     },
     -- Solo reward
     ["DSK11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Duskwood", creatureType = "Humanoid", npcEntry = 263,
         anthem = { tag = "zone", value = "Duskwood", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Duskwood creatures you control get +1/+1."
+        text = "Other Duskwood denizens you control get +1/+1."
     },
 })

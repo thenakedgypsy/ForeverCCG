@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["BRN08"] = {
         id = "BRN08", name = "Silithid Swarmer", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 4, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 2731,
+        power = 5, toughness = 5, deathtouch = true, isMob = true, isBoss = true, displayId = 2731,
         zone = "The Barrens", creatureType = "Beast", npcId = 3252,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Fatal."
     },
     ["BRN09"] = {
         id = "BRN09", name = "Stormhide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 1539,
+        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1539,
         zone = "The Barrens", creatureType = "Beast", npcId = 3238,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["BRN10"] = {
         id = "BRN10", name = "Azzere the Skyblade", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "The Barrens", creatureType = "Humanoid", npcEntry = 3432,
         rally = { tag = "zone", value = "The Barrens", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Gets +1/+0 for each other Barrens creature you control."
+        text = "Quick. Gets +1/+0 for each other Barrens denizen you control."
     },
 })

@@ -63,17 +63,17 @@ TTS:AddCards({
     },
     ["AZS08"] = {
         id = "AZS08", name = "Legashi Rogue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 5, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 6743,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 6743,
         zone = "Azshara", creatureType = "Demon", faction = "Satyr", npcId = 6201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
     },
     ["AZS09"] = {
         id = "AZS09", name = "Coralshell Lurker", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 4, toughness = 8, isMob = true, isBoss = true, displayId = 10947,
+        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 10947,
         zone = "Azshara", creatureType = "Beast", npcId = 6352,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant, Support."
     },
     ["AZS10"] = {
         id = "AZS10", name = "Monnos the Elder", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Azshara", creatureType = "Humanoid", npcEntry = 8420,
         rally = { tag = "zone", value = "Azshara", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Gets +1/+1 for each other Azshara creature you control."
+        text = "Gets +1/+1 for each other Azshara denizen you control."
     },
 })

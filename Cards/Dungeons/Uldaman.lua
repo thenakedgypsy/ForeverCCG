@@ -42,7 +42,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["ULD05"] = {
-        id = "ULD05", name = "Eric \"The Swift\"", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        id = "ULD05", name = "Eric \"The Swift\"", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 4, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 5708,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 6907,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
@@ -71,10 +71,10 @@ TTS:AddCards({
     },
     ["ULD09"] = {
         id = "ULD09", name = "Obsidian Sentinel", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 4, toughness = 9, defender = true, isMob = true, isBoss = true, displayId = 5285,
+        power = 4, toughness = 9, bulwark = 2, defender = true, isMob = true, isBoss = true, displayId = 5285,
         zone = "Uldaman", creatureType = "Mechanical", npcId = 7023,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Blocker."
+        text = "Blocker, Bulwark 2."
     },
     ["ULD10"] = {
         id = "ULD10", name = "Galgann Firehammer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -96,7 +96,7 @@ TTS:AddCards({
         zone = "Uldaman", creatureType = "Elemental", npcId = 7206,
         anthem = { tag = "zone", value = "Uldaman", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant. Other Uldaman creatures you control get +1/+1."
+        text = "Vigilant. Other Uldaman denizens you control get +1/+1."
     },
     -- Solo reward
     ["ULD13"] = {
@@ -106,6 +106,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Uldaman", t = 2 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Vigilant. When Ironaya enters the battlefield, deal 2 damage to each enemy creature. Other Uldaman creatures you control get +0/+2."
+        text = "Vigilant. When Ironaya enters the battlefield, deal 2 damage to each enemy denizen. Other Uldaman denizens you control get +0/+2."
     },
 })

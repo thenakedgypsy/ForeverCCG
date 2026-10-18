@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["TEL05"] = {
         id = "TEL05", name = "Webwood Lurker", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 2, toughness = 2, deathtouch = true, unblockable = true, isMob = true, isBoss = true, displayId = 760,
+        power = 2, toughness = 2, haste = true, deathtouch = true, isMob = true, isBoss = true, displayId = 760,
         zone = "Teldrassil", creatureType = "Beast", npcId = 1998,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Cannot be blocked."
+        text = "Fatal, Quick."
     },
     ["TEL06"] = {
         id = "TEL06", name = "Strigid Owl", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["TEL08"] = {
         id = "TEL08", name = "Gnarlpine Defender", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 4, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 6801,
+        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 6801,
         zone = "Teldrassil", creatureType = "Humanoid", faction = "Furbolg", npcId = 2010,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant."
     },
     ["TEL09"] = {
         id = "TEL09", name = "Strigid Screecher", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 4877,
+        power = 6, toughness = 6, flying = true, isMob = true, isBoss = true, displayId = 4877,
         zone = "Teldrassil", creatureType = "Beast", npcId = 1996,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Airborne."
     },
     ["TEL10"] = {
         id = "TEL10", name = "Blackmoss the Fetid", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 8, toughness = 10, isMob = true, isBoss = true, displayId = 1549,
+        power = 8, toughness = 10, trample = true, isMob = true, isBoss = true, displayId = 1549,
         zone = "Teldrassil", creatureType = "Elemental", npcId = 3535,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["TEL11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Teldrassil", creatureType = "Humanoid", npcEntry = 2079,
         anthem = { tag = "zone", value = "Teldrassil", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Teldrassil creatures you control get +1/+0."
+        text = "Other Teldrassil denizens you control get +1/+0."
     },
 })

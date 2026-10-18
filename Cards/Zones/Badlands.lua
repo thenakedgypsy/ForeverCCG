@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["BAD09"] = {
         id = "BAD09", name = "Shadowforge Digger", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 7, toughness = 7, isMob = true, isBoss = true, displayId = 6052,
+        power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 6052,
         zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4846,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     ["BAD10"] = {
         id = "BAD10", name = "Anathemus", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Badlands", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Lotwil Veriatus enters the battlefield, deal 1 damage to each enemy creature. Other Badlands creatures you control get +1/+0."
+        text = "When Lotwil Veriatus enters the battlefield, deal 1 damage to each enemy denizen. Other Badlands denizens you control get +1/+0."
     },
 })

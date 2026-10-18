@@ -64,7 +64,7 @@ TTS:AddCards({
     },
     ["RED08"] = {
         id = "RED08", name = "Blackrock Champion", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 5, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 6044,
+        power = 6, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 6044,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant."
@@ -79,10 +79,10 @@ TTS:AddCards({
     },
     ["RED10"] = {
         id = "RED10", name = "Kazon", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 6041,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 6041,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 584,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["RED11"] = {
@@ -92,6 +92,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Redridge Mountains", t = 2 },
         etb = { ops = { { op = "heal", to = "self_player", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Magistrate Solomon enters the battlefield, you gain 3 life. Other Redridge Mountains creatures you control get +0/+2."
+        text = "When Magistrate Solomon enters the battlefield, you gain 3 life. Other Redridge Mountains denizens you control get +0/+2."
     },
 })

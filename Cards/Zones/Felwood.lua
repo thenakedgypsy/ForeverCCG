@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["FEL08"] = {
         id = "FEL08", name = "Warpwood Moss Flayer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 4, toughness = 6, isMob = true, isBoss = true, displayId = 8389,
+        power = 5, toughness = 6, reach = true, isMob = true, isBoss = true, displayId = 8389,
         zone = "Felwood", creatureType = "Elemental", npcId = 7100,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["FEL09"] = {
         id = "FEL09", name = "Jaedenar Darkweaver", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 6393,
+        power = 5, toughness = 7, hexproof = true, isMob = true, isBoss = true, displayId = 6393,
         zone = "Felwood", creatureType = "Humanoid", npcId = 7118,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     ["FEL10"] = {
         id = "FEL10", name = "Mezzir the Howler", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 3208,
+        power = 9, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 3208,
         zone = "Felwood", creatureType = "Humanoid", npcId = 10197,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant."
     },
     -- Solo reward
     ["FEL11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Felwood", p = 1 },
         etb = { ops = { { op = "heal", to = "self_player", n = 5 }, { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Arathandris Silversky enters the battlefield, you gain 5 life and creatures you control permanently get +0/+1. Other Felwood creatures you control get +1/+0."
+        text = "When Arathandris Silversky enters the battlefield, you gain 5 life and denizens you control permanently get +0/+1. Other Felwood denizens you control get +1/+0."
     },
 })

@@ -63,7 +63,7 @@ TTS:AddCards({
     },
     ["ALT08"] = {
         id = "ALT08", name = "Syndicate Assassin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
@@ -77,10 +77,10 @@ TTS:AddCards({
     },
     ["ALT10"] = {
         id = "ALT10", name = "Crushridge Warmonger", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 536,
+        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 536,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2287,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = ""
+        text = "Brutish."
     },
     -- Solo reward
     ["ALT11"] = {
@@ -90,6 +90,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Alterac Mountains", t = 2 },
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Archmage Ansirem Runeweaver enters the battlefield, tap each enemy creature. Other Alterac Mountains creatures you control get +0/+2."
+        text = "When Archmage Ansirem Runeweaver enters the battlefield, Exhaust each enemy denizen. Other Alterac Mountains denizens you control get +0/+2."
     },
 })

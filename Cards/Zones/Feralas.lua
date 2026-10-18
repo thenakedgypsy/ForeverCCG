@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["FER08"] = {
         id = "FER08", name = "Sea Spray", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 4, toughness = 6, isMob = true, isBoss = true, displayId = 5562,
+        power = 4, toughness = 6, hexproof = true, isMob = true, isBoss = true, displayId = 5562,
         zone = "Feralas", creatureType = "Elemental", npcId = 5462,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     ["FER09"] = {
         id = "FER09", name = "Sea Elemental", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 5, toughness = 7, isMob = true, isBoss = true, displayId = 5450,
+        power = 5, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 5450,
         zone = "Feralas", creatureType = "Elemental", npcId = 5461,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant."
     },
     ["FER10"] = {
         id = "FER10", name = "Antilus the Soarer", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 10889,
+        power = 9, toughness = 9, flying = true, isMob = true, isBoss = true, displayId = 10889,
         zone = "Feralas", creatureType = "Beast", npcId = 5347,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = ""
+        text = "Airborne."
     },
     -- Solo reward
     ["FER11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Feralas", creatureType = "Humanoid", npcEntry = 7956,
         anthem = { tag = "zone", value = "Feralas", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Feralas creatures you control get +1/+1."
+        text = "Other Feralas denizens you control get +1/+1."
     },
 })

@@ -63,33 +63,33 @@ TTS:AddCards({
     },
     ["DAR08"] = {
         id = "DAR08", name = "Stormscale Myrmidon", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 4036,
+        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 4036,
         zone = "Darkshore", creatureType = "Humanoid", faction = "Naga", npcId = 2181,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Strikes-First."
     },
     ["DAR09"] = {
         id = "DAR09", name = "Raging Reef Crawler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 4, toughness = 8, isMob = true, isBoss = true, displayId = 1001,
+        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 1001,
         zone = "Darkshore", creatureType = "Beast", npcId = 2236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant, Support."
     },
     ["DAR10"] = {
         id = "DAR10", name = "Apothecary Falthis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 4156,
+        power = 9, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 4156,
         zone = "Darkshore", creatureType = "Humanoid", npcId = 3735,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Drain."
     },
     -- Solo reward
     ["DAR11"] = {
-        id = "DAR11", name = "Thundris Windweaver", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        id = "DAR11", name = "Thundris Windweaver", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 1, toughness = 3, isReward = true, displayId = 1770,
         zone = "Darkshore", creatureType = "Humanoid", npcEntry = 3649,
         anthem = { tag = "zone", value = "Darkshore", t = 1 },
         etb = { ops = { { op = "draw", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Thundris Windweaver enters the battlefield, draw a card. Other Darkshore creatures you control get +0/+1."
+        text = "When Thundris Windweaver enters the battlefield, draw a card. Other Darkshore denizens you control get +0/+1."
     },
 })

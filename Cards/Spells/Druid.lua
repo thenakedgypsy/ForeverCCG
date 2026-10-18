@@ -15,49 +15,49 @@ TTS:AddCards({
     -- DRUID
     ["DRU01"] = {
         id = "DRU01", name = "Wrath", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "Deal 3 damage to target enemy creature or the opponent.",
+        text = "Deal 3 damage to target enemy denizen or the opponent.",
         art = "Interface\\Icons\\Spell_Nature_AbolishMagic",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 } } }
     },
     ["DRU02"] = {
         id = "DRU02", name = "Moonfire", cost = "{U}", cmc = 1, color = "U", type = "Sorcery", class = "Druid",
-        text = "Deal 1 damage to target enemy creature or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the creature permanently gets -0/-1.",
+        text = "Deal 1 damage to target enemy denizen or the opponent. Then, at the start of each of your turns for 2 turns, the opponent takes 1 more damage, or the denizen permanently gets -0/-1.",
         art = "Interface\\Icons\\Spell_Nature_StarFall",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["DRU03"] = {
         id = "DRU03", name = "Healing Touch", cost = "{2}{G}", cmc = 3, color = "G", type = "Sorcery", class = "Druid",
-        text = "You or target creature you control regains 8 health.",
+        text = "You regain 8 health, or target denizen you control permanently gets +0/+3.",
         art = "Interface\\Icons\\Spell_Nature_HealingTouch",
-        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 8 } } }
+        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 8, t = 3 } } }
     },
     ["DRU04"] = {
         id = "DRU04", name = "Rejuvenation", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Druid",
-        text = "You regain 2 health at the start of each of your turns for 3 turns, or target creature you control permanently gets +0/+1 at the start of each of your turns for 3 turns.",
+        text = "You regain 2 health at the start of each of your turns for 3 turns, or target denizen you control permanently gets +0/+1 at the start of each of your turns for 3 turns.",
         art = "Interface\\Icons\\Spell_Nature_Rejuvenation",
         effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 } } }
     },
     ["DRU05"] = {
         id = "DRU05", name = "Regrowth", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "You regain 3 health, then 1 health at the start of each of your turns for 3 turns. Or target creature you control regains 3 health, then permanently gets +0/+1 at the start of each of your turns for 3 turns.",
+        text = "You regain 3 health, then 1 health at the start of each of your turns for 3 turns. Or target denizen you control permanently gets +0/+1, then +0/+1 more at the start of each of your turns for 3 turns.",
         art = "Interface\\Icons\\Spell_Nature_ResistNature",
-        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 3 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
+        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 3, t = 1 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
     },
     ["DRU06"] = {
         id = "DRU06", name = "Mark of the Wild", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "Target creature you control permanently gets +1/+1.",
+        text = "Target denizen you control permanently gets +1/+1.",
         art = "Interface\\Icons\\Spell_Nature_Regeneration",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, t = 1, perm = true } } }
     },
     ["DRU07"] = {
         id = "DRU07", name = "Entangling Roots", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "Tap target enemy creature. It does not untap during its controller's next untap step.",
+        text = "Exhaust target enemy denizen. It does not Recover during its controller's next Recover step.",
         art = "Interface\\Icons\\Spell_Nature_StrangleVines",
         effect = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } }
     },
     ["DRU08"] = {
         id = "DRU08", name = "Thorns", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Druid",
-        text = "Target creature you control gets +1/+1 and gains Fatal until end of turn.",
+        text = "Target denizen you control gets +1/+1 and gains Fatal until end of turn.",
         art = "Interface\\Icons\\Spell_Nature_Thorns",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, t = 1, kw = { "deathtouch" } } } }
     },
@@ -69,7 +69,7 @@ TTS:AddCards({
     },
     ["DRU10"] = {
         id = "DRU10", name = "Starfire", cost = "{3}{U}", cmc = 4, color = "U", type = "Sorcery", class = "Druid",
-        text = "Deal 5 damage to target enemy creature or the opponent.",
+        text = "Deal 5 damage to target enemy denizen or the opponent.",
         art = "Interface\\Icons\\Spell_Nature_StarFall",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 5 } } }
     },

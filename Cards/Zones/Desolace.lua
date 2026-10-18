@@ -63,24 +63,24 @@ TTS:AddCards({
     },
     ["DES08"] = {
         id = "DES08", name = "Undead Ravager", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 4, toughness = 6, isMob = true, isBoss = true, displayId = 11369,
+        power = 4, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 11369,
         zone = "Desolace", creatureType = "Undead", npcId = 11561,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = ""
+        text = "Drain."
     },
     ["DES09"] = {
         id = "DES09", name = "Elder Thunder Lizard", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 2764,
+        power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 2764,
         zone = "Desolace", creatureType = "Beast", npcId = 4727,
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
         text = "Brutish."
     },
     ["DES10"] = {
         id = "DES10", name = "Kaskk", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 14255,
+        power = 9, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 14255,
         zone = "Desolace", creatureType = "Demon", npcId = 14226,
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Fatal."
     },
     -- Solo reward
     ["DES11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Desolace", creatureType = "Humanoid", npcEntry = 5397,
         anthem = { tag = "zone", value = "Desolace", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Desolace creatures you control get +1/+1."
+        text = "Other Desolace denizens you control get +1/+1."
     },
 })

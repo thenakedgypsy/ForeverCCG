@@ -63,14 +63,14 @@ TTS:AddCards({
     },
     ["THO08"] = {
         id = "THO08", name = "Sparkleshell Borer", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 3, toughness = 7, isMob = true, isBoss = true, displayId = 2307,
+        power = 4, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 2307,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4144,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Vigilant."
     },
     ["THO09"] = {
         id = "THO09", name = "Scorpid Terror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
+        power = 5, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4139,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Fatal."
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Thousand Needles", creatureType = "Humanoid", npcEntry = 4630,
         anthem = { tag = "zone", value = "Thousand Needles", p = 1, kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Thousand Needles creatures you control get +1/+0 and Quick."
+        text = "Quick. Other Thousand Needles denizens you control get +1/+0 and Quick."
     },
 })

@@ -63,32 +63,32 @@ TTS:AddCards({
     },
     ["BLA08"] = {
         id = "BLA08", name = "Shadowsworn Enforcer", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 4, isMob = true, isBoss = true, displayId = 7841,
+        power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 7841,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 6007,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["BLA09"] = {
         id = "BLA09", name = "Dreadmaul Mauler", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 14401,
+        power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 14401,
         zone = "Blasted Lands", creatureType = "Humanoid", faction = "Ogre", npcId = 5977,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Brutish."
     },
     ["BLA10"] = {
         id = "BLA10", name = "Dreadscorn", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, isMob = true, isBoss = true, displayId = 7844,
+        power = 9, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 7844,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 8304,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Drain."
     },
     -- Solo reward
     ["BLA11"] = {
-        id = "BLA11", name = "Kum'isha the Collector", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
+        id = "BLA11", name = "Kum'isha the Collector", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 3, toughness = 4, isReward = true, displayId = 11653,
         zone = "Blasted Lands", creatureType = "Humanoid", npcEntry = 7363,
         etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Kum'isha the Collector enters the battlefield, return a creature card from your graveyard to the battlefield."
+        text = "When Kum'isha the Collector enters the battlefield, return a denizen card from your graveyard to the battlefield."
     },
 })

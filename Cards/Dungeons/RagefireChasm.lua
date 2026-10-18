@@ -62,7 +62,7 @@ TTS:AddCards({
         zone = "Ragefire Chasm", creatureType = "Humanoid", faction = "Burning Blade", npcId = 11520,
         anthem = { tag = "zone", value = "Ragefire Chasm", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Ragefire Chasm creatures you control get +1/+1."
+        text = "Brutish. Other Ragefire Chasm denizens you control get +1/+1."
     },
     -- Solo reward
     ["RFC08"] = {

@@ -117,7 +117,7 @@ TTS:AddCards({
         zone = "Scholomance", creatureType = "Undead", npcId = 11622,
         anthem = { tag = "zone", value = "Scholomance", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Scholomance creatures you control get +1/+1."
+        text = "Brutish. Other Scholomance denizens you control get +1/+1."
     },
     ["SCH16"] = {
         id = "SCH16", name = "The Ravenian", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -141,6 +141,6 @@ TTS:AddCards({
         zone = "Scholomance", creatureType = "Undead", npcEntry = 10506,
         anthem = { tag = "zone", value = "Scholomance", p = 1, t = 1 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Airborne. Other Scholomance creatures you control get +1/+1."
+        text = "Airborne. Other Scholomance denizens you control get +1/+1."
     },
 })

@@ -63,14 +63,14 @@ TTS:AddCards({
     },
     ["WIN08"] = {
         id = "WIN08", name = "Winterspring Screecher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 4, toughness = 4, flying = true, isMob = true, isBoss = true, displayId = 10833,
+        power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 10833,
         zone = "Winterspring", creatureType = "Beast", npcId = 7456,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = "Airborne."
     },
     ["WIN09"] = {
         id = "WIN09", name = "Frostsaber Huntress", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 6, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
+        power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
         zone = "Winterspring", creatureType = "Beast", npcId = 7433,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First."
@@ -87,8 +87,8 @@ TTS:AddCards({
         id = "WIN11", name = "Donova Snowden", cost = "{4}{U}", cmc = 5, color = "U", type = "Creature",
         power = 3, toughness = 4, isReward = true, displayId = 8949,
         zone = "Winterspring", creatureType = "Humanoid", npcEntry = 9298,
-        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Donova Snowden enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step."
+        text = "When Donova Snowden enters the battlefield, Exhaust each enemy denizen."
     },
 })

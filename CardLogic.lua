@@ -157,10 +157,7 @@ function E:GetCreatureStats(perm, isRemote)
 
     for _, other in ipairs(checkField) do
         if other ~= perm then
-            if other.id == "BOSS06" then
-                p = p + 1
-                t = t + 1
-            elseif other.id == "BOSS18" then
+            if other.id == "BOSS18" then
                 p = p + 1
                 t = t + 1
             end
@@ -524,8 +521,14 @@ SPELL_OPS.heal = function(self, op, d, card, cr)
         st.life = st.life + op.n
         self:Log(L("log.restoredLife", TTS:CardName(card), op.n, self:SideName(d.isRemote)), "ACTION")
     else
+        -- Damage clears at end of turn, so on a creature the heal is a permanent +0/+t
         d.perm.damage = math.max(0, (d.perm.damage or 0) - op.n)
-        self:Log(L("log.healed", TTS:CardName(card), CreatureName(d.perm), op.n), "ACTION")
+        if op.t then
+            d.perm.permToughness = (d.perm.permToughness or 0) + op.t
+            self:Log(L("log.affected", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
+        else
+            self:Log(L("log.healed", TTS:CardName(card), CreatureName(d.perm), op.n), "ACTION")
+        end
     end
 end
 
@@ -1017,7 +1020,7 @@ function E:OnCreatureAttack(perm, isRemote)
             target.freezeUntap = true
             self:Log(L("log.boss.amnennar", TTS:CardName(perm.id), CreatureName(target)), "ACTION")
         end
-    elseif perm.id == "BOSS23" then
+    elseif perm.id == "BOSS23" or perm.id == "BOSS11" then
         perm.tempPower = (perm.tempPower or 0) + 2
         self:Log(L("log.boss.gordok", TTS:CardName(perm.id)), "ACTION")
     end
@@ -1034,10 +1037,10 @@ end
 -- =========================================================================
 local ABILITIES = {
     BOSS01 = { tap = true, target = "enemy_player" },
-    BOSS04 = { tap = true, target = "creature", tapped = true },
-    BOSS07 = { tap = true },
-    BOSS08 = { tap = true, target = "creature" },
-    BOSS10 = { tap = true },
+    BOSS04 = { tap = true, cost = "{2}{U}", target = "creature", tapped = true },
+    BOSS07 = { tap = true, cost = "{1}{R}" },
+    BOSS08 = { tap = true, cost = "{1}{G}", target = "creature" },
+    BOSS10 = { tap = true, cost = "{1}{R}" },
     BOSS21 = { tap = true },
     BOSS22 = { cost = "{2}{U}" },
 }
@@ -1114,7 +1117,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
     elseif id == "BOSS07" or id == "BOSS10" then
         for _, p in ipairs(isRemote and self.localState.field or self.remoteState.field) do
             if IsCreaturePerm(p) then
-                self:DamageCreature(p, 2)
+                self:DamageCreature(p, 1)
             end
         end
         self:Log(L("log.boss.sweep", CreatureName(perm)), "COMBAT")

@@ -64,14 +64,14 @@ TTS:AddCards({
     },
     ["SIL08"] = {
         id = "SIL08", name = "Bloodsnout Worg", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 6, toughness = 4, isMob = true, isBoss = true, displayId = 741,
+        power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 741,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["SIL09"] = {
         id = "SIL09", name = "Ravenclaw Guardian", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 370,
+        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 370,
         zone = "Silverpine Forest", creatureType = "Undead", npcId = 1973,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant."
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Silverpine Forest", creatureType = "Undead", npcEntry = 1952,
         anthem = { tag = "zone", value = "Silverpine Forest", t = 1, kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Silverpine Forest creatures you control get +0/+1 and Drain."
+        text = "Other Silverpine Forest denizens you control get +0/+1 and Drain."
     },
 })
