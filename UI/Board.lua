@@ -1774,6 +1774,7 @@ end
 
 -- Paints a full-size preview card (a CreateCardFrame of PREVIEW_W x PREVIEW_H) and shows it
 local function PaintPreviewCard(f, card)
+    f.visualCard = nil   -- a preview always loads its model afresh (e.g. a card's model was changed)
     SetupCardVisual(f, card)
     ApplyFrameTexture(f.border, card)
     f.border:SetVertexColor(1, 1, 1)

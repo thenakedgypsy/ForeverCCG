@@ -20,17 +20,19 @@ TTS:AddCards({
         id = "LEEROY", name = "Leeroy Jenkins", cost = "{3}{W}", cmc = 4, color = "W", type = "Creature",
         power = 1, toughness = 4, isMob = true, isBoss = true, unlockOnDeath = true, diesAtTurnStart = true,
         dropChance = { 4, 2, 1, 0.5 },   -- % per death for copies 1-4 (BossTracker RecordMobKill)
-        displayId = 1753,   -- Magistrate Solomon (old Human male), dressed below
+        -- An NPC display's outfit is baked into its body texture, so items painted onto the body
+        -- (chest, tabard, ...) can't go over it; only separate pieces (helm, shoulders, weapon)
+        -- can. Hence a Scarlet NPC already in plate and a red tabard.
+        displayId = 10341,   -- Highlord Taelan Fordring (classic npc 1842): plate and the red Scarlet tabard
         dressItems = {
-            16695,   -- Devout Mantle
-            16726,   -- Lightforge Breastplate
-            23192,   -- Tabard of the Scarlet Crusade (red and white)
+            16731,   -- Helm of Valor
+            16733,   -- Spaulders of Valor
             12583,   -- Blackhand Doomsaw
         },
         creatureType = "Humanoid",
         enterSound = "Interface\\AddOns\\ForeverCCG\\Audio\\leeroy_jenkins.mp3",   -- only when he arrives (Sound.lua)
         etb = { ops = { { op = "token", id = "TOK04", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "When Leeroy Jenkins enters the battlefield, create four 0/1 Dragon Egg tokens with Blocker. At the start of your turn, Leeroy Jenkins dies."
+        text = "When Leeroy Jenkins enters the battlefield, create three 0/1 Dragon Egg tokens with Blocker. At the start of your turn, Leeroy Jenkins dies."
     },
 })
