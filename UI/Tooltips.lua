@@ -198,6 +198,53 @@ local TAG_GROUP = { faction = "faction", zone = "zone", type = "creatureType" }
 local function TagFieldLabel(tag) return L("tt.tagField." .. tostring(tag)) end
 local function TagValue(tag, value) return Loc:Term(TAG_GROUP[tag] or tag, value) end
 
+-- Rules text in the language's sentences ("Brutish. Other X you control get +1/+1.")
+local function Sentences(text)
+    local list, pos = {}, 1
+    while pos <= #text do
+        -- a sentence ends at "." before a capital or a non-ASCII letter (so "Venture Co. you" stays whole), or at "。"
+        local a, b = text:find("%. [%u\128-\255]", pos)
+        local c, d = text:find("。", pos, true)
+        if c and (not a or c < a) then a, b = c, d else b = a and b - 1 end
+        if not a then list[#list + 1] = text:sub(pos); break end
+        list[#list + 1] = text:sub(pos, b):gsub("%s+$", "")
+        pos = b + 1
+        while text:sub(pos, pos) == " " do pos = pos + 1 end
+    end
+    return list
+end
+
+-- Rules text as printed on the card: an anthem's sentence ("Other Undead you control get +1/+1.")
+-- becomes a line of its own, "Anthem: +1{PT}+1 - Undead", {PT} being the power/toughness emblem.
+-- The sentence is found in the English text and taken out at the same place in the translation;
+-- if the two don't split alike, the text is left as it is.
+function TTS:CardRulesText(card)
+    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
+    local text = TTS:CardText(card)
+    local a = card and card.anthem
+    if not (text and a and card.text) then return text end
+    local en, shown = Sentences(card.text), Sentences(text)
+    local at
+    for i, s in ipairs(en) do
+        if s:find("you control get") or s:find("you control gain") or s:find("you control have") then at = i end
+    end
+    if not at or #en ~= #shown then return text end
+
+    local parts = {}
+    if (a.p or 0) ~= 0 or (a.t or 0) ~= 0 then parts[1] = Signed(a.p) .. "{PT}" .. Signed(a.t) end
+    for _, kw in ipairs(a.kw or {}) do
+        if TT.KEYWORDS[kw] then parts[#parts + 1] = TT:Def("keyword", kw, "name") end
+    end
+    table.remove(shown, at)
+    local rest = table.concat(shown, text:find("。", 1, true) and "" or " ")
+
+    local prefix = TagValue(a.tag, a.value)
+    local anthemName = TT:Def("effect", "anthem", "name")
+    local line = (prefix ~= "" and (prefix .. " ") or "") .. anthemName .. ":\n" .. table.concat(parts, ", ")
+
+    return rest ~= "" and (rest .. "\n" .. line) or line
+end
+
 -- =========================================================================
 -- PANEL SPECS
 -- A spec is { title, tag, color, lines }. lines: strings (wrapped, light
@@ -525,7 +572,7 @@ local function BuildCardMain(tip, card, ctx)
     end
 
     if card.text and card.text ~= "" then
-        tip:AddLine(Sym(TTS:CardText(card), 16), 0.9, 0.9, 0.5, true)
+        tip:AddLine(Sym(TTS:CardRulesText(card), 16), 0.9, 0.9, 0.5, true)
     end
 
     tip:AddLine(" ")
@@ -548,7 +595,7 @@ local function AttachedPanels(perm)
             local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
             local aCost = (aCard.cost and aCard.cost ~= "") and Sym(aCard.cost, 16) or "0"
             local lines = { { L("tt.cost", aCost), 0.8, 0.8, 0.8 } }
-            if aCard.text and aCard.text ~= "" then table.insert(lines, { Sym(TTS:CardText(aCard), 14), 0.9, 0.9, 0.6 }) end
+            if aCard.text and aCard.text ~= "" then table.insert(lines, { Sym(TTS:CardRulesText(aCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, {
                 title = TTS:CardName(aCard),
                 tag = isEquip and "Equipment" or "Enchantment",
@@ -562,7 +609,7 @@ local function AttachedPanels(perm)
             local eCard = TTS.Cards[effId]
             local eCost = (eCard.cost and eCard.cost ~= "") and Sym(eCard.cost, 16) or "0"
             local lines = { { L("tt.cost", eCost) .. "  |  " .. (eCard.type and Loc:Term("type", eCard.type) or L("type.Spell")), 0.8, 0.8, 0.8 } }
-            if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(TTS:CardText(eCard), 14), 0.9, 0.9, 0.6 }) end
+            if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(TTS:CardRulesText(eCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, { title = TTS:CardName(eCard), tag = "Affected by", color = { 0.69, 0.5, 1.0 }, lines = lines })
         end
     end

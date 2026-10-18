@@ -31,6 +31,7 @@ local function EmblemIcon(h)
     h = math.floor(h + 0.5)
     return string.format("|T%s:%d:%d|t", TTS.STATS_EMBLEM, h, math.floor(h * EMBLEM_ASPECT + 0.5))
 end
+TTS.StatsEmblemIcon = EmblemIcon
 
 -- "3"
 function TTS.PowerText(power, colorCode)

@@ -827,7 +827,7 @@ local function PrintCardRules(f, card, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(Sym(TTS:CardText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(Sym(TTS:CardRulesText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end

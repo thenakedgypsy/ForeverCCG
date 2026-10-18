@@ -95,6 +95,11 @@ function TTS:FormatSymbols(str, size, tapSize)
             return string.format("|T%s:%d:%d:0:0|t", TAP_TEX, ts, ts)
         end
 
+        -- Power / toughness emblem (anthem bonuses in rules text)
+        if upperKey == "PT" and TTS.StatsEmblemIcon then
+            return TTS.StatsEmblemIcon(s)
+        end
+
         -- Generic / Numeric / X: the number takes the text's own colour (black in printed
         -- rules text, white on cost lines and in the log)
         if tonumber(key) or upperKey == "X" then
@@ -1214,7 +1219,7 @@ local function UpdateCardRules(f, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(TTS:CardText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end

@@ -13,7 +13,7 @@
 *   new: hearthstones - dual-colour prayers. Clicking one asks which mana to make; auto-pay and the AI pick the colour that's needed
 *   some innkeepers around Azeroth may have spare cards for travellers who ask nicely. They can't spare them often, but they'll give you an idea of when to come back. Rumour has it the innkeepers of the great cities keep something special behind the bar too.
 *   cards that return a denizen card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
-*   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo opponents drop their least useful one)
+*   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo-mode opponents drop their least useful one)
 *   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and combat resolves as soon as the blocks are in, then your turn ends (click again before the blocks arrive to cancel)
 *   Concede and Clear Deck now ask you to confirm first
