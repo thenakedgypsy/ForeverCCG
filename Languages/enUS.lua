@@ -25,6 +25,9 @@ S["locale.missing"] = "|cFFFFA500[TTSE]|r %s is not installed; using English. In
 S["locale.reload"] = "Language changes take effect after a /reload."
 S["locale.auto"] = "Automatic (%s)"
 
+-- LAUNCH (DataStamp.lua)
+S["stamp.fresh"] = "|cFFFFD200[TTSE]|r Welcome to the launch of Forever: CCG! Beta collections don't carry over, so yours starts afresh."
+
 -- OPTIONS
 S["options.title"] = "Options"
 S["options.sound"] = "Sound"

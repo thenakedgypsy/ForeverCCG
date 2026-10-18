@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: ForeverCCG
 ## Notes: 2-Player card game engine inspired by MTG.
-## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices
+## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp
 ## SavedVariablesPerCharacter: TTS_Hero
 ## Version: 1.0.0
 ## Author: the_naked_gypsy
@@ -11,6 +11,7 @@
 
 Locale.lua
 Languages\enUS.lua
+DataStamp.lua
 Cards\Core.lua
 Cards\Spells\Warrior.lua
 Cards\Spells\Paladin.lua
