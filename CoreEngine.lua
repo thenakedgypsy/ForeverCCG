@@ -281,14 +281,26 @@ end
 -- =========================================================================
 -- DAMAGE & LIFE
 -- =========================================================================
+-- PvP: the opponent's damage shield lives on their client; ours keeps a copy
+-- (remoteState.mirror.shield, replaced whenever they send ACTION:EFFECTS). Uses up to amount
+-- of it, as their client will, and returns how much it prevented.
+function E:UseOpponentShield(amount)
+    local m = self.remoteState.mirror
+    local prevented = math.min(amount, m and m.shield or 0)
+    if prevented > 0 then
+        m.shield = m.shield - prevented
+        self:Log(L("log.shieldPrevented", prevented, self.opponent), "ACTION")
+    end
+    return prevented
+end
+
 function E:DamagePlayer(isRemote, amount, reason)
     if amount <= 0 then return end
     -- Mirroring the PvP opponent's play (CardLogic.lua, E:RunMirrored): their client sends
     -- damage to us itself, and handles their own shield and defeat; we only track their life.
     if self.mirroring then
         if not isRemote then return end
-        local shield = self.remoteState.mirror and self.remoteState.mirror.shield or 0
-        amount = amount - math.min(amount, shield)
+        amount = amount - self:UseOpponentShield(amount)
         if amount <= 0 then return end
         self.remoteState.life = self.remoteState.life - amount
         self:Log(L("log.oppTookDamage", self.opponent, amount, TTS:ReasonText(reason) or L("reason.effect"), self.remoteState.life), "COMBAT")
@@ -310,11 +322,19 @@ function E:DamagePlayer(isRemote, amount, reason)
     end
 
     if isRemote then
+        if not self.isSolo then
+            -- Their client applies their own damage shield to the full amount we send; our copy
+            -- of their life has to take the same shield off, or the two clients' life totals drift
+            -- apart (one side could see a win the other never had)
+            TTS.Net:Send(self.opponent, string.format("ACTION:DAMAGE:%d:%s", amount, reason or "Damage"))
+            amount = amount - self:UseOpponentShield(amount)
+            if amount <= 0 then
+                self:RefreshUI()
+                return
+            end
+        end
         self.remoteState.life = self.remoteState.life - amount
         self:Log(L("log.dealtToOpp", amount, self.opponent, TTS:ReasonText(reason) or L("reason.effect"), self.remoteState.life), "COMBAT")
-        if not self.isSolo then
-            TTS.Net:Send(self.opponent, string.format("ACTION:DAMAGE:%d:%s", amount, reason or "Damage"))
-        end
         if self.remoteState.life <= 0 then
             self:WinMatch(L("end.oppDefeated", self.opponent))
         end
