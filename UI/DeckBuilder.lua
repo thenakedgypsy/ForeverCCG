@@ -1633,23 +1633,11 @@ clearBtn:SetScript("OnClick", function()
     D:ConfirmClearDeck()
 end)
 
-local HeroBtns = {}   -- the Hero and Reset Hero buttons (one local: this file is at the 200-locals limit)
-
--- TESTING ONLY (remove before release): forgets the account's hero card choices so the
--- milestones can be chosen again
-HeroBtns.reset = CreatePanelButton(deckPanel, 74, 22, "Reset Hero")
-HeroBtns.reset:SetPoint("RIGHT", clearBtn, "LEFT", -6, 0)
-HeroBtns.reset.label:SetJustifyH("CENTER")
-HeroBtns.reset:SetScript("OnClick", function()
-    TTS_HeroChoices = {}
-    if TTS.Hero then TTS.Hero:RebuildMine() end
-    D:RefreshPool()
-    D:RefreshDeck()
-end)
+local HeroBtns = {}   -- the Hero button (one local: this file is at the 200-locals limit)
 
 -- Reopens the hero card's milestone choice after "Decide later" (shown while one is waiting)
 HeroBtns.choice = CreatePanelButton(deckPanel, 60, 22, "db.heroChoice")
-HeroBtns.choice:SetPoint("RIGHT", HeroBtns.reset, "LEFT", -6, 0)
+HeroBtns.choice:SetPoint("RIGHT", clearBtn, "LEFT", -6, 0)
 HeroBtns.choice.label:SetJustifyH("CENTER")
 HeroBtns.choice.tooltipTitle = "db.heroChoiceTip"
 HeroBtns.choice:SetScript("OnClick", function()

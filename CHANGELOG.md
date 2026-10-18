@@ -22,6 +22,7 @@
 *   fix for card models flickering on the board (most noticeable on Hero cards): a model now only reloads when its card is played, drawn or moves
 *   tokens now make a sound when they arrive: tadpoles, diggers and skeletons sound like their kin, others rustle like a prayer
 *   fix for PvP life totals drifting apart when a player had a damage shield (Power Word: Shield): the attacker's client ignored it, so it could see a win while the other player was still alive
+*   fix for "No player named ... is currently playing" spam from the addon checking whether your contacts are online (it still showed in a second chat tab, or when the check went out late)
 *   new Lock checkbox at the top of the board: tick it and the board can't be dragged around by accident (remembered between sessions)
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside denizens

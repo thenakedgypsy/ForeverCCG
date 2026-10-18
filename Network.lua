@@ -202,6 +202,12 @@ local sendTokens = SEND_BURST
 local lastRefill = GetTime and GetTime() or 0
 local pumpScheduled = false
 local reportedFailures = {}
+-- Lower-case names we just sent an addon whisper to -> until when their "No player named"
+-- error is hidden (OfflinePingFilter). Set when the whisper actually goes out, not when it is
+-- queued, and kept for the whole window: chat filters run once per chat window showing the
+-- message, so clearing it on the first match let the error through in the others.
+local recentWhispers = {}
+local WHISPER_ERROR_WINDOW = 10
 
 -- Result codes that mean "too fast, try again": the per-prefix addon limit (3) and the
 -- custom channel's own limit (8, hit by bursts like a big attack)
@@ -262,6 +268,9 @@ local function PumpSendQueue()
             break
         end
         lockdownNoticed = false
+        if m.chatType == "WHISPER" and m.target then
+            recentWhispers[NormalizeName(m.target):lower()] = time() + WHISPER_ERROR_WINDOW
+        end
         table.remove(q, 1)
         sendTokens = sendTokens - 1
         if status == "failed" then ReportSendFailure(m, code) end
@@ -815,23 +824,29 @@ function TTS.Net:StartBackgroundPings()
     TTS:SafeAfter(20, Round)
 end
 
--- Hides the "No player named ... is currently playing" error for contacts we just pinged
--- (they are offline; nothing the player did). Other such errors still show.
+-- Hides the "No player named ... is currently playing" error for players the addon just
+-- whispered (contact pings, waiting-room messages: they are offline, nothing the player did).
+-- Other such errors, e.g. from the player's own whispers, still show.
 local notFoundPattern
 if ERR_CHAT_PLAYER_NOT_FOUND_S then
     notFoundPattern = "^" .. ERR_CHAT_PLAYER_NOT_FOUND_S:gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%s", "(.+)") .. "$"
 end
 
 local function OfflinePingFilter(_, _, msg, ...)
-    if type(msg) ~= "string" or not next(pendingPings) then return false, msg, ... end
-    local lower = msg:lower()
+    if type(msg) ~= "string" or not next(recentWhispers) then return false, msg, ... end
+    local now = time()
     local named = notFoundPattern and msg:match(notFoundPattern)
-    for key, expires in pairs(pendingPings) do
-        local namedKey = named and NormalizeName(named):lower()
-        if expires >= time() and ((namedKey and namedKey == key)
-            or (not named and lower:find(key, 1, true))) then
-            pendingPings[key] = nil
-            ContactState(key).offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
+    local namedKey = named and NormalizeName(named:gsub("^['\"]", ""):gsub("['\"]$", "")):lower()
+    local lower = msg:lower()
+    for key, expires in pairs(recentWhispers) do
+        if expires < now then
+            recentWhispers[key] = nil
+        elseif (namedKey and namedKey == key) or (not named and lower:find(key, 1, true)) then
+            -- A contact we pinged is offline: leave them alone for a while
+            if pendingPings[key] then
+                pendingPings[key] = nil
+                ContactState(key).offlineUntil = now + CONTACT_OFFLINE_BACKOFF
+            end
             return true
         end
     end
