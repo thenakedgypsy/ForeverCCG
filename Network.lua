@@ -967,8 +967,16 @@ local function ReportVersionMismatch(otherName, otherVersion)
     Print(L("net.versionMismatch", otherName, VersionText(otherVersion), TTS.VERSION))
 end
 
+-- Their hero card is our HEROOPP and ours is their HEROOPP (Hero.lua): every card id in an
+-- incoming game action is swapped, so the rest of the engine sees ordinary cards
+local HERO_SWAP = { HERO = "HEROOPP", HEROOPP = "HERO" }
+local function SwapHeroIds(msg)
+    return (msg:gsub("[^:,;]+", HERO_SWAP))
+end
+
 function TTS.Net:OnReceive(msg, sender)
     sender = NormalizeName(sender)
+    if msg:sub(1, 7) == "ACTION:" then msg = SwapHeroIds(msg) end
     local parts = { strsplit(":", msg) }
     local cmd = parts[1]
 
@@ -1269,7 +1277,11 @@ function TTS.Net:OnReceive(msg, sender)
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
 
-        if actionType == "CONCEDE" then
+        if actionType == "HEROINFO" then
+            -- HEROINFO:<level>:<class>:<race id>:<sex>:<item ids>, sent as the match starts
+            if TTS.Hero then TTS.Hero:SetOpponent(sender, parts[3], parts[4], parts[5], parts[6], parts[7]) end
+
+        elseif actionType == "CONCEDE" then
             E:WinMatch(L("end.oppConceded", sender))
 
         elseif actionType == "DEFEATED" then

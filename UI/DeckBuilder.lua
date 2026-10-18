@@ -398,7 +398,7 @@ local cardPoolKeys = {}
 -- (TTS:GetOwnedCopies).
 -- =========================================================================
 local function IsCollectible(card)
-    return card and (card.isBoss or card.isReward or card.isGift) and true or false
+    return card and (card.isBoss or card.isReward or card.isGift or card.isHero) and true or false
 end
 
 local function GetKillCount(cardId, card)
@@ -437,6 +437,7 @@ end
 
 local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
+    if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if not typeOn[GetTypeGroup(card)] then return false end
     if card.color and colorOn[card.color] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
@@ -641,7 +642,9 @@ local function CheckAdd(cardId, card, deck)
         end
         local maxAllowed = math.min(4, kills)
         if current >= maxAllowed then
-            if maxAllowed >= 4 then
+            if card.isHero then
+                return L(kills == 1 and "db.heroCopies.one" or "db.heroCopies.other", kills)
+            elseif maxAllowed >= 4 then
                 return L("db.max4", TTS:CardName(card))
             else
                 if card.isReward or card.isGift then
@@ -1627,6 +1630,54 @@ clearBtn:SetScript("OnClick", function()
     D:ConfirmClearDeck()
 end)
 
+local HeroBtns = {}   -- the Hero and Reset Hero buttons (one local: this file is at the 200-locals limit)
+
+-- TESTING ONLY (remove before release): forgets the account's hero card choices so the
+-- milestones can be chosen again
+HeroBtns.reset = CreatePanelButton(deckPanel, 74, 22, "Reset Hero")
+HeroBtns.reset:SetPoint("RIGHT", clearBtn, "LEFT", -6, 0)
+HeroBtns.reset.label:SetJustifyH("CENTER")
+HeroBtns.reset:SetScript("OnClick", function()
+    TTS_HeroChoices = {}
+    if TTS.Hero then TTS.Hero:RebuildMine() end
+    D:RefreshPool()
+    D:RefreshDeck()
+end)
+
+-- Reopens the hero card's milestone choice after "Decide later" (shown while one is waiting)
+HeroBtns.choice = CreatePanelButton(deckPanel, 60, 22, "db.heroChoice")
+HeroBtns.choice:SetPoint("RIGHT", HeroBtns.reset, "LEFT", -6, 0)
+HeroBtns.choice.label:SetJustifyH("CENTER")
+HeroBtns.choice.tooltipTitle = "db.heroChoiceTip"
+HeroBtns.choice:SetScript("OnClick", function()
+    if TTS.HeroChoice then TTS.HeroChoice:Open() end
+end)
+HeroBtns.choice:Hide()
+
+-- A pulsing gold glow while it is shown, so a waiting choice gets noticed
+do
+    local glow = HeroBtns.choice:CreateTexture(nil, "OVERLAY")
+    glow:SetTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+    glow:SetTexCoord(0, 0.625, 0, 0.6875)
+    glow:SetBlendMode("ADD")
+    glow:SetVertexColor(1, 0.82, 0.2)
+    glow:SetPoint("TOPLEFT", -4, 4)
+    glow:SetPoint("BOTTOMRIGHT", 4, -4)
+    local pulse = glow:CreateAnimationGroup()
+    pulse:SetLooping("BOUNCE")
+    local fade = pulse:CreateAnimation("Alpha")
+    fade:SetFromAlpha(0.15)
+    fade:SetToAlpha(1)
+    fade:SetDuration(0.8)
+    fade:SetSmoothing("IN_OUT")
+    HeroBtns.choice:HookScript("OnShow", function() pulse:Play() end)
+    HeroBtns.choice:HookScript("OnHide", function() pulse:Stop() end)
+end
+
+function HeroBtns.Update()
+    HeroBtns.choice:SetShown(TTS.Hero and TTS.HeroChoice and TTS.Hero:PendingChoices() > 0 or false)
+end
+
 local listDivider = deckPanel:CreateTexture(nil, "ARTWORK")
 listDivider:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10, -70)
 listDivider:SetPoint("TOPRIGHT", deckPanel, "TOPRIGHT", -10, -70)
@@ -1979,6 +2030,7 @@ end
 
 function D:RefreshPool()
     UpdateCollectionProgress()
+    HeroBtns.Update()
 
     wipe(cardPoolKeys)
     for id, card in pairs(TTS.Cards or {}) do
@@ -2255,6 +2307,12 @@ D:SetScript("OnShow", function()
         D:Hide()
         return
     end
+    -- The hero card's level is only ever updated here, never during a match; each 10 levels
+    -- reached asks for an upgrade or another copy
+    -- (a choice waiting lights up the Hero button; UI\HeroChoice.lua)
+    if TTS.Hero and not (TTS.HeroChoice and TTS.HeroChoice.reopening) then
+        TTS.Hero:Snapshot()
+    end
     UpdateSphereToggleLabels()
     UpdateSearchVisuals()
     D:RefreshPool()
@@ -2312,8 +2370,11 @@ D:SetScript("OnHide", function()
     StaticPopup_Hide("TTS_RENAME_DECK")
     -- Models may not survive the window being hidden, so force a reload next time
     for _, t in ipairs(tiles) do t.paintedId = nil end
-    -- New cards have been seen: no longer marked new
-    TTS:ClearNewCards()
+    -- New cards have been seen: no longer marked new (not when the hero card's choice
+    -- dialog only hides the Deckbuilder for a moment, UI\HeroChoice.lua)
+    if not (TTS.HeroChoice and TTS.HeroChoice.hidingDeckbuilder) then
+        TTS:ClearNewCards()
+    end
     if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then
         TTS.MainFrame:UpdatePlayState()
     end

@@ -57,7 +57,7 @@ local function Name(perm) local c = Card(perm.id); return c and TTS:CardName(c) 
 -- =========================================================================
 local KEYWORD_VALUE = {
     flying = 1.5, unblockable = 1.5, deathtouch = 1.5, firstStrike = 1, lifelink = 1, hexproof = 1,
-    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1, support = 0.5,
+    trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1, support = 0.5, shielded = 1,
 }
 
 -- How much a creature is worth to its controller, as it stands on the battlefield
@@ -262,6 +262,9 @@ function E:AISimFight(atk, atkRemote, blk, blkRemote, extra)
     local aDT, bDT = HasKw(self, atk, atkRemote, "deathtouch", extra), HasKw(self, blk, blkRemote, "deathtouch")
     local toBlk = (aDT and ap > 0) and 999 or ap
     local toAtk = (bDT and bp > 0) and 999 or bp
+    -- Shielded negates the one hit it takes in this fight
+    if HasKw(self, blk, blkRemote, "shielded") then toBlk = 0 end
+    if HasKw(self, atk, atkRemote, "shielded", extra) then toAtk = 0 end
     local atkDies, blkDies
     if aFirst and not bFirst then
         blkDies = toBlk >= bt
@@ -649,6 +652,12 @@ local function ScoreOpOn(self, op, d, card, profile)
     if op.op == "damage" then
         local n = op.n + ((op.bonusIfTapped and perm.tapped) and op.bonusIfTapped or 0)
         local kills = n >= RemainingToughness(self, perm, d.isRemote) and not perm.regenerateShield
+            and not perm.shielded
+        if perm.shielded then
+            -- Only strips Shielded
+            if enemy then return 0.5 end
+            return -0.5
+        end
         if enemy then return kills and v or n * 0.15 end
         return kills and -v or -n * 0.2
     elseif op.op == "destroy" then
@@ -680,7 +689,11 @@ local function ScoreOpOn(self, op, d, card, profile)
         if enemy then return 0 end
         return math.min(perm.damage or 0, op.n) * 0.3
     elseif op.op == "shield" then
+        if op.playerOnly then return 0 end
         return enemy and 0 or op.n * 0.2
+    elseif op.op == "shielded" then
+        if perm.shielded then return 0 end
+        return enemy and -1 or 0.4 + v * 0.15
     end
     return 0
 end

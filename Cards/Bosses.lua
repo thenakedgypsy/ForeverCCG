@@ -277,4 +277,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
         text = "Brutish. Vigilant."
     },
+
+    -- City of Dalaran: Shade of the Archmage (no kill statistic on Wowhead yet; tracked by statistic name)
+    ["BOSS30"] = {
+        id = "BOSS30", name = "Shade of the Archmage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
+        power = 6, toughness = 7, flying = true, isBoss = true, displayId = 130061,
+        zone = "City of Dalaran", creatureType = "Elemental",
+        etb = { ops = { { op = "freeze", to = "enemy_creatures" } } },
+        modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
+        text = "Airborne. When Shade of the Archmage enters the battlefield, tap each enemy creature. They don't untap during their controller's next untap step."
+    },
 })

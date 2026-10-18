@@ -112,7 +112,7 @@ TTS.SoloDungeonZone = {
     RFK = "BRN", SMO = "TIR", RFD = "BRN", ULD = "BAD", ZFK = "TAN", MAR = "DES", SUN = "SWA",
     BRD = "SEA", BRS = "BUR", DMA = "FER", SCH = "WPL", STR = "EPL",
     -- WoW Forever dungeons
-    HOT = "DUN", ROL = "TIR", EXC = "WET",
+    HOT = "DUN", ROL = "TIR", EXC = "WET", DAL = "ALT",
 }
 
 local neighbours = {}
@@ -160,8 +160,9 @@ local DUNGEONS = {
     { "HOT", "The Hall of Thanes", { "BOSS27" },                              25, { "REINFORCEMENTS" },                 "HOT12", "tactical", "Camelot160\\Main\\LoadScreen_Camelot_OldIronforge",      "Ironforge" },
     { "ROL", "Ruins of Lordaeron", { "BOSS28" },                              25, { "AWAKENING" },                      "ROL16", "tactical", "Camelot160\\Main\\LoadScreen_Camelot_RuinsOfLordaeron", "Tirisfal" },
     { "EXC", "Excavation Site",    { "BOSS29" },                              30, { "AWAKENING" },                      "EXC17", "expert",   "Camelot160\\Main\\LoadScreen_Camelot_Excavation",       "Wetlands" },
+    { "DAL", "City of Dalaran",    { "BOSS30" },                              30, { "AWAKENING", "ENRAGE" },            "DAL22", "expert",   "Camelot160\\Main\\LoadScreen_Camelot_Dalaran",          "Alterac" },
 }
-local WIDE_LOADSCREENS = { HOT = true, ROL = true, EXC = true }
+local WIDE_LOADSCREENS = { HOT = true, ROL = true, EXC = true, DAL = true }
 
 for i, d in ipairs(DUNGEONS) do
     local firstBoss = TTS.Cards[d[3][1]]
@@ -239,7 +240,7 @@ local PRAYER_IDS = { W = "W01", U = "U01", B = "B01", R = "R01", G = "G01" }
 
 -- Spell ops the AI knows how to use well
 local AI_SPELL_OPS = { damage = true, dot = true, destroy = true, freeze = true, tap = true, heal = true,
-    hot = true, buff = true, shield = true, draw = true, raise = true, tuck = true }
+    hot = true, buff = true, shield = true, draw = true, raise = true, tuck = true, shielded = true }
 
 local function IsAIFriendlySpell(card)
     if card.type ~= "Sorcery" or not card.effect or not card.effect.ops then return false end
@@ -442,6 +443,9 @@ end
 -- mob cards from kills. Returns nil for cards anyone can use (spells, prayers).
 function TTS:GetOwnedCopies(card)
     if not card then return 0 end
+    if card.isHero then   -- always yours; more copies can be chosen every 10 levels (Hero.lua)
+        return (card.id == "HERO" and TTS.Hero) and TTS.Hero:Copies() or 1
+    end
     if card.isReward then
         if TTS_DevModeActive then return MAX_REWARD_COPIES end
         return math.min(MAX_REWARD_COPIES, Progress().rewards[card.id] or 0)

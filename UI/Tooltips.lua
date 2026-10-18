@@ -68,7 +68,8 @@ end
 -- =========================================================================
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
-    "lifelink", "trample", "hexproof", "defender", "unblockable", "bulwark", "support",
+    "lifelink", "trample", "hexproof", "shielded", "defender", "unblockable", "bulwark", "support",
+    "unique",
 }
 
 TT.KEYWORDS = {
@@ -81,10 +82,12 @@ TT.KEYWORDS = {
     lifelink    = { name = "Drain",         text = "Combat damage this creature deals also restores that much life to its controller." },
     trample     = { name = "Brutish",       text = "When blocked, combat damage beyond the blocker's toughness carries over to the defending player." },
     hexproof    = { name = "Warded",        text = "Can't be the target of your opponent's spells or abilities." },
+    shielded    = { name = "Shielded",      text = "The next instance of damage this creature would take is negated, and it loses Shielded." },
     defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
     unblockable = { name = "Unblockable",   text = "Can't be blocked." },
     bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
     support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Every creature in that fight deals its full combat damage to each creature on the other side." },
+    unique      = { name = "Unique",        text = "You can have only one copy of it on your battlefield. You can't cast another while it's there, and if another arrives by an effect, the one already there is destroyed." },
 }
 
 -- =========================================================================
@@ -492,6 +495,10 @@ end
 -- =========================================================================
 local function DisplayType(card)
     if not card.type then return L("tt.card") end
+    -- e.g. "Creature - Hero" (Equipment's subtype is shown as its own type elsewhere)
+    if card.subType and card.subType ~= "Equipment" then
+        return Loc:Term("type", card.type) .. " - " .. Loc:Term("type", card.subType)
+    end
     return Loc:Term("type", card.type)
 end
 
@@ -579,7 +586,7 @@ local function KeywordPanels(card, ctx)
             if E:HasKeyword(ctx.perm, ctx.isRemote, kw) then
                 add(kw, (not card[kw]) and L("tt.kwGranted") or nil)
             elseif card[kw] then
-                add(kw, L("tt.kwSwitchedOff"))
+                add(kw, L(kw == "shielded" and "tt.kwShieldUsed" or "tt.kwSwitchedOff"))
             end
         elseif card[kw] then
             add(kw)
@@ -589,6 +596,7 @@ local function KeywordPanels(card, ctx)
     -- Keywords this card hands out
     for _, op in ipairs((card.effect and card.effect.ops) or {}) do
         for _, kw in ipairs(op.kw or {}) do add(kw, L("tt.kwSpellGrants")) end
+        if op.op == "shielded" then add("shielded", L("tt.kwSpellGrantsShield")) end
     end
     local a = card.anthem
     for _, kw in ipairs((a and a.kw) or {}) do

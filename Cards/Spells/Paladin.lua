@@ -33,15 +33,15 @@ TTS:AddCards({
     },
     ["PAL04"] = {
         id = "PAL04", name = "Blessing of Protection", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Target creature you control gets +0/+3 until end of turn and gains a regeneration shield.",
+        text = "Target creature you control gains Shielded and a regeneration shield.",
         art = "Interface\\Icons\\Spell_Holy_SealOfProtection",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", t = 3 }, { op = "regen", to = "target" } } }
+        effect = { target = "friendly_creature", ops = { { op = "shielded", to = "target" }, { op = "regen", to = "target" } } }
     },
     ["PAL05"] = {
         id = "PAL05", name = "Divine Shield", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Prevent the next 8 damage that would be dealt to you.",
+        text = "Prevent the next 4 damage that would be dealt to you. Creatures you control gain Shielded.",
         art = "Interface\\Icons\\Spell_Holy_DivineIntervention",
-        effect = { ops = { { op = "shield", to = "self_player", n = 8 } } }
+        effect = { ops = { { op = "shield", to = "self_player", n = 4 }, { op = "shielded", to = "friendly_creatures" } } }
     },
     ["PAL06"] = {
         id = "PAL06", name = "Hammer of Justice", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Paladin",

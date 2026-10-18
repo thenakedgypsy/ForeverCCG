@@ -141,6 +141,7 @@ TTS.CreatureSounds = {
     ["BOSS27"] = { death = 2932 }, -- Durgen Dirgehammer (dark iron dwarf)
     ["BOSS28"] = { aggro = 1357, death = 2936 }, -- Rath'mael (undead caster)
     ["BOSS29"] = { aggro = 472, death = 468 }, -- Relic Guardian (golem)
+    ["BOSS30"] = { aggro = 3424, death = 3422 }, -- Shade of the Archmage (phantasm)
     ["BRD01"] = { death = 2932 }, -- Anvilrage Guardsman
     ["BRD02"] = { aggro = 1288, death = 1286 }, -- Fireguard
     ["BRD03"] = { aggro = 1263, death = 2944 }, -- Twilight's Hammer Torturer
@@ -617,6 +618,28 @@ TTS.CreatureSounds = {
     ["EXC15"] = { aggro = 570, death = 569 }, -- Saltspine
     ["EXC16"] = { aggro = 708, death = 707 }, -- Shadetooth (raptor)
     ["EXC17"] = { aggro = 1263, death = 2944 }, -- Deathstalker Agent
+    ["DAL01"] = { aggro = 1408, death = 1406 }, -- Arcane Manaling (elemental)
+    ["DAL02"] = { aggro = 1249, death = 1250 }, -- Mana Fiend (felbeast)
+    ["DAL03"] = { aggro = 3424, death = 3422 }, -- Mana Phantom (phantasm)
+    ["DAL04"] = { aggro = 1408, death = 1406 }, -- Seeking Remnant (elemental)
+    ["DAL05"] = { aggro = 1408, death = 1406 }, -- Saturated Remnant (elemental)
+    ["DAL06"] = { aggro = 3424, death = 3422 }, -- Phantasm
+    ["DAL07"] = { aggro = 472, death = 468 }, -- Fragmented Sentry (golem)
+    ["DAL08"] = { aggro = 1357, death = 2936 }, -- Kirin Tor Necromancer
+    ["DAL09"] = { aggro = 3424, death = 3422 }, -- Arcane Echo (phantasm)
+    ["DAL10"] = { aggro = 1408, death = 1406 }, -- Mana Stalker (elemental)
+    ["DAL11"] = { aggro = 1408, death = 1406 }, -- Arcane Elemental
+    ["DAL12"] = { aggro = 3424, death = 3422 }, -- Mana Echo (phantasm)
+    ["DAL13"] = { aggro = 462, death = 458 }, -- Suffused Treant
+    ["DAL14"] = { aggro = 3424, death = 3422 }, -- Mana Wraith (phantasm)
+    ["DAL15"] = { aggro = 1408, death = 1406 }, -- Arcane Anomaly (elemental)
+    ["DAL16"] = { aggro = 1408, death = 1406 }, -- Arcanic Enigma (elemental)
+    ["DAL17"] = { aggro = 472, death = 468 }, -- Unstable Sentinel (golem)
+    ["DAL18"] = { aggro = 1249, death = 1250 }, -- Mana Devourer (felbeast)
+    ["DAL19"] = { aggro = 1263, death = 2944 }, -- Lyn the Ignored
+    ["DAL20"] = { aggro = 462, death = 458 }, -- Fel Ancient (treant)
+    ["DAL21"] = { aggro = 3611, death = 3609 }, -- Atrexis the Grave Knight (death knight)
+    ["DAL22"] = { aggro = 1263, death = 2944 }, -- Archmage Modera
     ["STV01"] = { aggro = 647, death = 646 }, -- Young Panther
     ["STV02"] = { aggro = 1263, death = 2944 }, -- Kurzen Medicine Man
     ["STV03"] = { aggro = 647, death = 646 }, -- Stranglethorn Tiger

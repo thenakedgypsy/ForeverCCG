@@ -979,7 +979,10 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.art:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight + iconPadX, artBottom - iconPadY)
     f.art:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
 
-    f.model = CreateFrame("PlayerModel", nil, f)
+    -- DressUpModel (a PlayerModel that can try on items) so an opponent's hero card can
+    -- wear the gear they sent (Hero.lua)
+    local okModel, model = pcall(CreateFrame, "DressUpModel", nil, f)
+    f.model = okModel and model or CreateFrame("PlayerModel", nil, f)
     f.model:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
     f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, artBottom)
     f.model:EnableMouse(false)
@@ -1584,34 +1587,27 @@ local function ApplyModelCamera(f, card)
     if f.model.SetRotation then f.model:SetRotation(cam.rotation or 0.15) end
 end
 
--- Card art colour. A dual prayer's art (the hearthstone icon) is tinted left to right
--- with the colours it can make; any other art keeps its own colours. shade (default 1)
--- darkens it, e.g. for a tapped card.
-local MANA_TINT = {
-    W = { 1.00, 0.92, 0.62 }, U = { 0.50, 0.72, 1.00 }, B = { 0.72, 0.50, 0.92 },
-    R = { 1.00, 0.45, 0.30 }, G = { 0.48, 1.00, 0.45 },
-}
+-- Card art colour: art keeps its own colours (dual prayers have their own coloured
+-- rune art). shade (default 1) darkens it, e.g. for a tapped card.
 local function TintArt(tex, card, shade)
     shade = shade or 1
-    local colors = card and card.colors
-    local a, b = colors and MANA_TINT[colors[1]], colors and MANA_TINT[colors[2]]
-    if a and b then
-        local ok = tex.SetGradient and CreateColor and pcall(tex.SetGradient, tex, "HORIZONTAL",
-            CreateColor(a[1] * shade, a[2] * shade, a[3] * shade, 1),
-            CreateColor(b[1] * shade, b[2] * shade, b[3] * shade, 1))
-        -- No gradient on this client: the two colours mixed
-        if not ok then
-            tex:SetVertexColor((a[1] + b[1]) / 2 * shade, (a[2] + b[2]) / 2 * shade, (a[3] + b[3]) / 2 * shade)
-        end
-    else
-        tex:SetVertexColor(shade, shade, shade)
-    end
+    tex:SetVertexColor(shade, shade, shade)
 end
 TTS.TintArt = TintArt
 
 local function SetupCardVisual(f, card)
     f.currentCard = card
-    if card and card.displayId then
+    local hero = card and card.isHero and f.model and TTS.Hero
+    if hero then
+        f.art:Hide()
+        f.model:Show()
+        f.model:ClearModel()
+        hero = TTS.Hero:SetModel(f.model, card)
+        if hero then ApplyModelCamera(f, card) end
+    end
+    if hero then
+        -- the hero card (Hero.lua) shows the character itself
+    elseif card and card.displayId and not card.isHero then
         f.art:Hide()
         f.model:Show()
         f.model:ClearModel()

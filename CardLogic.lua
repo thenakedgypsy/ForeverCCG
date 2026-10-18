@@ -103,6 +103,10 @@ function E:HasKeyword(perm, isRemote, keyword)
     local card = TTS.Cards[perm.id]
     if not card then return end
 
+    -- Shielded is used up by the first damage it negates (E:DamageCreature), so it is
+    -- state on the permanent: set when it enters (card.shielded) or by a spell
+    if keyword == "shielded" then return perm.shielded and true or false end
+
     if keyword == "haste" then
         local allPerms = {}
         for _, p in ipairs(self.localState.field) do table.insert(allPerms, p) end
@@ -196,7 +200,7 @@ end
 -- so the board can tuck that card under the creature while the effect lasts.
 -- An entry stays only while the state it created is still on the creature.
 -- =========================================================================
-local LINGERING_OPS = { buff = true, shield = true, freeze = true, regen = true }
+local LINGERING_OPS = { buff = true, shield = true, freeze = true, regen = true, shielded = true }
 
 local function RecordSpellEffect(perm, op, card)
     local kind
@@ -215,6 +219,7 @@ end
 local function SpellEffectActive(perm, e)
     if e.kind == "freeze" then return perm.freezeUntap and true or false end
     if e.kind == "regen" then return perm.regenerateShield and true or false end
+    if e.kind == "shielded" then return perm.shielded and true or false end
     local p, t = perm.tempPower or 0, perm.tempToughness or 0
     if e.kind == "perm" then p, t = perm.permPower or 0, perm.permToughness or 0 end
     if e.harmful then return p < 0 or t < 0 end
@@ -488,14 +493,28 @@ end
 
 local SPELL_OPS = {}
 
+-- Marks n damage on a creature, unless it is Shielded: then this instance of damage is
+-- negated and the creature loses Shielded. Returns the damage actually marked.
+function E:DamageCreature(perm, n)
+    if n <= 0 then return 0 end
+    if perm.shielded then
+        perm.shielded = nil
+        self:Log(L("log.shieldedAbsorbed", CreatureName(perm)), "COMBAT")
+        return 0
+    end
+    perm.damage = (perm.damage or 0) + n
+    return n
+end
+
 SPELL_OPS.damage = function(self, op, d, card, cr)
     local n = op.n
     if d.kind == "PLAYER" then
         self:DamagePlayer(d.isRemote, n, card.id)
     else
         if op.bonusIfTapped and d.perm.tapped then n = n + op.bonusIfTapped end
-        d.perm.damage = (d.perm.damage or 0) + n
-        self:Log(L("log.dealtDamage", TTS:CardName(card), n, CreatureName(d.perm)), "COMBAT")
+        if self:DamageCreature(d.perm, n) > 0 then
+            self:Log(L("log.dealtDamage", TTS:CardName(card), n, CreatureName(d.perm)), "COMBAT")
+        end
     end
 end
 
@@ -640,7 +659,7 @@ SPELL_OPS.shield = function(self, op, d, card, cr)
         local st = d.isRemote and self.remoteState or self.localState
         st.damageShield = (st.damageShield or 0) + op.n
         self:Log(L("log.shieldPlayer", TTS:CardName(card), op.n, self:SideName(d.isRemote)), "ACTION")
-    else
+    elseif not op.playerOnly then
         d.perm.tempToughness = (d.perm.tempToughness or 0) + op.n
         self:Log(L("log.shieldCreature", TTS:CardName(card), CreatureName(d.perm), op.n), "ACTION")
     end
@@ -649,6 +668,13 @@ end
 SPELL_OPS.regen = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     d.perm.regenerateShield = true
+end
+
+-- Grants the Shielded keyword (lasts until it negates an instance of damage)
+SPELL_OPS.shielded = function(self, op, d, card, cr)
+    if d.kind ~= "CREATURE" then return end
+    d.perm.shielded = true
+    self:Log(L("log.shieldedGained", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
 end
 
 SPELL_OPS.dispel = function(self, op, d, card, cr)
@@ -662,6 +688,7 @@ SPELL_OPS.dispel = function(self, op, d, card, cr)
         if (perm.permToughness or 0) > 0 then perm.permToughness = 0 end
         perm.tempKw = nil
         perm.regenerateShield = nil
+        perm.shielded = nil
         perm.hots = nil
     else
         -- cleanse harmful effects from our own creature
@@ -875,6 +902,7 @@ function E:NewCreaturePerm(cardId, isRemote)
         id = cardId,
         tapped = false,
         sick = not self:HasKeyword({ id = cardId }, isRemote, "haste"),
+        shielded = TTS.Cards[cardId] and TTS.Cards[cardId].shielded or nil,
         damage = 0,
         tempPower = 0,
         tempToughness = 0,
@@ -882,9 +910,30 @@ function E:NewCreaturePerm(cardId, isRemote)
     }
 end
 
+-- Unique (keyword): a player can have only one copy of the card on their battlefield.
+-- The copy that is already there is destroyed when another arrives (put onto the
+-- battlefield by an effect, or gained control of); casting a second one isn't allowed.
+function E:HasCopyOnField(cardId, isRemote, except)
+    for _, p in ipairs((isRemote and self.remoteState or self.localState).field) do
+        if p.id == cardId and p ~= except then return p end
+    end
+    return nil
+end
+
+function E:EnforceUnique(cardId, isRemote, newPerm)
+    local card = TTS.Cards[cardId]
+    if not (card and card.unique) then return end
+    local old = self:HasCopyOnField(cardId, isRemote, newPerm)
+    if old then
+        self:Log(L("log.uniqueReplaced", TTS:CardName(card)), "ACTION")
+        self:DestroyCreature(old)
+    end
+end
+
 -- Puts a creature card onto a side's battlefield (not cast: no mana, no network message)
 -- and fires its enter trigger. Returns the new permanent.
 function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
+    self:EnforceUnique(cardId, isRemote)
     local perm = self:NewCreaturePerm(cardId, isRemote)
     if opts and opts.ready then perm.sick = false end
     table.insert((isRemote and self.remoteState or self.localState).field, perm)
@@ -909,6 +958,7 @@ function E:GainControl(perm, newControllerIsRemote, untilEnd)
         perm.sick = true
     end
     table.insert((newControllerIsRemote and self.remoteState or self.localState).field, perm)
+    self:EnforceUnique(perm.id, newControllerIsRemote, perm)
 end
 
 -- The opposing creature an automatic trigger picks: the highest power one that passes `ok`
@@ -931,7 +981,7 @@ function E:OnCreatureEnter(perm, isRemote)
     if perm.id == "BOSS19" then
         for _, oppPerm in ipairs(isRemote and self.localState.field or self.remoteState.field) do
             if IsCreaturePerm(oppPerm) then
-                oppPerm.damage = (oppPerm.damage or 0) + 3
+                self:DamageCreature(oppPerm, 3)
             end
         end
         self:Log(L("log.boss.wyrmthalak", TTS:CardName(perm.id)), "COMBAT")
@@ -1064,7 +1114,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
     elseif id == "BOSS07" or id == "BOSS10" then
         for _, p in ipairs(isRemote and self.localState.field or self.remoteState.field) do
             if IsCreaturePerm(p) then
-                p.damage = (p.damage or 0) + 2
+                self:DamageCreature(p, 2)
             end
         end
         self:Log(L("log.boss.sweep", CreatureName(perm)), "COMBAT")
@@ -1251,6 +1301,10 @@ function E:PlayCard(handIndex)
     if card.type == "Creature" then
         if self.phase ~= "MAIN1" and self.phase ~= "MAIN2" then
             self:Log(L("err.permanentMainPhase"), "ERROR")
+            return
+        end
+        if card.unique and self:HasCopyOnField(cardId, false) then
+            self:Log(L("err.uniqueInPlay", TTS:CardName(card)), "ERROR")
             return
         end
         self:AutoPayMana(card.cost)
@@ -1831,7 +1885,8 @@ function E:PlanCombatDamage(bs)
         end
     end
 
-    local taken, dealt, struck = {}, {}, {}
+    -- Shielded: the first hit a creature takes is negated (popped[perm] = it loses Shielded)
+    local taken, dealt, struck, popped = {}, {}, {}, {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
     -- Strikes-First damage lands first, then everyone still standing strikes
     for _, firstStep in ipairs({ true, false }) do
@@ -1846,8 +1901,12 @@ function E:PlanCombatDamage(bs)
         end
         for _, h in ipairs(hits) do
             local src = info[h[1]]
-            taken[h[2]] = (taken[h[2]] or 0) + (src.fatal and 999 or src.p)
-            dealt[h[1]] = (dealt[h[1]] or 0) + src.p
+            if h[2].shielded and not popped[h[2]] then
+                popped[h[2]] = true
+            else
+                taken[h[2]] = (taken[h[2]] or 0) + (src.fatal and 999 or src.p)
+                dealt[h[1]] = (dealt[h[1]] or 0) + src.p
+            end
             struck[h[1]] = true
         end
     end
@@ -1873,7 +1932,7 @@ function E:PlanCombatDamage(bs)
         end
     end
 
-    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample }
+    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped }
 end
 
 function E:ResolveCombatDamage()
@@ -1894,6 +1953,10 @@ function E:ResolveCombatDamage()
     local plan = self:PlanCombatDamage(bs)
     local info = plan.info
     if not self.preventCombatDamage then
+        for perm in pairs(plan.popped) do
+            perm.shielded = nil
+            self:Log(L("log.shieldedAbsorbed", CreatureName(perm)), "COMBAT")
+        end
         for perm, n in pairs(plan.taken) do perm.damage = (perm.damage or 0) + n end
         for perm, n in pairs(plan.dealt) do
             local isRemote = info[perm].isRemote

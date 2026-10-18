@@ -15,9 +15,9 @@ TTS:AddCards({
     -- PRIEST
     ["PRI01"] = {
         id = "PRI01", name = "Power Word: Shield", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "Prevent the next 4 damage that would be dealt to you, or give target creature you control +0/+4 until end of turn.",
+        text = "Prevent the next 4 damage that would be dealt to you, or target creature you control gains Shielded.",
         art = "Interface\\Icons\\Spell_Holy_PowerWordShield",
-        effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4 } } }
+        effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4, playerOnly = true }, { op = "shielded", to = "target" } } }
     },
     ["PRI02"] = {
         id = "PRI02", name = "Renew", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",

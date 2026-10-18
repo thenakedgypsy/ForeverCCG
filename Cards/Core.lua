@@ -55,64 +55,64 @@ TTS.Cards = {
         id = "PRY01", name = "Lakeshire Hearth", nameHorde = "Sun Rock Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "R" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6727, Horde = 7731 },   -- Brianna, Lakeshire / Jayka, Sun Rock Retreat
         text = "{T}: Add {W} or {R}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_Y_R.png"
     },
     ["PRY02"] = {
         id = "PRY02", name = "Thelsamar Hearth", nameHorde = "Crossroads Hearth", cost = "", cmc = 0, color = "G", colors = { "G", "R" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6734, Horde = 3934 },   -- Hearthstove, Thelsamar / Boorand Plainswind, Crossroads
         text = "{T}: Add {G} or {R}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_R_G.png"
     },
     ["PRY03"] = {
         id = "PRY03", name = "Auberdine Hearth", nameHorde = "Sepulcher Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "G" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6737, Horde = 6739 },   -- Shaussiy, Auberdine / Bates, The Sepulcher
         text = "{T}: Add {U} or {G}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_U_G.png"
     },
     -- Levels 1-10
     ["PRY04"] = {
         id = "PRY04", name = "Dolanaar Hearth", nameHorde = "Bloodhoof Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "G" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6736, Horde = 6747 },   -- Keldamyr, Dolanaar / Kauth, Bloodhoof Village
         text = "{T}: Add {W} or {G}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_Y_G.png"
     },
     ["PRY05"] = {
         id = "PRY05", name = "Kharanos Hearth", nameHorde = "Brill Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "B" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 1247, Horde = 5688 },   -- Belm, Kharanos / Renee, Brill
         text = "{T}: Add {U} or {B}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_U_P.png"
     },
     ["PRY06"] = {
         id = "PRY06", name = "Goldshire Hearth", nameHorde = "Razor Hill Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "R" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 295, Horde = 6928 },   -- Farley, Goldshire / Grosk, Razor Hill
         text = "{T}: Add {B} or {R}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_P_R.png"
     },
     -- Levels 18-30
     ["PRY07"] = {
         id = "PRY07", name = "Southshore Hearth", nameHorde = "Tarren Mill Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "B" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 2352, Horde = 2388 },   -- Anderson, Southshore / Shay, Tarren Mill
         text = "{T}: Add {W} or {B}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_Y_P.png"
     },
     ["PRY08"] = {
         id = "PRY08", name = "Darkshire Hearth", nameHorde = "Splintertree Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "G" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6790, Horde = 12196 },   -- Trelayne, Darkshire / Kaylisk, Splintertree Post
         text = "{T}: Add {B} or {G}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_P_G.png"
     },
     -- Levels 35-50
     ["PRY09"] = {
         id = "PRY09", name = "Aerie Peak Hearth", nameHorde = "Revantusk Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "U" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 7744, Horde = 14731 },   -- Thulfram, Aerie Peak / Lard, Revantusk Village
         text = "{T}: Add {W} or {U}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_Y_U.png"
     },
     ["PRY10"] = {
         id = "PRY10", name = "Theramore Hearth", nameHorde = "Kargath Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "R" }, type = "Land",
         isGift = true, giftNpcs = { Alliance = 6272, Horde = 9356 },   -- Janene, Theramore / Shul'kar, Kargath
         text = "{T}: Add {U} or {R}.",
-        art = "Interface\\Icons\\INV_Misc_Rune_01"
+        art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_U_R.png"
     },
 
     -- =========================================================================
@@ -120,26 +120,26 @@ TTS.Cards = {
     -- prayer of yours is tapped with them. Any capital city innkeeper (TTS.GIFT_POOLS.capital)
     -- hands out a random one the player doesn't have all 4 of; one wait for the whole pool.
     -- =========================================================================
-    ["PRY11"] = { id = "PRY11", name = "Hearth of Dawn", cost = "", cmc = 0, color = "W", colors = { "W", "U" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{U}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY12"] = { id = "PRY12", name = "Hearth of Embers", cost = "", cmc = 0, color = "W", colors = { "W", "R" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY13"] = { id = "PRY13", name = "Hearth of Twilight", cost = "", cmc = 0, color = "W", colors = { "W", "B" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{B}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY14"] = { id = "PRY14", name = "Hearth of Blossoms", cost = "", cmc = 0, color = "W", colors = { "W", "G" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY15"] = { id = "PRY15", name = "Hearth of Moonshadow", cost = "", cmc = 0, color = "U", colors = { "U", "B" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{B}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY16"] = { id = "PRY16", name = "Hearth of Storms", cost = "", cmc = 0, color = "U", colors = { "U", "R" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY17"] = { id = "PRY17", name = "Hearth of Tides", cost = "", cmc = 0, color = "U", colors = { "U", "G" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY18"] = { id = "PRY18", name = "Hearth of Cinders", cost = "", cmc = 0, color = "B", colors = { "B", "R" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{R}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY19"] = { id = "PRY19", name = "Hearth of Thorns", cost = "", cmc = 0, color = "B", colors = { "B", "G" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
-    ["PRY20"] = { id = "PRY20", name = "Hearth of the Wilds", cost = "", cmc = 0, color = "R", colors = { "R", "G" }, makesBoth = true, type = "Land",
-        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {R}{G}.", art = "Interface\\Icons\\INV_Misc_Rune_01" },
+    ["PRY11"] = { id = "PRY11", name = "Cracked Dawn Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "U" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{U}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_Y_U.png" },
+    ["PRY12"] = { id = "PRY12", name = "Cracked Ember Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_Y_R.png" },
+    ["PRY13"] = { id = "PRY13", name = "Cracked Twilight Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "B" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{B}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_Y_P.png" },
+    ["PRY14"] = { id = "PRY14", name = "Cracked Blossom Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {W}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_Y_G.png" },
+    ["PRY15"] = { id = "PRY15", name = "Cracked Moonshadow Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "B" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{B}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_U_P.png" },
+    ["PRY16"] = { id = "PRY16", name = "Cracked Storm Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_U_R.png" },
+    ["PRY17"] = { id = "PRY17", name = "Cracked Tide Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {U}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_U_G.png" },
+    ["PRY18"] = { id = "PRY18", name = "Cracked Cinder Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "R" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_P_R.png" },
+    ["PRY19"] = { id = "PRY19", name = "Cracked Thorn Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {B}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_P_G.png" },
+    ["PRY20"] = { id = "PRY20", name = "Cracked Wild Hearth", cost = "", cmc = 0, color = "R", colors = { "R", "G" }, makesBoth = true, type = "Land",
+        isGift = true, giftPool = "capital", text = "{T}, tap another untapped Prayer you control: Add {R}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_R_G.png" },
 }
 
 -- The trail of town innkeepers for each faction, by level: once one has given all its

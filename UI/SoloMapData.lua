@@ -45,6 +45,7 @@ TTS.SoloMapPositions = {
     HOT = { "EK", 0.4790, 0.5230 },   -- under the High Seat of Ironforge
     ROL = { "EK", 0.4490, 0.2400 },   -- the ruins above the Undercity
     EXC = { "EK", 0.5065, 0.4690 },   -- western Wetlands
+    DAL = { "EK", 0.4455, 0.3065 },   -- Dalaran, western Alterac Mountains
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
     LOC = { "EK", 0.5504, 0.5486 },

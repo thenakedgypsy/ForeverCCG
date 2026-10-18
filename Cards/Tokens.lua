@@ -27,4 +27,11 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    ["TOK03"] = {
+        id = "TOK03", name = "Skeleton", cost = "", cmc = 0, color = "B", type = "Creature",
+        power = 1, toughness = 1, isToken = true, displayId = 7846,
+        creatureType = "Undead",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = ""
+    },
 })

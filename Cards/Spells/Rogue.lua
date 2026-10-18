@@ -57,9 +57,9 @@ TTS:AddCards({
     },
     ["ROG08"] = {
         id = "ROG08", name = "Evasion", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target creature you control gets +0/+2 and gains Strikes-First until end of turn.",
+        text = "Target creature you control gains Shielded, and Strikes-First until end of turn.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWard",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", t = 2, kw = { "firstStrike" } } } }
+        effect = { target = "friendly_creature", ops = { { op = "shielded", to = "target" }, { op = "buff", to = "target", kw = { "firstStrike" } } } }
     },
     ["ROG09"] = {
         id = "ROG09", name = "Slice and Dice", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",

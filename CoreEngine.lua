@@ -912,6 +912,12 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
+    -- Hero cards (Hero.lua): the opponent's stands in until their HEROINFO arrives; ours goes
+    -- to them before any card can be played
+    if TTS.Hero then
+        TTS.Hero:BuildCard(TTS.Hero.OPP_ID, { name = self.opponent, class = "WARRIOR", upgrades = 0 })
+        if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:HEROINFO:" .. TTS.Hero:Encode()) end
+    end
     self.turn = 1
     self.landPlayedThisTurn = false
     self.preventCombatDamage = false
@@ -958,6 +964,10 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
         local activeDeck = TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex] and TTS_SavedDecks[TTS_ActiveDeckIndex].cards
         if activeDeck then
             for cardId, qty in pairs(activeDeck) do
+                -- Decks are shared by all characters: an alt plays only the hero copies it owns
+                if TTS.Cards[cardId] and TTS.Cards[cardId].isHero then
+                    qty = math.min(qty, TTS:GetOwnedCopies(TTS.Cards[cardId]) or 1)
+                end
                 if TTS.Cards[cardId] then
                     for _ = 1, qty do table.insert(self.localState.deck, cardId) end
                 end
