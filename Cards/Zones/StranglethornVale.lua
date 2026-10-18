@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 9573,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 2544,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Support."
+        text = "Vigilant. Support."
     },
     ["STV10"] = {
         id = "STV10", name = "Lord Sakrasis", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",

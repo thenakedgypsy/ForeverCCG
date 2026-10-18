@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, deathtouch = true, isMob = true, isBoss = true, displayId = 760,
         zone = "Teldrassil", creatureType = "Beast", npcId = 1998,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Quick."
+        text = "Fatal. Quick."
     },
     ["TEL06"] = {
         id = "TEL06", name = "Strigid Owl", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",

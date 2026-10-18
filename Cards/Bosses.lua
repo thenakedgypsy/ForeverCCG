@@ -26,7 +26,7 @@ TTS:AddCards({
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias",
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
         anthem = { tag = "faction", value = "Defias", p = 1 },
-        text = "Quick, Strikes-First. Other Defias you control get +1/+0."
+        text = "Quick. Strikes-First. Other Defias you control get +1/+0."
     },
 
     -- Wailing Caverns: Mutanus the Devourer
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 8, toughness = 9, trample = true, bulwark = 2, isBoss = true, displayId = 2837, achievementId = 632,
         zone = "Blackfathom Deeps", creatureType = "Beast",
         modelCam = { zoom = 0.20, camScale = 1.80, z = 0.00, rotation = -0.30 },
-        text = "Brutish, Bulwark 2."
+        text = "Brutish. Bulwark 2."
     },
 
     -- Stockade: Bazil Thredd
@@ -117,7 +117,7 @@ TTS:AddCards({
         power = 4, toughness = 6, shielded = true, lifelink = true, isBoss = true, displayId = 2043, achievementId = 638,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade",
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Drain, Shielded. Martyrdom: Return the last other denizen card put into your graveyard to the battlefield."
+        text = "Drain. Shielded. Martyrdom: Return the last other denizen card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -135,7 +135,7 @@ TTS:AddCards({
         power = 8, toughness = 10, vigilance = true, hexproof = true, isBoss = true, displayId = 5988, achievementId = 639,
         zone = "Uldaman", creatureType = "Giant",
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
-        text = "Vigilant, Warded."
+        text = "Vigilant. Warded."
     },
 
     -- Zul'Farrak: Chief Ukorz Sandscalp
@@ -144,7 +144,7 @@ TTS:AddCards({
         power = 8, toughness = 7, haste = true, trample = true, isBoss = true, displayId = 6439, achievementId = 640,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll",
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish, Quick. Gets +3/+0 while your life is 10 or less."
+        text = "Brutish. Quick. Gets +3/+0 while your life is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -189,7 +189,7 @@ TTS:AddCards({
         power = 10, toughness = 9, hexproof = true, trample = true, isBoss = true, displayId = 10115, achievementId = 1307,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock",
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
-        text = "Brutish, Warded. All other denizens lose and cannot gain Quick."
+        text = "Brutish. Warded. All other denizens lose and cannot gain Quick."
     },
 
     -- Dire Maul East: Alzzin the Wildshaper
@@ -257,7 +257,7 @@ TTS:AddCards({
         zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron",
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First, Vigilant. Other Dark Iron you control get +1/+1."
+        text = "Strikes-First. Vigilant. Other Dark Iron you control get +1/+1."
     },
 
     -- Ruins of Lordaeron: Rath'mael
@@ -268,7 +268,7 @@ TTS:AddCards({
         zone = "Ruins of Lordaeron", creatureType = "Undead",
         anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Drain. Other Undead you control get +1/+0."
+        text = "Fatal. Drain. Other Undead you control get +1/+0."
     },
 
     -- Excavation Site: Relic Guardian (no kill statistic on Wowhead yet; tracked by statistic name)

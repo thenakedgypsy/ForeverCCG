@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 2, toughness = 3, flying = true, haste = true, isMob = true, isBoss = true, displayId = 1228,
         zone = "Mulgore", creatureType = "Beast", npcId = 2969,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne, Quick."
+        text = "Airborne. Quick."
     },
     ["MUL08"] = {
         id = "MUL08", name = "Venture Co. Worker", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

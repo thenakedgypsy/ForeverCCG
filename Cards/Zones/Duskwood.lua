@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4276,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Defias", npcId = 215,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First, Quick."
+        text = "Strikes-First. Quick."
     },
     ["DSK06"] = {
         id = "DSK06", name = "Carrion Recluse", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",

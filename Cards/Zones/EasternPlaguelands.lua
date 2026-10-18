@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 2, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 7897,
         zone = "Eastern Plaguelands", creatureType = "Beast", npcId = 8602,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne, Drain."
+        text = "Airborne. Drain."
     },
     ["EPL08"] = {
         id = "EPL08", name = "Frenzied Plaguehound", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

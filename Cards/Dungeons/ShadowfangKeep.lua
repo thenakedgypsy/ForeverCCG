@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 3, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 8808,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 3866,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne, Drain."
+        text = "Airborne. Drain."
     },
     ["SFK05"] = {
         id = "SFK05", name = "Lupine Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

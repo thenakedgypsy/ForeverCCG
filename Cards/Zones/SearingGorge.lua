@@ -67,7 +67,7 @@ TTS:AddCards({
         power = 1, toughness = 11, bulwark = 2, defender = true, isMob = true, isBoss = true, displayId = 10801,
         zone = "Searing Gorge", creatureType = "Mechanical", npcId = 5854,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Blocker, Bulwark 2."
+        text = "Blocker. Bulwark 2."
     },
     ["SEA09"] = {
         id = "SEA09", name = "Incendosaur", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",

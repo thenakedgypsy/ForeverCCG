@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 1001,
         zone = "Darkshore", creatureType = "Beast", npcId = 2236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Support."
+        text = "Vigilant. Support."
     },
     ["DAR10"] = {
         id = "DAR10", name = "Apothecary Falthis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

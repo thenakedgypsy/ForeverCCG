@@ -74,7 +74,7 @@ TTS:AddCards({
         power = 4, toughness = 9, bulwark = 2, defender = true, isMob = true, isBoss = true, displayId = 5285,
         zone = "Uldaman", creatureType = "Mechanical", npcId = 7023,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Blocker, Bulwark 2."
+        text = "Blocker. Bulwark 2."
     },
     ["ULD10"] = {
         id = "ULD10", name = "Galgann Firehammer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

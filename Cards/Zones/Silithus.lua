@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Silithus", creatureType = "Humanoid", npcEntry = 14347,
         anthem = { tag = "zone", value = "Silithus", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Strikes-First. Other Silithus denizens you control get +1/+1."
+        text = "Vigilant. Strikes-First. Other Silithus denizens you control get +1/+1."
     },
 })

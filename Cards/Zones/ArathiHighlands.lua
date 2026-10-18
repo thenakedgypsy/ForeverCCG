@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 4, trample = true, vigilance = true, isMob = true, isBoss = true, displayId = 4139,
         zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2583,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish, Vigilant."
+        text = "Brutish. Vigilant."
     },
     ["ARA08"] = {
         id = "ARA08", name = "Boulderfist Shaman", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",

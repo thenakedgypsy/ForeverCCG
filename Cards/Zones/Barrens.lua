@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 1858,
         zone = "The Barrens", creatureType = "Humanoid", npcId = 3385,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First, Vigilant."
+        text = "Strikes-First. Vigilant."
     },
     ["BRN06"] = {
         id = "BRN06", name = "Stormsnout", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

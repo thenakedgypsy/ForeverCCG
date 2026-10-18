@@ -69,6 +69,6 @@ TTS:AddCards({
         zone = "Razorfen Downs", creatureType = "Undead", npcEntry = 7355,
         anthem = { tag = "zone", value = "Razorfen Downs", p = 1, t = 1 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Anti-Air, Fatal. Other Razorfen Downs denizens you control get +1/+1."
+        text = "Anti-Air. Fatal. Other Razorfen Downs denizens you control get +1/+1."
     },
 })

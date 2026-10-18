@@ -228,7 +228,8 @@ local function BonusLine(bonus, name)
         if TT.KEYWORDS[kw] then parts[#parts + 1] = TT:Def("keyword", kw, "name") end
     end
     local prefix = TagValue(bonus.tag, bonus.value)
-    return (prefix ~= "" and (prefix .. " ") or "") .. name .. ":\n" .. table.concat(parts, ", ")
+    -- keywords are never separated by commas: "+1{PT}+1. Quick"
+    return (prefix ~= "" and (prefix .. " ") or "") .. name .. ":\n" .. table.concat(parts, Loc.code == "zhCN" and "。" or ". ")
 end
 
 -- Rules text as printed on the card: an anthem's sentence ("Other Undead you control get +1/+1.")
@@ -267,14 +268,12 @@ end
 -- COLOURED KEYWORDS (readability test; false shows rules text as before)
 -- Keyword and card-term names in rules text take a colour. In an Aura or Kinsmanship line
 -- ("Undead Aura:") the type before it shares that colour; types elsewhere stay plain.
--- A keyword right after another (only a ", " or ": " between, as in
--- "Arrival: Spawn:" or "Drain, Shielded") takes the second colour, so the two stand apart.
--- Dark colours on the printed card face, light ones in tooltips (TTS:CardRulesText's onCard).
+-- Dark on the printed card face, light in tooltips (TTS:CardRulesText's onCard).
 -- =========================================================================
 TTS.COLOR_KEYWORDS = true
 TT.TEXT_COLORS = {
-    card = { kw = "|cFF8A2A00", kw2 = "|cFF1E4FA0" },   -- rust, blue on the light card
-    tip  = { kw = "|cFF80D0FF", kw2 = "|cFFFFB060" },   -- light blue, orange on the dark tooltip
+    card = "|cFF8A2A00",   -- dark rust, on the card's light face
+    tip  = "|cFF80D0FF",   -- light blue, on the dark tooltip
 }
 
 -- { name, kind } to colour, longest first (so "Anti-Air" wins over a shorter name inside it).
@@ -297,7 +296,7 @@ local function ColoredNames()
     return list
 end
 
-local function ColorNames(text, colors)
+local function ColorNames(text, color)
     local names, found = ColoredNames(), {}
     -- First mark every match, so a shorter name can't match inside one already found
     for _, e in ipairs(names) do
@@ -321,22 +320,8 @@ local function ColorNames(text, colors)
         lines[#lines + 1] = line
     end
     text = table.concat(lines, "\n")
-    -- Then colour them in reading order, alternating keywords that follow one another
-    local out, pos, lastKwEnd, alt = {}, 1, nil, false
-    while true do
-        local a, b, i = text:find("\1(%d+)\2", pos)
-        if not a then break end
-        local gap = text:sub(pos, a - 1)
-        local m = found[tonumber(i)]
-        local sep = gap:gsub("，", ""):gsub("：", ""):gsub("；", "")
-        alt = (lastKwEnd == pos and sep:match("^[,:;%s]*$") ~= nil) and not alt or false
-        local color = alt and colors.kw2 or colors.kw
-        lastKwEnd = b + 1
-        out[#out + 1] = gap .. color .. m.text .. "|r"
-        pos = b + 1
-    end
-    out[#out + 1] = text:sub(pos)
-    return table.concat(out)
+    -- Then colour them
+    return (text:gsub("\1(%d+)\2", function(i) return color .. found[tonumber(i)].text .. "|r" end))
 end
 
 -- Rules text as the card shows it (see PlainRulesText), keywords coloured.
@@ -895,18 +880,6 @@ local function AbilityPanels(card)
     local specs = {}
     if card.type == "Land" then table.insert(specs, TT:EffectPanel("prayer")) end
 
-    local a = card.anthem
-    if a then
-        local bonus = string.format("%s/%s", Signed(a.p), Signed(a.t))
-        local kws = {}
-        for _, kw in ipairs(a.kw or {}) do
-            if TT.KEYWORDS[kw] then table.insert(kws, TT:Def("keyword", kw, "name")) end
-        end
-        local line = #kws > 0 and L("tt.anthemKw", TagValue(a.tag, a.value), bonus, table.concat(kws, ", "))
-            or L("tt.anthem", TagValue(a.tag, a.value), bonus)
-        table.insert(specs, TT:EffectPanel("anthem", { { line, 1, 0.82, 0 }, { L("tt.matchesBy", TagFieldLabel(a.tag)), 0.6, 0.6, 0.6 } }))
-    end
-
     -- The English rules text is the data here (it is the same whatever the language)
     local text = card.text or ""
     if card.type == "Creature" and text ~= "" then
@@ -951,6 +924,19 @@ local function AbilityPanels(card)
             seen[key] = true
             table.insert(specs, TT:EffectPanel(key))
         end
+    end
+
+    -- The Aura always comes last, as it does on the card
+    local a = card.anthem
+    if a then
+        local bonus = string.format("%s/%s", Signed(a.p), Signed(a.t))
+        local kws = {}
+        for _, kw in ipairs(a.kw or {}) do
+            if TT.KEYWORDS[kw] then table.insert(kws, TT:Def("keyword", kw, "name")) end
+        end
+        local line = #kws > 0 and L("tt.anthemKw", TagValue(a.tag, a.value), bonus, table.concat(kws, ", "))
+            or L("tt.anthem", TagValue(a.tag, a.value), bonus)
+        table.insert(specs, TT:EffectPanel("anthem", { { line, 1, 0.82, 0 }, { L("tt.matchesBy", TagFieldLabel(a.tag)), 0.6, 0.6, 0.6 } }))
     end
     return specs
 end

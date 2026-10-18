@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, vigilance = true, isMob = true, isBoss = true, displayId = 6549,
         zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick, Vigilant."
+        text = "Quick. Vigilant."
     },
     ["HIN06"] = {
         id = "HIN06", name = "Saltwater Snapjaw", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "The Hinterlands", creatureType = "Humanoid", npcEntry = 5635,
         anthem = { tag = "zone", value = "The Hinterlands", p = 1, t = 1, kw = { "flying" } },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Airborne, Vigilant. Other Hinterlands denizens you control get +1/+1 and Airborne."
+        text = "Airborne. Vigilant. Other Hinterlands denizens you control get +1/+1 and Airborne."
     },
 })

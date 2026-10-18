@@ -102,7 +102,7 @@ TTS:AddCards({
         power = 6, toughness = 7, deathtouch = true, reach = true, isMob = true, isBoss = true, displayId = 9929,
         zone = "Blackrock Spire", creatureType = "Beast", npcId = 10596,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Anti-Air."
+        text = "Fatal. Anti-Air."
     },
     ["BRS14"] = {
         id = "BRS14", name = "Jed Runewatcher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -147,7 +147,7 @@ TTS:AddCards({
         power = 10, toughness = 10, haste = true, trample = true, isMob = true, isBoss = true, displayId = 10193,
         zone = "Blackrock Spire", creatureType = "Beast", npcId = 10430,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Quick, Brutish."
+        text = "Quick. Brutish."
     },
     -- Solo reward
     ["BRS20"] = {
@@ -156,6 +156,6 @@ TTS:AddCards({
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcEntry = 10429,
         anthem = { tag = "zone", value = "Blackrock Spire", p = 1, kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick, Brutish. Other Blackrock Spire denizens you control get +1/+0 and Quick."
+        text = "Quick. Brutish. Other Blackrock Spire denizens you control get +1/+0 and Quick."
     },
 })

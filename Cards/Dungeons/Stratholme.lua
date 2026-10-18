@@ -32,7 +32,7 @@ TTS:AddCards({
         power = 3, toughness = 4, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Support."
+        text = "Vigilant. Support."
     },
     ["STR04"] = {
         id = "STR04", name = "Rockwing Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -153,7 +153,7 @@ TTS:AddCards({
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10812,
         anthem = { tag = "faction", value = "Scarlet Crusade", kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain, Vigilant. Other Scarlet Crusade you control have Drain."
+        text = "Drain. Vigilant. Other Scarlet Crusade you control have Drain."
     },
     -- Solo reward
     ["STR21"] = {

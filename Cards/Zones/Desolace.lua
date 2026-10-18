@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, haste = true, isMob = true, isBoss = true, displayId = 1192,
         zone = "Desolace", creatureType = "Beast", npcId = 4692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne, Quick."
+        text = "Airborne. Quick."
     },
     ["DES06"] = {
         id = "DES06", name = "Raging Thunder Lizard", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",

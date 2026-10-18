@@ -25,7 +25,7 @@ TTS:AddCards({
         power = 2, toughness = 4, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 184,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Support."
+        text = "Vigilant. Support."
     },
     ["DMS03"] = {
         id = "DMS03", name = "Goblin Engineer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",

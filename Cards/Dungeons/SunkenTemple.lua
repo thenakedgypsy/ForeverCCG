@@ -97,7 +97,7 @@ TTS:AddCards({
         power = 7, toughness = 9, flying = true, vigilance = true, isMob = true, isBoss = true, displayId = 9584,
         zone = "Sunken Temple", creatureType = "Dragonkin", npcId = 5722,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Airborne, Vigilant."
+        text = "Airborne. Vigilant."
     },
     -- Solo reward
     ["SUN13"] = {
@@ -106,6 +106,6 @@ TTS:AddCards({
         zone = "Sunken Temple", creatureType = "Beast", npcEntry = 8443,
         anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne, Drain. Other Trolls you control get +1/+1."
+        text = "Airborne. Drain. Other Trolls you control get +1/+1."
     },
 })

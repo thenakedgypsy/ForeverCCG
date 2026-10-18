@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 4734,
         zone = "Tirisfal Glades", creatureType = "Beast", npcId = 1553,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne, Drain."
+        text = "Airborne. Drain."
     },
     ["TIR07"] = {
         id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -74,7 +74,7 @@ TTS:AddCards({
         power = 6, toughness = 7, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 2481,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant, Support."
+        text = "Vigilant. Support."
     },
     ["TIR10"] = {
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 4, toughness = 5, deathtouch = true, reach = true, isMob = true, isBoss = true, displayId = 11178,
         zone = "Scholomance", creatureType = "Undead", npcId = 11551,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Anti-Air."
+        text = "Fatal. Anti-Air."
     },
     ["SCH06"] = {
         id = "SCH06", name = "Risen Construct", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -88,7 +88,7 @@ TTS:AddCards({
         power = 1, toughness = 5, deathtouch = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11492,
         zone = "Scholomance", creatureType = "Undead", npcId = 10901,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal, Strikes-First."
+        text = "Fatal. Strikes-First."
     },
     ["SCH12"] = {
         id = "SCH12", name = "Doctor Theolen Krastinov", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

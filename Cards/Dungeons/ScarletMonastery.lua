@@ -105,7 +105,7 @@ TTS:AddCards({
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3976,
         anthem = { tag = "faction", value = "Scarlet Crusade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First, Vigilant. Other Scarlet Crusade you control get +1/+1."
+        text = "Strikes-First. Vigilant. Other Scarlet Crusade you control get +1/+1."
     },
     -- Solo reward
     ["SMO14"] = {

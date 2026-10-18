@@ -96,7 +96,7 @@ TTS:AddCards({
         power = 7, toughness = 7, haste = true, trample = true, isMob = true, isBoss = true, displayId = 2450,
         zone = "Razorfen Kraul", creatureType = "Beast", npcId = 4422,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Quick, Brutish."
+        text = "Quick. Brutish."
     },
     -- Solo reward
     ["RFK13"] = {

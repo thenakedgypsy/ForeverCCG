@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, unblockable = true, isMob = true, isBoss = true, displayId = 7552,
         zone = "Dire Maul", creatureType = "Demon", npcId = 14354,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick, Invisible."
+        text = "Quick. Invisible."
     },
     ["DMA06"] = {
         id = "DMA06", name = "Warpwood Crusher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",

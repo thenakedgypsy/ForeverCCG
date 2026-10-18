@@ -607,7 +607,15 @@ function Keyword.Has(card, k)
         end
         return false
     end
-    return card[k] and true or false
+    if card[k] then return true end
+    -- A spell has the keywords it grants ("gains Quick and Invisible", Shielded)
+    for _, op in ipairs((card.effect and card.effect.ops) or {}) do
+        if k == "shielded" and op.op == "shielded" then return true end
+        for _, kw in ipairs(op.kw or {}) do
+            if kw == k then return true end
+        end
+    end
+    return false
 end
 function Keyword.List()
     local list = {}
