@@ -49,6 +49,127 @@ local CLASS_ICON = {
     MAGE = "Interface\\Icons\\ClassIcon_Mage",
 }
 
+-- A class trainer stands in for an opponent who can't be drawn: one of their race and
+-- gender if there is one (key race id * 10 + UnitSex: 2 male, 3 female), else their race,
+-- else their faction's (TRAINER_DISPLAY). displayIds from the client's creature cache; race
+-- and gender from each trainer's model file (/fcap trainers in ForeverCCG_DevCapture).
+local TRAINER_BY_RACE = {
+    WARRIOR = {
+        [12] = 3343,   -- Human male: Llane Beshere
+        [13] = 1300,   -- Human female: Lyria Du Lac
+        [22] = 4556,   -- Orc male: Malosh
+        [32] = 3399,   -- Dwarf male: Thran Khorman
+        [42] = 6071,   -- Night Elf male: Darnath Bladesinger
+        [43] = 1721,   -- Night Elf female: Alyissia
+        [52] = 1578,   -- Undead male: Dannal Stern
+        [53] = 2658,   -- Undead female: Angela Curthas
+        [62] = 2103,   -- Tauren male: Torm Ragetotem
+        [63] = 2113,   -- Tauren female: Ker Ragetotem
+        [72] = 3055,   -- Gnome male: Bilban Tosslespanner
+        [82] = 4242,   -- Troll male: Zel'mak
+    },
+    ROGUE = {
+        [12] = 3351,   -- Human male: Jorik Kerridan
+        [13] = 1297,   -- Human female: Keryn Sylvius
+        [22] = 1886,   -- Orc male: Rwag
+        [32] = 3407,   -- Dwarf male: Solm Hargrin
+        [42] = 1725,   -- Night Elf male: Frahun Shadewhisper
+        [43] = 2231,   -- Night Elf female: Syurna
+        [52] = 1580,   -- Undead male: David Trias
+        [53] = 1603,   -- Undead female: Marion Call
+        [72] = 3113,   -- Gnome male: Fenthwick
+        [82] = 4360,   -- Troll male: Shenthul
+    },
+    HUNTER = {
+        [13] = 137105, -- Human female: Josephine Carson
+        [22] = 4560,   -- Orc male: Ogromm
+        [32] = 3395,   -- Dwarf male: Thorgas Grimson
+        [33] = 3056,   -- Dwarf female: Daera Brightspear
+        [42] = 1703,   -- Night Elf male: Dazalar
+        [43] = 1723,   -- Night Elf female: Ayanna Everstride
+        [62] = 2087,   -- Tauren male: Holt Thunderhorn
+        [63] = 2112,   -- Tauren female: Kary Thunderhorn
+        [82] = 4239,   -- Troll male: Xor'juul
+        [83] = 1882,   -- Troll female: Jen'shan
+    },
+    PALADIN = {
+        [12] = 3346,   -- Human male: Brother Sammuel
+        [32] = 3393,   -- Dwarf male: Bromos Grummner
+        [52] = 129405, -- Undead male: Aramis Hammerhand
+        [53] = 129943, -- Undead female: Shari Stilwell
+    },
+    SHAMAN = {
+        [22] = 4552,   -- Orc male: Haromm
+        [23] = 1878,   -- Orc female: Shikrik
+        [32] = 126743, -- Dwarf male: Teo Hammerstorm
+        [33] = 140654, -- Dwarf female: Ingrid Dunwald
+        [62] = 2102,   -- Tauren male: Tigor Skychaser
+        [63] = 2123,   -- Tauren female: Siln Skychaser
+        [83] = 4231,   -- Troll female: Sian'tsu
+    },
+    WARLOCK = {
+        [12] = 3271,   -- Human male: Maximillian Crowe
+        [13] = 3345,   -- Human female: Drusilla La Salle
+        [22] = 4567,   -- Orc male: Kartosh
+        [23] = 1325,   -- Orc female: Mirket
+        [52] = 1581,   -- Undead male: Maximillion
+        [72] = 1930,   -- Gnome male: Alamar Grimm
+    },
+    DRUID = {
+        [42] = 1732,   -- Night Elf male: Mardant Strongoak
+        [43] = 2191,   -- Night Elf female: Alfina Nightgaze
+        [62] = 2106,   -- Tauren male: Turak Runetotem
+        [63] = 2121,   -- Tauren female: Sheal Runetotem
+    },
+    PRIEST = {
+        [12] = 3282,   -- Human male: Brother Benjamin
+        [13] = 3344,   -- Human female: Priestess Anetta
+        [32] = 3401,   -- Dwarf male: Branstock Khalder
+        [33] = 3066,   -- Dwarf female: Braenna Flintcrag
+        [43] = 1733,   -- Night Elf female: Shanda
+        [52] = 1579,   -- Undead male: Dark Cleric Duesten
+        [73] = 140941, -- Gnome female: High Priestess Mims
+        [82] = 4068,   -- Troll male: Ken'jai
+        [83] = 1897,   -- Troll female: Tai'jin
+    },
+    MAGE = {
+        [12] = 5001,   -- Human male: Khelden Bremen
+        [13] = 3292,   -- Human female: Jennea Cannon
+        [52] = 1600,   -- Undead male: Cain Firesong
+        [53] = 1592,   -- Undead female: Isabella
+        [72] = 10216,  -- Gnome male: Marryk Nurribit
+        [73] = 3108,   -- Gnome female: Bink
+        [82] = 10171,  -- Troll male: Un'Thuwa
+        [83] = 4524,   -- Troll female: Pephredo
+    },
+}
+-- Horde races: Orc 2, Undead 5, Tauren 6, Troll 8
+local HORDE_RACE = { [2] = true, [5] = true, [6] = true, [8] = true }
+local TRAINER_DISPLAY = {
+    Alliance = {
+        WARRIOR = 3343,    -- Llane Beshere
+        ROGUE   = 1297,    -- Keryn Sylvius
+        HUNTER  = 3558,    -- Grif Wildheart
+        PALADIN = 3346,    -- Brother Sammuel
+        SHAMAN  = 140654,  -- Ingrid Dunwald
+        WARLOCK = 3345,    -- Drusilla La Salle
+        DRUID   = 1732,    -- Mardant Strongoak
+        PRIEST  = 3344,    -- Priestess Anetta
+        MAGE    = 5001,    -- Khelden Bremen
+    },
+    Horde = {
+        WARRIOR = 1880,    -- Frang
+        ROGUE   = 1886,    -- Rwag
+        HUNTER  = 1882,    -- Jen'shan
+        PALADIN = 129405,  -- Aramis Hammerhand
+        SHAMAN  = 1878,    -- Shikrik
+        WARLOCK = 1884,    -- Nartok
+        DRUID   = 3819,    -- Gart Mistrunner
+        PRIEST  = 4068,    -- Ken'jai
+        MAGE    = 4526,    -- Mai'ah
+    },
+}
+
 local MAX_TIER = 6
 local MAX_COPIES = 4   -- at 4 copies the choice is still shown, with only the upgrade left
 H.MAX_COPIES = MAX_COPIES
@@ -209,8 +330,10 @@ end
 -- (the caller shows the class icon instead).
 -- This client can only dress a model made from a real character (no SetCustomRace, and
 -- bare race displays load untextured), so an opponent out of sight is drawn as your own
--- character in their gear when you share race and gender, and as their class icon if not.
-function H:SetModel(model, card)
+-- character in their gear when you share race and gender, and if not as a class trainer
+-- of their race and gender (TRAINER_BY_RACE), their race, or their faction, dressed in
+-- their gear (NPC displays take TryOn; bare race displays don't).
+function H:SetModel(model, card, onDressed)
     local info = card.heroInfo
     if not (model and info) then return false end
     -- Yours and the upgrade preview show you
@@ -227,7 +350,59 @@ function H:SetModel(model, card)
         for _, itemId in ipairs(info.items or {}) do pcall(model.TryOn, model, "item:" .. itemId) end
         return true
     end
-    return false
+
+    local displayId
+    local byRace = TRAINER_BY_RACE[info.class]
+    local race = tonumber(info.race)
+    if byRace and race then
+        local otherSex = (info.sex == 3) and 2 or 3
+        displayId = byRace[race * 10 + (info.sex or 2)] or byRace[race * 10 + otherSex]
+    end
+    if not displayId then
+        local trainers = TRAINER_DISPLAY[HORDE_RACE[info.race] and "Horde" or "Alliance"]
+        displayId = trainers[info.class] or trainers.WARRIOR
+    end
+    if not (model.SetDisplayInfo and pcall(model.SetDisplayInfo, model, displayId)) then return false end
+    self:DressModel(model, info.items, onDressed)   -- the trainer wears the opponent's gear
+    return true
+end
+
+-- Dresses a display model (an NPC display, e.g. a trainer) in items, stripping its own
+-- outfit first. A display model takes items only once it has loaded, so they go on now and
+-- again shortly after; the token stops a delayed dressing landing on a frame that has moved
+-- on to another card (UI\Board.lua clears it). Also used for cards with dressItems.
+-- onDressed (optional) runs after each dressing, e.g. to set the card's camera again (dressing
+-- can reset it)
+function H:DressModel(model, items, onDressed)
+    if not (model and model.TryOn and items and #items > 0) then return end
+    -- TryOn needs the item's data on the client: ask for any not loaded yet, so the later
+    -- retries find it
+    for _, itemId in ipairs(items) do
+        if C_Item and C_Item.RequestLoadItemDataByID then
+            pcall(C_Item.RequestLoadItemDataByID, itemId)
+        elseif GetItemInfo then
+            pcall(GetItemInfo, itemId)
+        end
+    end
+    local token = {}
+    model.heroDressToken = token
+    local function Dress()
+        if model.heroDressToken ~= token then return end
+        -- Clear everything first: Undress, then each slot on its own (an NPC display's
+        -- outfit can cover what TryOn adds to that slot)
+        if model.Undress then pcall(model.Undress, model) end
+        if model.UndressSlot then
+            for slot = 1, 19 do pcall(model.UndressSlot, model, slot) end
+        end
+        for _, itemId in ipairs(items) do pcall(model.TryOn, model, "item:" .. itemId) end
+        if onDressed then pcall(onDressed) end
+    end
+    Dress()
+    if C_Timer then
+        C_Timer.After(0.3, Dress)
+        C_Timer.After(1, Dress)
+        C_Timer.After(2.5, Dress)   -- items the server was still sending
+    end
 end
 
 -- The moment the opponent can be drawn live (targeted, moused over, focused or grouped),
@@ -243,10 +418,16 @@ liveWatch:SetScript("OnEvent", function()
     if not (info and FindUnit(info.name)) then return end
     for _, st in ipairs({ E.localState, E.remoteState }) do
         for _, perm in ipairs(st.field or {}) do
-            if perm.id == H.OPP_ID then E:RefreshUI(); return end
+            if perm.id == H.OPP_ID then
+                if TTS.RedrawCardModels then TTS.RedrawCardModels() end
+                E:RefreshUI(); return
+            end
         end
         for _, id in ipairs(st.hand or {}) do
-            if id == H.OPP_ID then E:RefreshUI(); return end
+            if id == H.OPP_ID then
+                if TTS.RedrawCardModels then TTS.RedrawCardModels() end
+                E:RefreshUI(); return
+            end
         end
     end
 end)

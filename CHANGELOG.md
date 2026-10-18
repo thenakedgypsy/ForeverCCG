@@ -2,6 +2,7 @@
 
 *   added cards for the new City of Dalaran dungeon
 *   new: your Hero card - you, but as a card. Its keyword and stats come from your class; every 10 levels choose to upgrade it or take another copy (the Hero button in the deckbuilder). Choices are shared by your alts
+*   your opponent's Hero card shows their real character when you can see them (target, mouseover or group). Out of sight, it's a class trainer of their race and gender, wearing their gear
 *   new keyword `Shielded`: the next damage the denizen would take is negated, then it loses Shielded. Power Word: Shield, Blessing of Protection, Divine Shield and Evasion now grant it
 *   new to Forever: CCG? A Quick Start walkthrough greets you the first time you open the addon, and a short guided tutorial game teaches you the basics turn by turn (Play Tutorial in Rules & Guide, or /tragic tutorial)
 *   Rules & Guide rewritten to be friendlier and up to date
@@ -17,6 +18,10 @@
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and combat resolves as soon as the blocks are in, then your turn ends (click again before the blocks arrive to cancel)
 *   Concede and Clear Deck now ask you to confirm first
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
+*   each side of the board now holds up to 16 denizens, shrinking them to fit
+*   fix for card models flickering on the board (most noticeable on Hero cards): a model now only reloads when its card is played, drawn or moves
+*   tokens now make a sound when they arrive: tadpoles, diggers and skeletons sound like their kin, others rustle like a prayer
+*   new Lock checkbox at the top of the board: tick it and the board can't be dragged around by accident (remembered between sessions)
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside denizens
 *   added new art for hearthstones

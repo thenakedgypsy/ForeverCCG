@@ -245,7 +245,10 @@ AddTitleStrip(B, 33)
 B:EnableMouse(true)
 B:SetMovable(true)
 B:RegisterForDrag("LeftButton")
-B:SetScript("OnDragStart", B.StartMoving)
+B:SetScript("OnDragStart", function(self)
+    if TTS.Options and TTS.Options:Get("boardLocked") then return end   -- the Lock checkbox
+    self:StartMoving()
+end)
 B:SetScript("OnDragStop", B.StopMovingOrSizing)
 B:SetScript("OnMouseDown", function(self, button)
     if button == "RightButton" then
@@ -433,8 +436,10 @@ end
 -- Any way the board comes back (Restore, /tragic board, a new match) removes the restore bar
 B:SetScript("OnShow", function(self)
     restoreBar:Hide()
+    if TTS.RedrawCardModels then TTS.RedrawCardModels() end
     if self.soundCheck and TTS.Sound then self.soundCheck:SetChecked(TTS.Sound.enabled) end
     if self.autoPayCheck and TTS.Options then self.autoPayCheck:SetChecked(TTS.Options:Get("autoPayMana") ~= false) end
+    if self.lockCheck and TTS.Options then self.lockCheck:SetChecked(TTS.Options:Get("boardLocked") and true or false) end
     self:UpdateDisplay()
 end)
 
@@ -488,9 +493,27 @@ autoPayCheck:SetScript("OnEnter", function(self)
 end)
 autoPayCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- Lock: the board can't be dragged (OnDragStart above)
+local lockCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
+lockCheck:SetSize(24, 24)
+lockCheck:SetPoint("RIGHT", autoPayLabel, "LEFT", -10, -1)
+lockCheck:SetScript("OnClick", function(self)
+    if TTS.Options then TTS.Options:Set("boardLocked", self:GetChecked() and true or false) end
+end)
+B.lockCheck = lockCheck   -- set from the saved option when the board opens
+
+local lockLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+lockLabel:SetPoint("RIGHT", lockCheck, "LEFT", 0, 1)
+Loc:Bind(lockLabel, "board.lock")
+lockCheck:SetHitRectInsets(-(lockLabel:GetStringWidth() + 4), 0, 0, 0)
+lockCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("board.lockTitle"), L("board.lockDesc"))
+end)
+lockCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 -- Subtitle in the title strip, as on the other Forever: CCG windows
 local subtitle = B:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-subtitle:SetPoint("RIGHT", autoPayLabel, "LEFT", -14, 0)
+subtitle:SetPoint("RIGHT", lockLabel, "LEFT", -14, 0)
 subtitle:SetText("Forever: CCG")
 
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
@@ -829,12 +852,22 @@ local function FormatPT(power, toughness, damage, colorCode)
     return TTS.FormatStats(power, toughness, damage, colorCode)
 end
 
+-- A hand card's model loads again when hovering zooms it in or out, so it draws at its new size
+-- (models otherwise only reload when their card changes, SetupCardVisual)
+local function ReloadHandModel(f)
+    if f.currentCard and f.model and f.model:IsShown() and TTS.SetupCardVisual then
+        f.visualCard = nil
+        TTS.SetupCardVisual(f, f.currentCard)
+    end
+end
+
 local function Card_OnEnter(self)
     if not self.cardId then return end
     if self.isHand then
         self.hovered = true
         self:SetScale((self.baseScale or 1) * 1.18)
         self:SetFrameLevel((self.origFrameLevel or 10) + 15)
+        ReloadHandModel(self)
     end
 
     local card = TTS.Cards[self.cardId]
@@ -859,6 +892,7 @@ local function Card_OnLeave(self)
         self.hovered = nil
         self:SetScale(self.baseScale or 1)
         if self.origFrameLevel then self:SetFrameLevel(self.origFrameLevel) end
+        ReloadHandModel(self)
     end
     TT:Hide(self)
     if HideBoardPreview then HideBoardPreview() end
@@ -1095,6 +1129,7 @@ local BF_START_X = 35
 local BF_RIGHT   = 1045   -- right edge stops short of your effects bar
 local LAND_MAX_SCALE     = 1.0
 local CREATURE_MAX_SCALE = 1.2
+local MAX_CREATURE_FRAMES = 16   -- cards each creature row can show; they shrink to fit (FitScale)
 
 -- Vertical centre of each battlefield row, measured up from the board's bottom edge
 local ROW_Y = {
@@ -1118,7 +1153,32 @@ local function FitScale(n, cardW, step, left, right, maxScale)
     return math.max(0.5, math.min(maxScale, (right - left) / need))
 end
 
+-- A card whose size changed (its row gained or lost a card) loads its model again on the next
+-- frame, and once more when any played card has landed: a model already showing keeps its
+-- old size otherwise
+local MODEL_RESIZE_DELAY = 0.35
+local resizedFrames = {}
+local function ReloadModels(list)
+    for f in pairs(list) do
+        if f:IsShown() and f.currentCard and f.model and f.model:IsShown() and TTS.SetupCardVisual then
+            f.visualCard = nil
+            TTS.SetupCardVisual(f, f.currentCard)
+        end
+    end
+end
+
 local function PlaceCard(f, i, s, left, centerY, cardW, step)
+    if f.baseScale and f.baseScale ~= s and f.model then
+        if not next(resizedFrames) then
+            TTS:SafeAfter(0, function() ReloadModels(resizedFrames) end)
+            TTS:SafeAfter(MODEL_RESIZE_DELAY, function()
+                local list = resizedFrames
+                resizedFrames = {}
+                ReloadModels(list)
+            end)
+        end
+        resizedFrames[f] = true
+    end
     f.baseScale = s
     f:SetScale(f.hovered and s * 1.18 or s)
     f.slot:ClearAllPoints()
@@ -1485,7 +1545,7 @@ for i = 1, 12 do
     myLandFrames[i] = f
 end
 
-for i = 1, 12 do
+for i = 1, MAX_CREATURE_FRAMES do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = false
     AttachSlot(f)
@@ -1512,7 +1572,7 @@ for i = 1, 12 do
     oppLandFrames[i] = f
 end
 
-for i = 1, 12 do
+for i = 1, MAX_CREATURE_FRAMES do
     local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
     f.isRemote = true
     AttachSlot(f)
@@ -1596,14 +1656,28 @@ local function TintArt(tex, card, shade)
 end
 TTS.TintArt = TintArt
 
+-- Bumped to make every frame load its model again on its next refresh (board reopened,
+-- opponent's hero now drawable live)
+local modelGeneration = 0
+function TTS.RedrawCardModels() modelGeneration = modelGeneration + 1 end
+
 local function SetupCardVisual(f, card)
+    -- The same card still showing on this frame keeps its model: reloading it on every
+    -- refresh made models flicker (worst on dressed ones like hero cards and Leeroy)
+    if card and f.visualCard == card and f.visualGen == modelGeneration and f:IsShown() then
+        f.currentCard = card
+        return
+    end
+    f.visualCard, f.visualGen = card, modelGeneration
     f.currentCard = card
+    -- Cancels a hero model's pending dressing (Hero.lua) now the frame shows something new
+    if f.model then f.model.heroDressToken = nil end
     local hero = card and card.isHero and f.model and TTS.Hero
     if hero then
         f.art:Hide()
         f.model:Show()
         f.model:ClearModel()
-        hero = TTS.Hero:SetModel(f.model, card)
+        hero = TTS.Hero:SetModel(f.model, card, function() ApplyModelCamera(f, card) end)
         if hero then ApplyModelCamera(f, card) end
     end
     if hero then
@@ -1613,6 +1687,10 @@ local function SetupCardVisual(f, card)
         f.model:Show()
         f.model:ClearModel()
         f.model:SetDisplayInfo(card.displayId)
+        -- A card can dress its display in items (e.g. Leeroy Jenkins, Cards\Special.lua)
+        if card.dressItems and TTS.Hero then
+            TTS.Hero:DressModel(f.model, card.dressItems, function() ApplyModelCamera(f, card) end)
+        end
         ApplyModelCamera(f, card)
     else
         if f.model then f.model:Hide() end
@@ -1882,7 +1960,7 @@ end
 -- =========================================================================
 -- TOKEN SPAWNS
 -- A token (Cards\Tokens.lua) is on the battlefield from the moment its effect resolves;
--- only its card waits a moment, then fades in with the spell sound.
+-- only its card waits a moment, then fades in with the token's sound (TTS.Sound:PlayTokenSound).
 -- Each client draws this for every token on either side, so both PvP players see it.
 -- Tokens made together come in one after another; one sound plays for the group.
 -- =========================================================================
@@ -1895,13 +1973,13 @@ local groupNext = 0           -- when the next token in the group shows
 
 function B.StartSpawn(perm, animate)
     if not animate then
-        if TTS.Engine.PlaySpellCastSound then TTS.Engine:PlaySpellCastSound() end
+        if TTS.Sound then TTS.Sound:PlayTokenSound(perm.id) end
         return
     end
     local now = GetTime()
     if now > groupUntil then groupNext = SPAWN_DELAY end
     groupUntil = now + 0.05
-    spawns[perm] = { t = 0, at = groupNext, sound = (groupNext == SPAWN_DELAY) }
+    spawns[perm] = { t = 0, at = groupNext, sound = (groupNext == SPAWN_DELAY), id = perm.id }
     groupNext = groupNext + SPAWN_STAGGER
 end
 
@@ -1933,8 +2011,8 @@ spawnTicker:SetScript("OnUpdate", function(_, dt)
     for perm, sp in pairs(spawns) do
         local before = sp.t
         sp.t = sp.t + dt
-        if sp.sound and before < sp.at and sp.t >= sp.at and TTS.Engine.PlaySpellCastSound then
-            TTS.Engine:PlaySpellCastSound()
+        if sp.sound and before < sp.at and sp.t >= sp.at and TTS.Sound then
+            TTS.Sound:PlayTokenSound(sp.id)
         end
         if sp.t >= sp.at + SPAWN_FADE then spawns[perm] = nil end
     end

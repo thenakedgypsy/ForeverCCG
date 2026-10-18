@@ -812,6 +812,12 @@ TTS.CreatureSounds = {
     ["ZFK10"] = { aggro = 344001, death = 3310 }, -- Sandarr Dunereaver
     ["ZFK11"] = { aggro = 344001, death = 3310 }, -- Antu'sul
     ["ZFK12"] = { aggro = 455, death = 449 }, -- Gahz'rilla
+    -- Tokens (Cards\Tokens.lua) borrow a similar mob's sounds; one without (the Dragon Egg)
+    -- arrives with the paper sound prayers make (PlayTokenSound)
+    ["TOK01"] = { aggro = 416, death = 420 }, -- Murloc Tadpole (as Murloc Forager)
+    ["TOK02"] = { aggro = 694, death = 314 }, -- Kobold Digger (as Kobold Worker)
+    ["TOK03"] = { aggro = 1016, death = 337 }, -- Skeleton (as Skeletal Warrior)
+    ["TOK05"] = { aggro = 428, death = 432 }, -- Rookery Whelp (as Scalding Whelp)
 }
 
 -- =========================================================================
@@ -848,22 +854,25 @@ end
 -- Events queued in the same moment are batched: only one sound per kind plays,
 -- taken from the highest-cost creature in the batch that has sound data.
 -- =========================================================================
+-- kind "enter" (arriving on the battlefield) is the card's enterSound if it has one, and
+-- otherwise its aggro sound, like attacking
 function S:GetCreatureSound(cardId, kind)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not card or card.type ~= "Creature" then return nil end
     local own = card[kind .. "Sound"]
     if own then return own end
+    if kind == "enter" then return self:GetCreatureSound(cardId, "aggro") end
     local data = TTS.CreatureSounds[cardId]
     return data and data[kind]
 end
 
 local BATCH_WINDOW = 0.05
-local pending = { aggro = {}, death = {} }
+local pending = { aggro = {}, death = {}, enter = {} }
 local flushScheduled = false
 
 local function Flush()
     flushScheduled = false
-    for _, kind in ipairs({ "aggro", "death" }) do
+    for _, kind in ipairs({ "enter", "aggro", "death" }) do
         local bestSound, bestCmc = nil, -1
         for _, cardId in ipairs(pending[kind]) do
             local snd = S:GetCreatureSound(cardId, kind)
@@ -879,7 +888,16 @@ local function Flush()
     end
 end
 
--- kind = "aggro" (creature played / attacking) or "death"
+-- A token's card appearing (UI\Board.lua token spawns): its mob sound, or without one the
+-- paper sound a prayer makes when played (E:PlayNonCreatureCardSound)
+local PAPER_SOUND = 829
+function S:PlayTokenSound(cardId)
+    if not self.enabled then return end
+    PlayRaw(self:GetCreatureSound(cardId, "enter") or PAPER_SOUND)
+end
+
+-- kind = "enter" (creature arrives; tokens use PlayTokenSound instead), "aggro" (attacking)
+-- or "death"
 function S:QueueCreature(kind, cardId)
     if not self.enabled or not pending[kind] or not cardId then return end
     table.insert(pending[kind], cardId)

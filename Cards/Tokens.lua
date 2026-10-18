@@ -34,4 +34,20 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
+    -- Leeroy Jenkins (Cards\Special.lua): the Rookery's eggs and what hatches from them
+    ["TOK04"] = {
+        id = "TOK04", name = "Dragon Egg", cost = "", cmc = 0, color = "R", type = "Creature",
+        power = 0, toughness = 1, defender = true, isToken = true, displayId = 10056,   -- murloc egg model (classic npc 205765)
+        creatureType = "Dragonkin",
+        onDeath = { ops = { { op = "token", id = "TOK05", n = 1 } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Blocker. When Dragon Egg dies, create a 1/1 Rookery Whelp token with Airborne."
+    },
+    ["TOK05"] = {
+        id = "TOK05", name = "Rookery Whelp", cost = "", cmc = 0, color = "R", type = "Creature",
+        power = 1, toughness = 1, flying = true, isToken = true, displayId = 397,   -- Rookery Whelp (classic npc 10161)
+        creatureType = "Dragonkin",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Airborne."
+    },
 })

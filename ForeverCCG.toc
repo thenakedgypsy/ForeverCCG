@@ -83,6 +83,7 @@ Cards\Dungeons\RuinsOfLordaeron.lua
 Cards\Dungeons\ExcavationSite.lua
 Cards\Dungeons\CityOfDalaran.lua
 Cards\Bosses.lua
+Cards\Special.lua
 Cards\Tokens.lua
 Hero.lua
 BossTracker.lua

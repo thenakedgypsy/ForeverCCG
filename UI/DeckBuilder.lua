@@ -413,6 +413,7 @@ local function UnlockHint(card)
         return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
     if card.isGift then return TTS:GiftHow(card) end
+    if card.unlockOnDeath then return L("link.dieToUnlock") end
     return L("link.defeat", TTS:CardName(card))
 end
 
@@ -691,7 +692,9 @@ local function BuildStandaloneCardPreview(parent, sizeX, sizeY, name)
     f.art:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, artBottom)
     f.art:SetTexture(QUESTION_ICON)
 
-    f.model = CreateFrame("PlayerModel", nil, f)
+    -- DressUpModel (a PlayerModel that can try on items) for cards with dressItems
+    local okModel, model = pcall(CreateFrame, "DressUpModel", nil, f)
+    f.model = okModel and model or CreateFrame("PlayerModel", nil, f)
     f.model:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
     f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, artBottom)
     f.model:EnableMouse(false)

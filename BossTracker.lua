@@ -193,8 +193,9 @@ function TTS.BossTracker:BuildMobCardCache()
     mobCardsByName = {}
 
     for cardId, card in pairs(TTS.Cards or {}) do
-        -- Solo reward cards are earned only by winning their encounter, never from kills
-        if card.isMob and not card.isReward then
+        -- Solo reward cards are earned only by winning their encounter, never from kills;
+        -- unlockOnDeath cards (Leeroy Jenkins) only from your own deaths
+        if card.isMob and not card.isReward and not card.unlockOnDeath then
             if card.npcId then
                 mobCardsByNpcID[card.npcId] = card
             end
@@ -324,19 +325,22 @@ local function ShowCardCompletePopup(card)
     end
 end
 
-function TTS.BossTracker:RecordMobKill(card)
+-- msgKey: the chat line for a new copy (default boss.mobSlain)
+function TTS.BossTracker:RecordMobKill(card, msgKey)
     if not card or not card.id then return end
     TTS_KilledBosses = TTS_KilledBosses or {}
 
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
     if currentKills < 4 then
         local newKills = currentKills + 1
-        if math.random(100) > COPY_DROP_CHANCE[newKills] then return end
+        -- A card may set its own chances (card.dropChance, in %, fractions allowed)
+        local chance = (card.dropChance or COPY_DROP_CHANCE)[newKills] or 0
+        if math.random() * 100 >= chance then return end
         TTS_KilledBosses[card.id] = newKills
         TTS:MarkCardNew(card.id)
         local zoneText = card.zone and string.format(" (%s)", TTS.Locale:Term("zone", card.zone)) or ""
         local cardText = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
-        DEFAULT_CHAT_FRAME:AddMessage(L("boss.mobSlain", cardText .. zoneText, newKills))
+        DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.mobSlain", cardText .. zoneText, newKills))
 
         -- Final copy: raid-warning style announcement in the middle of the screen
         if newKills == 4 then
@@ -546,6 +550,7 @@ end
 
 local function RegisterEvents()
     tracker:RegisterEvent("PLAYER_ENTERING_WORLD")
+    tracker:RegisterEvent("PLAYER_DEAD")   -- unlockOnDeath cards (Leeroy Jenkins)
     tracker:RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN")
     tracker:RegisterEvent("LOOT_OPENED")
     SafeRegister("LOOT_READY") -- earlier than LOOT_OPENED, before fast auto-loot empties the slots
@@ -621,6 +626,12 @@ tracker:SetScript("OnEvent", function(self, event, ...)
             end
         end
         wasInInstance = inInstance
+
+    elseif event == "PLAYER_DEAD" then
+        -- Your own death rolls for every unlockOnDeath card, like a kill does for a mob card
+        for _, card in pairs(TTS.Cards or {}) do
+            if card.unlockOnDeath then TTS.BossTracker:RecordMobKill(card, "boss.deathUnlock") end
+        end
 
     elseif event == "PARTY_KILL" then
         -- KillDex approach: Bail immediately in instances to avoid security/secret taint violations

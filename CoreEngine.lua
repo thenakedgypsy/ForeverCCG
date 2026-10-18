@@ -831,6 +831,19 @@ function E:BeginTurn(isRemote)
     self:UntapSide(isRemote)
     st.mana = { W = 0, U = 0, B = 0, R = 0, G = 0, C = 0 }
 
+    -- Creatures that die at the start of their controller's turn (diesAtTurnStart, e.g.
+    -- Leeroy Jenkins). Both clients run BeginTurn for both sides, so PvP stays in step.
+    local doomed = {}
+    for _, perm in ipairs(st.field) do
+        local c = TTS.Cards[perm.id]
+        if c and c.diesAtTurnStart then table.insert(doomed, perm) end
+    end
+    for _, perm in ipairs(doomed) do
+        self:Log(L("log.diesAtTurnStart", TTS:CardName(perm.id)), "COMBAT")
+        self:DestroyCreature(perm)
+        if not self.inMatch then return false end
+    end
+
     self:TickOverTime(isRemote)
     if not self.inMatch then return false end
     self:RunEncounterRules(isRemote and "onAITurnStart" or "onPlayerTurnStart")

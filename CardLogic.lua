@@ -940,7 +940,9 @@ function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     local perm = self:NewCreaturePerm(cardId, isRemote)
     if opts and opts.ready then perm.sick = false end
     table.insert((isRemote and self.remoteState or self.localState).field, perm)
-    if TTS.Sound then TTS.Sound:QueueCreature("aggro", cardId) end
+    -- A token sounds when its card shows instead (UI\Board.lua token spawns)
+    local card = TTS.Cards[cardId]
+    if TTS.Sound and not (card and card.isToken) then TTS.Sound:QueueCreature("enter", cardId) end
     self:OnCreatureEnter(perm, isRemote)
     return perm
 end

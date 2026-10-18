@@ -158,6 +158,8 @@ local function CollectionStatus(card)
             how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
         elseif card.isGift then
             how = TTS:GiftHow(card)
+        elseif card.unlockOnDeath then
+            how = L("link.dieToUnlock")
         elseif card.zone then
             how = L("link.defeatIn", TTS:CardName(card), TTS.Locale:Term("zone", card.zone))
         else

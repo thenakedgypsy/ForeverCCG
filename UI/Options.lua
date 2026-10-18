@@ -25,6 +25,7 @@ local DEFAULTS = {
     animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
     autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
     gameLogFolded = false,   -- the board's game log folded up to its title (Board.lua)
+    boardLocked = false,     -- the board can't be dragged (the board's Lock checkbox)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
