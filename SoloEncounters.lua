@@ -459,6 +459,11 @@ function TTS:GetOwnedCopies(card)
         local copies = TTS_NpcGifts and TTS_NpcGifts.copies and TTS_NpcGifts.copies[card.id]
         return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
     end
+    if card.isBeta then
+        -- One copy for beta players (DataStamp.lua)
+        if TTS_DevModeActive then return 1 end
+        return (TTS_DataStamp and TTS_DataStamp.beta) and 1 or 0
+    end
     return nil
 end
 

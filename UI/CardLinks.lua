@@ -145,7 +145,7 @@ local function CollectionStatus(card)
     if card.type == "Land" and not card.isGift then
         return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
-    if card.isBoss or card.isReward or card.isGift then
+    if card.isBoss or card.isReward or card.isGift or card.isBeta then
         local copies = TTS:GetOwnedCopies(card) or 0
         if copies >= 4 then
             return "|cFF00FF00" .. L("link.mastered") .. "|r"
@@ -158,6 +158,8 @@ local function CollectionStatus(card)
             how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
         elseif card.isGift then
             how = TTS:GiftHow(card)
+        elseif card.isBeta then
+            how = L("link.betaOnly")
         elseif card.unlockOnDeath then
             how = L("link.dieToUnlock")
         elseif card.zone then

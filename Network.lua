@@ -210,8 +210,14 @@ local THROTTLE_CODES = {
 local LOCKDOWN_CODE = (RESULTS and RESULTS.AddOnMessageLockdown) or 11
 local LOCKDOWN_RETRY = 2    -- seconds between retries while locked down
 local lockdownNoticed = false
+-- A general error (9) comes back for whispers sent around a loading screen: background
+-- messages are dropped quietly (the next round sends them again), game messages retried
+local GENERAL_ERROR_CODE = (RESULTS and RESULTS.GeneralError) or 9
+local GENERAL_ERROR_TRIES = 3
+-- Between PLAYER_LEAVING_WORLD and PLAYER_ENTERING_WORLD nothing is sent; the queue waits
+local inLoadingScreen = false
 
--- Returns "ok", "throttled", "lockdown" or "failed", plus the client's result code
+-- Returns "ok", "throttled", "lockdown", "general" or "failed", plus the client's result code
 local function RawSend(m)
     local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
     local result = send(PREFIX, m.msg, m.chatType, m.target)
@@ -219,6 +225,7 @@ local function RawSend(m)
     if result == nil or result == true or result == 0 then return "ok" end
     if THROTTLE_CODES[result] then return "throttled", result end
     if result == LOCKDOWN_CODE then return "lockdown", result end
+    if result == GENERAL_ERROR_CODE then return "general", result end
     return "failed", result
 end
 
@@ -231,6 +238,7 @@ end
 
 local function PumpSendQueue()
     pumpScheduled = false
+    if inLoadingScreen then return end   -- PLAYER_ENTERING_WORLD pumps again
     local now = GetTime()
     sendTokens = math.min(SEND_BURST, sendTokens + (now - lastRefill) * SEND_RATE)
     lastRefill = now
@@ -257,6 +265,15 @@ local function PumpSendQueue()
             break
         end
         lockdownNoticed = false
+        if status == "general" and not m.low then
+            m.tries = (m.tries or 0) + 1
+            if m.tries < GENERAL_ERROR_TRIES then
+                sendTokens = 0
+                delay = LOCKDOWN_RETRY
+                break
+            end
+            status = "failed"
+        end
         if m.chatType == "WHISPER" and m.target then
             recentWhispers[NormalizeName(m.target):lower()] = time() + WHISPER_ERROR_WINDOW
         end
@@ -274,9 +291,21 @@ end
 local function QueueSend(msg, chatType, target, low)
     local q = low and sendQueues.low or sendQueues.high
     if low and #q >= LOW_QUEUE_MAX then table.remove(q, 1) end
-    table.insert(q, { msg = msg, chatType = chatType, target = target })
+    table.insert(q, { msg = msg, chatType = chatType, target = target, low = low or nil })
     if not pumpScheduled then PumpSendQueue() end
 end
+
+-- Hold the queue across loading screens, then send what waited
+local loadingWatcher = CreateFrame("Frame")
+loadingWatcher:RegisterEvent("PLAYER_LEAVING_WORLD")
+loadingWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+loadingWatcher:SetScript("OnEvent", function(_, event)
+    inLoadingScreen = (event == "PLAYER_LEAVING_WORLD")
+    if not inLoadingScreen and not pumpScheduled and #sendQueues.high + #sendQueues.low > 0 then
+        pumpScheduled = true
+        TTS:SafeAfter(1, PumpSendQueue)
+    end
+end)
 
 local function RawChannelSend(channelId, msg, low)
     QueueSend(msg, "CHANNEL", channelId, low)
@@ -1349,8 +1378,20 @@ function TTS.Net:OnReceive(msg, sender)
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             E:Log(L("log.oppCast", sender, card and TTS.Locale:Term("type", card.type) or L("type.Permanent"), card and TTS:CardName(card) or cardId), "ACTION")
+            -- Optional Arrival target, as for CAST_SPELL: PLAYER|CREATURE, MINE|THEIRS from
+            -- the caster's side, field index
+            local tgt
+            local kind, side, idx = parts[4], parts[5], tonumber(parts[6])
+            if kind == "PLAYER" or kind == "CREATURE" then
+                local onOurSide = (side == "THEIRS")
+                tgt = { kind = kind, isRemote = not onOurSide }
+                if kind == "CREATURE" then
+                    tgt.perm = idx and (onOurSide and E.localState.field or E.remoteState.field)[idx]
+                    if not tgt.perm then tgt = nil end
+                end
+            end
             -- Their client runs its enter trigger too; we mirror it so both boards match
-            E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
+            E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true, { tgt = tgt }) end)
             E:RefreshUI()
 
         elseif actionType == "CAST_SPELL" then

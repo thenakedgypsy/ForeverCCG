@@ -403,12 +403,37 @@ local SPELL_TARGET_UI = {
     player            = "PLAYER",
 }
 
-function E:GetSpellTargetType(card)
-    local eff = card and card.effect
-    if eff and eff.target then
-        return SPELL_TARGET_UI[eff.target]
-    end
+-- What a card targets as it's cast: a spell's effect.target, or a creature's targeted
+-- Arrival (etb.target, chosen as it's cast like a spell's)
+function E:GetCardTargetSpec(card)
+    if not card then return nil end
+    if card.effect and card.effect.target then return card.effect.target end
+    if card.type == "Creature" and card.etb and card.etb.target then return card.etb.target end
     return nil
+end
+
+-- Whether anything on the board is a legal target for the local player's spec
+function E:HasLegalTarget(spec)
+    if self:IsValidSpellTarget(spec, "PLAYER", false, false) or self:IsValidSpellTarget(spec, "PLAYER", true, false) then
+        return true
+    end
+    for _, isRemote in ipairs({ false, true }) do
+        for _, perm in ipairs(isRemote and self.remoteState.field or self.localState.field) do
+            if IsCreaturePerm(perm) and self:IsValidSpellTarget(spec, "CREATURE", isRemote, false)
+                and not self:IsHexproofAgainst(perm, isRemote, false) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function E:GetSpellTargetType(card)
+    local spec = self:GetCardTargetSpec(card)
+    if not spec then return nil end
+    -- A creature with nothing to target is cast as usual; its Arrival does nothing
+    if not card.effect and not self:HasLegalTarget(spec) then return nil end
+    return SPELL_TARGET_UI[spec]
 end
 
 -- isRemote is the side the target is on; casterIsRemote the side casting
@@ -443,8 +468,7 @@ function E:IsValidTargetNow(kind, isRemote, perm, targeting)
         if not source then return false end
         return self:IsValidAbilityTarget(source, false, { kind = kind, isRemote = isRemote, perm = perm })
     end
-    local card = TTS.Cards[t.cardId]
-    local spec = card and card.effect and card.effect.target
+    local spec = self:GetCardTargetSpec(TTS.Cards[t.cardId])
     if not spec or not self:IsValidSpellTarget(spec, kind, isRemote, false) then return false end
     if kind == "CREATURE" and self:IsHexproofAgainst(perm, isRemote, false) then return false end
     return true
@@ -940,7 +964,7 @@ function E:EnforceUnique(cardId, isRemote, newPerm)
 end
 
 -- Puts a creature card onto a side's battlefield (not cast: no mana, no network message)
--- and fires its enter trigger. Returns the new permanent.
+-- and fires its enter trigger. Returns the new permanent. opts.tgt: its Arrival's target.
 function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     self:EnforceUnique(cardId, isRemote)
     local perm = self:NewCreaturePerm(cardId, isRemote)
@@ -949,7 +973,7 @@ function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     -- A token sounds when its card shows instead (UI\Board.lua token spawns)
     local card = TTS.Cards[cardId]
     if TTS.Sound and not (card and card.isToken) then TTS.Sound:QueueCreature("enter", cardId) end
-    self:OnCreatureEnter(perm, isRemote)
+    self:OnCreatureEnter(perm, isRemote, opts and opts.tgt)
     return perm
 end
 
@@ -984,8 +1008,9 @@ local function BestEnemyCreature(self, isRemote, ok)
     return best
 end
 
--- Enter-the-battlefield triggers for either side
-function E:OnCreatureEnter(perm, isRemote)
+-- Enter-the-battlefield triggers for either side. tgt: the targeted Arrival's target
+-- (etb.target), chosen as it was cast.
+function E:OnCreatureEnter(perm, isRemote, tgt)
     local card = TTS.Cards[perm.id]
     if not card then return end
 
@@ -1008,7 +1033,17 @@ function E:OnCreatureEnter(perm, isRemote)
     end
 
     if card.etb and self.inMatch then
-        self:ResolveEffect(card.etb, card, isRemote)
+        -- The solo AI doesn't choose: its targeted Arrival takes your strongest denizen
+        if card.etb.target and not tgt and isRemote and self.isSolo then
+            local best = BestEnemyCreature(self, isRemote)
+            if best and self:IsValidSpellTarget(card.etb.target, "CREATURE", false, true) then
+                tgt = { kind = "CREATURE", isRemote = false, perm = best }
+            end
+        end
+        -- A targeted Arrival with no target (nothing to choose, or it has left) does nothing
+        if not card.etb.target or tgt then
+            self:ResolveEffect(card.etb, card, isRemote, tgt)
+        end
     end
 end
 
@@ -1296,6 +1331,10 @@ function E:PlayCard(handIndex)
             self:Log(L("err.manaCast", TTS:CardName(card), card.cost), "ERROR")
             return
         end
+        if card.unique and self:HasCopyOnField(cardId, false) then
+            self:Log(L("err.uniqueInPlay", TTS:CardName(card)), "ERROR")
+            return
+        end
 
         self.targeting = {
             targetMode = "SPELL",
@@ -1412,8 +1451,8 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     local cardId = self.targeting.cardId
     local handIndex = self.targeting.handIndex
     local card = TTS.Cards[cardId]
-    local eff = card and card.effect
-    if not eff then
+    local spec = self:GetCardTargetSpec(card)
+    if not spec then
         self.targeting = nil
         self:RefreshUI()
         return
@@ -1435,7 +1474,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
         tgt = { kind = "CREATURE", isRemote = isRemote, perm = perm, idx = fieldIndex }
     end
 
-    if not self:IsValidSpellTarget(eff.target, tgt.kind, tgt.isRemote, false) then
+    if not self:IsValidSpellTarget(spec, tgt.kind, tgt.isRemote, false) then
         self:Log(L("err.cannotTarget", TTS:CardName(card)) .. " " .. L("log.cancelHint"), "ERROR")
         return
     end
@@ -1456,6 +1495,21 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
 
     self.targeting = nil
     table.remove(self.localState.hand, handIndex)
+
+    -- A creature with a targeted Arrival: cast it, and its Arrival takes the target
+    if card.type == "Creature" then
+        self:Log(L("log.cast", TTS.Locale:Term("type", card.type), TTS:CardName(card)), "ACTION")
+        -- Target as for CAST_SPELL; optional, so a plain PLAY_PERM still reads the same
+        if not self.isSolo then
+            TTS.Net:Send(self.opponent, string.format("ACTION:PLAY_PERM:%s:%s:%s:%d", cardId, tgt.kind,
+                tgt.isRemote and "THEIRS" or "MINE", tgt.idx or 0))
+        end
+        self:PutCreatureOntoBattlefield(cardId, false, { tgt = tgt })
+        self:CommitUndoablePlay(undoSnap, cardId)
+        self:RefreshUI()
+        return
+    end
+
     table.insert(self.localState.graveyard, cardId)
     self:PlaySpellCastSound()
     -- Sent before resolving, so the opponent sees the card and its target before the damage

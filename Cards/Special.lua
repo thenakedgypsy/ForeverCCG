@@ -14,6 +14,8 @@
 --   dropChance = { %, %, %, % }: chance per kill/death for copies 1-4 (default 100/25/12/6)
 --   diesAtTurnStart = true: dies at the start of its controller's turn (CoreEngine.lua BeginTurn)
 --   dressItems = { itemIds }: its display model wears these (UI\Board.lua, Hero.lua DressModel)
+--   isBeta = true: one copy for players whose beta collection was cleared at launch
+--                  (DataStamp.lua sets TTS_DataStamp.beta; SoloEncounters.lua GetOwnedCopies)
 -- =========================================================================
 TTS:AddCards({
     ["LEEROY"] = {
@@ -34,5 +36,15 @@ TTS:AddCards({
         etb = { ops = { { op = "token", id = "TOK04", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Arrival: Spawn: 3 Dragon Egg Adds (0/1, Blocker). Dies at the start of your turn."
+    },
+    ["BUGREPORTER"] = {
+        id = "BUGREPORTER", name = "The Bug Reporter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 3, isBeta = true,
+        displayId = 7125,   -- Tinkerer Gizlock (classic npc 13601): a gnome tinker
+        creatureType = "Humanoid",
+        -- Targeted Arrival: the target is chosen as it's cast (CardLogic.lua GetCardTargetSpec)
+        etb = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Arrival: Freeze target enemy denizen."
     },
 })

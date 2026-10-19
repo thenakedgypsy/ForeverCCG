@@ -26,7 +26,7 @@ S["locale.reload"] = "Language changes take effect after a /reload."
 S["locale.auto"] = "Automatic (%s)"
 
 -- LAUNCH (DataStamp.lua)
-S["stamp.fresh"] = "|cFFFFD200[TTSE]|r Welcome to the launch of Forever: CCG! Beta collections don't carry over, so yours starts afresh, good luck out there! - Gypsy!"
+S["stamp.betaPopup"] = "Welcome to the launch of Forever: CCG!\n\nBeta collections don't carry over, so yours starts afresh. As thanks for testing, here's a card only beta players have: |cFFFFD200%s|r.\n\nGood luck out there! - Gypsy!"
 
 -- OPTIONS
 S["options.title"] = "Options"
@@ -731,6 +731,7 @@ S["link.winItsEncounter"] = "Win its encounter in Solo mode"
 S["link.defeatIn"] = "Defeat %s (%s)"
 S["link.defeat"] = "Defeat %s"
 S["link.dieToUnlock"] = "\"At least I have chicken.\""
+S["link.betaOnly"] = "\"Cannot reproduce.\" Given to Forever: CCG beta testers"
 S["link.notCollected"] = "Not collected yet"
 S["link.unlocksAt"] = "Unlocks at level %d"
 S["link.unlocked"] = "Unlocked"

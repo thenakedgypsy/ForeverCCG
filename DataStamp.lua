@@ -24,6 +24,9 @@ local CLEARED = {
     "TTS_SavedDecks", "TTS_ActiveDeckIndex", "TTS_NewCards",
 }
 
+-- Given to every player whose beta collection was cleared (Cards\Special.lua)
+local BETA_CARD = "BUGREPORTER"
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
@@ -38,8 +41,32 @@ frame:SetScript("OnEvent", function(self, event, addon)
         if type(v) == "table" and next(v) ~= nil then had = true end
         _G[name] = nil
     end
-    TTS_DataStamp = { launch = true }
-    if had and DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage((TTS.L or tostring)("stamp.fresh"))
+    -- beta = true: the player gets the beta card (isBeta, Cards\Special.lua). It's a flag rather
+    -- than a copy count, so the stamp being restored again can't grant it twice.
+    TTS_DataStamp = { launch = true, beta = had or nil }
+    if had then
+        if TTS.MarkCardNew then TTS:MarkCardNew(BETA_CARD) end
+        self:RegisterEvent("PLAYER_ENTERING_WORLD")
     end
+end)
+
+-- The welcome popup waits until the world is loaded, so the chosen language is ready
+StaticPopupDialogs["TTS_BETA_WELCOME"] = {
+    text = "",
+    button1 = OKAY or "Okay",
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+frame:HookScript("OnEvent", function(self, event)
+    if event ~= "PLAYER_ENTERING_WORLD" then return end
+    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    C_Timer.After(2, function()
+        local card = TTS.Cards and TTS.Cards[BETA_CARD]
+        local name = card and TTS.CardName and TTS:CardName(card) or BETA_CARD
+        StaticPopupDialogs["TTS_BETA_WELCOME"].text = (TTS.L or tostring)("stamp.betaPopup", name)
+        StaticPopup_Show("TTS_BETA_WELCOME")
+    end)
 end)
