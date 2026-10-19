@@ -20,10 +20,13 @@ local L = TTS.L
 -- =========================================================================
 local PREFIX = "TTS_ADM"
 
--- The developer's characters: full "Firstname Surname" names, lower case, e.g.
---   ["firstname surname"] = true,
-local ADMINS = {
-}
+-- The developer's characters: full "Firstname Surname" names (any case)
+local ADMINS = {}
+for _, name in ipairs({
+    "Aekku Sekenzen",
+}) do
+    ADMINS[name:lower()] = true
+end
 
 local MAX_COPIES = 4
 
@@ -149,7 +152,14 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
     if prefix ~= PREFIX or channel ~= "WHISPER" or type(msg) ~= "string" then return end
+    -- Replies are never answered, or two clients (or one whispering itself) would bounce
+    -- errors back and forth forever
+    if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" then return end
     local from = NormalizeName(sender)
-    if not ADMINS[from:lower()] then return end
-    OnAdminMessage(msg, from)
+    if ADMINS[from:lower()] then
+        OnAdminMessage(msg, from)
+    else
+        -- Refused, with the name as we see it, so a misspelt ADMINS entry is easy to spot
+        Reply(sender, "ERR:NOT_ADMIN:" .. from)
+    end
 end)

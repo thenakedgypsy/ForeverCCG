@@ -448,7 +448,6 @@ function TTS:GetOwnedCopies(card)
         return (card.id == "HERO" and TTS.Hero) and TTS.Hero:Copies() or 1
     end
     if card.isReward then
-        if TTS_DevModeActive then return MAX_REWARD_COPIES end
         return math.min(MAX_REWARD_COPIES, Progress().rewards[card.id] or 0)
     end
     if card.isBoss then
@@ -456,13 +455,11 @@ function TTS:GetOwnedCopies(card)
     end
     if card.isGift then
         -- Handed out by an NPC (UI\NpcGossip.lua): TTS_NpcGifts.copies[cardId]
-        if TTS_DevModeActive then return MAX_REWARD_COPIES end
         local copies = TTS_NpcGifts and TTS_NpcGifts.copies and TTS_NpcGifts.copies[card.id]
         return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
     end
     if card.isBeta then
         -- One copy for beta players (DataStamp.lua)
-        if TTS_DevModeActive then return 1 end
         return (TTS_DataStamp and TTS_DataStamp.beta) and 1 or 0
     end
     return nil
@@ -551,7 +548,7 @@ function TTS:IsEncounterUnlocked(enc)
         return false, L("solo.clearFirst", table.concat(names, L("solo.or")))
     end
     if req.killed then
-        if TTS_DevModeActive or KillCount(req.killed) > 0 then return true end
+        if KillCount(req.killed) > 0 then return true end
         local boss = TTS.Cards[req.killed]
         return false, L("solo.defeatFirst", boss and TTS:CardName(boss) or req.killed, TTS:EncounterName(enc))
     end

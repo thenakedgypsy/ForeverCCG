@@ -409,7 +409,6 @@ end
 
 function TTS.BossTracker:GetBossKills(card)
     if not card then return 0 end
-    if TTS_DevModeActive then return 4 end
 
     if card.isMob then
         return SanitizeKillCount(TTS_KilledBosses and TTS_KilledBosses[card.id])
@@ -463,52 +462,6 @@ function TTS.BossTracker:GetBossKills(card)
     end
 
     return kills
-end
-
-function TTS.BossTracker:UnlockAllBosses()
-    TTS_DevModeActive = true
-    TTS_KilledBosses = TTS_KilledBosses or {}
-
-    for cardId, card in pairs(TTS.Cards or {}) do
-        if card.isBoss or card.isMob then
-            TTS_KilledBosses[cardId] = 4
-        end
-    end
-
-    DEFAULT_CHAT_FRAME:AddMessage(L("boss.devOn"))
-
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
-        TTS.DeckBuilderFrame:RefreshAll()
-    end
-end
-
-function TTS.BossTracker:ResetBosses()
-    TTS_DevModeActive = false
-    TTS_KilledBosses = {}
-    DEFAULT_CHAT_FRAME:AddMessage(L("boss.devOff"))
-
-    self:ScanAllBosses()
-
-    if TTS_SavedDecks and TTS_ActiveDeckIndex and TTS_SavedDecks[TTS_ActiveDeckIndex] then
-        local deck = TTS_SavedDecks[TTS_ActiveDeckIndex]
-        if deck.cards then
-            for cardId, count in pairs(deck.cards) do
-                local card = TTS.Cards and TTS.Cards[cardId]
-                if card and (card.isBoss or card.isMob) then
-                    local allowed = math.min(4, SanitizeKillCount(TTS_KilledBosses[cardId]))
-                    if allowed == 0 then
-                        deck.cards[cardId] = nil
-                    elseif count > allowed then
-                        deck.cards[cardId] = allowed
-                    end
-                end
-            end
-        end
-    end
-
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
-        TTS.DeckBuilderFrame:RefreshAll()
-    end
 end
 
 function TTS.BossTracker:ScanAllBosses()
@@ -587,7 +540,6 @@ tracker:SetScript("OnEvent", function(self, event, ...)
         local arg1 = ...
         if SafeCompare(arg1, "ForeverCCG") then
             TTS_KilledBosses = TTS_KilledBosses or {}
-            TTS_DevModeActive = TTS_DevModeActive or false
 
             for k, v in pairs(TTS_KilledBosses) do
                 if type(v) == "boolean" then
@@ -606,14 +558,10 @@ tracker:SetScript("OnEvent", function(self, event, ...)
         TTS.BossTracker:BuildMobCardCache()
 
         if isInitialLogin or isReloadingUI or (wasInInstance and not inInstance) then
-            if not TTS_DevModeActive then
-                local function scan()
-                    if not TTS_DevModeActive then TTS.BossTracker:ScanAllBosses() end
-                end
-                C_Timer.After(1, scan)
-                C_Timer.After(3, scan)
-                C_Timer.After(7, scan)
-            end
+            local function scan() TTS.BossTracker:ScanAllBosses() end
+            C_Timer.After(1, scan)
+            C_Timer.After(3, scan)
+            C_Timer.After(7, scan)
         end
 
         -- Entering a dungeon or raid: mention any cards still to unlock there
