@@ -969,14 +969,16 @@ end
 
 -- Puts a creature card onto a side's battlefield (not cast: no mana, no network message)
 -- and fires its enter trigger. Returns the new permanent. opts.tgt: its Arrival's target.
+-- opts.spawned: made by an encounter rule, so it shows up as a token does (UI\Board.lua)
 function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     self:EnforceUnique(cardId, isRemote)
     local perm = self:NewCreaturePerm(cardId, isRemote)
     if opts and opts.ready then perm.sick = false end
+    if opts and opts.spawned then perm.spawned = true end
     table.insert((isRemote and self.remoteState or self.localState).field, perm)
-    -- A token sounds when its card shows instead (UI\Board.lua token spawns)
+    -- A token (or spawned card) sounds when its card shows instead (UI\Board.lua token spawns)
     local card = TTS.Cards[cardId]
-    if TTS.Sound and not (card and card.isToken) then TTS.Sound:QueueCreature("enter", cardId) end
+    if TTS.Sound and not (card and card.isToken) and not perm.spawned then TTS.Sound:QueueCreature("enter", cardId) end
     self:OnCreatureEnter(perm, isRemote, opts and opts.tgt)
     return perm
 end

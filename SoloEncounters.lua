@@ -607,7 +607,7 @@ end
 local function BringInBoss(self, bossId, verbKey)
     PullFromLibraryOrHand(self, bossId)
     self:Log("|cFFFF4444" .. L(verbKey, BossName(bossId)) .. "|r", "SYSTEM")
-    self:PutCreatureOntoBattlefield(bossId, true, { ready = true })
+    self:PutCreatureOntoBattlefield(bossId, true, { ready = true, spawned = true })
 end
 
 TTS.EncounterRules = {
@@ -636,7 +636,7 @@ TTS.EncounterRules = {
             end)
             for i = 1, 2 do
                 local id = ids[((i - 1) % math.max(1, #ids)) + 1] or "W01"
-                table.insert(self.remoteState.field, { id = id, tapped = false, uid = self:NewUid() })
+                table.insert(self.remoteState.field, { id = id, tapped = false, uid = self:NewUid(), spawned = true })
             end
             self:Log(L("solo.headStart", self.opponent), "SYSTEM")
         end,
@@ -654,7 +654,7 @@ TTS.EncounterRules = {
             if #options == 0 then return end
             local id = table.remove(self.remoteState.deck, options[math.random(#options)])
             self:Log(L("solo.reinforcements", BossName(id), self.opponent), "SYSTEM")
-            self:PutCreatureOntoBattlefield(id, true)
+            self:PutCreatureOntoBattlefield(id, true, { spawned = true })
         end,
     },
     ENRAGE = {

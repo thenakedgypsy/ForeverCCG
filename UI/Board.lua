@@ -1521,6 +1521,10 @@ for i = 1, 10 do
     oppHandFrames[i] = f
 end
 
+-- How many cards the opponent holds, just after the last card back (UpdateDisplay moves it)
+local oppHandCount = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+B.oppHandCount = oppHandCount
+
 local function MyLand_OnClick(self, btn)
     if btn == "RightButton" and TTS.Engine.targeting then
         TTS.Engine:CancelTargeting()
@@ -2232,7 +2236,10 @@ local function StartFlights(E)
             if not seenPerms[perm] then
                 seenPerms[perm] = true
                 local sx, sy
-                if not isRemote and (before[perm.id] or 0) > (now[perm.id] or 0) then
+                if perm.spawned then
+                    -- Made by an encounter rule (SoloEncounters.lua): fades in where it is, as
+                    -- a token does, even when it was taken from the opponent's hand
+                elseif not isRemote and (before[perm.id] or 0) > (now[perm.id] or 0) then
                     before[perm.id] = before[perm.id] - 1
                     if launch and launch.cardId == perm.id then
                         sx, sy = launch.x, launch.y
@@ -2255,7 +2262,7 @@ local function StartFlights(E)
                 local card = TTS.Cards[perm.id]
                 if card and card.displayId then ScheduleModelCameraFix() end
                 -- Marked on the permanent itself, so an undo (which restores copies) doesn't replay it
-                if card and card.isToken and not perm.spawnShown then
+                if card and (card.isToken or perm.spawned) and not perm.spawnShown then
                     perm.spawnShown = true
                     B.StartSpawn(perm, animate)
                 end
@@ -2295,7 +2302,7 @@ end
 -- their parent's alpha (as in MobTooltip.lua), so the model's own alpha fades with the card,
 -- on top of its tapped / summoning-sick shade (f.modelAlpha, set by the redraw).
 local function ApplySpawns()
-    for _, group in ipairs({ myNonLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
         for _, f in ipairs(group) do
             local sp = f:IsShown() and f.perm and spawns[f.perm]
             if sp then
@@ -2327,12 +2334,102 @@ spawnTicker:SetScript("OnUpdate", function(_, dt)
     ApplySpawns()
 end)
 
--- Offsets each flying card from its slot by what is left of its flight
+-- =========================================================================
+-- REORDER SLIDES
+-- A card already on a row (or in your hand) whose slot moves, because a card came, left or
+-- the row was re-centred, slides to its new slot along a small arc instead of jumping:
+-- up when it moves right, down when it moves left, so cards swapping places pass each other.
+-- Keyed by frame and worked out again on every redraw, from where each card is drawn then.
+-- =========================================================================
+TIMING.SLIDE_TIME = 0.25
+TIMING.HAND_SLIDE_DELAY = 0.12   -- the hand moves just after the battlefield, not in step with it
+TIMING.SLIDE_STAGGER = 0.035     -- between cards of a row, in the order they move
+LAYOUT.SLIDE_ARC = 10            -- the hand arcs the other way (see StartSlides)
+
+local slides = setmetatable({}, { __mode = "k" })   -- frame -> { x, y, t, dir }: start, in board coordinates
+local oldField = setmetatable({}, { __mode = "k" }) -- perm -> { x, y } where it was drawn before the redraw
+local FIELD_GROUPS = { myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }
+
+-- Before a redraw: where each permanent is drawn (mid-slide included, so a slide that is
+-- interrupted carries on from where the card is)
+function B.RememberField()
+    wipe(oldField)
+    for _, group in ipairs(FIELD_GROUPS) do
+        for _, f in ipairs(group) do
+            if f:IsShown() and f.perm then
+                local x, y = BoardXY(f)
+                if x then oldField[f.perm] = { x = x, y = y } end
+            end
+        end
+    end
+end
+
+local function SlideFrom(f, old)
+    local sx, sy = f.slot:GetCenter()
+    local left, bottom = B:GetLeft(), B:GetBottom()
+    if not (old and sx and left) then return nil end
+    sx, sy = sx - left, sy - bottom
+    if math.abs(old.x - sx) < 1 and math.abs(old.y - sy) < 1 then return nil end
+    return { x = old.x, y = old.y, t = 0, dir = (sx >= old.x) and 1 or -1, newX = sx }
+end
+
+-- Each row's cards set off one after another, the one furthest along the way they move
+-- first (so cards closing a gap go in turn, nearest the gap first). Cards moving left and
+-- cards moving right are staggered on their own, so both sides of a gap start together.
+-- start: the row's delay
+local function Stagger(frames, start)
+    for _, dir in ipairs({ 1, -1 }) do
+        local list = {}
+        for _, f in ipairs(frames) do
+            if slides[f] and slides[f].dir == dir then list[#list + 1] = slides[f] end
+        end
+        table.sort(list, function(a, b) return a.newX * dir > b.newX * dir end)
+        for i, sl in ipairs(list) do sl.t = -(start + (i - 1) * TIMING.SLIDE_STAGGER) end
+    end
+end
+
+-- After a redraw: a slide for each card whose slot moved. Hand cards are matched to where
+-- the same card was drawn before, in order (copies of a card keep their order)
+function B.StartSlides(E)
+    wipe(slides)
+    if TTS.Options and TTS.Options:Get("animateCards") == false then return end
+    for _, group in ipairs(FIELD_GROUPS) do
+        for _, f in ipairs(group) do
+            if f:IsShown() and f.perm and not flights[f.perm] then
+                slides[f] = SlideFrom(f, oldField[f.perm])
+            end
+        end
+    end
+    local used = {}
+    for i = 1, 10 do
+        local f = myHandFrames[i]
+        local id = E.localState.hand[i]
+        if f:IsShown() and id then
+            for k, h in ipairs(oldHand) do
+                if not used[k] and h.id == id then
+                    used[k] = true
+                    slides[f] = SlideFrom(f, h)
+                    break
+                end
+            end
+        end
+    end
+    for _, group in ipairs(FIELD_GROUPS) do Stagger(group, 0) end
+    -- The hand waits a moment at its old spot first, then arcs the other way
+    Stagger(myHandFrames, TIMING.HAND_SLIDE_DELAY)
+    for i = 1, 10 do
+        local sl = slides[myHandFrames[i]]
+        if sl then sl.arc = -1 end
+    end
+end
+
+-- Offsets each flying or sliding card from its slot by what is left of its move
 local function ApplyFlights()
     local left, bottom = B:GetLeft(), B:GetBottom()
-    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, myHandFrames }) do
         for _, f in ipairs(group) do
             local fl = f:IsShown() and f.perm and flights[f.perm]
+            local sl = f:IsShown() and slides[f]
             local dx, dy = 0, 0
             local sx, sy = f.slot:GetCenter()   -- the slot is unscaled: already in board coordinates
             if fl and sx and left then
@@ -2340,6 +2437,12 @@ local function ApplyFlights()
                 local s = f:GetScale()
                 dx = (fl.x - (sx - left)) * rest / s
                 dy = (fl.y - (sy - bottom)) * rest / s
+            elseif sl and sx and left then
+                local p = math.max(0, math.min(1, sl.t / TIMING.SLIDE_TIME))
+                local eased = (p < 0.5) and (4 * p ^ 3) or (1 - (2 - 2 * p) ^ 3 / 2)   -- ease in-out
+                local s = f:GetScale()
+                dx = (sl.x - (sx - left)) * (1 - eased) / s
+                dy = ((sl.y - (sy - bottom)) * (1 - eased) + math.sin(math.pi * p) * LAYOUT.SLIDE_ARC * sl.dir * (sl.arc or 1)) / s
             end
             if dx ~= (f.flyX or 0) or dy ~= (f.flyY or 0) then
                 f.flyX, f.flyY = dx, dy
@@ -2352,10 +2455,14 @@ end
 
 local flyTicker = CreateFrame("Frame", nil, B)
 flyTicker:SetScript("OnUpdate", function(_, dt)
-    if not next(flights) then return end
+    if not next(flights) and not next(slides) then return end
     for perm, fl in pairs(flights) do
         fl.t = fl.t + dt
         if fl.t >= TIMING.FLY_TIME then flights[perm] = nil end
+    end
+    for f, sl in pairs(slides) do
+        sl.t = sl.t + dt
+        if sl.t >= TIMING.SLIDE_TIME then slides[f] = nil end
     end
     ApplyFlights()
 end)
@@ -2517,9 +2624,10 @@ function B:UpdateDisplay()
     local E = TTS.Engine
     if not E.inMatch then return end
     RememberHand()
+    B.RememberField()
     concedeBtn:Enable()
 
-    B.oppLifeText:SetText(L("board.oppLife", E.opponent or L("side.opponentCap"), E.remoteState.life, E.remoteState.handCount))
+    B.oppLifeText:SetText(L("board.oppLife", E.opponent or L("side.opponentCap"), E.remoteState.life))
     -- The plate grows to fit a long "Firstname Surname" (the rules / score text follows it)
     B.oppLifeBtn:SetWidth(math.max(B.oppLifeBtn.minWidth, B.oppLifeText:GetStringWidth() + 18))
     local ruleNames = {}
@@ -2676,6 +2784,13 @@ function B:UpdateDisplay()
             oppHandFrames[i]:Hide()
         end
     end
+    oppHandCount:ClearAllPoints()
+    if oppCount > 0 then
+        oppHandCount:SetPoint("LEFT", oppHandFrames[oppCount], "RIGHT", 8, 0)
+    else
+        oppHandCount:SetPoint("LEFT", oppHandFrames[1], "LEFT", 0, 0)
+    end
+    oppHandCount:SetText(E.remoteState.handCount or 0)
 
     local handScale = FitScale(math.min(10, #E.localState.hand), LAYOUT.HAND_W, LAYOUT.HAND_STEP, LAYOUT.HAND_LEFT, LAYOUT.HAND_RIGHT, LAYOUT.HAND_MAX_SCALE)
     for i = 1, 10 do
@@ -2870,6 +2985,7 @@ function B:UpdateDisplay()
         if oppNonLandFrames[i].tuckedFrames then for k = 1, #oppNonLandFrames[i].tuckedFrames do oppNonLandFrames[i].tuckedFrames[k]:Hide() end end
     end
 
+    B.StartSlides(E)
     StartFlights(E)
     ApplyFlights()
     B.ApplySpawns()
