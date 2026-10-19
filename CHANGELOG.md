@@ -42,7 +42,7 @@
 *   collection scores are coloured by how close they are to the best possible score: grey, white, green, blue, purple, orange, and red once complete (deckbuilder, main window, waiting room, board and minimap tooltips). The deckbuilder's collected/mastered counters use the same colours
 *   balance changes too long to list here.
 *   the regeneration shield from Blessing of Protection and Vanish is now called Soulstone (it works the same way)
-*   new names: creatures are now Denizens, Sorceries are Spells, summoning sickness is Rez Sickness, and tapping is now Exhausting (cards Recover at the start of their controller's turn)
+*   new names: many keywords adjusted to be less... tragic
 
 ## 0.15.7
 
