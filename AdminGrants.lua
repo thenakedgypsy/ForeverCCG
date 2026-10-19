@@ -24,6 +24,8 @@ local PREFIX = "TTS_ADM"
 local ADMINS = {}
 for _, name in ipairs({
     "Aekku Sekenzen",
+    "Aeku Skenzen",
+    "Aeku Kyuta",
 }) do
     ADMINS[name:lower()] = true
 end
