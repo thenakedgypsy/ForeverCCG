@@ -1169,9 +1169,10 @@ local function FitScale(n, cardW, step, left, right, maxScale)
     return math.max(0.5, math.min(maxScale, (right - left) / need))
 end
 
--- A card whose size changed (its row gained or lost a card) loads its model again on the next
--- frame, and once more when any played card has landed: a model already showing keeps its
--- old size otherwise
+-- A card whose size changed (its row gained or lost a card, or its slot is used for the first
+-- time and so starts at scale 1) loads its model again on the next frame, and once more when
+-- any played card has landed: a model already showing keeps its old size otherwise. A model
+-- the client has cached loads at once, at the size of the moment, before the card is placed.
 TIMING.MODEL_RESIZE_DELAY = 0.35
 local resizedFrames = {}
 local function ReloadModels(list)
@@ -1184,7 +1185,7 @@ local function ReloadModels(list)
 end
 
 local function PlaceCard(f, i, s, left, centerY, cardW, step)
-    if f.baseScale and f.baseScale ~= s and f.model then
+    if (f.baseScale or 1) ~= s and f.model then
         if not next(resizedFrames) then
             TTS:SafeAfter(0, function() ReloadModels(resizedFrames) end)
             TTS:SafeAfter(TIMING.MODEL_RESIZE_DELAY, function()
@@ -2501,11 +2502,14 @@ function B:UpdateDisplay()
     -- =====================================================================
     -- PHASE & COMBAT BUTTON STATE
     -- =====================================================================
-    -- While our attack waits on blocks or on Resolve, End Turn becomes "End Turn After
-    -- Combat" (a toggle, see E:ToggleEndAfterCombat); otherwise it's the normal button
+    -- With attackers declared, End Turn becomes "Commit to Attacks & End Turn"
+    -- (E:CommitAttacksAndEndTurn); while our attack waits on blocks or on Resolve, "End Turn
+    -- After Combat" (a toggle, see E:ToggleEndAfterCombat); otherwise it's the normal button
     local attackingCombat = E.phase == "COMBAT_BLOCK" and E.blockingState and not E.blockingState.isRemoteAttacking
-    if attackingCombat then
-        B.endTurnBtn:SetText(L(E.endAfterCombat and "board.btn.endingAfterCombat" or "board.btn.endAfterCombat"))
+    local committing = E.isMyTurn and E.phase == "COMBAT_ATTACK" and E.blockingState and #E.blockingState.attackers > 0
+    if attackingCombat or committing then
+        B.endTurnBtn:SetText(L(committing and "board.btn.attackAndEnd"
+            or (E.endAfterCombat and "board.btn.endingAfterCombat" or "board.btn.endAfterCombat")))
         B.endTurnBtn:SetWidth(math.max(90, B.endTurnBtn:GetTextWidth() + 24))
     elseif B.endTurnBtn:GetWidth() ~= 90 then
         B.endTurnBtn:SetText(L("board.endTurn"))
@@ -2549,15 +2553,11 @@ function B:UpdateDisplay()
         B.endTurnBtn:Disable()
     elseif E.phase == "COMBAT_ATTACK" then
         B.nextPhaseBtn:Enable()
-        -- Until an attacker is declared the turn can still end (or skip on to Main 2)
+        -- Until an attacker is declared the turn can still end (or skip on to Main 2); after
+        -- that End Turn commits the attack and ends the turn once combat is over
         local hasAttackers = E.blockingState and #E.blockingState.attackers > 0
-        if hasAttackers then
-            B.nextPhaseBtn:SetText(L("board.btn.declareBlocks"))
-            B.endTurnBtn:Disable()
-        else
-            B.nextPhaseBtn:SetText(L("board.btn.toMain2"))
-            B.endTurnBtn:Enable()
-        end
+        B.nextPhaseBtn:SetText(L(hasAttackers and "board.btn.declareBlocks" or "board.btn.toMain2"))
+        B.endTurnBtn:Enable()
     elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
         B.nextPhaseBtn:SetText(L("board.btn.opponentTurn"))
         B.nextPhaseBtn:Disable()

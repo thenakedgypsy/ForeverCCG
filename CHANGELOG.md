@@ -15,6 +15,7 @@
 *   cards that return a denizen card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
 *   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo-mode opponents drop their least useful one)
 *   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result
+*   once you've declared attackers, End Turn becomes Commit to Attacks & End Turn: the attack goes in and your turn ends as soon as combat is over (the blocks resolve the moment they're in, with no review)
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and combat resolves as soon as the blocks are in, then your turn ends (click again before the blocks arrive to cancel)
 *   Concede and Clear Deck now ask you to confirm first
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
@@ -30,6 +31,7 @@
 *   the opponent's hand no longer lights up as a target while you choose one: target the opponent with their name plate
 *   fix for long opponent names spilling out of their name plate
 *   fix for PvP games drifting apart when denizens on both sides died at once (e.g. a Martyrdom during combat): each player's client put them into the graveyards in a different order, so High Inquisitor Whitemane could return a different denizen for each player
+*   fix for a denizen's model sometimes showing at the wrong zoom after it was played or drawn (mostly in a slot of the board used for the first time that session)
 *   fix for being unable to end your turn when Herod arrived after combat (e.g. cast in Main Phase 2): he only has to attack while combat is still to come
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside denizens

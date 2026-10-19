@@ -748,12 +748,33 @@ function E:TryEndAfterCombat()
     self:EndTurn()
 end
 
+-- Commit to Attacks & End Turn (the End Turn button once attackers are declared): the attack
+-- goes in and the turn ends as soon as combat is over, with the blocks resolved the moment
+-- they are in instead of waiting for a review
+function E:CommitAttacksAndEndTurn()
+    local bs = self.blockingState
+    if not (self.isMyTurn and self.phase == "COMBAT_ATTACK" and bs and #bs.attackers > 0) then return end
+    self.endAfterCombat = true
+    self:Log(L("log.endAfterCombat"), "SYSTEM")
+    self:NextPhase()
+    -- Solo: the AI's blocks are already in, so resolve now (PvP: when BLOCKS_DECLARED arrives)
+    bs = self.blockingState
+    if self.endAfterCombat and self.isMyTurn and self.phase == "COMBAT_BLOCK" and bs and bs.blocksDeclared
+        and not bs.isRemoteAttacking then
+        self:NextPhase()
+    end
+end
+
 function E:EndTurn()
     if not self.isMyTurn then return end
     if self:UndoBlocksAction() then return end
+    local bs = self.blockingState
+    if self.phase == "COMBAT_ATTACK" and bs and #bs.attackers > 0 then
+        self:CommitAttacksAndEndTurn()
+        return
+    end
     -- Our attack is still being blocked or resolved: end the turn once it's over. With the
     -- blocks already in, that means resolving combat now (TryEndAfterCombat then ends the turn).
-    local bs = self.blockingState
     if self.phase == "COMBAT_BLOCK" and bs and not bs.isRemoteAttacking then
         if bs.blocksDeclared then
             self.endAfterCombat = true
