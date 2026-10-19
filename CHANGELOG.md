@@ -20,6 +20,7 @@
 *   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result
 *   once you've declared attackers, End Turn becomes Commit to Attacks & End Turn: the attack goes in and your turn ends as soon as combat is over (the blocks show for a second, then resolve, with no review)
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and combat resolves as soon as the blocks are in, then your turn ends (click again before the blocks arrive to cancel)
+*   started combat by accident (e.g. a stray drag at the opponent)? Until you commit to attacks, Undo calls it off: you're back in Main Phase 1 with your attackers ready again
 *   Concede and Clear Deck now ask you to confirm first
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
 *   each side of the board now holds up to 16 denizens, shrinking them to fit

@@ -115,9 +115,45 @@ function E:LockInPlays()
     if self.undo and not self.undo.pending then self.undo = nil end
 end
 
+-- =========================================================================
+-- TAKING BACK COMBAT
+-- Combat that has started (To Combat, or a denizen dragged at the opponent) but whose
+-- attacks aren't committed yet: Undo goes back to Main 1 and takes back any attackers
+-- picked. Nothing has reached the opponent yet (ATTACK messages go out on Commit to
+-- Attacks), so it needs no agreement. Back in Main 1, a card played there can be taken
+-- back again as usual.
+-- =========================================================================
+function E:CanUndoCombat()
+    local bs = self.blockingState
+    return self.inMatch and self.isMyTurn and self.phase == "COMBAT_ATTACK" and bs ~= nil
+        and not bs.isRemoteAttacking and not self.targeting and not self.pendingDiscard
+        and not self:HasPendingChoice() and not (self.undo and self.undo.pending)
+end
+
+function E:UndoCombat()
+    if not self:CanUndoCombat() then return end
+    local bs = self.blockingState
+    for _, idx in ipairs(bs.attackers or {}) do
+        local perm = self.localState.field[idx]
+        if perm and perm.isAttacking then
+            local undo = perm.attackUndo or {}
+            perm.isAttacking = nil
+            perm.tapped = undo.tapped
+            perm.hasAttackedThisTurn = undo.hasAttacked
+            perm.attackUndo = nil
+        end
+    end
+    self.blockingState = nil
+    self.endAfterCombat = nil
+    self:SetPhase("MAIN1")
+    self:Log(L("undo.combatDone"), "SYSTEM")
+    self:RefreshUI()
+end
+
 -- Whether the undo button can be used now. Returns ok, reason (reason when not ok).
 function E:CanUndo()
     local u = self.undo
+    if self:CanUndoCombat() then return true end
     if not self.inMatch then return false, L("undo.noMatch") end
     if not self.isMyTurn then return false, L("undo.notYourTurn") end
     if not u then return false, L("undo.nothing") end
@@ -156,6 +192,10 @@ local function ApplyLocalUndo(self)
 end
 
 function E:RequestUndo()
+    if self:CanUndoCombat() then
+        self:UndoCombat()
+        return
+    end
     local ok, reason = self:CanUndo()
     if not ok then
         if reason then self:Log(reason, "ERROR") end

@@ -562,7 +562,10 @@ B.undoBtn:SetScript("OnEnter", function(self)
     local E = TTS.Engine
     local ok, reason = E:CanUndo()
     local lines = {}
-    if ok then
+    if E:CanUndoCombat() then
+        -- Combat not committed yet: Undo goes back to Main 1 (Undo.lua), no agreement needed
+        table.insert(lines, { L("board.undoCombatDesc"), 1, 1, 1, true })
+    elseif ok then
         table.insert(lines, { L("board.undoDesc", E:UndoCardName()), 1, 1, 1, true })
         if not E.isSolo then
             table.insert(lines, { L("board.undoAgree", E.opponent or L("undo.yourOpponentCap")), 0.7, 0.7, 0.7, true })

@@ -333,6 +333,9 @@ end
 function TTS:CardRulesText(card, onCard)
     local text = PlainRulesText(card)
     if not text or text == "" then return text end
+    -- A signed stat change ("+1/+0", "-2/-1") always starts a line of its own
+    text = text:gsub("[ \t]+([%+%-]%d+/[%+%-]?%d+)", "\n%1")
+    text = text:gsub("([^\n])([%+%-]%d+/[%+%-]?%d+)", "%1\n%2")
     text = text:gsub("([%+%-]?%d+)/([%+%-]?%d+)", "%1{PT}%2")
     if not TTS.COLOR_KEYWORDS then return text end
     return ColorNames(text, onCard and TT.TEXT_COLORS.card or TT.TEXT_COLORS.tip)
