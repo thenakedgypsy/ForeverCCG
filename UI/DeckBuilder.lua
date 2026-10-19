@@ -20,8 +20,10 @@ local LAYOUT, RULES, CHART = {}, {}, {}
 -- =========================================================================
 TTS.MAX_DECK_SLOTS = 3
 
--- Maximum number of spells (non-Prayer, non-Creature cards) allowed in a deck
+-- Maximum number of spells (non-Prayer, non-Creature, non-Gear cards) allowed in a deck
 TTS.MAX_DECK_SPELLS = 12
+-- Maximum number of Gear Cards (Cards\Gear.lua) allowed in a deck
+TTS.MAX_DECK_GEAR = 8
 
 -- =========================================================================
 -- CLASS SPELL UNLOCKS (by character level)
@@ -252,7 +254,7 @@ end
 -- =========================================================================
 -- LAYOUT
 -- =========================================================================
-LAYOUT.WIN_W, LAYOUT.WIN_H = 1090, 680
+LAYOUT.WIN_W, LAYOUT.WIN_H = 1090, 692   -- the bottom strip holds the two-line collection tracker
 LAYOUT.PAD          = 14
 LAYOUT.PANEL_TOP    = -46
 LAYOUT.PANEL_H      = 598
@@ -383,7 +385,7 @@ Skin(deckPanel, STYLE.panelBg, STYLE.panelBorder)
 -- =========================================================================
 local onlyUnlocked = true   -- locked cards are never shown in the card pool
 local colorOn = { W = true, U = true, B = true, R = true, G = true }
-local typeOn  = { Prayer = true, Creature = true, Spell = true }
+local typeOn  = { Prayer = true, Creature = true, Spell = true, Gear = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
@@ -428,12 +430,17 @@ local function IsCardUnlocked(cardId, card)
     return TTS:IsSpellUnlocked(cardId)
 end
 
--- Land = Prayer, Creature = Creature, everything else (Sorcery, ...) = Spell
+-- Land = Prayer, Creature = Creature, Gear Cards = Gear, everything else (Sorcery, ...) = Spell
 local function GetTypeGroup(card)
     if card.type == "Land" then return "Prayer" end
     if card.type == "Creature" then return "Creature" end
+    if card.subType == "Gear" then return "Gear" end
     return "Spell"
 end
+
+-- The most cards of a type group a deck may hold (nil = no cap of its own)
+local GROUP_CAP = { Spell = function() return TTS.MAX_DECK_SPELLS end, Gear = function() return TTS.MAX_DECK_GEAR end }
+local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear" }
 
 -- Copies of a card the deck may hold (nil = unlimited, used for Prayers)
 local function GetCopyLimit(cardId, card)
@@ -449,7 +456,8 @@ local function CardPassesFilters(cardId, card)
     if card.color and colorOn[card.color] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
-    if zoneFilter and GetTypeGroup(card) == "Creature" and card.zone ~= zoneFilter then return false end
+    -- A zone shows its denizens and its Gear
+    if zoneFilter and (GetTypeGroup(card) == "Creature" or card.subType == "Gear") and card.zone ~= zoneFilter then return false end
     if factionFilter and GetTypeGroup(card) == "Creature" and card.faction ~= factionFilter then return false end
     if creatureTypeFilter and GetTypeGroup(card) == "Creature" and card.creatureType ~= creatureTypeFilter then return false end
     if Keyword.value and not Keyword.Has(card, Keyword.value) then return false end
@@ -476,7 +484,7 @@ local function IndexOf(list)
 end
 local CLASS_RANK  = IndexOf(CLASS_ORDER)
 local SPHERE_RANK = IndexOf(SPHERE_ORDER)
-local TYPE_RANK   = { Creature = 1, Spell = 2, Prayer = 3 }
+local TYPE_RANK   = { Creature = 1, Spell = 2, Gear = 3, Prayer = 4 }
 
 local SORT_ORDER = { "COST", "COLOR", "TYPE", "CLASS", "FACTION", "ZONE", "CREATURETYPE" }
 -- Shown as db.sort.<mode>
@@ -658,17 +666,19 @@ local function CheckAdd(cardId, card, deck)
         return L("db.maxDeck")
     end
 
-    -- Spell cap (TTS.MAX_DECK_SPELLS spells maximum)
-    if GetTypeGroup(card) == "Spell" then
-        local spellCards = 0
+    -- Spell cap (TTS.MAX_DECK_SPELLS) and Gear cap (TTS.MAX_DECK_GEAR)
+    local group = GetTypeGroup(card)
+    if GROUP_CAP[group] then
+        local inGroup = 0
         for id, qty in pairs(cards) do
             local c = TTS.Cards[id]
-            if c and GetTypeGroup(c) == "Spell" then
-                spellCards = spellCards + qty
+            if c and GetTypeGroup(c) == group then
+                inGroup = inGroup + qty
             end
         end
-        if spellCards >= TTS.MAX_DECK_SPELLS then
-            return L("db.maxSpells", TTS.MAX_DECK_SPELLS)
+        local cap = GROUP_CAP[group]()
+        if inGroup >= cap then
+            return L(GROUP_CAP_MSG[group], cap)
         end
     end
 
@@ -1173,7 +1183,7 @@ end
 
 -- Search box
 local searchBox = CreateFrame("EditBox", nil, poolPanel)
-searchBox:SetSize(170, 24)
+searchBox:SetSize(160, 24)
 searchBox:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -10)
 Skin(searchBox, STYLE.controlBg, STYLE.controlBorder, "control")
 searchBox:SetFontObject(ChatFontNormal)
@@ -1226,16 +1236,18 @@ searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
 -- Card type toggles
+-- (four of them fit between the search box and the sphere toggles at x = 434)
 local TYPE_DEFS = {
     { key = "Creature", label = "db.creatures" },
     { key = "Spell",    label = "db.spells" },
+    { key = "Gear",     label = "db.gear" },
     { key = "Prayer",   label = "db.prayers" },
 }
 for n, def in ipairs(TYPE_DEFS) do
-    local b = CreateToggle(poolPanel, 74, def.label, STYLE.accent,
+    local b = CreateToggle(poolPanel, 60, def.label, STYLE.accent,
         function() return typeOn[def.key] end,
         function(v) typeOn[def.key] = v end)
-    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 192 + (n - 1) * 78, -10)
+    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 176 + (n - 1) * 64, -10)
 end
 
 -- Sphere toggles (icons filled in on show, once Board.lua's symbols exist)
@@ -1584,18 +1596,22 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 -- =========================================================================
 -- COLLECTION PROGRESS (bottom-left)
 -- Collected = at least 1 copy of a creature card, Mastered = all 4 copies,
--- and the same for Hearthstones (the innkeepers' gift prayers).
+-- and the same for Hearthstones (the innkeepers' gift prayers) and Gear Cards (the weapon
+-- merchants' gift spells, all 38 whichever faction gives them). Two lines: collected,
+-- then mastered and the score.
 -- =========================================================================
 local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 13)
+collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 10)
 collectionLabel:SetJustifyH("LEFT")
+collectionLabel:SetSpacing(2)
 
 local function UpdateCollectionProgress()
-    local score, collected, mastered, total, hCollected, hMastered, hTotal = TTS:GetCollectionScore()
-    -- In the order of the score: (Hearthstones + creatures collected) x (Hearthstones + creatures mastered + 1)
-    collectionLabel:SetText(L("db.collection", TTS:ColoredCount(hCollected, hTotal),
-        TTS:ColoredCount(collected, total), TTS:ColoredCount(hMastered, hTotal),
-        TTS:ColoredCount(mastered, total), TTS:ColoredScore(score)))
+    local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal = TTS:GetCollectionScore()
+    -- In the order of the score: (Hearthstones + Gear + creatures collected) x (... mastered + 1)
+    collectionLabel:SetText(L("db.collection",
+        TTS:ColoredCount(hCollected, hTotal), TTS:ColoredCount(gCollected, gTotal), TTS:ColoredCount(collected, total),
+        TTS:ColoredCount(hMastered, hTotal), TTS:ColoredCount(gMastered, gTotal), TTS:ColoredCount(mastered, total),
+        TTS:ColoredScore(score)))
 end
 
 -- =========================================================================
@@ -1776,7 +1792,7 @@ deckEmptyText:SetPoint("CENTER", 0, 20)
 deckEmptyText:SetWidth(LAYOUT.LIST_W - 40)
 Loc:Bind(deckEmptyText, "db.deckEmpty")
 
-local GROUP_ORDER = { "Creature", "Spell", "Prayer" }
+local GROUP_ORDER = { "Creature", "Spell", "Gear", "Prayer" }
 -- Deck list group headers: db.group.<group>
 local GROUP_LABEL = setmetatable({}, { __index = function(_, group) return L("db.group." .. group) end })
 
@@ -1862,9 +1878,10 @@ local function SetupHeaderRow(r, group, count)
     r.name:Hide()
     r.header:SetText(GROUP_LABEL[group])
     r.header:Show()
-    if group == "Spell" then
-        local color = (count >= TTS.MAX_DECK_SPELLS) and GOLD or ""
-        r.headerCount:SetText(color .. count .. " / " .. TTS.MAX_DECK_SPELLS .. ((color ~= "") and "|r" or ""))
+    if GROUP_CAP[group] then
+        local cap = GROUP_CAP[group]()
+        local color = (count >= cap) and GOLD or ""
+        r.headerCount:SetText(color .. count .. " / " .. cap .. ((color ~= "") and "|r" or ""))
     else
         r.headerCount:SetText(count)
     end
@@ -2158,8 +2175,8 @@ end
 function D:RefreshDeck()
     local deck = GetActiveDeck()
 
-    local groups = { Creature = {}, Spell = {}, Prayer = {} }
-    local groupTotals = { Creature = 0, Spell = 0, Prayer = 0 }
+    local groups = { Creature = {}, Spell = {}, Gear = {}, Prayer = {} }
+    local groupTotals = { Creature = 0, Spell = 0, Gear = 0, Prayer = 0 }
     local totalCards = 0
     if deck and deck.cards then
         for id, count in pairs(deck.cards) do

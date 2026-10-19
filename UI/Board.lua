@@ -128,8 +128,9 @@ function TTS:FormatSymbols(str, size, tapSize)
 end
 
 -- Creature type, faction and zone as one tooltip line, e.g. "Humanoid  •  Defias  •  The Deadmines"
+-- (Gear shows its zone)
 function TTS:GetCardTagLine(card)
-    if not card or card.type ~= "Creature" then return nil end
+    if not card or (card.type ~= "Creature" and card.subType ~= "Gear") then return nil end
     local parts = {}
     if card.creatureType then table.insert(parts, Loc:Term("creatureType", card.creatureType)) end
     if card.faction then table.insert(parts, "|cFFFFD200" .. Loc:Term("faction", card.faction) .. "|r") end

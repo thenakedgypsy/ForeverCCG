@@ -244,6 +244,7 @@ local AI_SPELL_OPS = { damage = true, dot = true, destroy = true, freeze = true,
 
 local function IsAIFriendlySpell(card)
     if card.type ~= "Sorcery" or not card.effect or not card.effect.ops then return false end
+    if card.isGift then return false end   -- Gear is earned from merchants, never dealt to the AI
     for _, op in ipairs(card.effect.ops) do
         if not AI_SPELL_OPS[op.op] then return false end
         if op.to == "self_player" and op.op == "damage" then return false end
@@ -467,13 +468,15 @@ function TTS:GetOwnedCopies(card)
     return nil
 end
 
--- Collection score: (Hearthstones collected + creature cards collected (1+ copies)) x
--- (Hearthstones mastered + creature cards mastered (all 4) + 1). Hearthstones are the
--- innkeepers' gift prayers.
--- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total.
+-- Collection score: (Hearthstones + Gear + creature cards collected (1+ copies)) x
+-- (Hearthstones + Gear + creature cards mastered (all 4) + 1). Hearthstones are the
+-- innkeepers' gift prayers, Gear the weapon merchants' gift spells.
+-- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total,
+-- gear collected, gear mastered, gear total.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
     local hTotal, hCollected, hMastered = 0, 0, 0
+    local gTotal, gCollected, gMastered = 0, 0, 0
     for _, card in pairs(TTS.Cards or {}) do
         if card.isBeta then
             -- Beta players only: no one else can get it, so it never counts towards a collection
@@ -487,10 +490,15 @@ function TTS:GetCollectionScore()
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then hCollected = hCollected + 1 end
             if copies >= MAX_REWARD_COPIES then hMastered = hMastered + 1 end
+        elseif card.subType == "Gear" and card.isGift then
+            gTotal = gTotal + 1
+            local copies = self:GetOwnedCopies(card) or 0
+            if copies >= 1 then gCollected = gCollected + 1 end
+            if copies >= MAX_REWARD_COPIES then gMastered = gMastered + 1 end
         end
     end
-    local score = (hCollected + collected) * (hMastered + mastered + 1)
-    return score, collected, mastered, total, hCollected, hMastered, hTotal
+    local score = (hCollected + gCollected + collected) * (hMastered + gMastered + mastered + 1)
+    return score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal
 end
 
 -- "1,234,567" (falls back to plain digits if the client lacks BreakUpLargeNumbers)
@@ -518,8 +526,9 @@ local maxScore
 function TTS:ColoredScore(n)
     if not n then return "|cFF888888?|r" end
     if not maxScore then
-        local _, _, _, total, _, _, hTotal = self:GetCollectionScore()
-        maxScore = (hTotal + total) * (hTotal + total + 1)
+        local _, _, _, total, _, _, hTotal, _, _, gTotal = self:GetCollectionScore()
+        local all = hTotal + gTotal + total
+        maxScore = all * (all + 1)
     end
     return self:TierColored(maxScore > 0 and math.sqrt(n / maxScore) or 0, self:FormatScore(n))
 end

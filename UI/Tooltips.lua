@@ -146,6 +146,7 @@ TT.EFFECTS = {
     token      = { name = "Add",               tag = "Effect", text = "A denizen made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent denizen card in a graveyard to the battlefield under your control." },
     targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy denizens can't be chosen." },
+    gear       = { name = "Gear Card",         tag = "Effect", text = "Equips a denizen you control. Its bonus and keywords last for as long as the denizen stays on the battlefield. An enemy Dispel strips them. Weapon merchants hand out Gear Cards to travellers who ask." },
 
     -- Creature and Prayer abilities
     prayer     = { name = "Prayer",            tag = "Ability", text = "Click a ready Prayer to Exhaust it for one mana of its colour. You can play one Prayer per turn, during a main phase." },
@@ -649,6 +650,8 @@ end
 -- =========================================================================
 local function DisplayType(card)
     if not card.type then return L("tt.card") end
+    -- A Gear Card is a spell underneath, but only ever shown as a Gear Card
+    if card.subType == "Gear" then return TTS:CardTypeName(card) end
     -- e.g. "Creature - Hero" (Equipment's subtype is shown as its own type elsewhere)
     if card.subType and card.subType ~= "Equipment" then
         return Loc:Term("type", card.type) .. " - " .. Loc:Term("type", card.subType)
@@ -715,7 +718,7 @@ local function AttachedPanels(perm)
         for _, effId in ipairs(TTS.Engine:GetPermEffectCards(perm)) do
             local eCard = TTS.Cards[effId]
             local eCost = (eCard.cost and eCard.cost ~= "") and Sym(eCard.cost, 16) or "0"
-            local lines = { { L("tt.cost", eCost) .. "  |  " .. (eCard.type and Loc:Term("type", eCard.type) or L("type.Spell")), 0.8, 0.8, 0.8 } }
+            local lines = { { L("tt.cost", eCost) .. "  |  " .. (eCard.type and DisplayType(eCard) or L("type.Spell")), 0.8, 0.8, 0.8 } }
             if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(TTS:CardRulesText(eCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, { title = TTS:CardName(eCard), tag = "Affected by", color = { 0.69, 0.5, 1.0 }, lines = lines })
         end
@@ -753,7 +756,7 @@ local function KeywordPanels(card, ctx)
 
     -- Keywords this card hands out
     for _, op in ipairs((card.effect and card.effect.ops) or {}) do
-        for _, kw in ipairs(op.kw or {}) do add(kw, L("tt.kwSpellGrants")) end
+        for _, kw in ipairs(op.kw or {}) do add(kw, L(op.perm and "tt.kwGearGrants" or "tt.kwSpellGrants")) end
         if op.op == "shielded" then add("shielded", L("tt.kwSpellGrantsShield")) end
     end
     local a = card.anthem
@@ -897,6 +900,7 @@ end
 local function AbilityPanels(card)
     local specs = {}
     if card.type == "Land" then table.insert(specs, TT:EffectPanel("prayer")) end
+    if card.subType == "Gear" then table.insert(specs, TT:EffectPanel("gear")) end
 
     -- The English rules text is the data here (it is the same whatever the language)
     local text = card.text or ""

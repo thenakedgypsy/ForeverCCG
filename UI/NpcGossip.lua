@@ -13,7 +13,8 @@ local Loc = TTS.Locale
 -- =========================================================================
 -- NPC GOSSIP
 -- Talking to an NPC that hands out a gift card (card.isGift, card.giftNpcs = its
--- npcId in each faction, see Cards\Core.lua) adds a line it says under its greeting
+-- npcId in each faction: innkeepers' Hearthstones in Cards\Core.lua, weapon merchants'
+-- Gear in Cards\Gear.lua) adds a line it says under its greeting
 -- in the gossip window, and an "Any spare cards?" option at the end of its list.
 -- Up to 4 copies; after each one the next comes 24 to 168 hours later. The wait belongs
 -- to the card, not the NPC, and the saved data is account-wide, so the Alliance and Horde
@@ -99,18 +100,82 @@ local function GiftSource(npcId)
 end
 local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
 
--- The NPC that hands out a gift card to the player's faction, or nil for a pool card
+-- =========================================================================
+-- THE OTHER FACTION'S GEAR CARDS
+-- Gear Cards only the other faction's merchants hand out (no npc for the player's faction
+-- and no Neutral one). Once the player has all 4 copies of every Gear Card their own
+-- side's merchants give, those merchants switch to gifting a random one of these instead,
+-- up to 4 copies each, with one wait shared by all of them (key "pool:otherGear").
+-- =========================================================================
+local function PlayerFaction() return UnitFactionGroup and UnitFactionGroup("player") end
+
+-- Whether the player's faction can get a Gear Card from a merchant
+local function OwnSideGives(card, faction)
+    local npcs = card.giftNpcs or {}
+    return (npcs[faction] or npcs.Neutral) and true or false
+end
+
+-- Gear Cards split by who gives them to this player: own (their merchants) and other
+-- (only the other faction's merchants), each in id order
+function TTS:GearCardsBySide()
+    local faction = PlayerFaction()
+    local own, other = {}, {}
+    for _, card in pairs(TTS.Cards or {}) do
+        if card.subType == "Gear" and card.isGift then
+            table.insert(OwnSideGives(card, faction) and own or other, card)
+        end
+    end
+    local function byId(a, b) return a.id < b.id end
+    table.sort(own, byId)
+    table.sort(other, byId)
+    return own, other
+end
+
+-- Whether merchants have switched to the other faction's Gear Cards: every own-side one
+-- has all its copies
+function TTS:OtherGearUnlocked()
+    local own = TTS:GearCardsBySide()
+    for _, card in ipairs(own) do
+        if (TTS:GetOwnedCopies(card) or 0) < MAX_GIFT_COPIES then return false end
+    end
+    return #own > 0
+end
+
+-- What the merchants give once they've switched, or nil while it's locked (or there's nothing in it)
+local function OtherGearSource()
+    if not TTS:OtherGearUnlocked() then return nil end
+    local _, other = TTS:GearCardsBySide()
+    if #other == 0 then return nil end
+    return { key = "pool:otherGear", cards = other }
+end
+
+-- A weapon merchant the player's faction asks (their side's gear trail, Neutral ones included)
+local function IsOwnMerchant(npcId)
+    local trail = TTS.GIFT_TRAILS and TTS.GIFT_TRAILS.gear
+    for _, id in ipairs(trail and trail[PlayerFaction()] or {}) do
+        if id == npcId then return true end
+    end
+    return false
+end
+
+-- The NPC that hands out a gift card to the player's faction (a Neutral one serves both),
+-- or nil for a pool card
 function TTS:GiftNpcFor(card)
     local npcs = card and card.giftNpcs
     if not npcs then return nil end
-    local faction = UnitFactionGroup and UnitFactionGroup("player")
-    return npcs[faction] or npcs.Alliance or npcs.Horde
+    local faction = PlayerFaction()
+    return npcs[faction] or npcs.Neutral or npcs.Alliance or npcs.Horde
 end
 
--- How to get a gift card (collection hints): "Ask Innkeeper ... for spare cards"
+-- How to get a gift card (collection hints): "Ask Innkeeper ... for spare cards". The other
+-- faction's Gear Cards add that the player's own merchants give them too, once they've switched.
 function TTS:GiftHow(card)
     if card and card.giftPool then return L("gift." .. card.giftPool .. ".how") end
-    return L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow")
+    local how = L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow")
+    if card and card.subType == "Gear" and not OwnSideGives(card, PlayerFaction()) then
+        how = L(TTS:OtherGearUnlocked() and "gift.otherGear.open" or "gift.otherGear.locked", how)
+    end
+    return how
 end
 
 -- When the next gift from a source can be handed out (server time), or nil if it can now.
@@ -128,11 +193,10 @@ local function NextGift(g, source)
     return last and last + MIN_WAIT_HOURS * HOUR
 end
 
--- Gives the player a copy of the NPC's card (a random one not yet complete, for a pool)
--- once its wait is over. Returns which line the NPC answers with: "give", "comeBack" or
--- "allOut", and for "comeBack" the npc.wait.<key> hint at how long is left.
-function TTS:AskNpcForCard(npcId)
-    local source = GiftSource(npcId)
+-- Gives the player a copy of a source's card (a random one not yet complete, for a pool)
+-- once its wait is over. Returns "give", "comeBack" (with the npc.wait.<key> hint at how
+-- long is left) or "allOut".
+local function GiveFrom(source)
     if not source then return "allOut" end
     local open = {}
     for _, c in ipairs(source.cards) do
@@ -173,17 +237,29 @@ function TTS:AskNpcForCard(npcId)
     return "give"
 end
 
+-- Asks an NPC for a card: its own, or (the player's own merchants, once their Gear Cards
+-- are all collected) the other faction's Gear Cards. Returns which line the NPC answers
+-- with: "give", "comeBack" or "allOut", and for "comeBack" the npc.wait.<key> hint at how
+-- long is left.
+function TTS:AskNpcForCard(npcId)
+    local answer, hint = GiveFrom(GiftSource(npcId))
+    if answer == "give" or not IsOwnMerchant(npcId) then return answer, hint end
+    local extra = OtherGearSource()
+    if not extra then return answer, hint end
+    local answer2, hint2 = GiveFrom(extra)
+    -- A gift, or a wait instead of "all out"; otherwise the innkeeper's own answer
+    if answer2 == "give" or (answer == "allOut" and answer2 == "comeBack") then return answer2, hint2 end
+    return answer, hint
+end
+
 -- Once the NPC has answered (a card, or no), the option goes until the next visit
 local function CanAsk(npcId)
     return not (replyNpc == npcId and reply)
 end
 
--- The NPC's answer to "Any spare cards?", or nil before the player has asked
--- (until then the window shows only the NPC's own greeting)
--- Whether the player still has copies to collect from an NPC's gifts; ready = and its
--- wait is over, so it would give one right now
-local function HasMoreToGive(npcId, ready)
-    local source = GiftSource(npcId)
+-- Whether the player still has copies to collect from a source; ready = and its wait is
+-- over, so it would give one right now
+local function SourceHasMore(source, ready)
     local open = false
     for _, c in ipairs(source and source.cards or {}) do
         if (TTS:GetOwnedCopies(c) or 0) < MAX_GIFT_COPIES then open = true; break end
@@ -193,46 +269,71 @@ local function HasMoreToGive(npcId, ready)
     return not nextAt or Now() >= nextAt
 end
 
--- Where an all-out town innkeeper sends the player next (TTS.GIFT_TRAIL): the next inn
--- on its faction's trail that still has cards for them (going round to the start for
--- any skipped), else the capitals. A capital innkeeper sends them to the first inn on
--- their own faction's trail that still has cards. Only places with a card ready right now
--- are named (so the player isn't sent round in circles): with cards left but none ready
--- anywhere the NPC says so (npc.trail.none), and with nothing left at all, that the player
--- has them all (npc.trail.done, only once the NPC itself is all out).
+-- The same for everything an NPC can give (an own merchant: the other faction's Gear Cards too)
+local function HasMoreToGive(npcId, ready)
+    if SourceHasMore(GiftSource(npcId), ready) then return true end
+    return IsOwnMerchant(npcId) and SourceHasMore(OtherGearSource(), ready)
+end
+
+-- Where an all-out NPC sends the player next (TTS.GIFT_TRAILS): the next NPC on its trail
+-- (the player's faction's; a Neutral merchant on the other faction's trail sends them along
+-- theirs from its start) that still has cards for them, going round to the start for any
+-- skipped, then the trail's
+-- pool if it has one (the innkeepers' capitals). A pool NPC sends them to the first on the
+-- trail that still has cards. Only NPCs with a card ready right now are named, with their
+-- place (npc.<id>.name, place.<id>), so the player isn't sent round in circles: with cards
+-- left but none ready anywhere the NPC says so (npc.trail[.<trail>].none), and with nothing
+-- left at all, that the player has them all (...done, only once the NPC itself is all out).
 local function TrailHint(npcId)
-    local capital = TTS.GIFT_POOLS and TTS.GIFT_POOLS.capital
-    -- Where this NPC could send the player, in order: npc ids, "capital" for the rumour
-    local places
-    for _, id in ipairs(capital and capital.npcs or {}) do
-        if id == npcId then
-            local faction = UnitFactionGroup and UnitFactionGroup("player")
-            places = { unpack(TTS.GIFT_TRAIL and TTS.GIFT_TRAIL[faction] or {}) }
+    local faction = UnitFactionGroup and UnitFactionGroup("player")
+    -- Where this NPC could send the player, in order: npc ids, "pool" for the rumour
+    local places, trailKey, pool
+    for key, def in pairs(TTS.GIFT_TRAILS or {}) do
+        local p = def.pool and TTS.GIFT_POOLS and TTS.GIFT_POOLS[def.pool]
+        for _, id in ipairs(p and p.npcs or {}) do
+            if id == npcId then
+                places, trailKey, pool = { unpack(def[faction] or {}) }, key, def.pool
+            end
         end
-    end
-    if not places then
-        for _, trail in pairs(TTS.GIFT_TRAIL or {}) do
+        if not places then
+            local trail = def[faction] or {}
             for i, id in ipairs(trail) do
                 if id == npcId then
-                    places = {}
+                    places, trailKey, pool = {}, key, def.pool
                     for step = 1, #trail - 1 do table.insert(places, trail[(i - 1 + step) % #trail + 1]) end
-                    if capital then table.insert(places, "capital") end
+                    if pool then table.insert(places, "pool") end
+                end
+            end
+            -- On the other faction's trail only (a Neutral merchant): the player's own trail
+            -- from its start
+            for side, other in pairs(def) do
+                if not places and side ~= faction and side ~= "pool" then
+                    for _, id in ipairs(other) do
+                        if id == npcId then
+                            places, trailKey, pool = { unpack(trail) }, key, def.pool
+                            if pool then table.insert(places, "pool") end
+                            break
+                        end
+                    end
                 end
             end
         end
+        if places then break end
     end
+    if not places then return nil end
 
+    -- Lines of the innkeepers' trail are npc.trail.*, others npc.trail.<trail>.*
+    local prefix = (trailKey == "inn") and "npc.trail" or ("npc.trail." .. trailKey)
     local anyLeft = HasMoreToGive(npcId)
-    for _, p in ipairs(places or {}) do
-        local id = (p == "capital") and capital.npcs[1] or p
+    for _, p in ipairs(places) do
+        local id = (p == "pool") and TTS.GIFT_POOLS[pool].npcs[1] or p
         if HasMoreToGive(id, true) then
-            if p == "capital" then return L("npc.trail.capital") end
-            return L("npc.trail", L("place." .. p))
+            if p == "pool" then return L(prefix .. "." .. pool) end
+            return L(prefix, L("npc." .. p .. ".name"), L("place." .. p))
         end
         anyLeft = anyLeft or HasMoreToGive(id)
     end
-    if not places then return nil end
-    return L(anyLeft and "npc.trail.none" or "npc.trail.done")
+    return L(prefix .. (anyLeft and ".none" or ".done"))
 end
 
 -- The NPC's answer, then (when it has nothing for the player) where else to try
@@ -249,8 +350,9 @@ end
 
 -- =========================================================================
 -- FALLBACK PANEL
--- Under the gossip window when we can't add to its list, or on its own when another
--- addon (Immersion, DialogueUI...) shows gossip in its own window instead.
+-- Under the gossip window when we can't add to its list, beside the merchant window (a
+-- vendor with nothing else to say, like most weapon merchants, opens it straight away), or
+-- on its own when another addon (Immersion, DialogueUI...) shows gossip in its own window.
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local G = CreateFrame("Frame", "TTS_NpcGossipPanel", UIParent, backdropTemplate)
@@ -263,6 +365,13 @@ G:SetBackdrop({
 })
 G:EnableMouse(true)
 G:Hide()
+
+-- The NPC's name, as a gossip window titles it (shown on its own: beside the merchant
+-- window, or when another addon shows the gossip)
+local title = G:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", 18, -18)
+title:SetPoint("RIGHT", G, "RIGHT", -20, 0)
+title:SetJustifyH("LEFT")
 
 local icon = G:CreateTexture(nil, "ARTWORK")
 icon:SetSize(32, 32)
@@ -280,18 +389,35 @@ ask:SetSize(150, 24)
 Loc:Bind(ask, "npc.ask")
 
 local function ShowPanel(npcId)
-    local onBlizzard = GossipFrame and GossipFrame:IsShown()
+    local gossip = GossipFrame and GossipFrame:IsShown() and GossipFrame
+    local merchant = not gossip and MerchantFrame and MerchantFrame:IsShown() and MerchantFrame
     G:ClearAllPoints()
-    if onBlizzard then
-        G:SetPoint("TOPLEFT", GossipFrame, "BOTTOMLEFT", 0, 2)
-        G:SetPoint("TOPRIGHT", GossipFrame, "BOTTOMRIGHT", 0, 2)
-        G:SetFrameStrata(GossipFrame:GetFrameStrata())
+    if gossip then
+        G:SetPoint("TOPLEFT", gossip, "BOTTOMLEFT", 0, 2)
+        G:SetPoint("TOPRIGHT", gossip, "BOTTOMRIGHT", 0, 2)
+        G:SetFrameStrata(gossip:GetFrameStrata())
+    elseif merchant then
+        -- Beside the merchant window (its Merchant / Buyback tabs hang off the bottom)
+        G:SetPoint("TOPLEFT", merchant, "TOPRIGHT", 0, 0)
+        G:SetWidth(300)
+        G:SetFrameStrata(merchant:GetFrameStrata())
     else
         G:SetPoint("TOP", UIParent, "TOP", 0, -140)
         G:SetWidth(340)
         G:SetFrameStrata("DIALOG")
     end
+    -- Away from the gossip window the panel is the NPC's own: its name, then its greeting
+    -- (npc.<npcId>.greet, the weapon merchants') until it has answered
+    local name = not gossip and UnitName("npc")
+    if name and (IsSecret(name) or name == "") then name = nil end
+    title:SetText(name or "")
+    title:SetShown(name ~= nil)
+    local top = name and (18 + title:GetStringHeight() + 8) or 18
+    icon:ClearAllPoints()
+    icon:SetPoint("TOPLEFT", 18, -top)
+
     local said = Said(npcId)
+    if not said and not gossip then said = Loc:Get("npc." .. tostring(npcId) .. ".greet") end
     text:SetText(said or "")
     ask:ClearAllPoints()
     if said then
@@ -301,7 +427,7 @@ local function ShowPanel(npcId)
     end
     ask:SetShown(CanAsk(npcId))
     local body = (said and text:GetStringHeight() or 0) + (ask:IsShown() and (said and 10 or 0) + ask:GetHeight() or 0)
-    G:SetHeight(math.max(icon:GetHeight(), body) + 36)
+    G:SetHeight(top + math.max(icon:GetHeight(), body) + 18)
     G:Show()
 end
 
@@ -425,3 +551,22 @@ if GossipFrame then
         end)
     end)
 end
+
+-- A vendor with no gossip opens its merchant window straight away: the panel goes under it
+local M = CreateFrame("Frame")
+M:RegisterEvent("MERCHANT_SHOW")
+M:RegisterEvent("MERCHANT_CLOSED")
+M:SetScript("OnEvent", function(_, event)
+    if event == "MERCHANT_CLOSED" then
+        if not (GossipFrame and GossipFrame:IsShown()) then
+            G:Hide()
+            reply = nil
+        end
+        return
+    end
+    if event ~= "MERCHANT_SHOW" then return end
+    C_Timer.After(0, function()
+        local npcId = GossipNpcId()
+        if GiftCardOf(npcId) and not (GossipFrame and GossipFrame:IsShown()) then ShowPanel(npcId) end
+    end)
+end)

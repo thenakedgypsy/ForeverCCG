@@ -14,6 +14,7 @@
 *   Brutish damage against several blockers carries over beyond their combined toughness
 *   new: hearthstones - dual-colour prayers. Clicking one asks which mana to make; auto-pay and the AI pick the colour that's needed
 *   some innkeepers around Azeroth may have spare cards for travellers who ask nicely. They can't spare them often, but they'll give you an idea of when to come back. Rumour has it the innkeepers of the great cities keep something special behind the bar too.
+*   new: Gear Cards - one for every zone. A Gear Card equips a denizen you control: its stat bonus and keywords last as long as the denizen stays on the battlefield. Up to 8 per deck, on top of the 12 spells, with their own filter and section in the deckbuilder. Weapon merchants out in the world might spare one for travellers who ask, and when they're out, they'll tell you who else to try (innkeepers now name names too). Collect every Gear Card your own faction's merchants give, and they'll start slipping you the other faction's. The deckbuilder tracks your Gear Cards, collected and mastered
 *   cards that return a denizen card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
 *   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo-mode opponents drop their least useful one)
 *   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result

@@ -153,6 +153,15 @@ function TTS:CardName(card)
 end
 function TTS:CardText(card) return CardField(card, "text") end
 
+-- A card's type as players read it: "Spell", "Denizen"... and "Gear Card" for Gear Cards
+-- (spells underneath, type "Sorcery", but never called one)
+function TTS:CardTypeName(card)
+    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
+    if not card then return nil end
+    if card.subType == "Gear" then return Loc:Term("type", "Gear") end
+    return Loc:Term("type", card.type)
+end
+
 -- Damage / healing sources travel (and are stored) as "<cardId>" or "<cardId>/<kind>"
 -- (kind: attack, trample) so each player reads them in their own language. Anything
 -- else -- older versions sent plain English names -- shows as it is.

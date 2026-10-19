@@ -139,8 +139,9 @@ function E:HasKeyword(perm, isRemote, keyword)
     end)
     if granted then return true end
 
-    -- Keywords granted by spells until end of turn
+    -- Keywords granted by spells until end of turn, or for good (Gear)
     if perm.tempKw and perm.tempKw[keyword] then return true end
+    if perm.permKw and perm.permKw[keyword] then return true end
 
     return card[keyword] or false
 end
@@ -220,7 +221,7 @@ local function SpellEffectActive(perm, e)
     local p, t = perm.tempPower or 0, perm.tempToughness or 0
     if e.kind == "perm" then p, t = perm.permPower or 0, perm.permToughness or 0 end
     if e.harmful then return p < 0 or t < 0 end
-    return p > 0 or t > 0 or (e.kind == "temp" and perm.tempKw ~= nil)
+    return p > 0 or t > 0 or (e.kind == "temp" and perm.tempKw ~= nil) or (e.kind == "perm" and perm.permKw ~= nil)
 end
 
 -- Ids of the cards whose effects are currently on this creature (oldest first, no duplicates)
@@ -573,10 +574,12 @@ SPELL_OPS.buff = function(self, op, d, card, cr)
         perm.tempToughness = (perm.tempToughness or 0) + (op.t or 0)
     end
     if op.kw then
-        perm.tempKw = perm.tempKw or {}
-        for _, kw in ipairs(op.kw) do perm.tempKw[kw] = true end
+        -- A lasting buff (Gear) grants its keywords for as long as the denizen stays
+        local key = op.perm and "permKw" or "tempKw"
+        perm[key] = perm[key] or {}
+        for _, kw in ipairs(op.kw) do perm[key][kw] = true end
     end
-    self:Log(L("log.affected", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
+    self:Log(L(card.subType == "Gear" and "log.equipped" or "log.affected", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
 end
 
 SPELL_OPS.tap = function(self, op, d, card, cr)
@@ -720,6 +723,7 @@ SPELL_OPS.dispel = function(self, op, d, card, cr)
         if (perm.permPower or 0) > 0 then perm.permPower = 0 end
         if (perm.permToughness or 0) > 0 then perm.permToughness = 0 end
         perm.tempKw = nil
+        perm.permKw = nil
         perm.regenerateShield = nil
         perm.shielded = nil
         perm.hots = nil
@@ -864,9 +868,9 @@ end
 
 function E:ResolveSpell(card, tgt, casterIsRemote)
     if casterIsRemote then
-        self:Log(L("log.resolvedOpp", self.opponent or L("side.opponentCap"), TTS.Locale:Term("type", card.type), TTS:CardName(card)), "ACTION")
+        self:Log(L("log.resolvedOpp", self.opponent or L("side.opponentCap"), TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
     else
-        self:Log(L("log.resolved", TTS.Locale:Term("type", card.type), TTS:CardName(card)), "ACTION")
+        self:Log(L("log.resolved", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
     end
     self:ResolveEffect(card.effect, card, casterIsRemote, tgt)
 end
@@ -1365,7 +1369,7 @@ function E:PlayCard(handIndex)
         end
 
         table.remove(self.localState.hand, handIndex)
-        self:Log(L("log.cast", TTS.Locale:Term("type", card.type), TTS:CardName(card)), "ACTION")
+        self:Log(L("log.cast", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
         -- Tell the opponent before enter triggers run, so the creature is on their board first
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_PERM:" .. cardId) end
         self:PutCreatureOntoBattlefield(cardId, false)
@@ -1498,7 +1502,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
 
     -- A creature with a targeted Arrival: cast it, and its Arrival takes the target
     if card.type == "Creature" then
-        self:Log(L("log.cast", TTS.Locale:Term("type", card.type), TTS:CardName(card)), "ACTION")
+        self:Log(L("log.cast", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
         -- Target as for CAST_SPELL; optional, so a plain PLAY_PERM still reads the same
         if not self.isSolo then
             TTS.Net:Send(self.opponent, string.format("ACTION:PLAY_PERM:%s:%s:%s:%d", cardId, tgt.kind,

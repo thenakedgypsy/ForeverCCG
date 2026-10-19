@@ -48,7 +48,7 @@ TTS.Cards = {
     -- NON-BASIC PRAYERS
     -- nameHorde = the name Horde players see; colors = the colours it can make;
     -- isGift = handed out by NPCs (giftNpcs = the npcId
-    -- in each faction; they share one cooldown per card, see
+    -- in each faction, Alliance / Horde / Neutral; they share one cooldown per card, see
     -- UI\NpcGossip.lua), one copy a day up to 4
     -- =========================================================================
     ["PRY01"] = {
@@ -142,12 +142,17 @@ TTS.Cards = {
         isGift = true, giftPool = "capital", text = "{T}(1): Add {R}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\rune_cracked_R_G.png" },
 }
 
--- The trail of town innkeepers for each faction, by level: once one has given all its
--- copies, it points the player to the next one still worth visiting (place.<npcId>), and
--- after the last to the capitals (UI\NpcGossip.lua)
-TTS.GIFT_TRAIL = {
-    Alliance = { 295, 1247, 6736, 6734, 6737, 6727, 6790, 2352, 6272, 7744 },
-    Horde = { 6928, 6747, 5688, 3934, 6739, 7731, 12196, 2388, 9356, 14731 },
+-- Gift trails for each faction, by level: once an NPC has given all its copies, it points
+-- the player to the next one on its trail still worth visiting, by name and place
+-- (npc.<npcId>.name, place.<npcId>), and after the last to the trail's pool if it has one
+-- (UI\NpcGossip.lua). inn: the town innkeepers, then the capitals; gear: the zones' weapon
+-- merchants (added by Cards\Gear.lua).
+TTS.GIFT_TRAILS = {
+    inn = {
+        Alliance = { 295, 1247, 6736, 6734, 6737, 6727, 6790, 2352, 6272, 7744 },
+        Horde = { 6928, 6747, 5688, 3934, 6739, 7731, 12196, 2388, 9356, 14731 },
+        pool = "capital",
+    },
 }
 
 -- NPCs that share one pool of gift cards (cards with giftPool = <key>): each gift is a

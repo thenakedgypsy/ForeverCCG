@@ -1377,7 +1377,7 @@ function TTS.Net:OnReceive(msg, sender)
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
-            E:Log(L("log.oppCast", sender, card and TTS.Locale:Term("type", card.type) or L("type.Permanent"), card and TTS:CardName(card) or cardId), "ACTION")
+            E:Log(L("log.oppCast", sender, card and TTS:CardTypeName(card) or L("type.Permanent"), card and TTS:CardName(card) or cardId), "ACTION")
             -- Optional Arrival target, as for CAST_SPELL: PLAYER|CREATURE, MINE|THEIRS from
             -- the caster's side, field index
             local tgt
@@ -1400,7 +1400,7 @@ function TTS.Net:OnReceive(msg, sender)
             E:OnRemotePlay()
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
-            E:Log(L("log.oppCast", sender, card and TTS.Locale:Term("type", card.type) or L("type.Spell"), card and TTS:CardName(card) or cardId), "ACTION")
+            E:Log(L("log.oppCast", sender, card and TTS:CardTypeName(card) or L("type.Spell"), card and TTS:CardName(card) or cardId), "ACTION")
             E:PlaySpellCastSound()
             -- Optional target: PLAYER|CREATURE, MINE|THEIRS from the caster's side, field index
             local tgt

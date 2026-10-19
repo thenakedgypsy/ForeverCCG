@@ -86,6 +86,7 @@ Cards\Dungeons\CityOfDalaran.lua
 Cards\Bosses.lua
 Cards\Special.lua
 Cards\Tokens.lua
+Cards\Gear.lua
 Hero.lua
 BossTracker.lua
 MobTooltip.lua
