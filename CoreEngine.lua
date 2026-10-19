@@ -50,22 +50,6 @@ TTS.Engine = TTS.Engine or {
 local E = TTS.Engine
 local L = TTS.L
 
-function TTS:SafeAfter(seconds, callback)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(seconds, callback)
-    else
-        local delayFrame = CreateFrame("Frame")
-        local elapsed = 0
-        delayFrame:SetScript("OnUpdate", function(self, delta)
-            elapsed = elapsed + delta
-            if elapsed >= seconds then
-                self:SetScript("OnUpdate", nil)
-                callback()
-            end
-        end)
-    end
-end
-
 function E:Log(msg, category)
     local prefix = "|cFFFFFF00[TTSE]|r "
     if category == "ACTION" then
@@ -786,8 +770,10 @@ function E:EndTurn()
     end
     self.endAfterCombat = nil
 
+    -- Herod attacks each combat if able: the turn can't end before combat while he could.
+    -- After combat (Main 2) there is no combat left for him, e.g. cast there with Quick.
     for _, perm in ipairs(self.localState.field) do
-        local mustAttack = (perm.id == "BOSS11")
+        local mustAttack = (perm.id == "BOSS11") and self.phase ~= "MAIN2"
         if mustAttack and not perm.hasAttackedThisTurn and self:CanCreatureAttack(perm) then
             local card = TTS.Cards[perm.id]
             local cName = card and TTS:CardName(card) or perm.id

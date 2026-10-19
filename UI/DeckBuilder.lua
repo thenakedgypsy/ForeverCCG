@@ -10,6 +10,11 @@ TTS = TTS or {}
 local L = TTS.L
 local Loc = TTS.Locale
 
+-- Sizes are grouped in tables (filled in where each is explained) to keep this file well
+-- under Lua's 200-locals limit: LAYOUT (window, panels, tiles, list, menus), RULES (printed
+-- rules text), CHART (mana curve and colour bars)
+local LAYOUT, RULES, CHART = {}, {}, {}
+
 -- =========================================================================
 -- DECK SLOTS (up to 3 saved decks, switchable from the Deckbuilder)
 -- =========================================================================
@@ -247,31 +252,31 @@ end
 -- =========================================================================
 -- LAYOUT
 -- =========================================================================
-local WIN_W, WIN_H = 1090, 680
-local PAD          = 14
-local PANEL_TOP    = -46
-local PANEL_H      = 598
-local POOL_W       = 684
-local DECK_W       = WIN_W - PAD * 3 - POOL_W   -- 364
+LAYOUT.WIN_W, LAYOUT.WIN_H = 1090, 680
+LAYOUT.PAD          = 14
+LAYOUT.PANEL_TOP    = -46
+LAYOUT.PANEL_H      = 598
+LAYOUT.POOL_W       = 684
+LAYOUT.DECK_W       = LAYOUT.WIN_W - LAYOUT.PAD * 3 - LAYOUT.POOL_W   -- 364
 
-local TILE_W, TILE_H     = 104, 152
-local TILE_GAP_X         = 8
-local TILE_GAP_Y         = 10
-local GRID_COLS          = 6
-local GRID_ROWS          = 3
-local TILES_PER_PAGE     = GRID_COLS * GRID_ROWS
+LAYOUT.TILE_W, LAYOUT.TILE_H     = 104, 152
+LAYOUT.TILE_GAP_X         = 8
+LAYOUT.TILE_GAP_Y         = 10
+LAYOUT.GRID_COLS          = 6
+LAYOUT.GRID_ROWS          = 3
+LAYOUT.TILES_PER_PAGE     = LAYOUT.GRID_COLS * LAYOUT.GRID_ROWS
 
-local LIST_W   = DECK_W - 20                    -- 344
-local LIST_H   = 388
-local ROW_H    = 15
-local COL_GAP  = 8
+LAYOUT.LIST_W   = LAYOUT.DECK_W - 20                    -- 344
+LAYOUT.LIST_H   = 388
+LAYOUT.ROW_H    = 15
+LAYOUT.COL_GAP  = 8
 
 -- =========================================================================
 -- MAIN WINDOW
 -- =========================================================================
 local D = CreateFrame("Frame", "TTS_DeckBuilderFrame", UIParent)
 TTS.DeckBuilderFrame = D
-D:SetSize(WIN_W, WIN_H)
+D:SetSize(LAYOUT.WIN_W, LAYOUT.WIN_H)
 D:SetPoint("CENTER")
 D:SetClampedToScreen(true)
 Skin(D, STYLE.windowBg, STYLE.windowBorder, "dialog")
@@ -312,7 +317,7 @@ close:SetPoint("TOPRIGHT", -2, -2)
 -- The whole window scales as one, so the layout never reflows. The top-left
 -- corner stays put while dragging.
 -- =========================================================================
-local MIN_SCALE, MAX_SCALE = 0.6, 1.5
+LAYOUT.MIN_SCALE, LAYOUT.MAX_SCALE = 0.6, 1.5
 
 local scaleGrip = CreateFrame("Button", nil, D)
 scaleGrip:SetSize(16, 16)
@@ -326,7 +331,7 @@ local function ScaleGrip_OnUpdate(self)
     local cx, cy = GetCursorPosition()
     -- Grow by however far the cursor moved along the window's diagonal
     local grow = ((cx - self.startX) / self.startW + (self.startY - cy) / self.startH) / 2
-    local scale = math.max(MIN_SCALE, math.min(MAX_SCALE, self.startScale * (1 + grow)))
+    local scale = math.max(LAYOUT.MIN_SCALE, math.min(LAYOUT.MAX_SCALE, self.startScale * (1 + grow)))
     D:SetScale(scale)
     -- Saved so the Deckbuilder always reopens at this size
     if TTS.Options then TTS.Options:Set("deckBuilderScale", scale) end
@@ -364,13 +369,13 @@ footer:SetPoint("BOTTOMRIGHT", D, "BOTTOMRIGHT", -26, 13)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
 local poolPanel = CreateFrame("Frame", nil, D)
-poolPanel:SetSize(POOL_W, PANEL_H)
-poolPanel:SetPoint("TOPLEFT", D, "TOPLEFT", PAD, PANEL_TOP)
+poolPanel:SetSize(LAYOUT.POOL_W, LAYOUT.PANEL_H)
+poolPanel:SetPoint("TOPLEFT", D, "TOPLEFT", LAYOUT.PAD, LAYOUT.PANEL_TOP)
 Skin(poolPanel, STYLE.panelBg, STYLE.panelBorder)
 
 local deckPanel = CreateFrame("Frame", nil, D)
-deckPanel:SetSize(DECK_W, PANEL_H)
-deckPanel:SetPoint("TOPLEFT", poolPanel, "TOPRIGHT", PAD, 0)
+deckPanel:SetSize(LAYOUT.DECK_W, LAYOUT.PANEL_H)
+deckPanel:SetPoint("TOPLEFT", poolPanel, "TOPRIGHT", LAYOUT.PAD, 0)
 Skin(deckPanel, STYLE.panelBg, STYLE.panelBorder)
 
 -- =========================================================================
@@ -383,7 +388,7 @@ local classFilter = nil      -- nil = all classes; otherwise only spells of this
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
 local creatureTypeFilter = nil -- nil = all creature types; otherwise only creatures of this type are shown
--- Keyword filter, kept in one table (this file is near Lua's 200-locals limit):
+-- Keyword filter, kept in one table (to spare the file's locals):
 -- value = nil (any) or a TT.KEYWORDS key; Name(k), List() and dd (its dropdown) below
 local Keyword = {}
 local searchText = ""        -- lower-case; matched against card name and rules text
@@ -761,7 +766,7 @@ local function BuildStandaloneCardPreview(parent, sizeX, sizeY, name)
     return f
 end
 
-local PREVIEW_W, PREVIEW_H = 150, 212
+LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H = 150, 212
 
 -- A card in Board.lua's design (or the identical standalone copy if Board.lua isn't loaded)
 local function CreateCardDesign(parent, w, h, name)
@@ -817,14 +822,14 @@ local TEXT_BOX = {
     bottom       = 0.08,
     bottomWithPT = 0.20,
 }
-local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
-local RULES_FONT_MIN = 6
+RULES.RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
+RULES.RULES_FONT_MIN = 6
 -- Cards narrower than this on screen (pixels, Deckbuilder scale included) show
 -- no printed text: their rules are in the tooltip only
-local CARD_TEXT_MIN_WIDTH = 72
+RULES.CARD_TEXT_MIN_WIDTH = 72
 -- Symbols in printed rules text (tap and mana alike) are drawn this many pixels
 -- larger than the text's base symbol size (mirrors Board.lua)
-local RULES_TAP_EXTRA = 3
+RULES.RULES_TAP_EXTRA = 3
 
 -- Rules text settings for the large preview card on the left
 local PREVIEW_RULES = {
@@ -838,8 +843,8 @@ local PREVIEW_RULES = {
 -- opts (optional): fontMax, fontMin, offsetX (pixels right), offsetY (pixels down)
 local function PrintCardRules(f, card, opts)
     if not f.rules or not f.pt then return end
-    local fontMax = (opts and opts.fontMax) or RULES_FONT_MAX
-    local fontMin = (opts and opts.fontMin) or RULES_FONT_MIN
+    local fontMax = (opts and opts.fontMax) or RULES.RULES_FONT_MAX
+    local fontMin = (opts and opts.fontMin) or RULES.RULES_FONT_MIN
     local dx = (opts and opts.offsetX) or 0
     local dy = (opts and opts.offsetY) or 0
     local hasPT = f.pt:IsShown()
@@ -847,7 +852,7 @@ local function PrintCardRules(f, card, opts)
     local onScreen = w * (D:GetScale() or 1)
 
     TTS.PlaceCardStats(f)
-    if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
+    if card and card.text and card.text ~= "" and onScreen >= RULES.CARD_TEXT_MIN_WIDTH then
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
             f.rulesCard, f.rulesPT = card, hasPT
@@ -859,7 +864,7 @@ local function PrintCardRules(f, card, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(Sym(TTS:CardRulesText(card, true), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(Sym(TTS:CardRulesText(card, true), size + 2 + RULES.RULES_TAP_EXTRA, size + 2 + RULES.RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -872,9 +877,9 @@ end
 local function EnsurePreviewFrame()
     if previewCard then return previewCard end
 
-    previewCard = CreateCardDesign(D, PREVIEW_W, PREVIEW_H, "TTS_DeckBuilder_PreviewCard")
+    previewCard = CreateCardDesign(D, LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H, "TTS_DeckBuilder_PreviewCard")
 
-    previewCard:SetSize(PREVIEW_W, PREVIEW_H)
+    previewCard:SetSize(LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H)
     previewCard:SetFrameStrata("DIALOG")
     previewCard:SetFrameLevel((D:GetFrameLevel() or 10) + 40)
     previewCard:SetClampedToScreen(true)
@@ -884,7 +889,7 @@ local function EnsurePreviewFrame()
 end
 
 -- The Adds a card spawns (and the Adds those spawn), as small cards stacked under the preview,
--- each labelled "3x Add" over its tags. Kept on D: this file is at Lua's 200-locals limit.
+-- each labelled "3x Add" over its tags. Kept on D to spare the file's locals.
 D.ADD_PREVIEW = { w = 106, h = 150, gap = 52, rules = { fontMax = 9, fontMin = 6 } }
 function D:UpdateAddPreviews(f, card)
     f.adds = f.adds or {}
@@ -946,7 +951,7 @@ local function UpdateCardPreview(cardId)
 
     -- Card name and cost sit above the frame, so leave room for them
     f:ClearAllPoints()
-    f:SetPoint("TOPRIGHT", D, "TOPLEFT", -12, PANEL_TOP - 30)
+    f:SetPoint("TOPRIGHT", D, "TOPLEFT", -12, LAYOUT.PANEL_TOP - 30)
 
     PaintCardFrame(f, card, 18)
 
@@ -1020,7 +1025,7 @@ local function CloseMenus()
 end
 menuBlocker:SetScript("OnClick", CloseMenus)
 
-local MENU_ROW_H, MENU_COL_W = 18, 140
+LAYOUT.MENU_ROW_H, LAYOUT.MENU_COL_W = 18, 140
 
 -- cfg: values() -> list, cols, colorize(value) -> text, onSelect(value or nil)
 local function CreateDropdown(parent, width, allText, cfg)
@@ -1079,8 +1084,8 @@ local function CreateDropdown(parent, width, allText, cfg)
             local col = math.floor((i - 1) / perCol)
             local rowIdx = (i - 1) % perCol
             local row = CreateFrame("Button", nil, menu)
-            row:SetSize(MENU_COL_W - 4, MENU_ROW_H)
-            row:SetPoint("TOPLEFT", menu, "TOPLEFT", 6 + col * MENU_COL_W, -6 - rowIdx * MENU_ROW_H)
+            row:SetSize(LAYOUT.MENU_COL_W - 4, LAYOUT.MENU_ROW_H)
+            row:SetPoint("TOPLEFT", menu, "TOPLEFT", 6 + col * LAYOUT.MENU_COL_W, -6 - rowIdx * LAYOUT.MENU_ROW_H)
 
             local hl = row:CreateTexture(nil, "HIGHLIGHT")
             hl:SetAllPoints(row)
@@ -1108,7 +1113,7 @@ local function CreateDropdown(parent, width, allText, cfg)
             rows[i] = row
         end
         local usedCols = math.ceil(#entries / perCol)
-        menu:SetSize(8 + usedCols * MENU_COL_W, 12 + perCol * MENU_ROW_H)
+        menu:SetSize(8 + usedCols * LAYOUT.MENU_COL_W, 12 + perCol * LAYOUT.MENU_ROW_H)
         menu:Hide()
     end
 
@@ -1357,7 +1362,7 @@ end)
 -- =========================================================================
 local gridFrame = CreateFrame("Frame", nil, poolPanel)
 gridFrame:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -76)
-gridFrame:SetSize(GRID_COLS * TILE_W + (GRID_COLS - 1) * TILE_GAP_X, GRID_ROWS * TILE_H + (GRID_ROWS - 1) * TILE_GAP_Y)
+gridFrame:SetSize(LAYOUT.GRID_COLS * LAYOUT.TILE_W + (LAYOUT.GRID_COLS - 1) * LAYOUT.TILE_GAP_X, LAYOUT.GRID_ROWS * LAYOUT.TILE_H + (LAYOUT.GRID_ROWS - 1) * LAYOUT.TILE_GAP_Y)
 
 local poolEmptyText = gridFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 poolEmptyText:SetPoint("CENTER")
@@ -1365,7 +1370,7 @@ Loc:Bind(poolEmptyText, "db.noMatch")
 poolEmptyText:Hide()
 
 local function ChangePoolPage(delta)
-    local pages = math.max(1, math.ceil(#cardPoolKeys / TILES_PER_PAGE))
+    local pages = math.max(1, math.ceil(#cardPoolKeys / LAYOUT.TILES_PER_PAGE))
     local newPage = math.max(1, math.min(pages, poolPage + delta))
     if newPage ~= poolPage then
         poolPage = newPage
@@ -1381,20 +1386,20 @@ local tiles = {}
 
 -- Each grid slot shows the card in Board.lua's design, with its name and cost
 -- above it (as on the board) and the copy pips below.
-local CARD_W, CARD_H = 78, 110
-local CARD_TOP = 30          -- room above the card for its cost and name
+LAYOUT.CARD_W, LAYOUT.CARD_H = 78, 110
+LAYOUT.CARD_TOP = 30          -- room above the card for its cost and name
 
 local function CreateTile(index)
     local t = CreateFrame("Frame", nil, gridFrame)
-    t:SetSize(TILE_W, TILE_H)
-    local col = (index - 1) % GRID_COLS
-    local row = math.floor((index - 1) / GRID_COLS)
-    t:SetPoint("TOPLEFT", gridFrame, "TOPLEFT", col * (TILE_W + TILE_GAP_X), -row * (TILE_H + TILE_GAP_Y))
+    t:SetSize(LAYOUT.TILE_W, LAYOUT.TILE_H)
+    local col = (index - 1) % LAYOUT.GRID_COLS
+    local row = math.floor((index - 1) / LAYOUT.GRID_COLS)
+    t:SetPoint("TOPLEFT", gridFrame, "TOPLEFT", col * (LAYOUT.TILE_W + LAYOUT.TILE_GAP_X), -row * (LAYOUT.TILE_H + LAYOUT.TILE_GAP_Y))
 
-    local card = CreateCardDesign(t, CARD_W, CARD_H, nil)
-    card:SetSize(CARD_W, CARD_H)
+    local card = CreateCardDesign(t, LAYOUT.CARD_W, LAYOUT.CARD_H, nil)
+    card:SetSize(LAYOUT.CARD_W, LAYOUT.CARD_H)
     card:ClearAllPoints()
-    card:SetPoint("TOP", t, "TOP", 0, -CARD_TOP)
+    card:SetPoint("TOP", t, "TOP", 0, -LAYOUT.CARD_TOP)
     card:SetFrameStrata(D:GetFrameStrata())
     card:EnableMouse(false)
     if card.model then card.model:EnableMouse(false) end
@@ -1460,7 +1465,7 @@ local function CreateTile(index)
     for p = 1, 4 do
         local pip = hit:CreateTexture(nil, "OVERLAY")
         pip:SetSize(16, 5)
-        pip:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", math.floor((TILE_W - pipsW) / 2) + (p - 1) * 19, 4)
+        pip:SetPoint("BOTTOMLEFT", t, "BOTTOMLEFT", math.floor((LAYOUT.TILE_W - pipsW) / 2) + (p - 1) * 19, 4)
         t.pips[p] = pip
     end
     t.copyText = hit:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -1494,7 +1499,7 @@ end
 -- Built on first use: Board.lua's card frame doesn't exist yet when this file loads
 local function EnsureTiles()
     if #tiles > 0 then return end
-    for i = 1, TILES_PER_PAGE do
+    for i = 1, LAYOUT.TILES_PER_PAGE do
         tiles[i] = CreateTile(i)
     end
 end
@@ -1660,11 +1665,11 @@ StaticPopupDialogs["TTS_RENAME_DECK"] = {
 }
 Loc:OnReady(function() StaticPopupDialogs["TTS_RENAME_DECK"].text = L("db.renameDeck") end)
 
-local TAB_W = math.floor((LIST_W - (TTS.MAX_DECK_SLOTS - 1) * 7) / TTS.MAX_DECK_SLOTS)
+LAYOUT.TAB_W = math.floor((LAYOUT.LIST_W - (TTS.MAX_DECK_SLOTS - 1) * 7) / TTS.MAX_DECK_SLOTS)
 
 for i = 1, TTS.MAX_DECK_SLOTS do
-    local tab = CreatePanelButton(deckPanel, TAB_W, 26, "")
-    tab:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10 + (i - 1) * (TAB_W + 7), -10)
+    local tab = CreatePanelButton(deckPanel, LAYOUT.TAB_W, 26, "")
+    tab:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10 + (i - 1) * (LAYOUT.TAB_W + 7), -10)
 
     tab.countText = tab:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     tab.countText:SetPoint("RIGHT", -7, 0)
@@ -1714,7 +1719,7 @@ clearBtn:SetScript("OnClick", function()
     D:ConfirmClearDeck()
 end)
 
-local HeroBtns = {}   -- the Hero button (one local: this file is at the 200-locals limit)
+local HeroBtns = {}   -- the Hero button
 
 -- Reopens the hero card's milestone choice after "Decide later" (shown while one is waiting)
 HeroBtns.choice = CreatePanelButton(deckPanel, 60, 22, "db.heroChoice")
@@ -1763,11 +1768,11 @@ listDivider:SetColorTexture(1, 0.82, 0, 0.25)
 -- =========================================================================
 local listArea = CreateFrame("Frame", nil, deckPanel)
 listArea:SetPoint("TOPLEFT", deckPanel, "TOPLEFT", 10, -76)
-listArea:SetSize(LIST_W, LIST_H)
+listArea:SetSize(LAYOUT.LIST_W, LAYOUT.LIST_H)
 
 local deckEmptyText = listArea:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 deckEmptyText:SetPoint("CENTER", 0, 20)
-deckEmptyText:SetWidth(LIST_W - 40)
+deckEmptyText:SetWidth(LAYOUT.LIST_W - 40)
 Loc:Bind(deckEmptyText, "db.deckEmpty")
 
 local GROUP_ORDER = { "Creature", "Spell", "Prayer" }
@@ -1905,7 +1910,7 @@ end
 -- =========================================================================
 local statsFrame = CreateFrame("Frame", "TTS_DeckStatsFrame", deckPanel)
 statsFrame:SetPoint("BOTTOMLEFT", deckPanel, "BOTTOMLEFT", 10, 10)
-statsFrame:SetSize(LIST_W, 118)
+statsFrame:SetSize(LAYOUT.LIST_W, 118)
 Skin(statsFrame, { 0.02, 0.02, 0.02, 0.6 }, STYLE.panelBorder)
 
 local statsDivider = statsFrame:CreateTexture(nil, "ARTWORK")
@@ -1921,13 +1926,13 @@ local chartsNote = statsFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableS
 chartsNote:SetPoint("BOTTOMRIGHT", statsFrame, "BOTTOMRIGHT", -8, 7)
 Loc:Bind(chartsNote, "db.prayersNotCharted")
 
-local BAR_BASE_Y = 36
-local BAR_MAX_H  = 48
+CHART.BAR_BASE_Y = 36
+CHART.BAR_MAX_H  = 48
 
 -- Mana curve
-local CURVE_COLUMNS = 8      -- mana values 0..7+
-local CURVE_BAR_W   = 16
-local CURVE_BAR_GAP = 7
+CHART.CURVE_COLUMNS = 8      -- mana values 0..7+
+CHART.CURVE_BAR_W   = 16
+CHART.CURVE_BAR_GAP = 7
 
 local curveFrame = CreateFrame("Frame", "TTS_ManaCurveFrame", statsFrame)
 curveFrame:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 0, 0)
@@ -1941,19 +1946,19 @@ local curveAvg = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSma
 curveAvg:SetPoint("TOPRIGHT", curveFrame, "TOPRIGHT", -10, -8)
 
 local curveBars, curveCounts = {}, {}
-for m = 0, CURVE_COLUMNS - 1 do
-    local x = 10 + m * (CURVE_BAR_W + CURVE_BAR_GAP)
+for m = 0, CHART.CURVE_COLUMNS - 1 do
+    local x = 10 + m * (CHART.CURVE_BAR_W + CHART.CURVE_BAR_GAP)
 
     local track = curveFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
     track:SetColorTexture(0, 0, 0, 0.35)
-    track:SetSize(CURVE_BAR_W, BAR_MAX_H)
-    track:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
+    track:SetSize(CHART.CURVE_BAR_W, CHART.BAR_MAX_H)
+    track:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
 
     local bar = curveFrame:CreateTexture(nil, "ARTWORK")
     bar:SetTexture(BAR_TEX)
     bar:SetVertexColor(0.30, 0.60, 1.00, 0.95)
-    bar:SetSize(CURVE_BAR_W, 1)
-    bar:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
+    bar:SetSize(CHART.CURVE_BAR_W, 1)
+    bar:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
     curveBars[m] = bar
 
     local cnt = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -1962,12 +1967,12 @@ for m = 0, CURVE_COLUMNS - 1 do
 
     local lbl = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     lbl:SetPoint("TOP", track, "BOTTOM", 0, -3)
-    lbl:SetText(m == CURVE_COLUMNS - 1 and (m .. "+") or tostring(m))
+    lbl:SetText(m == CHART.CURVE_COLUMNS - 1 and (m .. "+") or tostring(m))
 end
 
 function D:UpdateManaCurve(deck)
     local buckets = {}
-    for m = 0, CURVE_COLUMNS - 1 do buckets[m] = 0 end
+    for m = 0, CHART.CURVE_COLUMNS - 1 do buckets[m] = 0 end
     local spellCount, cmcSum = 0, 0
     local nCreature, nSpell, nPrayer = 0, 0, 0
 
@@ -1981,7 +1986,7 @@ function D:UpdateManaCurve(deck)
                 else
                     if group == "Creature" then nCreature = nCreature + count else nSpell = nSpell + count end
                     local cmc = c.cmc or 0
-                    local m = math.min(CURVE_COLUMNS - 1, cmc)
+                    local m = math.min(CHART.CURVE_COLUMNS - 1, cmc)
                     buckets[m] = buckets[m] + count
                     spellCount = spellCount + count
                     cmcSum = cmcSum + cmc * count
@@ -1991,13 +1996,13 @@ function D:UpdateManaCurve(deck)
     end
 
     local maxCount = 1
-    for m = 0, CURVE_COLUMNS - 1 do
+    for m = 0, CHART.CURVE_COLUMNS - 1 do
         if buckets[m] > maxCount then maxCount = buckets[m] end
     end
-    for m = 0, CURVE_COLUMNS - 1 do
+    for m = 0, CHART.CURVE_COLUMNS - 1 do
         local n = buckets[m]
         if n > 0 then
-            curveBars[m]:SetHeight(math.max(2, math.floor(n / maxCount * BAR_MAX_H)))
+            curveBars[m]:SetHeight(math.max(2, math.floor(n / maxCount * CHART.BAR_MAX_H)))
             curveBars[m]:Show()
             curveCounts[m]:SetText(n)
         else
@@ -2013,12 +2018,12 @@ function D:UpdateManaCurve(deck)
 end
 
 -- Sphere distribution
-local COLOR_BAR_W   = 18
-local COLOR_BAR_GAP = 8
+CHART.COLOR_BAR_W   = 18
+CHART.COLOR_BAR_GAP = 8
 
 local colorFrame = CreateFrame("Frame", "TTS_ColorDistFrame", statsFrame)
 colorFrame:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 200, 0)
-colorFrame:SetSize(LIST_W - 200, 118)
+colorFrame:SetSize(LAYOUT.LIST_W - 200, 118)
 
 local colorTitle = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 colorTitle:SetPoint("TOPLEFT", colorFrame, "TOPLEFT", 10, -8)
@@ -2029,19 +2034,19 @@ colorTotal:SetPoint("TOPRIGHT", colorFrame, "TOPRIGHT", -8, -8)
 
 local colorBars, colorCounts, colorLabels = {}, {}, {}
 for i, col in ipairs(SPHERE_ORDER) do
-    local x = 10 + (i - 1) * (COLOR_BAR_W + COLOR_BAR_GAP)
+    local x = 10 + (i - 1) * (CHART.COLOR_BAR_W + CHART.COLOR_BAR_GAP)
     local rgb = SPHERE_RGB[col]
 
     local track = colorFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
     track:SetColorTexture(0, 0, 0, 0.35)
-    track:SetSize(COLOR_BAR_W, BAR_MAX_H)
-    track:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
+    track:SetSize(CHART.COLOR_BAR_W, CHART.BAR_MAX_H)
+    track:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
 
     local bar = colorFrame:CreateTexture(nil, "ARTWORK")
     bar:SetTexture(BAR_TEX)
     bar:SetVertexColor(rgb[1], rgb[2], rgb[3], 0.95)
-    bar:SetSize(COLOR_BAR_W, 1)
-    bar:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, BAR_BASE_Y)
+    bar:SetSize(CHART.COLOR_BAR_W, 1)
+    bar:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
     colorBars[col] = bar
 
     local cnt = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2079,7 +2084,7 @@ function D:UpdateColorDistribution(deck)
             colorLabels[col]:SetText(Sym("{" .. col .. "}", 12))
         end
         if n > 0 then
-            colorBars[col]:SetHeight(math.max(2, math.floor(n / maxCount * BAR_MAX_H)))
+            colorBars[col]:SetHeight(math.max(2, math.floor(n / maxCount * CHART.BAR_MAX_H)))
             colorBars[col]:Show()
             colorCounts[col]:SetText(n)
         else
@@ -2122,15 +2127,15 @@ function D:RefreshPool()
     for _, id in ipairs(rest) do table.insert(cardPoolKeys, id) end
 
     local total = #cardPoolKeys
-    local pages = math.max(1, math.ceil(total / TILES_PER_PAGE))
+    local pages = math.max(1, math.ceil(total / LAYOUT.TILES_PER_PAGE))
     if poolPage > pages then poolPage = pages end
     if poolPage < 1 then poolPage = 1 end
 
     EnsureTiles()
     local deck = GetActiveDeck()
-    for i = 1, TILES_PER_PAGE do
+    for i = 1, LAYOUT.TILES_PER_PAGE do
         local t = tiles[i]
-        local id = cardPoolKeys[(poolPage - 1) * TILES_PER_PAGE + i]
+        local id = cardPoolKeys[(poolPage - 1) * LAYOUT.TILES_PER_PAGE + i]
         if id then
             t:Show()
             UpdateTile(t, id, TTS.Cards[id], deck)
@@ -2180,15 +2185,15 @@ function D:RefreshDeck()
 
     -- Layout: one column if it fits, otherwise two (never leave a header at the foot of column 1)
     local n = #entries
-    local cols, perCol, rowH = 1, n, ROW_H
-    if n > math.floor(LIST_H / ROW_H) then
+    local cols, perCol, rowH = 1, n, LAYOUT.ROW_H
+    if n > math.floor(LAYOUT.LIST_H / LAYOUT.ROW_H) then
         cols = 2
         perCol = math.ceil(n / 2)
         if entries[perCol] and entries[perCol].header then perCol = perCol - 1 end
         local tallest = math.max(perCol, n - perCol)
-        rowH = math.min(ROW_H, math.floor(LIST_H / tallest))
+        rowH = math.min(LAYOUT.ROW_H, math.floor(LAYOUT.LIST_H / tallest))
     end
-    local colW = (cols == 1) and LIST_W or math.floor((LIST_W - COL_GAP) / 2)
+    local colW = (cols == 1) and LAYOUT.LIST_W or math.floor((LAYOUT.LIST_W - LAYOUT.COL_GAP) / 2)
 
     for i, e in ipairs(entries) do
         local r = GetDeckRow(i)
@@ -2198,7 +2203,7 @@ function D:RefreshDeck()
         end
         r:ClearAllPoints()
         r:SetSize(colW, rowH)
-        r:SetPoint("TOPLEFT", listArea, "TOPLEFT", col * (colW + COL_GAP), -idx * rowH)
+        r:SetPoint("TOPLEFT", listArea, "TOPLEFT", col * (colW + LAYOUT.COL_GAP), -idx * rowH)
         if e.header then
             SetupHeaderRow(r, e.header, e.count)
         else
@@ -2416,11 +2421,7 @@ levelWatcher:SetScript("OnEvent", function(self, event, newLevel)
         AnnounceSpellUnlocks(newLevel)
     end
     -- UnitLevel can still report the old level during the event, so refresh a moment later
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0.5, function() if D:IsShown() then D:RefreshAll() end end)
-    elseif D:IsShown() then
-        D:RefreshAll()
-    end
+    C_Timer.After(0.5, function() if D:IsShown() then D:RefreshAll() end end)
 end)
 
 -- Saved size (scale), applied once the saved settings have loaded
@@ -2431,7 +2432,7 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
     self:UnregisterAllEvents()
     local saved = TTS.Options and tonumber(TTS.Options:Get("deckBuilderScale"))
     if saved then
-        D:SetScale(math.max(MIN_SCALE, math.min(MAX_SCALE, saved)))
+        D:SetScale(math.max(LAYOUT.MIN_SCALE, math.min(LAYOUT.MAX_SCALE, saved)))
     end
 end)
 

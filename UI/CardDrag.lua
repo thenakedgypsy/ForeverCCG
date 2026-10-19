@@ -104,9 +104,6 @@ local function DropTarget(d)
         end
     end
     if B.oppLifeBtn:IsMouseOver() then return { kind = "PLAYER", isRemote = true, fieldIndex = 0 } end
-    for _, f in ipairs(B.oppHandFrames) do
-        if f:IsShown() and f:IsMouseOver() then return { kind = "PLAYER", isRemote = true, fieldIndex = 0 } end
-    end
     if B.myLifeBtn:IsMouseOver() then return { kind = "PLAYER", isRemote = false, fieldIndex = 0 } end
 end
 

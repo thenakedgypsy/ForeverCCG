@@ -607,23 +607,15 @@ tracker:SetScript("OnEvent", function(self, event, ...)
                 local function scan()
                     if not TTS_DevModeActive then TTS.BossTracker:ScanAllBosses() end
                 end
-                if C_Timer and C_Timer.After then
-                    C_Timer.After(1, scan)
-                    C_Timer.After(3, scan)
-                    C_Timer.After(7, scan)
-                else
-                    scan()
-                end
+                C_Timer.After(1, scan)
+                C_Timer.After(3, scan)
+                C_Timer.After(7, scan)
             end
         end
 
         -- Entering a dungeon or raid: mention any cards still to unlock there
         if inInstance and not wasInInstance then
-            if C_Timer and C_Timer.After then
-                C_Timer.After(2, AnnounceInstanceCards)
-            else
-                AnnounceInstanceCards()
-            end
+            C_Timer.After(2, AnnounceInstanceCards)
         end
         wasInInstance = inInstance
 

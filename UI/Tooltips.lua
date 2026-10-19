@@ -510,14 +510,29 @@ local function RenderAll()
     rendering = false
 end
 
+-- Panel tag -> the options menu switch that hides it (Options.lua, tooltipPanels)
+local PANEL_SWITCH = {
+    Keyword = "keyword", Ability = "ability", Effect = "effect", Status = "status", Symbol = "symbol",
+    Equipment = "attached", Enchantment = "attached", ["Affected by"] = "attached",
+}
+
+local function PanelAllowed(spec)
+    local switch = PANEL_SWITCH[spec.tag]
+    local on = switch and TTS.Options and TTS.Options.Get and TTS.Options:Get("tooltipPanels")
+    return not (type(on) == "table" and on[switch] == false)
+end
+
 -- Builds every stage now (so empty ones can be skipped and the hint is right)
 local function Prepare(st)
-    st.base = (st.opts.base and st.opts.base()) or {}
+    st.base = {}
+    for _, spec in ipairs((st.opts.base and st.opts.base()) or {}) do
+        if PanelAllowed(spec) then table.insert(st.base, spec) end
+    end
     st.stages = {}
     for _, stage in ipairs(st.opts.stages or {}) do
         local list = {}
         for _, spec in ipairs(stage.build() or {}) do
-            if spec then table.insert(list, spec) end
+            if spec and PanelAllowed(spec) then table.insert(list, spec) end
         end
         if #list > 0 then
             table.insert(st.stages, { label = stage.label, panels = list })

@@ -111,20 +111,9 @@ local function IsMatchOpponent(sender)
     return E and E.inMatch and not E.isSolo and SameName(E.opponent, sender)
 end
 
+-- Runs callback after a delay (every file uses this one; Network.lua loads before the engine)
 function TTS:SafeAfter(seconds, callback)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(seconds, callback)
-    else
-        local delayFrame = CreateFrame("Frame")
-        local elapsed = 0
-        delayFrame:SetScript("OnUpdate", function(self, dt)
-            elapsed = elapsed + dt
-            if elapsed >= seconds then
-                self:SetScript("OnUpdate", nil)
-                callback()
-            end
-        end)
-    end
+    C_Timer.After(seconds, callback)
 end
 
 -- Returns the channel number of FCCGTTSE, or nil if we haven't joined it

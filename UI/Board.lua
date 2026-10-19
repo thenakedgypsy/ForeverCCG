@@ -10,6 +10,12 @@ TTS = TTS or {}
 local L = TTS.L
 local Loc = TTS.Locale
 
+-- Sizes and timings are grouped in tables (filled in where each is explained) to keep this
+-- file well under Lua's 200-locals limit: LAYOUT (card and row geometry, board scale), RULES
+-- (printed rules text), EFFECT_BAR (player effect icons), BG (solo backgrounds), TIMING
+-- (animations and model reloads)
+local LAYOUT, RULES, EFFECT_BAR, BG, TIMING = {}, {}, {}, {}, {}
+
 -- =========================================================================
 -- TEXTURE PATH CONFIGURATION & MANA ICONS
 -- =========================================================================
@@ -59,17 +65,17 @@ local TEXT_BOX = {
     bottom       = 0.05,
     bottomWithPT = 0.20,
 }
-local RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
-local RULES_FONT_MIN = 6
+RULES.RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
+RULES.RULES_FONT_MIN = 6
 -- Cards narrower than this on screen (pixels, board zoom included) show no
 -- printed text: their rules are in the tooltip only
-local CARD_TEXT_MIN_WIDTH = 72
+RULES.CARD_TEXT_MIN_WIDTH = 72
 -- Symbols in printed rules text (tap and mana alike) are drawn this many pixels
 -- larger than the text's base symbol size
-local RULES_TAP_EXTRA = 3
+RULES.RULES_TAP_EXTRA = 3
 
 -- Large preview of the hovered card, docked outside the left edge of the board
-local PREVIEW_W, PREVIEW_H = 150, 212
+LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H = 150, 212
 local PREVIEW_RULES = {
     fontMax = 11,
     fontMin = 8,
@@ -271,7 +277,7 @@ B:SetScript("OnMouseDown", function(self, button)
 end)
 
 -- Board size (scale) is saved so the board always reopens at the size it was left at
-local BOARD_MIN_SCALE, BOARD_MAX_SCALE = 0.60, 1.60
+LAYOUT.BOARD_MIN_SCALE, LAYOUT.BOARD_MAX_SCALE = 0.60, 1.60
 
 local function SaveBoardScale()
     if TTS.Options then TTS.Options:Set("boardScale", B:GetScale()) end
@@ -281,7 +287,7 @@ B:EnableMouseWheel(true)
 B:SetScript("OnMouseWheel", function(self, delta)
     if IsControlKeyDown() then
         local cur = self:GetScale() or 1.0
-        local newScale = math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, cur + (delta * 0.05)))
+        local newScale = math.max(LAYOUT.BOARD_MIN_SCALE, math.min(LAYOUT.BOARD_MAX_SCALE, cur + (delta * 0.05)))
         self:SetScale(newScale)
         SaveBoardScale()
         if RefreshAllModelCameras then RefreshAllModelCameras() end
@@ -323,7 +329,7 @@ resizer:SetScript("OnUpdate", function(self)
         local dx = (cx - startCursorX) / uiScale
         local dy = (startCursorY - cy) / uiScale
         local delta = (dx + dy) * 0.5 * 0.0015
-        local newScale = math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, startScale + delta))
+        local newScale = math.max(LAYOUT.BOARD_MIN_SCALE, math.min(LAYOUT.BOARD_MAX_SCALE, startScale + delta))
         if math.abs(newScale - B:GetScale()) > 0.001 then
             B:SetScale(newScale)
             SaveBoardScale()
@@ -628,6 +634,7 @@ end
 -- =========================================================================
 B.oppLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.oppLifeBtn:SetSize(270, 28)
+B.oppLifeBtn.minWidth = 270   -- wider for a long name (UpdateDisplay)
 B.oppLifeBtn:SetPoint("TOPLEFT", 24, -15)
 Skin(B.oppLifeBtn, "control", STYLE.controlBg, STYLE.controlBorder)
 B.oppLifeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -751,11 +758,11 @@ end
 -- PLAYER EFFECT BARS (damage / healing over time, damage shields)
 -- Opponent: top-right under Concede. You: right side above your deck.
 -- =========================================================================
-local EFFECT_ICON  = 24
-local EFFECT_GAP   = 4
-local EFFECT_COLS  = 3
-local EFFECT_ROWS  = 2
-local EFFECT_LABEL = 14
+EFFECT_BAR.EFFECT_ICON  = 24
+EFFECT_BAR.EFFECT_GAP   = 4
+EFFECT_BAR.EFFECT_COLS  = 3
+EFFECT_BAR.EFFECT_ROWS  = 2
+EFFECT_BAR.EFFECT_LABEL = 14
 
 local EFFECT_DEFAULT_ICONS = {
     dot    = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
@@ -774,8 +781,8 @@ end
 
 local function CreateEffectBar(labelText)
     local bar = CreateFrame("Frame", nil, B)
-    bar:SetSize(EFFECT_COLS * (EFFECT_ICON + EFFECT_GAP) - EFFECT_GAP,
-        EFFECT_LABEL + EFFECT_ROWS * (EFFECT_ICON + EFFECT_GAP))
+    bar:SetSize(EFFECT_BAR.EFFECT_COLS * (EFFECT_BAR.EFFECT_ICON + EFFECT_BAR.EFFECT_GAP) - EFFECT_BAR.EFFECT_GAP,
+        EFFECT_BAR.EFFECT_LABEL + EFFECT_BAR.EFFECT_ROWS * (EFFECT_BAR.EFFECT_ICON + EFFECT_BAR.EFFECT_GAP))
 
     bar.label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bar.label:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
@@ -783,14 +790,14 @@ local function CreateEffectBar(labelText)
     Loc:Bind(bar.label, labelText)
 
     bar.icons = {}
-    for i = 1, EFFECT_COLS * EFFECT_ROWS do
-        local col = (i - 1) % EFFECT_COLS
-        local row = math.floor((i - 1) / EFFECT_COLS)
+    for i = 1, EFFECT_BAR.EFFECT_COLS * EFFECT_BAR.EFFECT_ROWS do
+        local col = (i - 1) % EFFECT_BAR.EFFECT_COLS
+        local row = math.floor((i - 1) / EFFECT_BAR.EFFECT_COLS)
         local icon = CreateFrame("Frame", nil, bar)
-        icon:SetSize(EFFECT_ICON, EFFECT_ICON)
+        icon:SetSize(EFFECT_BAR.EFFECT_ICON, EFFECT_BAR.EFFECT_ICON)
         icon:SetPoint("TOPRIGHT", bar, "TOPRIGHT",
-            -col * (EFFECT_ICON + EFFECT_GAP),
-            -EFFECT_LABEL - row * (EFFECT_ICON + EFFECT_GAP))
+            -col * (EFFECT_BAR.EFFECT_ICON + EFFECT_BAR.EFFECT_GAP),
+            -EFFECT_BAR.EFFECT_LABEL - row * (EFFECT_BAR.EFFECT_ICON + EFFECT_BAR.EFFECT_GAP))
 
         icon.border = icon:CreateTexture(nil, "BACKGROUND")
         icon.border:SetPoint("TOPLEFT", icon, "TOPLEFT", -2, 2)
@@ -1127,18 +1134,18 @@ end
 -- down to the base size when the row is full. A card is centred on an
 -- unscaled "slot" so scaling it never moves it.
 -- =========================================================================
-local HAND_W, HAND_H, HAND_STEP = 72, 102, 96
-local HAND_LEFT, HAND_RIGHT, HAND_BOTTOM = 35, 1054, 52   -- right edge stops short of your deck
-local HAND_MAX_SCALE = 1.2
+LAYOUT.HAND_W, LAYOUT.HAND_H, LAYOUT.HAND_STEP = 72, 102, 96
+LAYOUT.HAND_LEFT, LAYOUT.HAND_RIGHT, LAYOUT.HAND_BOTTOM = 35, 1054, 52   -- right edge stops short of your deck
+LAYOUT.HAND_MAX_SCALE = 1.2
 
-local BF_CARD_W  = 64
-local BF_CARD_H  = 84
-local BF_STEP_X  = 86
-local BF_START_X = 35
-local BF_RIGHT   = 1045   -- right edge stops short of your effects bar
-local LAND_MAX_SCALE     = 1.0
-local CREATURE_MAX_SCALE = 1.2
-local MAX_CREATURE_FRAMES = 16   -- cards each creature row can show; they shrink to fit (FitScale)
+LAYOUT.BF_CARD_W  = 64
+LAYOUT.BF_CARD_H  = 84
+LAYOUT.BF_STEP_X  = 86
+LAYOUT.BF_START_X = 35
+LAYOUT.BF_RIGHT   = 1045   -- right edge stops short of your effects bar
+LAYOUT.LAND_MAX_SCALE     = 1.0
+LAYOUT.CREATURE_MAX_SCALE = 1.2
+LAYOUT.MAX_CREATURE_FRAMES = 16   -- cards each creature row can show; they shrink to fit (FitScale)
 
 -- Vertical centre of each battlefield row, measured up from the board's bottom edge
 local ROW_Y = {
@@ -1165,7 +1172,7 @@ end
 -- A card whose size changed (its row gained or lost a card) loads its model again on the next
 -- frame, and once more when any played card has landed: a model already showing keeps its
 -- old size otherwise
-local MODEL_RESIZE_DELAY = 0.35
+TIMING.MODEL_RESIZE_DELAY = 0.35
 local resizedFrames = {}
 local function ReloadModels(list)
     for f in pairs(list) do
@@ -1180,7 +1187,7 @@ local function PlaceCard(f, i, s, left, centerY, cardW, step)
     if f.baseScale and f.baseScale ~= s and f.model then
         if not next(resizedFrames) then
             TTS:SafeAfter(0, function() ReloadModels(resizedFrames) end)
-            TTS:SafeAfter(MODEL_RESIZE_DELAY, function()
+            TTS:SafeAfter(TIMING.MODEL_RESIZE_DELAY, function()
                 local list = resizedFrames
                 resizedFrames = {}
                 ReloadModels(list)
@@ -1200,8 +1207,8 @@ end
 local function UpdateCardRules(f, opts)
     if not f.rules then return end
     local card = f.currentCard
-    local fontMax = (opts and opts.fontMax) or RULES_FONT_MAX
-    local fontMin = (opts and opts.fontMin) or RULES_FONT_MIN
+    local fontMax = (opts and opts.fontMax) or RULES.RULES_FONT_MAX
+    local fontMin = (opts and opts.fontMin) or RULES.RULES_FONT_MIN
     local dx = (opts and opts.offsetX) or 0
     local dy = (opts and opts.offsetY) or 0
     local hasPT = f.pt:IsShown()
@@ -1211,7 +1218,7 @@ local function UpdateCardRules(f, opts)
     local onScreen = w * f:GetEffectiveScale() / UIParent:GetEffectiveScale() / (f.hovered and 1.18 or 1)
 
     TTS.PlaceCardStats(f)
-    if card and card.text and card.text ~= "" and onScreen >= CARD_TEXT_MIN_WIDTH then
+    if card and card.text and card.text ~= "" and onScreen >= RULES.CARD_TEXT_MIN_WIDTH then
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
         if f.rulesCard ~= card or f.rulesPT ~= hasPT then
             f.rulesCard, f.rulesPT = card, hasPT
@@ -1223,7 +1230,7 @@ local function UpdateCardRules(f, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card, true), size + 2 + RULES_TAP_EXTRA, size + 2 + RULES_TAP_EXTRA))
+                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card, true), size + 2 + RULES.RULES_TAP_EXTRA, size + 2 + RULES.RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
@@ -1256,12 +1263,12 @@ midLine:SetColorTexture(1, 0.82, 0, 0.25)
 --                        bottom; else the map, tinted
 -- Every texture is checked after it is set; anything missing leaves the plain board.
 -- =========================================================================
-local BG_INSET = 4
-local BG_W, BG_H = 1028 - BG_INSET * 2, 496 - BG_INSET * 2
-local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
-local LOADSCREEN_PATH = "Interface\\Glues\\LoadingScreens\\"
-local BG_OVERLAY_ALPHA = 0.55
-local PANEL_BG_DIMMED = 0.25
+BG.BG_INSET = 4
+BG.BG_W, BG.BG_H = 1028 - BG.BG_INSET * 2, 496 - BG.BG_INSET * 2
+BG.MAP_W, BG.MAP_H, BG.MAP_TILE = 1002, 668, 256
+BG.LOADSCREEN_PATH = "Interface\\Glues\\LoadingScreens\\"
+BG.BG_OVERLAY_ALPHA = 0.55
+BG.PANEL_BG_DIMMED = 0.25
 
 local bgTiles = {}
 local overlayPool = {}   -- explored-area overlay textures, created as needed
@@ -1271,13 +1278,13 @@ for i = 1, 12 do
     bgTiles[i] = t
 end
 local bgArt = battlefield:CreateTexture(nil, "BACKGROUND", nil, 1)
-bgArt:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET, -BG_INSET)
-bgArt:SetSize(BG_W, BG_H)
+bgArt:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG.BG_INSET, -BG.BG_INSET)
+bgArt:SetSize(BG.BG_W, BG.BG_H)
 bgArt:Hide()
 local bgOverlay = battlefield:CreateTexture(nil, "BACKGROUND", nil, 2)
-bgOverlay:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET, -BG_INSET)
-bgOverlay:SetSize(BG_W, BG_H)
-bgOverlay:SetColorTexture(0, 0, 0, BG_OVERLAY_ALPHA)
+bgOverlay:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG.BG_INSET, -BG.BG_INSET)
+bgOverlay:SetSize(BG.BG_W, BG.BG_H)
+bgOverlay:SetColorTexture(0, 0, 0, BG.BG_OVERLAY_ALPHA)
 bgOverlay:Hide()
 
 local function HideBackground()
@@ -1291,10 +1298,10 @@ end
 -- A loading screen, cropped top and bottom to the panel's shape. Classic ones are stored
 -- square but drawn at 4:3. Returns false if the file is missing.
 local function ShowLoadScreen(file, wide)
-    local loaded = bgArt:SetTexture(LOADSCREEN_PATH .. file)
+    local loaded = bgArt:SetTexture(BG.LOADSCREEN_PATH .. file)
     if loaded == false or not bgArt:GetTexture() then return false end
-    local scaledH = BG_W / (wide and 16 / 9 or 4 / 3)
-    local crop = math.max(0, (scaledH - BG_H) / 2) / scaledH
+    local scaledH = BG.BG_W / (wide and 16 / 9 or 4 / 3)
+    local crop = math.max(0, (scaledH - BG.BG_H) / 2) / scaledH
     bgArt:SetTexCoord(0, 1, crop, 1 - crop)
     bgArt:SetVertexColor(1, 1, 1)
     bgArt:Show()
@@ -1313,14 +1320,14 @@ end
 -- file is fw x fh pixels. Only the part inside the visible window is drawn.
 -- Returns false if none of it is visible.
 local function PlaceMapPiece(t, px0, py0, pw, ph, fw, fh, s, winTop, winBottom, tint)
-    local ix0, ix1 = math.max(px0, 0), math.min(px0 + pw, MAP_W)
-    local iy0, iy1 = math.max(py0, winTop), math.min(py0 + ph, winBottom, MAP_H)
+    local ix0, ix1 = math.max(px0, 0), math.min(px0 + pw, BG.MAP_W)
+    local iy0, iy1 = math.max(py0, winTop), math.min(py0 + ph, winBottom, BG.MAP_H)
     if ix1 <= ix0 or iy1 <= iy0 then
         t:Hide()
         return false
     end
     t:ClearAllPoints()
-    t:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG_INSET + ix0 * s, -(BG_INSET + (iy0 - winTop) * s))
+    t:SetPoint("TOPLEFT", battlefield, "TOPLEFT", BG.BG_INSET + ix0 * s, -(BG.BG_INSET + (iy0 - winTop) * s))
     t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
     t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
     if tint then t:SetVertexColor(tint[1], tint[2], tint[3]) else t:SetVertexColor(1, 1, 1) end
@@ -1338,9 +1345,9 @@ end
 -- A world map, tile by tile, with every explored-area overlay on top so the whole zone
 -- shows whether or not this character has explored it.
 local function ShowMap(map, tint)
-    local s = BG_W / MAP_W
-    local winTop = ((MAP_H * s - BG_H) / 2) / s     -- map rows above the visible window
-    local winBottom = winTop + BG_H / s
+    local s = BG.BG_W / BG.MAP_W
+    local winTop = ((BG.MAP_H * s - BG.BG_H) / 2) / s     -- map rows above the visible window
+    local winBottom = winTop + BG.BG_H / s
     local shown = 0
     for row = 0, 2 do
         for col = 0, 3 do
@@ -1351,7 +1358,7 @@ local function ShowMap(map, tint)
                 for _, other in ipairs(bgTiles) do other:Hide() end
                 return false
             end
-            if PlaceMapPiece(t, col * MAP_TILE, row * MAP_TILE, MAP_TILE, MAP_TILE, MAP_TILE, MAP_TILE, s, winTop, winBottom, tint) then
+            if PlaceMapPiece(t, col * BG.MAP_TILE, row * BG.MAP_TILE, BG.MAP_TILE, BG.MAP_TILE, BG.MAP_TILE, BG.MAP_TILE, s, winTop, winBottom, tint) then
                 shown = shown + 1
             end
         end
@@ -1360,18 +1367,18 @@ local function ShowMap(map, tint)
     local used = 0
     for _, o in ipairs((TTS.MapOverlays and TTS.MapOverlays[map]) or {}) do
         local ox, oy, w, h, files = o[1], o[2], o[3], o[4], o[5]
-        local across = math.ceil(w / MAP_TILE)
-        local down = math.ceil(h / MAP_TILE)
+        local across = math.ceil(w / BG.MAP_TILE)
+        local down = math.ceil(h / BG.MAP_TILE)
         for r = 0, down - 1 do
             for c = 0, across - 1 do
                 local name = files[r * across + c + 1]
                 if name then
-                    local pw = (c < across - 1) and MAP_TILE or (w - c * MAP_TILE)
-                    local ph = (r < down - 1) and MAP_TILE or (h - r * MAP_TILE)
+                    local pw = (c < across - 1) and BG.MAP_TILE or (w - c * BG.MAP_TILE)
+                    local ph = (r < down - 1) and BG.MAP_TILE or (h - r * BG.MAP_TILE)
                     local t = OverlayTexture(used + 1)
                     -- A file this client doesn't have is skipped rather than drawn
                     local loaded = t:SetTexture(string.format("Interface\\WorldMap\\%s\\%s", map, name))
-                    if loaded ~= false and t:GetTexture() and PlaceMapPiece(t, ox + c * MAP_TILE, oy + r * MAP_TILE, pw, ph,
+                    if loaded ~= false and t:GetTexture() and PlaceMapPiece(t, ox + c * BG.MAP_TILE, oy + r * BG.MAP_TILE, pw, ph,
                             TextureFileSize(pw), TextureFileSize(ph), s, winTop, winBottom, tint) then
                         used = used + 1
                     end
@@ -1395,7 +1402,7 @@ function B:SetBackground(spec)
         return
     end
     bgOverlay:Show()
-    battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], PANEL_BG_DIMMED)
+    battlefield:SetBackdropColor(STYLE.panelBg[1], STYLE.panelBg[2], STYLE.panelBg[3], BG.PANEL_BG_DIMMED)
 end
 
 function B:ClearBackground()
@@ -1411,7 +1418,7 @@ end
 -- BOARD LAYOUT GRIDS
 -- =========================================================================
 for i = 1, 10 do
-    local f = CreateCardFrame(B, HAND_W, HAND_H)
+    local f = CreateCardFrame(B, LAYOUT.HAND_W, LAYOUT.HAND_H)
     f.isHand = true
     f.handIndex = i
     f.origFrameLevel = f:GetFrameLevel()
@@ -1444,30 +1451,13 @@ for i = 1, 10 do
     f.back:SetAllPoints(f)
     ApplyBackTexture(f.back)
 
-    f.targetBorder = f:CreateTexture(nil, "OVERLAY")
-    f.targetBorder:SetAllPoints(f)
-    f.targetBorder:SetTexture("Interface\\Tooltips\\UI-Tooltip-Border")
-    f.targetBorder:Hide()
-
-    f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    -- Not a target: the opponent is targeted with their life plate. Right-click still cancels.
+    f:RegisterForClicks("RightButtonUp")
     f:SetScript("OnClick", function(self, btn)
-        if not TTS.Engine.inMatch then return end
-        PlayUISound("card")
-        if btn == "RightButton" and TTS.Engine.targeting then
+        if TTS.Engine.inMatch and btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
-            return
-        end
-        if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "PLAYER" or TTS.Engine.targeting.targetType == "ANY") then
-            TTS.Engine:ResolveTarget("PLAYER", true, 0)
         end
     end)
-    f:SetScript("OnEnter", function(self)
-        if IsTargetingPlayer(true) then
-            TT:ShowText(self, "ANCHOR_TOP", TTS.Engine.opponent or L("side.opponentCap"), nil,
-                { r = 1, g = 0.82, b = 0, lines = { { "|cFF00FF00" .. L("board.targetEnemy") .. "|r", 0.2, 1.0, 0.2 } } })
-        end
-    end)
-    f:SetScript("OnLeave", function(self) TT:Hide(self) end)
     f:Hide()
     oppHandFrames[i] = f
 end
@@ -1547,15 +1537,15 @@ local function WithFieldSound(handler)
 end
 
 for i = 1, 12 do
-    local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
+    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
     f.isRemote = false
     AttachSlot(f)
     f:SetScript("OnClick", WithFieldSound(MyLand_OnClick))
     myLandFrames[i] = f
 end
 
-for i = 1, MAX_CREATURE_FRAMES do
-    local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
+for i = 1, LAYOUT.MAX_CREATURE_FRAMES do
+    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
     f.isRemote = false
     AttachSlot(f)
     f:SetScript("OnClick", WithFieldSound(MyNonLand_OnClick))
@@ -1563,7 +1553,7 @@ for i = 1, MAX_CREATURE_FRAMES do
 end
 
 for i = 1, 12 do
-    local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
+    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
     f.isRemote = true
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
@@ -1581,8 +1571,8 @@ for i = 1, 12 do
     oppLandFrames[i] = f
 end
 
-for i = 1, MAX_CREATURE_FRAMES do
-    local f = CreateCardFrame(B, BF_CARD_W, BF_CARD_H)
+for i = 1, LAYOUT.MAX_CREATURE_FRAMES do
+    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
     f.isRemote = true
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
@@ -1606,7 +1596,7 @@ for i = 1, MAX_CREATURE_FRAMES do
 end
 
 local myDeckFrame = CreateFrame("Frame", nil, B)
-myDeckFrame:SetSize(HAND_W, HAND_H)
+myDeckFrame:SetSize(LAYOUT.HAND_W, LAYOUT.HAND_H)
 myDeckFrame:SetPoint("BOTTOMRIGHT", -30, 52)
 myDeckFrame.back = myDeckFrame:CreateTexture(nil, "ARTWORK")
 myDeckFrame.back:SetAllPoints(myDeckFrame)
@@ -1636,6 +1626,244 @@ oppDeckFrame:SetScript("OnEnter", function(self)
     ShowDeckTip(self, L("board.oppDeck", TTS.Engine.opponent or L("side.opponentCap")), TTS.Engine:RemoteDeckCount())
 end)
 oppDeckFrame:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
+-- =========================================================================
+-- GRAVEYARD LISTS
+-- A button per player; clicking it drops down the cards in that graveyard, most
+-- recent first. Hovering one shows it in the docked preview. Opponent's: beside
+-- their deck, opening downwards. Yours: in the bottom bar, opening upwards.
+-- (In a block of its own, so its locals don't count towards the file's.)
+-- =========================================================================
+do
+    local GRAVE_BTN_W  = 120
+    local GRAVE_LIST_W = 210
+    local GRAVE_ROW_H  = 18
+    local GRAVE_ROWS   = 16   -- rows shown at once; the mouse wheel scrolls the rest
+
+    local function GraveyardCards(isRemote)
+        local st = isRemote and TTS.Engine.remoteState or TTS.Engine.localState
+        return st.graveyard or {}
+    end
+
+    local function GraveRow_OnEnter(self)
+        local card = self.cardId and TTS.Cards[self.cardId]
+        if card and ShowBoardPreview then ShowBoardPreview(self, card) end
+    end
+
+    local function GraveRow_OnLeave(self)
+        if HideBoardPreview then HideBoardPreview(self) end
+    end
+
+    local function GraveyardRow(list, r)
+        local row = list.rows[r]
+        if row then return row end
+        row = CreateFrame("Button", nil, list)
+        row:SetSize(GRAVE_LIST_W - 12, GRAVE_ROW_H)
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 6, -6 - (r - 1) * GRAVE_ROW_H)
+        row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+        row.ttsSilent = true
+        row.cost = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.cost:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.cost:SetJustifyH("RIGHT")
+        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.text:SetPoint("RIGHT", row.cost, "LEFT", -4, 0)
+        row.text:SetJustifyH("LEFT")
+        row.text:SetWordWrap(false)
+        row:SetScript("OnEnter", GraveRow_OnEnter)
+        row:SetScript("OnLeave", GraveRow_OnLeave)
+        row:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId) end)   -- shift-click links it
+        row:SetScript("OnHide", GraveRow_OnLeave)
+        list.rows[r] = row
+        return row
+    end
+
+    local graveButtons = {}
+
+    -- Fills an open list from its graveyard (offset: rows scrolled past)
+    local function FillGraveyardList(list)
+        local cards = GraveyardCards(list.isRemote)
+        local n = #cards
+        local shown = math.min(n, GRAVE_ROWS)
+        list.offset = math.max(0, math.min(list.offset or 0, n - shown))
+        for r = 1, shown do
+            local cardId = cards[n - list.offset - r + 1]
+            local card = TTS.Cards[cardId]
+            local row = GraveyardRow(list, r)
+            row.cardId = cardId
+            row.text:SetText(card and TTS:CardName(card) or tostring(cardId))
+            row.cost:SetText((card and card.cost and card.cost ~= "") and TTS:FormatSymbols(card.cost, 12) or "")
+            row:Show()
+        end
+        for r = shown + 1, #list.rows do list.rows[r]:Hide() end
+        list.empty:SetShown(n == 0)
+        list.more:SetShown(n > shown)
+        if n > shown then
+            list.more:SetText(L("board.graveyardRange", list.offset + 1, list.offset + shown, n))
+        end
+        list:SetHeight(12 + math.max(1, shown) * GRAVE_ROW_H + (n > shown and 14 or 0))
+    end
+
+    local function CreateGraveyardButton(isRemote)
+        local btn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
+        btn:SetSize(GRAVE_BTN_W, 22)
+        StyleButton(btn)
+
+        local list = CreateFrame("Frame", nil, btn, backdropTemplate)
+        list:SetFrameStrata("DIALOG")
+        list:SetWidth(GRAVE_LIST_W)
+        list:SetClampedToScreen(true)
+        Skin(list, "panel", { 0.04, 0.04, 0.04, 0.95 }, STYLE.panelBorder)
+        list:EnableMouse(true)
+        list:EnableMouseWheel(true)
+        list.isRemote = isRemote
+        list.rows = {}
+        if isRemote then
+            list:SetPoint("TOPRIGHT", btn, "BOTTOMRIGHT", 0, -2)
+        else
+            list:SetPoint("BOTTOMRIGHT", btn, "TOPRIGHT", 0, 2)
+        end
+        list.empty = list:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        list.empty:SetPoint("LEFT", list, "LEFT", 10, 0)
+        Loc:Bind(list.empty, "board.graveyardEmpty")
+        list.more = list:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        list.more:SetPoint("BOTTOM", list, "BOTTOM", 0, 6)
+        list:SetScript("OnMouseWheel", function(self, delta)
+            self.offset = (self.offset or 0) - delta * 3
+            FillGraveyardList(self)
+        end)
+        list:Hide()
+        btn.list = list
+
+        btn:SetScript("OnClick", function(self)
+            TT:Hide(self)
+            if list:IsShown() then list:Hide(); return end
+            for _, other in ipairs(graveButtons) do other.list:Hide() end
+            list.offset = 0
+            FillGraveyardList(list)
+            list:Show()
+        end)
+        btn:SetScript("OnEnter", function(self)
+            if list:IsShown() then return end
+            local title = isRemote and L("board.oppGraveyard", TTS.Engine.opponent or L("side.opponentCap")) or L("board.yourGraveyard")
+            TT:ShowText(self, "ANCHOR_TOP", title, L("board.graveyardDesc"))
+        end)
+        btn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+        table.insert(graveButtons, btn)
+        return btn
+    end
+
+    B.oppGraveBtn = CreateGraveyardButton(true)
+    B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -34, 0)
+
+    -- Yours sits left of Undo, with Mulligan (while it is up) moved left of it
+    B.myGraveBtn = CreateGraveyardButton(false)
+    B.myGraveBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
+    B.mulliganBtn:ClearAllPoints()
+    B.mulliganBtn:SetPoint("RIGHT", B.myGraveBtn, "LEFT", -8, 0)
+
+    -- Button labels with the counts, and any open list refilled (UpdateDisplay)
+    function B:UpdateGraveyards()
+        for _, btn in ipairs(graveButtons) do
+            btn:SetText(L("board.graveyard", #GraveyardCards(btn.list.isRemote)))
+            btn:SetWidth(math.max(GRAVE_BTN_W, btn:GetTextWidth() + 24))
+            if btn.list:IsShown() then FillGraveyardList(btn.list) end
+        end
+    end
+
+    -- Lists close with the board (they would otherwise come back open with the next match)
+    B:HookScript("OnHide", function()
+        for _, btn in ipairs(graveButtons) do btn.list:Hide() end
+    end)
+end
+
+-- =========================================================================
+-- SHUFFLE
+-- A deck being shuffled riffles: the top cards split to either side and fall back in
+-- one after another, twice. Both decks at the start of a game, yours again on a
+-- mulligan. Turned off with "Animate played cards" in the options.
+-- =========================================================================
+do
+    local SHUFFLE_CARDS   = 8      -- card backs in the animation
+    local SHUFFLE_PASS    = 0.5    -- seconds per riffle
+    local SHUFFLE_PASSES  = 2
+    local SHUFFLE_STAGGER = 0.03   -- each card moves a little after the one under it
+    local SHUFFLE_SPREAD  = 0.6    -- how far a card swings out, in deck widths
+    local SHUFFLE_TILT    = 0.18   -- radians a card leans as it swings out
+
+    local function CreateShuffleLayer(deck)
+        local layer = CreateFrame("Frame", nil, B)
+        layer:SetAllPoints(deck)
+        layer:SetFrameLevel(deck:GetFrameLevel() + 5)
+        layer.cards = {}
+        for i = 1, SHUFFLE_CARDS do
+            local t = layer:CreateTexture(nil, "ARTWORK", nil, i - 1)   -- higher cards draw on top
+            t:SetSize(deck:GetWidth(), deck:GetHeight())
+            ApplyBackTexture(t)
+            layer.cards[i] = t
+        end
+        layer:Hide()
+
+        layer:SetScript("OnUpdate", function(self, dt)
+            self.t = self.t + dt
+            if self.t >= SHUFFLE_PASS * SHUFFLE_PASSES then
+                self:Hide()
+                return
+            end
+            local w = deck:GetWidth()
+            local pass = math.floor(self.t / SHUFFLE_PASS)
+            local within = self.t - pass * SHUFFLE_PASS
+            local swing = SHUFFLE_PASS - SHUFFLE_STAGGER * (SHUFFLE_CARDS - 1)
+            for i, tex in ipairs(self.cards) do
+                local u = math.max(0, math.min(1, (within - (i - 1) * SHUFFLE_STAGGER) / swing))
+                local out = math.sin(math.pi * u)
+                -- Alternate cards go to alternate sides, swapped on the next pass
+                local side = ((i + pass) % 2 == 0) and 1 or -1
+                tex:ClearAllPoints()
+                tex:SetPoint("CENTER", self, "CENTER", side * out * w * SHUFFLE_SPREAD, (i - 1) * 0.6 + out * 4)
+                if tex.SetRotation then tex:SetRotation(-side * out * SHUFFLE_TILT) end
+            end
+        end)
+        return layer
+    end
+
+    local shuffleLayers = {
+        [false] = CreateShuffleLayer(myDeckFrame),
+        [true]  = CreateShuffleLayer(oppDeckFrame),
+    }
+
+    -- isRemote: that player's deck only (nil: both)
+    function B:PlayShuffle(isRemote)
+        if TTS.Options and TTS.Options:Get("animateCards") == false then return end
+        for side, layer in pairs(shuffleLayers) do
+            if isRemote == nil or isRemote == side then
+                layer.t = 0
+                layer:Show()
+            end
+        end
+    end
+
+    do
+        local E = TTS.Engine
+        local origStart = E and E.StartMatch
+        if origStart then
+            E.StartMatch = function(self, ...)
+                local results = { origStart(self, ...) }
+                if self.inMatch then B:PlayShuffle() end
+                return unpack(results)
+            end
+        end
+        local origMulligan = E and E.Mulligan
+        if origMulligan then
+            E.Mulligan = function(self, ...)
+                local open = self.mulliganOpen
+                local results = { origMulligan(self, ...) }
+                if open and not self.mulliganOpen then B:PlayShuffle(false) end
+                return unpack(results)
+            end
+        end
+    end
+end
 
 -- =========================================================================
 -- 3D MODEL VISUAL HELPER
@@ -1751,16 +1979,16 @@ end
 
 -- A creature just came onto the battlefield (either side): fix its camera once the model has
 -- loaded, and again when its flight from the hand has landed
-local MODEL_SETTLE_DELAY = 0.05
-local MODEL_LANDED_DELAY = 0.8    -- well after a played card's 0.3 s flight (FLY_TIME), once the model has settled
+TIMING.MODEL_SETTLE_DELAY = 0.05
+TIMING.MODEL_LANDED_DELAY = 0.8    -- well after a played card's 0.3 s flight (TIMING.FLY_TIME), once the model has settled
 local function ScheduleModelCameraFix()
     if B.cameraFixPending then return end
     B.cameraFixPending = true
-    TTS:SafeAfter(MODEL_SETTLE_DELAY, function()
+    TTS:SafeAfter(TIMING.MODEL_SETTLE_DELAY, function()
         B.cameraFixPending = nil
         ReapplyModelCameras()
     end)
-    TTS:SafeAfter(MODEL_LANDED_DELAY, ReapplyModelCameras)
+    TTS:SafeAfter(TIMING.MODEL_LANDED_DELAY, ReapplyModelCameras)
 end
 
 RefreshCardText = function()
@@ -1781,7 +2009,7 @@ local boardPreview, previewOwner
 
 local function EnsureBoardPreview()
     if boardPreview then return boardPreview end
-    local f = CreateCardFrame(B, PREVIEW_W, PREVIEW_H)
+    local f = CreateCardFrame(B, LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H)
     f:SetFrameStrata("DIALOG")
     f:SetFrameLevel((B:GetFrameLevel() or 10) + 40)
     f:SetClampedToScreen(true)
@@ -1792,7 +2020,7 @@ local function EnsureBoardPreview()
     return f
 end
 
--- Paints a full-size preview card (a CreateCardFrame of PREVIEW_W x PREVIEW_H) and shows it
+-- Paints a full-size preview card (a CreateCardFrame of LAYOUT.PREVIEW_W x LAYOUT.PREVIEW_H) and shows it
 local function PaintPreviewCard(f, card)
     f.visualCard = nil   -- a preview always loads its model afresh (e.g. a card's model was changed)
     SetupCardVisual(f, card)
@@ -1877,7 +2105,7 @@ end
 -- A creature that leaves the battlefield stays in its slot for a moment before the row
 -- closes up: red with a skull when it died, blue when it went to a hand or library.
 -- =========================================================================
-local LEAVE_TIME = 1.0
+TIMING.LEAVE_TIME = 1.0
 local LEAVE_COLORS = { died = { 1.0, 0.2, 0.2 }, returned = { 0.3, 0.55, 1.0 } }
 local LEAVE_SKULL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull.png"
 
@@ -1888,7 +2116,7 @@ local leavingPerms = setmetatable({}, { __mode = "k" })
 local diedPerms = setmetatable({}, { __mode = "k" })
 
 -- How dark a creature is drawn: tapped 0.4, summoning-sick in your attack step this
-local SICK_SHADE = 0.7
+TIMING.SICK_SHADE = 0.7
 -- 3D models ignore vertex colour, so they fade instead (less, or they vanish into the card)
 local function ModelAlpha(shade) return 0.25 + 0.75 * shade end
 
@@ -1898,7 +2126,7 @@ local function ModelAlpha(shade) return 0.25 + 0.75 * shade end
 -- it was: the card in your hand (or where a drag dropped it), or the opponent's hand row.
 -- Turned off with "Animate played cards" in the options.
 -- =========================================================================
-local FLY_TIME = 0.3
+TIMING.FLY_TIME = 0.3
 
 local flights = setmetatable({}, { __mode = "k" })   -- perm -> { x, y, t }: start, in board coordinates
 local seenPerms = setmetatable({}, { __mode = "k" })
@@ -1985,9 +2213,9 @@ end
 -- Each client draws this for every token on either side, so both PvP players see it.
 -- Tokens made together come in one after another; one sound plays for the group.
 -- =========================================================================
-local SPAWN_DELAY = 0.45     -- seconds before the first token of a group shows
-local SPAWN_STAGGER = 0.15   -- between tokens made together
-local SPAWN_FADE = 0.35      -- fade-in
+TIMING.SPAWN_DELAY = 0.45     -- seconds before the first token of a group shows
+TIMING.SPAWN_STAGGER = 0.15   -- between tokens made together
+TIMING.SPAWN_FADE = 0.35      -- fade-in
 local spawns = setmetatable({}, { __mode = "k" })   -- perm -> { t = seconds since made, at = when it shows }
 local groupUntil = 0          -- tokens made before this joins the current group
 local groupNext = 0           -- when the next token in the group shows
@@ -1998,10 +2226,10 @@ function B.StartSpawn(perm, animate)
         return
     end
     local now = GetTime()
-    if now > groupUntil then groupNext = SPAWN_DELAY end
+    if now > groupUntil then groupNext = TIMING.SPAWN_DELAY end
     groupUntil = now + 0.05
-    spawns[perm] = { t = 0, at = groupNext, sound = (groupNext == SPAWN_DELAY), id = perm.id }
-    groupNext = groupNext + SPAWN_STAGGER
+    spawns[perm] = { t = 0, at = groupNext, sound = (groupNext == TIMING.SPAWN_DELAY), id = perm.id }
+    groupNext = groupNext + TIMING.SPAWN_STAGGER
 end
 
 -- Sets each spawning token's card alpha; cards no longer spawning are reset. Models ignore
@@ -2012,7 +2240,7 @@ local function ApplySpawns()
         for _, f in ipairs(group) do
             local sp = f:IsShown() and f.perm and spawns[f.perm]
             if sp then
-                local a = math.max(0, math.min(1, (sp.t - sp.at) / SPAWN_FADE))   -- 0 while still waiting
+                local a = math.max(0, math.min(1, (sp.t - sp.at) / TIMING.SPAWN_FADE))   -- 0 while still waiting
                 f:SetAlpha(a)
                 if f.model then f.model:SetAlpha((f.modelAlpha or 1) * a) end
                 f.spawning = true
@@ -2035,7 +2263,7 @@ spawnTicker:SetScript("OnUpdate", function(_, dt)
         if sp.sound and before < sp.at and sp.t >= sp.at and TTS.Sound then
             TTS.Sound:PlayTokenSound(sp.id)
         end
-        if sp.t >= sp.at + SPAWN_FADE then spawns[perm] = nil end
+        if sp.t >= sp.at + TIMING.SPAWN_FADE then spawns[perm] = nil end
     end
     ApplySpawns()
 end)
@@ -2049,7 +2277,7 @@ local function ApplyFlights()
             local dx, dy = 0, 0
             local sx, sy = f.slot:GetCenter()   -- the slot is unscaled: already in board coordinates
             if fl and sx and left then
-                local rest = (1 - math.min(1, fl.t / FLY_TIME)) ^ 3   -- ease out
+                local rest = (1 - math.min(1, fl.t / TIMING.FLY_TIME)) ^ 3   -- ease out
                 local s = f:GetScale()
                 dx = (fl.x - (sx - left)) * rest / s
                 dy = (fl.y - (sy - bottom)) * rest / s
@@ -2068,7 +2296,7 @@ flyTicker:SetScript("OnUpdate", function(_, dt)
     if not next(flights) then return end
     for perm, fl in pairs(flights) do
         fl.t = fl.t + dt
-        if fl.t >= FLY_TIME then flights[perm] = nil end
+        if fl.t >= TIMING.FLY_TIME then flights[perm] = nil end
     end
     ApplyFlights()
 end)
@@ -2177,8 +2405,8 @@ local function BattlefieldList(E, isRemote)
         local card = TTS.Cards[p.id]
         if not present[p] and not leavingPerms[p] and card and card.type == "Creature" then
             leavingPerms[p] = true
-            table.insert(leaving[isRemote], { perm = p, kind = diedPerms[p] and "died" or "returned", untilT = now + LEAVE_TIME, slot = slot })
-            TTS:SafeAfter(LEAVE_TIME + 0.05, function() E:RefreshUI() end)
+            table.insert(leaving[isRemote], { perm = p, kind = diedPerms[p] and "died" or "returned", untilT = now + TIMING.LEAVE_TIME, slot = slot })
+            TTS:SafeAfter(TIMING.LEAVE_TIME + 0.05, function() E:RefreshUI() end)
         end
     end
     local list = leaving[isRemote]
@@ -2233,6 +2461,8 @@ function B:UpdateDisplay()
     concedeBtn:Enable()
 
     B.oppLifeText:SetText(L("board.oppLife", E.opponent or L("side.opponentCap"), E.remoteState.life, E.remoteState.handCount))
+    -- The plate grows to fit a long "Firstname Surname" (the rules / score text follows it)
+    B.oppLifeBtn:SetWidth(math.max(B.oppLifeBtn.minWidth, B.oppLifeText:GetStringWidth() + 18))
     local ruleNames = {}
     if E.isSolo and E.encounter and TTS.GetEncounterRuleLines then
         for _, rule in ipairs(TTS:GetEncounterRuleLines(E.encounter)) do table.insert(ruleNames, rule.name) end
@@ -2376,24 +2606,19 @@ function B:UpdateDisplay()
 
     myDeckFrame.count:SetText(#E.localState.deck)
     oppDeckFrame.count:SetText(E:RemoteDeckCount() or "?")
+    B:UpdateGraveyards()
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
     for i = 1, 10 do
         if i <= oppCount then
             ApplyBackTexture(oppHandFrames[i].back)
-            if isTargetingPlayer then
-                oppHandFrames[i].targetBorder:SetVertexColor(0.2, 1.0, 0.2, 1.0)
-                oppHandFrames[i].targetBorder:Show()
-            else
-                oppHandFrames[i].targetBorder:Hide()
-            end
             oppHandFrames[i]:Show()
         else
             oppHandFrames[i]:Hide()
         end
     end
 
-    local handScale = FitScale(math.min(10, #E.localState.hand), HAND_W, HAND_STEP, HAND_LEFT, HAND_RIGHT, HAND_MAX_SCALE)
+    local handScale = FitScale(math.min(10, #E.localState.hand), LAYOUT.HAND_W, LAYOUT.HAND_STEP, LAYOUT.HAND_LEFT, LAYOUT.HAND_RIGHT, LAYOUT.HAND_MAX_SCALE)
     for i = 1, 10 do
         local cardId = E.localState.hand[i]
         if cardId then
@@ -2420,7 +2645,7 @@ function B:UpdateDisplay()
             else
                 f.border:SetVertexColor(1.0, 1.0, 1.0)
             end
-            PlaceCard(f, i, handScale, HAND_LEFT, HAND_BOTTOM + HAND_H * handScale / 2, HAND_W, HAND_STEP)
+            PlaceCard(f, i, handScale, LAYOUT.HAND_LEFT, LAYOUT.HAND_BOTTOM + LAYOUT.HAND_H * handScale / 2, LAYOUT.HAND_W, LAYOUT.HAND_STEP)
             f:Show()
             UpdateCardRules(f)
         else
@@ -2465,7 +2690,7 @@ function B:UpdateDisplay()
                 -- In your attack step, creatures with summoning sickness are dimmed a little
                 if not perm.tapped and card.type == "Creature" and E.isMyTurn and E.phase == "COMBAT_ATTACK"
                     and perm.sick and not E:HasKeyword(perm, false, "haste") then
-                    shade = SICK_SHADE
+                    shade = TIMING.SICK_SHADE
                 end
                 if IsTargetableCreature(perm, false) then
                     f.border:SetVertexColor(0.2, 1.0, 0.2)
@@ -2491,14 +2716,14 @@ function B:UpdateDisplay()
 
     local function LayoutRow(frames, count, centerY, maxScale)
         count = math.min(count, #frames)
-        local s = FitScale(count, BF_CARD_W, BF_STEP_X, BF_START_X, BF_RIGHT, maxScale)
+        local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, LAYOUT.BF_START_X, LAYOUT.BF_RIGHT, maxScale)
         for k = 1, count do
-            PlaceCard(frames[k], k, s, BF_START_X, centerY, BF_CARD_W, BF_STEP_X)
+            PlaceCard(frames[k], k, s, LAYOUT.BF_START_X, centerY, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X)
             UpdateCardRules(frames[k])
         end
     end
-    LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAND_MAX_SCALE)
-    LayoutRow(myNonLandFrames, myNonLandIdx, ROW_Y.myNonLand, CREATURE_MAX_SCALE)
+    LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAYOUT.LAND_MAX_SCALE)
+    LayoutRow(myNonLandFrames, myNonLandIdx, ROW_Y.myNonLand, LAYOUT.CREATURE_MAX_SCALE)
 
     for i = myLandIdx + 1, #myLandFrames do
         myLandFrames[i]:Hide()
@@ -2562,8 +2787,8 @@ function B:UpdateDisplay()
         end
     end
 
-    LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAND_MAX_SCALE)
-    LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, CREATURE_MAX_SCALE)
+    LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAYOUT.LAND_MAX_SCALE)
+    LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, LAYOUT.CREATURE_MAX_SCALE)
 
     -- Damage / healing numbers for this redraw (cards are in place now)
     EmitFloats()
@@ -2604,7 +2829,7 @@ TTS.CARD_FRAME_DEF      = CARD_FRAME_DEF
 TTS.UpdateCardRules     = UpdateCardRules  -- prints rules text on any card made by CreateCardFrame
 TTS.FormatPT            = FormatPT         -- P/T with damage shown, used by the card tooltips
 TTS.PaintPreviewCard    = PaintPreviewCard -- full-size preview card in the board's design
-TTS.PREVIEW_W, TTS.PREVIEW_H = PREVIEW_W, PREVIEW_H
+TTS.PREVIEW_W, TTS.PREVIEW_H = LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H
 B.myHandFrames          = myHandFrames  -- read by TargetFX.lua (targeting arrow source)
 -- Read by CardDrag.lua (drag sources and drop targets)
 B.oppHandFrames         = oppHandFrames
@@ -2612,8 +2837,8 @@ B.myLandFrames          = myLandFrames
 B.myNonLandFrames       = myNonLandFrames
 B.oppLandFrames         = oppLandFrames
 B.oppNonLandFrames      = oppNonLandFrames
-B.HAND_W, B.HAND_H      = HAND_W, HAND_H
-B.HAND_TOP              = HAND_BOTTOM + HAND_H * HAND_MAX_SCALE   -- top of the hand row, in board coordinates
+B.HAND_W, B.HAND_H      = LAYOUT.HAND_W, LAYOUT.HAND_H
+B.HAND_TOP              = LAYOUT.HAND_BOTTOM + LAYOUT.HAND_H * LAYOUT.HAND_MAX_SCALE   -- top of the hand row, in board coordinates
 B.MIDLINE               = (ROW_Y.myNonLand + ROW_Y.oppNonLand) / 2 -- between the two creature rows
 
 -- =========================================================================
@@ -2626,6 +2851,6 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
     self:UnregisterAllEvents()
     local saved = TTS.Options and tonumber(TTS.Options:Get("boardScale"))
     if saved then
-        B:SetScale(math.max(BOARD_MIN_SCALE, math.min(BOARD_MAX_SCALE, saved)))
+        B:SetScale(math.max(LAYOUT.BOARD_MIN_SCALE, math.min(LAYOUT.BOARD_MAX_SCALE, saved)))
     end
 end)

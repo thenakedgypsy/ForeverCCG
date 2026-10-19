@@ -61,11 +61,7 @@ end)
 
 btn:SetScript("OnDragStop", function(self)
     self:SetScript("OnUpdate", nil)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0.1, function() isDragging = false end)
-    else
-        isDragging = false
-    end
+    C_Timer.After(0.1, function() isDragging = false end)
 end)
 
 -- =========================================================================

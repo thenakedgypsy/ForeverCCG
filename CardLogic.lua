@@ -315,9 +315,15 @@ function E:PutInZone(zone, cardId, front)
     return true
 end
 
+-- Sides in the order deaths are checked: the side whose turn it is first, so both PvP
+-- clients put denizens that die together into graveyards (and run their Martyrdoms) in the
+-- same order. Each client checking its own side first left the order differing, and
+-- Whitemane returns the last denizen put into the graveyard.
+local ACTIVE_SIDE_FIRST = { [true] = { false, true }, [false] = { true, false } }
+
 -- Returns the first creature (isRemote, index, perm) with lethal damage, or nil
 local function FindLethalCreature(self)
-    for _, isRemote in ipairs({ false, true }) do
+    for _, isRemote in ipairs(ACTIVE_SIDE_FIRST[self.isMyTurn and true or false]) do
         local field = isRemote and self.remoteState.field or self.localState.field
         for i = #field, 1, -1 do
             local perm = field[i]

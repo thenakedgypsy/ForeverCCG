@@ -24,6 +24,13 @@
 *   fix for PvP life totals drifting apart when a player had a damage shield (Power Word: Shield): the attacker's client ignored it, so it could see a win while the other player was still alive
 *   fix for "No player named ... is currently playing" spam from the addon checking whether your contacts are online (it still showed in a second chat tab, or when the check went out late)
 *   new Lock checkbox at the top of the board: tick it and the board can't be dragged around by accident (remembered between sessions)
+*   new graveyard buttons on the board, one for each player: click to list the cards in that graveyard (most recent first) and hover one to see it in the preview
+*   options: each kind of tooltip detail panel (keywords, abilities, effects, statuses, symbols, attached cards) can now be switched off
+*   decks now shuffle on screen at the start of a game, and yours again when you mulligan (off with "Animate played cards")
+*   the opponent's hand no longer lights up as a target while you choose one: target the opponent with their name plate
+*   fix for long opponent names spilling out of their name plate
+*   fix for PvP games drifting apart when denizens on both sides died at once (e.g. a Martyrdom during combat): each player's client put them into the graveyards in a different order, so High Inquisitor Whitemane could return a different denizen for each player
+*   fix for being unable to end your turn when Herod arrived after combat (e.g. cast in Main Phase 2): he only has to attack while combat is still to come
 *   deckbuilder: new Keyword filter (e.g. show only Support or Airborne cards)
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside denizens
 *   added new art for hearthstones

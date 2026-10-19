@@ -398,11 +398,9 @@ function H:DressModel(model, items, onDressed)
         if onDressed then pcall(onDressed) end
     end
     Dress()
-    if C_Timer then
-        C_Timer.After(0.3, Dress)
-        C_Timer.After(1, Dress)
-        C_Timer.After(2.5, Dress)   -- items the server was still sending
-    end
+    C_Timer.After(0.3, Dress)
+    C_Timer.After(1, Dress)
+    C_Timer.After(2.5, Dress)   -- items the server was still sending
 end
 
 -- The moment the opponent can be drawn live (targeted, moused over, focused or grouped),
