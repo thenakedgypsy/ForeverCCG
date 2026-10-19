@@ -44,6 +44,13 @@ local function CardTag(card)
     return "[Forever CCG: " .. TTS:CardName(card) .. " #" .. card.id .. "]"
 end
 
+-- The tag for a card, for chat the addon sends itself (e.g. the gift emotes)
+function TTS:CardTag(cardId)
+    local card = TTS.Cards and TTS.Cards[cardId]
+    if not (card and card.name) then return tostring(cardId) end
+    return CardTag(card)
+end
+
 -- Shift-clicking a card while a chat box is open inserts its tag. Returns true when it did,
 -- so click handlers can stop there instead of also playing / adding the card.
 function TTS:TryLinkCard(cardId)

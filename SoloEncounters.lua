@@ -475,7 +475,9 @@ function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
     local hTotal, hCollected, hMastered = 0, 0, 0
     for _, card in pairs(TTS.Cards or {}) do
-        if card.type == "Creature" and (card.isBoss or card.isReward) then
+        if card.isBeta then
+            -- Beta players only: no one else can get it, so it never counts towards a collection
+        elseif card.type == "Creature" and (card.isBoss or card.isReward) then
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end

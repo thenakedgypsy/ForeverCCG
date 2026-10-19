@@ -104,6 +104,8 @@ TT.SYMBOLS = {
     R       = { name = "Fire",          text = "One Fire mana, made by Exhausting a Fire Prayer. Fire cards bring aggression, direct burn, Quick denizens and burst damage." },
     G       = { name = "Nature",        text = "One Nature mana, made by Exhausting a Nature Prayer. Nature cards bring mana ramp, Anti-Air blockers and massive behemoths." },
     T       = { name = "Exhaust",           text = "Exhaust the card (it turns grey and shows this symbol) to use the ability. An Exhausted card stays Exhausted until it Recovers at the start of its controller's turn. Attacking also Exhausts denizens that aren't Vigilant." },
+    -- {T}(1) in rules text (the Cracked Hearths)
+    TAP1    = { name = "Exhaust (1)",       text = "Exhaust this card and one other ready Prayer you control to use the ability. Both Recover at the start of your turn as usual." },
     GENERIC = { name = "Generic Mana",  text = "A number in brackets is generic mana: pay it with mana of any colour." },
     X       = { name = "X",             text = "X stands for a number chosen when the card is played." },
     SKULL   = { name = "Lethal",        text = "This denizen dies if the current blocks are accepted." },
@@ -113,6 +115,7 @@ local function SymbolIcon(key, size)
     size = size or 16
     if key == "SKULL" then return string.format("|T%s:%d:%d:0:0|t", SKULL_TEX, size, size) end
     if key == "GENERIC" then return Sym("{1}", size) end
+    if key == "TAP1" then return Sym("{T}", size) .. "(1)" end
     return Sym("{" .. key .. "}", size)
 end
 
@@ -967,11 +970,14 @@ local function SymbolPanels(card, ctx)
         end
     end
 
+    -- {T}(1): its own panel, in place of plain Exhaust
+    local tapOne = (card.text or ""):find("{T}(1)", 1, true)
+    if tapOne then add("TAP1") end
     for token in ((card.cost or "") .. " " .. (card.text or "")):gmatch("{(%w+)}") do
         local key = token:upper()
         if tonumber(token) then key = "GENERIC" end
         if key == "TAP" then key = "T" end
-        add(key)
+        if not (tapOne and key == "T") then add(key) end
     end
 
     -- Symbols drawn on the card itself on the board

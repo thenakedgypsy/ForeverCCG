@@ -158,10 +158,12 @@ function TTS:AskNpcForCard(npcId)
     TTS:MarkCardNew(card.id)
     local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
     DEFAULT_CHAT_FRAME:AddMessage(L("npc.gotCard", link, copies))
-    -- "/e was gifted a Forever: CCG card by Innkeeper Brianna!" (sent from the gossip click)
+    -- "/e was gifted [Card Name] by Innkeeper Brianna!" (a card link, UI\CardLinks.lua;
+    -- sent from the gossip click)
     local npcName = UnitName("npc")
     if npcName and not IsSecret(npcName) and npcName ~= "" then
-        pcall(SendChatMessage, L("emote.gifted", npcName), "EMOTE")
+        local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
+        pcall(SendChatMessage, L("emote.giftedCard", tag, npcName), "EMOTE")
         -- then a thank-you /bow, a moment later so it doesn't collide with the text above
         TTS:SafeAfter(0.5, function() DoEmote("BOW") end)
     end
