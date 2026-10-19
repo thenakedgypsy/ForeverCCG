@@ -464,6 +464,7 @@ B:SetScript("OnShow", function(self)
     if TTS.RedrawCardModels then TTS.RedrawCardModels() end
     if self.soundCheck and TTS.Sound then self.soundCheck:SetChecked(TTS.Sound.enabled) end
     if self.autoPayCheck and TTS.Options then self.autoPayCheck:SetChecked(TTS.Options:Get("autoPayMana") ~= false) end
+    if self.autoPassCheck and TTS.Options then self.autoPassCheck:SetChecked(TTS.Options:Get("autoPassBlocks") ~= false) end
     if self.lockCheck and TTS.Options then self.lockCheck:SetChecked(TTS.Options:Get("boardLocked") and true or false) end
     self:UpdateDisplay()
 end)
@@ -518,10 +519,31 @@ autoPayCheck:SetScript("OnEnter", function(self)
 end)
 autoPayCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- Auto-pass: with nothing able to block an attack, blocking is passed on after a second
+-- (CoreEngine.lua, E:AutoPassBlocksSoon)
+local autoPassCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
+autoPassCheck:SetSize(24, 24)
+autoPassCheck:SetPoint("RIGHT", autoPayLabel, "LEFT", -10, -1)
+autoPassCheck:SetScript("OnClick", function(self)
+    if TTS.Options then TTS.Options:Set("autoPassBlocks", self:GetChecked() and true or false) end
+    -- Ticked during an attack nothing can block: pass on it as usual
+    if self:GetChecked() and TTS.Engine.AutoPassBlocksSoon then TTS.Engine:AutoPassBlocksSoon() end
+end)
+B.autoPassCheck = autoPassCheck   -- set from the saved option when the board opens
+
+local autoPassLabel = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+autoPassLabel:SetPoint("RIGHT", autoPassCheck, "LEFT", 0, 1)
+Loc:Bind(autoPassLabel, "board.autoPass")
+autoPassCheck:SetHitRectInsets(-(autoPassLabel:GetStringWidth() + 4), 0, 0, 0)
+autoPassCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("board.autoPassTitle"), L("board.autoPassDesc"))
+end)
+autoPassCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 -- Lock: the board can't be dragged (OnDragStart above)
 local lockCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
 lockCheck:SetSize(24, 24)
-lockCheck:SetPoint("RIGHT", autoPayLabel, "LEFT", -10, -1)
+lockCheck:SetPoint("RIGHT", autoPassLabel, "LEFT", -10, -1)
 lockCheck:SetScript("OnClick", function(self)
     if TTS.Options then TTS.Options:Set("boardLocked", self:GetChecked() and true or false) end
 end)
@@ -535,11 +557,6 @@ lockCheck:SetScript("OnEnter", function(self)
     TT:ShowText(self, "ANCHOR_TOP", L("board.lockTitle"), L("board.lockDesc"))
 end)
 lockCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
-
--- Subtitle in the title strip, as on the other Forever: CCG windows
-local subtitle = B:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-subtitle:SetPoint("RIGHT", lockLabel, "LEFT", -14, 0)
-subtitle:SetText("Forever: CCG")
 
 B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.endTurnBtn:SetSize(90, 24)

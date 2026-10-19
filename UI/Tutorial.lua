@@ -175,6 +175,13 @@ E.AutoPayEnabled = function(self, ...)
     return autoPayEnabled(self, ...)
 end
 
+-- The tutorial teaches blocking by hand: no automatic passing in it
+local autoPassEnabled = E.AutoPassEnabled
+E.AutoPassEnabled = function(self, ...)
+    if T.active and self.inMatch then return false end
+    return autoPassEnabled(self, ...)
+end
+
 -- Starts the tutorial game (not while another game is on)
 function TTS:StartTutorial()
     if E.inMatch then

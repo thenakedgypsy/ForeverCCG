@@ -595,6 +595,10 @@ function E:AutoPayEnabled()
     return TTS.Options and TTS.Options:Get("autoPayMana") ~= false
 end
 
+function E:AutoPassEnabled()
+    return TTS.Options and TTS.Options:Get("autoPassBlocks") ~= false
+end
+
 -- The player's affordability check: the pool alone, or the pool plus untapped prayers with auto-pay
 function E:CanPayManaAuto(costString)
     if self:CanPayMana(costString) then return true end
@@ -783,12 +787,13 @@ end
 local AUTO_PASS_BLOCK_DELAY = 1
 
 -- The opponent's attack is fully declared: with nothing able to block it, pass on blocks
--- after a moment (unless the board has changed, or the player is mid-choice or targeting)
+-- after a moment (unless the board has changed, the player is mid-choice or targeting, or
+-- the board's Auto-pass checkbox has been unticked meanwhile)
 function E:AutoPassBlocksSoon()
     local bs = self.blockingState
-    if not (bs and bs.isRemoteAttacking) or self:CanBlockAny(bs) then return end
+    if not (bs and bs.isRemoteAttacking) or not self:AutoPassEnabled() or self:CanBlockAny(bs) then return end
     TTS:SafeAfter(AUTO_PASS_BLOCK_DELAY, function()
-        if self.inMatch and self.phase == "COMBAT_BLOCK" and self.blockingState == bs
+        if self.inMatch and self.phase == "COMBAT_BLOCK" and self.blockingState == bs and self:AutoPassEnabled()
             and not bs.blocksDeclared and next(bs.blocks) == nil and (self.isSolo or bs.attacksDone)
             and not self.targeting and not self:HasPendingChoice() and not self:CanBlockAny(bs) then
             self:NextPhase()

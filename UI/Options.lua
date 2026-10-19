@@ -33,6 +33,7 @@ local DEFAULTS = {
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
     animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
     autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
+    autoPassBlocks = true,   -- no blocks possible: pass on blocking after a second (the board's Auto-pass checkbox)
     gameLogFolded = false,   -- the board's game log folded up to its title (Board.lua)
     boardLocked = false,     -- the board can't be dragged (the board's Lock checkbox)
     sound = {
