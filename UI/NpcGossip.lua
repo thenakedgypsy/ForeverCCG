@@ -228,8 +228,8 @@ local function GiveFrom(source)
     if npcName and not IsSecret(npcName) and npcName ~= "" then
         local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
         pcall(SendChatMessage, L("emote.giftedCard", tag, npcName), "EMOTE")
-        -- then a thank-you /bow, a moment later so it doesn't collide with the text above
-        TTS:SafeAfter(0.5, function() DoEmote("BOW") end)
+        -- then a /ty (the THANK emote token), a moment later so it doesn't collide with the text above
+        TTS:SafeAfter(0.5, function() DoEmote("THANK") end)
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()
