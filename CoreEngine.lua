@@ -750,7 +750,7 @@ end
 
 -- Seconds the blocks stay on the board (arrows and skulls) before a turn set to end after
 -- combat resolves them, so the player still sees who blocked what
-local AUTO_RESOLVE_DELAY = 0.5
+local AUTO_RESOLVE_DELAY = 1
 
 -- Our attack's blocks are in and the turn is set to end after combat: show them, then
 -- resolve (unless the player resolved, cancelled End Turn After Combat, or the match ended)
