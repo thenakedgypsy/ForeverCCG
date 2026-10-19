@@ -31,6 +31,7 @@ local CARD_FRAMES = {
     B       = TEXTURE_ROOT .. "Cards\\card_frame_shadow.png",
     R       = TEXTURE_ROOT .. "Cards\\card_frame_fire.png",
     G       = TEXTURE_ROOT .. "Cards\\card_frame_nature.png",
+    C       = TEXTURE_ROOT .. "Cards\\card_frame_neutral.png",   -- colourless (Gear Cards)
     HOLY    = TEXTURE_ROOT .. "Cards\\card_frame_holy.png",
     ARCANE  = TEXTURE_ROOT .. "Cards\\card_frame_arcane.png",
     SHADOW  = TEXTURE_ROOT .. "Cards\\card_frame_shadow.png",
