@@ -7,7 +7,7 @@
 *   your opponent's Hero card shows their real character when you can see them (target, mouseover or group). Out of sight, it's a class trainer of their race and gender, wearing their gear
 *   new keyword `Shielded`: the next damage the denizen would take is negated, then it loses Shielded. Power Word: Shield, Blessing of Protection, Divine Shield and Evasion now grant it
 *   new to Forever: CCG? A Quick Start walkthrough greets you the first time you open the addon, and a short guided tutorial game teaches you the basics turn by turn (Play Tutorial in Rules & Guide, or /tragic tutorial)
-*   Rules & Guide rewritten to be friendlier and up to date
+*   Rules & Guide rebuilt: a tab per topic (Quick Start, Building a Deck, Collecting Cards, Prayers & Mana, Your Turn, Combat, Keywords, Card Terms, Solo Mode, Playing Others), each opening with an "In short" summary, then bite-sized sections, example cards for every keyword and card term, worked combat examples and buttons straight into the tutorial, Solo Encounters and the Waiting Room
 *   new keyword `Support`: the denizen can block an attacker alongside other blockers, and every denizen in that fight deals its full combat damage to each denizen on the other side
 *   `Support` added to Kurzen Medicine Man, Crimson Initiate, Defias Watchman, Crimson Gallant, Hillsbrad Miner, Scarlet Vanguard, Porcine Entourage, Palemane Tanner and Razorfen Geomancer
 *   solo opponents gang-block with Support denizens when that kills the attacker without losing any of them
