@@ -977,6 +977,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
+    self.awaitingDeckPick = nil   -- set by Network.lua after accepting a challenge
     -- Hero cards (Hero.lua): the opponent's stands in until their HEROINFO arrives; ours goes
     -- to them before any card can be played
     if TTS.Hero then

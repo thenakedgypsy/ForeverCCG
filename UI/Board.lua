@@ -2564,7 +2564,8 @@ function B:UpdateDisplay()
         B.nextPhaseBtn:SetText(L(hasAttackers and "board.btn.declareBlocks" or "board.btn.toMain2"))
         B.endTurnBtn:Enable()
     elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
-        B.nextPhaseBtn:SetText(L("board.btn.opponentTurn"))
+        -- After accepting a challenge, until the challenger has chosen their deck (Network.lua)
+        B.nextPhaseBtn:SetText(L(E.awaitingDeckPick and "board.btn.oppPickingDeck" or "board.btn.opponentTurn"))
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()
     else

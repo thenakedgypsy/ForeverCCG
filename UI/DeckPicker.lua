@@ -19,7 +19,7 @@ local Loc = TTS.Locale
 --
 --   TTS.DeckPicker:Open({ opponent = name, timeout = seconds or nil,
 --                         onPick = function(deckIndex) end, onCancel = function() end })
--- With a timeout the selected deck is played when it runs out.
+-- With a timeout the selected deck is played when it runs out, and there is no Cancel.
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local GOLD, GREEN, RED = "|cFFFFD200", "|cFF00FF00", "|cFFFF4444"
@@ -186,6 +186,10 @@ function P:Open(opts)
 
     request = opts or {}
     deadline = request.timeout and (GetTime() + request.timeout) or nil
+    -- A game with a timeout (PvP) can't be backed out of: the selected deck plays when it runs out
+    cancelBtn:SetShown(not deadline)
+    playBtn:ClearAllPoints()
+    playBtn:SetPoint("BOTTOM", P, "BOTTOM", deadline and 0 or -60, 36)
     subtitle:SetText(request.opponent and L("picker.vs", request.opponent) or "")
     countdown:SetText("")
     Refresh()

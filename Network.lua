@@ -1007,6 +1007,15 @@ local function SwapHeroIds(msg)
     return (msg:gsub("[^:,;]+", HERO_SWAP))
 end
 
+-- Closes the "accepted your challenge" popup if it is for this player (without sending a
+-- cancel: they are the one who left). True if it was open.
+function TTS.Net:CloseAcceptedPopup(name)
+    if not (self.acceptedBy and name and self.acceptedBy:lower() == name:lower()) then return false end
+    self.acceptedBy = nil
+    StaticPopup_Hide("TTS_CHALLENGE_ACCEPTED")
+    return true
+end
+
 function TTS.Net:OnReceive(msg, sender)
     sender = NormalizeName(sender)
     if msg:sub(1, 7) == "ACTION:" then msg = SwapHeroIds(msg) end
@@ -1147,6 +1156,7 @@ function TTS.Net:OnReceive(msg, sender)
         -- Already accepted and picking a deck for a game with them
         if picker and picker:IsPendingWith(sender) then return end
         if (TTS.Net.incomingChallenge and not SameName(TTS.Net.incomingChallenge, sender))
+            or TTS.Net.acceptedBy
             or (picker and picker:IsPending() and not picker:IsPendingWith(sender)) then
             TTS.Net:Send(sender, "DECLINE:BUSY")
             Print(L("net.autoDeclineBusy", sender))
@@ -1172,6 +1182,8 @@ function TTS.Net:OnReceive(msg, sender)
                 end
                 -- Pick a deck, then accept. The ACCEPT goes once the deck is picked, so the
                 -- challenger (who goes first) can't start before we're ready.
+                -- Announce the game from this native popup's button (blocked from the deck picker's)
+                pcall(SendChatMessage, L("emote.started", sender), "EMOTE")
                 local timeLeft = receivedAt + INVITE_EXPIRY - DECK_PICK_MARGIN - time()
                 TTS.DeckPicker:Open({
                     opponent = sender,
@@ -1187,6 +1199,9 @@ function TTS.Net:OnReceive(msg, sender)
                         TTS.Engine:StartMatch(sender, false, false)
                         TTS.Engine.opponentScore = theirScore
                         TTS.Engine.remoteState.handCount = 7
+                        -- They choose their deck only now: shown until their first message (ACTION below)
+                        TTS.Engine.awaitingDeckPick = true
+                        TTS.Engine:Log(L("log.waitDeckPick", sender), "SYSTEM")
                         TTS.Engine:RefreshUI()
                     end,
                     onCancel = function()
@@ -1237,7 +1252,8 @@ function TTS.Net:OnReceive(msg, sender)
             return
         end
 
-        if (TTS.Engine and TTS.Engine.inMatch) or (TTS.DeckPicker and TTS.DeckPicker:IsPending()) then
+        if (TTS.Engine and TTS.Engine.inMatch) or TTS.Net.acceptedBy
+            or (TTS.DeckPicker and TTS.DeckPicker:IsPending()) then
             TTS.Net:Send(sender, "CANCEL:IN_MATCH")
             Print(L("net.acceptedInMatch", sender))
             return
@@ -1254,21 +1270,55 @@ function TTS.Net:OnReceive(msg, sender)
         -- They have started already and wait for our first turn while we pick a deck.
         -- The match id lets their messages in meanwhile (a concede, see ACTION below).
         TTS.Net.matchId = invite.matchId
-        TTS.DeckPicker:Open({
-            opponent = sender,
-            timeout = DECK_PICK_TIMEOUT,
-            onPick = function()
-                if not TTS.Engine then return end
-                TTS.Engine:StartMatch(sender, true, false)
-                TTS.Engine.opponentScore = theirScore
-                TTS.Engine.remoteState.handCount = 7
-                TTS.Engine:RefreshUI()
+        -- A popup first: the game's emote is only allowed from a native popup's button
+        -- (the client blocks it from the deck picker's), as the match result's is
+        TTS.Net.acceptedBy = sender
+        TTS.Net.earlyHero = nil
+        local acceptedAt = GetTime()
+        -- No way back from here: unclicked, the popup times out into the deck picker
+        -- (without the emote), which plays the selected deck when its own time runs out
+        local function OpenPicker()
+            TTS.Net.acceptedBy = nil
+            TTS.DeckPicker:Open({
+                opponent = sender,
+                timeout = math.max(5, DECK_PICK_TIMEOUT - (GetTime() - acceptedAt)),
+                onPick = function()
+                    if not TTS.Engine then return end
+                    TTS.Engine:StartMatch(sender, true, false)
+                    TTS.Engine.opponentScore = theirScore
+                    TTS.Engine.remoteState.handCount = 7
+                    -- Their hero arrived while we were choosing (StartMatch put a stand-in up)
+                    local early = TTS.Net.earlyHero
+                    TTS.Net.earlyHero = nil
+                    if early and SameName(early.name, sender) and TTS.Hero then
+                        local p = early.parts
+                        TTS.Hero:SetOpponent(sender, p[3], p[4], p[5], p[6], p[7])
+                    end
+                    TTS.Engine:RefreshUI()
+                end,
+                -- No playable deck when the time ran out. Their game has started:
+                -- a CANCEL from their opponent ends it ("setup cancelled")
+                onCancel = function()
+                    TTS.Net:Send(sender, "CANCEL:REFUSED")
+                end,
+            })
+        end
+        StaticPopupDialogs["TTS_CHALLENGE_ACCEPTED"] = {
+            text = L("net.acceptedPopup", sender),
+            button1 = L("net.chooseDeck"),
+            OnAccept = function()
+                pcall(SendChatMessage, L("emote.started", sender), "EMOTE")
+                OpenPicker()
             end,
-            onCancel = function()
-                -- Their game has started: a CANCEL from their opponent ends it ("setup cancelled")
-                TTS.Net:Send(sender, "CANCEL:REFUSED")
+            -- The timeout (there is no Cancel button, and Escape doesn't close it)
+            OnCancel = function()
+                if TTS.Net.acceptedBy then OpenPicker() end
             end,
-        })
+            timeout = DECK_PICK_TIMEOUT / 2,
+            whileDead = true,
+            hideOnEscape = false,
+        }
+        StaticPopup_Show("TTS_CHALLENGE_ACCEPTED")
 
     elseif cmd == "DECLINE" or cmd == "CANCEL" then
         local key = sender:lower()
@@ -1278,7 +1328,9 @@ function TTS.Net:OnReceive(msg, sender)
 
         local reason = parts[2] or "Declined"
         -- Gone while we were still picking a deck for the game with them
-        if TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender) then
+        if TTS.Net:CloseAcceptedPopup(sender) then
+            wasInvited = true
+        elseif TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender) then
             TTS.DeckPicker:Abort()
             wasInvited = true
         end
@@ -1301,14 +1353,29 @@ function TTS.Net:OnReceive(msg, sender)
         if not E then return end
 
         -- They left while we were picking a deck (they started as soon as they accepted)
-        if actionType == "CONCEDE" and TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender) then
+        if actionType == "CONCEDE" and (TTS.Net:CloseAcceptedPopup(sender)
+            or (TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender))) then
             TTS.DeckPicker:Abort()
             Print(L("picker.opponentLeft", sender))
             return
         end
 
+        -- They send their hero as their game starts, while we're still choosing a deck:
+        -- kept until ours starts (the ACCEPT handler applies it)
+        if actionType == "HEROINFO" and (SameName(TTS.Net.acceptedBy, sender)
+            or (TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender))) then
+            TTS.Net.earlyHero = { name = sender, parts = parts }
+            return
+        end
+
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
+
+        -- Their first message (HEROINFO) means they have chosen their deck
+        if E.awaitingDeckPick then
+            E.awaitingDeckPick = nil
+            E:RefreshUI()
+        end
 
         if actionType == "HEROINFO" then
             -- HEROINFO:<level>:<class>:<race id>:<sex>:<item ids>, sent as the match starts
