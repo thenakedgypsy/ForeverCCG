@@ -522,6 +522,9 @@ function TTS.BossTracker:ScanAllBosses()
     for cardId, card in pairs(TTS.Cards or {}) do
         if card.isBoss and not card.isMob then
             local kills = self:GetBossKills(card)
+            -- Copies taken away by the developer stay away (AdminGrants.lua)
+            local cap = TTS_AdminCaps and tonumber(TTS_AdminCaps[cardId])
+            if cap then kills = math.min(kills, cap) end
             local oldKills = SanitizeKillCount(TTS_KilledBosses[cardId])
 
             if kills > oldKills then

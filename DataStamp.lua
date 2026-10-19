@@ -23,6 +23,8 @@ local CLEARED = {
     "TTS_KilledBosses", "TTS_SoloProgress", "TTS_NpcGifts", "TTS_HeroChoices",
     "TTS_SavedDecks", "TTS_ActiveDeckIndex", "TTS_NewCards",
 }
+-- AdminGrants.lua clears the same data when told to wipe a player
+TTS.COLLECTION_VARS = CLEARED
 
 -- Given to every player whose beta collection was cleared (Cards\Special.lua)
 local BETA_CARD = "BUGREPORTER"
