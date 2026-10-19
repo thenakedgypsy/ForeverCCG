@@ -157,6 +157,7 @@ end
 -- Forward declarations for the camera / printed-text refreshers (run when the board is rescaled)
 local RefreshAllModelCameras
 local RefreshCardText
+local QueueBoardModelReload
 -- Forward declarations for the hover preview (built once CreateCardFrame exists)
 local ShowBoardPreview, HideBoardPreview
 
@@ -294,6 +295,7 @@ B:SetScript("OnMouseWheel", function(self, delta)
         SaveBoardScale()
         if RefreshAllModelCameras then RefreshAllModelCameras() end
         if RefreshCardText then RefreshCardText() end
+        if QueueBoardModelReload then QueueBoardModelReload() end
     end
 end)
 B:Hide()
@@ -322,8 +324,14 @@ resizer:SetScript("OnMouseDown", function(self, button)
     end
 end)
 
-resizer:SetScript("OnMouseUp", function() isRescaling = false end)
-resizer:SetScript("OnHide", function() isRescaling = false end)
+-- The models are reloaded once the drag ends, not on every frame of it
+local function StopRescaling()
+    if not isRescaling then return end
+    isRescaling = false
+    if QueueBoardModelReload then QueueBoardModelReload() end
+end
+resizer:SetScript("OnMouseUp", StopRescaling)
+resizer:SetScript("OnHide", StopRescaling)
 resizer:SetScript("OnUpdate", function(self)
     if isRescaling then
         local cx, cy = GetCursorPosition()
@@ -598,7 +606,8 @@ B.mulliganBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 B.mulliganBtn:Hide()
 
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-B.phaseText:SetPoint("TOP", 0, -22)
+B.phaseText:SetPoint("TOPLEFT", 30, -22)
+B.phaseText:SetJustifyH("LEFT")
 Loc:Bind(B.phaseText, "phase.label", "SETUP")
 
 -- =========================================================================
@@ -640,7 +649,7 @@ end
 B.oppLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.oppLifeBtn:SetSize(270, 28)
 B.oppLifeBtn.minWidth = 270   -- wider for a long name (UpdateDisplay)
-B.oppLifeBtn:SetPoint("TOPLEFT", 24, -15)
+B.oppLifeBtn:SetPoint("TOP", 0, -15)
 Skin(B.oppLifeBtn, "control", STYLE.controlBg, STYLE.controlBorder)
 B.oppLifeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
@@ -648,17 +657,18 @@ B.oppLifeText = B.oppLifeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLar
 B.oppLifeText:SetPoint("LEFT", B.oppLifeBtn, "LEFT", 8, 0)
 B.oppLifeText:SetJustifyH("LEFT")
 
--- Solo encounter rules, beside the opponent's name (details in its tooltip)
+-- Solo encounter rules, left of the opponent's name (details in its tooltip); the
+-- top-right controls leave no room on its right
 B.oppRulesText = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-B.oppRulesText:SetPoint("TOPLEFT", B.oppLifeBtn, "TOPRIGHT", 8, -2)
+B.oppRulesText:SetPoint("TOPRIGHT", B.oppLifeBtn, "TOPLEFT", -8, -2)
 B.oppRulesText:SetWidth(220)
-B.oppRulesText:SetJustifyH("LEFT")
+B.oppRulesText:SetJustifyH("RIGHT")
 B.oppRulesText:SetTextColor(1, 0.5, 0.25)
 
 -- PvP opponent's collection score, in the same spot (solo games have rules there instead)
 B.oppScoreText = B:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-B.oppScoreText:SetPoint("LEFT", B.oppLifeBtn, "RIGHT", 8, 0)
-B.oppScoreText:SetJustifyH("LEFT")
+B.oppScoreText:SetPoint("RIGHT", B.oppLifeBtn, "LEFT", -8, 0)
+B.oppScoreText:SetJustifyH("RIGHT")
 
 B.oppLifeBtn:SetScript("OnClick", function(self, btn)
     if not TTS.Engine.inMatch then return end
@@ -1141,7 +1151,7 @@ end
 -- =========================================================================
 LAYOUT.HAND_W, LAYOUT.HAND_H, LAYOUT.HAND_STEP = 72, 102, 96
 LAYOUT.HAND_LEFT, LAYOUT.HAND_RIGHT, LAYOUT.HAND_BOTTOM = 35, 1054, 52   -- right edge stops short of your deck
-LAYOUT.HAND_MAX_SCALE = 1.2
+LAYOUT.HAND_MAX_SCALE = 1.1   -- keeps a two-line title and its cost under the battlefield
 
 LAYOUT.BF_CARD_W  = 64
 LAYOUT.BF_CARD_H  = 84
@@ -1152,13 +1162,24 @@ LAYOUT.LAND_MAX_SCALE     = 1.0
 LAYOUT.CREATURE_MAX_SCALE = 1.2
 LAYOUT.MAX_CREATURE_FRAMES = 16   -- cards each creature row can show; they shrink to fit (FitScale)
 
--- Vertical centre of each battlefield row, measured up from the board's bottom edge
-local ROW_Y = {
-    myLand     = 256,
-    myNonLand  = 380,
-    oppNonLand = 513,
-    oppLand    = 638,
-}
+-- Vertical centre of each battlefield row, measured up from the board's bottom edge. Rows
+-- stack up from BF_BOTTOM, each leaving room above its cards for a two-line title
+-- (GameFontHighlightSmall lines, its 3px offset and a little clearance), scaled with the row.
+-- The top row's title ends just under the opponent's hand.
+LAYOUT.BF_BOTTOM  = 212
+LAYOUT.TITLE_ROOM = 2 * 11 + 3 + 3
+local ROW_Y = {}
+do
+    local y = LAYOUT.BF_BOTTOM
+    for _, row in ipairs({
+        { "myLand", LAYOUT.LAND_MAX_SCALE }, { "myNonLand", LAYOUT.CREATURE_MAX_SCALE },
+        { "oppNonLand", LAYOUT.CREATURE_MAX_SCALE }, { "oppLand", LAYOUT.LAND_MAX_SCALE },
+    }) do
+        local h = LAYOUT.BF_CARD_H * row[2]
+        ROW_Y[row[1]] = y + h / 2
+        y = y + h + LAYOUT.TITLE_ROOM * row[2]
+    end
+end
 
 local function AttachSlot(f)
     f.slot = CreateFrame("Frame", nil, B)
@@ -1189,22 +1210,37 @@ local function ReloadModels(list)
     end
 end
 
-local function PlaceCard(f, i, s, left, centerY, cardW, step)
-    if (f.baseScale or 1) ~= s and f.model then
-        if not next(resizedFrames) then
-            TTS:SafeAfter(0, function() ReloadModels(resizedFrames) end)
-            TTS:SafeAfter(TIMING.MODEL_RESIZE_DELAY, function()
-                local list = resizedFrames
-                resizedFrames = {}
-                ReloadModels(list)
-            end)
-        end
-        resizedFrames[f] = true
+local function QueueModelReload(f)
+    if not next(resizedFrames) then
+        TTS:SafeAfter(0, function() ReloadModels(resizedFrames) end)
+        TTS:SafeAfter(TIMING.MODEL_RESIZE_DELAY, function()
+            local list = resizedFrames
+            resizedFrames = {}
+            ReloadModels(list)
+        end)
     end
+    resizedFrames[f] = true
+end
+
+-- Any resize on the battlefield (a row rescaling, or the board itself) reloads every
+-- battlefield model, not just the cards whose size changed
+QueueBoardModelReload = function()
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+        for _, f in ipairs(group) do
+            if f.model and f:IsShown() then QueueModelReload(f) end
+        end
+    end
+end
+
+-- Returns true when the card's size changed
+local function PlaceCard(f, i, s, left, centerY, cardW, step)
+    local resized = (f.baseScale or 1) ~= s
+    if resized and f.model then QueueModelReload(f) end
     f.baseScale = s
     f:SetScale(f.hovered and s * 1.18 or s)
     f.slot:ClearAllPoints()
     f.slot:SetPoint("CENTER", B, "BOTTOMLEFT", left + (i - 1) * step * s + cardW * s / 2, centerY)
+    return resized
 end
 
 -- Prints the card's rules on it when the card is wide enough on screen; otherwise
@@ -2720,11 +2756,15 @@ function B:UpdateDisplay()
         end
     end
 
+    local boardResized = false
     local function LayoutRow(frames, count, centerY, maxScale)
         count = math.min(count, #frames)
         local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, LAYOUT.BF_START_X, LAYOUT.BF_RIGHT, maxScale)
+        -- Centre the row so it grows outwards from the middle of the battlefield
+        local rowW = ((count - 1) * LAYOUT.BF_STEP_X + LAYOUT.BF_CARD_W) * s
+        local left = math.max(LAYOUT.BF_START_X, (LAYOUT.BF_START_X + LAYOUT.BF_RIGHT - rowW) / 2)
         for k = 1, count do
-            PlaceCard(frames[k], k, s, LAYOUT.BF_START_X, centerY, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X)
+            if PlaceCard(frames[k], k, s, left, centerY, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X) then boardResized = true end
             UpdateCardRules(frames[k])
         end
     end
@@ -2795,6 +2835,7 @@ function B:UpdateDisplay()
 
     LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAYOUT.LAND_MAX_SCALE)
     LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, LAYOUT.CREATURE_MAX_SCALE)
+    if boardResized then QueueBoardModelReload() end
 
     -- Damage / healing numbers for this redraw (cards are in place now)
     EmitFloats()
