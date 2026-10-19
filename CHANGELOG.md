@@ -32,6 +32,10 @@
 *   the regeneration shield from Blessing of Protection and Vanish is now called Soulstone (it works the same way)
 *   new names: creatures are now Denizens, Sorceries are Spells, summoning sickness is Rez Sickness, and tapping is now Exhausting (cards Recover at the start of their controller's turn)
 
+## 0.15.7
+
+*   added option to disable card preview in creature tooltip
+
 ## 0.15.6
 
 *   joining the Forever CCG community is no longer required to join the waiting room; it's still recommended, as it's how the addon finds players on other server shards
