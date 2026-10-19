@@ -765,6 +765,37 @@ function E:ResolveAfterCombatSoon()
     end)
 end
 
+-- True when one of our creatures could legally block one of the opponent's attackers
+function E:CanBlockAny(bs)
+    if self.cantBlockThisTurn then return false end
+    for _, atkIdx in ipairs(bs.attackers) do
+        local atk = self.remoteState.field[atkIdx]
+        if atk and atk.isAttacking then
+            for _, blk in ipairs(self.localState.field) do
+                if self:AICanBlock(atk, true, blk, false) then return true end
+            end
+        end
+    end
+    return false
+end
+
+-- Seconds the incoming attack stays on the board before we pass on blocks we can't make
+local AUTO_PASS_BLOCK_DELAY = 1
+
+-- The opponent's attack is fully declared: with nothing able to block it, pass on blocks
+-- after a moment (unless the board has changed, or the player is mid-choice or targeting)
+function E:AutoPassBlocksSoon()
+    local bs = self.blockingState
+    if not (bs and bs.isRemoteAttacking) or self:CanBlockAny(bs) then return end
+    TTS:SafeAfter(AUTO_PASS_BLOCK_DELAY, function()
+        if self.inMatch and self.phase == "COMBAT_BLOCK" and self.blockingState == bs
+            and not bs.blocksDeclared and next(bs.blocks) == nil and (self.isSolo or bs.attacksDone)
+            and not self.targeting and not self:HasPendingChoice() and not self:CanBlockAny(bs) then
+            self:NextPhase()
+        end
+    end)
+end
+
 -- Commit to Attacks & End Turn (the End Turn button once attackers are declared): the attack
 -- goes in and the turn ends as soon as combat is over, with the blocks resolved shortly after
 -- they are in instead of waiting for a review

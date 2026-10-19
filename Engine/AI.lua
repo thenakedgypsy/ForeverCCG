@@ -443,6 +443,7 @@ function E:AIDeclareAttack(indices)
     self:SetPhase("COMBAT_BLOCK")
     self:Log(L("log.aiDeclaredAttackers"), "SYSTEM")
     self:RefreshUI()
+    self:AutoPassBlocksSoon()
     return true
 end
 

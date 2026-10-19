@@ -1619,6 +1619,7 @@ function TTS.Net:OnReceive(msg, sender)
                 E.blockingState.attacksDone = true
                 E:Log(L("log.oppAttacksDone", sender), "COMBAT")
                 E:RefreshUI()
+                E:AutoPassBlocksSoon()
             end
 
         elseif actionType == "BLOCKS_DECLARED" then
