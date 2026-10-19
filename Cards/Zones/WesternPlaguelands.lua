@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["WPL08"] = {
         id = "WPL08", name = "Scarlet Worker", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 10303,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 10303,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1883,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["WPL09"] = {
         id = "WPL09", name = "Haunting Vision", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -77,10 +77,10 @@ TTS:AddCards({
     },
     ["WPL10"] = {
         id = "WPL10", name = "Scarlet High Clerist", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
-        power = 9, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 10342,
+        power = 9, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 10342,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1839,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     -- Solo reward
     ["WPL11"] = {

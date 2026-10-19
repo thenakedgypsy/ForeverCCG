@@ -22,10 +22,10 @@ TTS:AddCards({
     },
     ["GNO02"] = {
         id = "GNO02", name = "Leprous Defender", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 6982,
+        power = 3, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 6982,
         zone = "Gnomeregan", creatureType = "Humanoid", npcId = 6223,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["GNO03"] = {
         id = "GNO03", name = "Mechano-Flamewalker", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",

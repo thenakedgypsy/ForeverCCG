@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["BUR09"] = {
         id = "BUR09", name = "War Reaver", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 10806,
+        power = 6, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 10806,
         zone = "Burning Steppes", creatureType = "Elemental", npcId = 7039,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["BUR10"] = {
         id = "BUR10", name = "Volchan", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

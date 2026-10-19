@@ -56,10 +56,10 @@ TTS:AddCards({
     },
     ["SLI07"] = {
         id = "SLI07", name = "Desert Rumbler", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 8550,
+        power = 3, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 8550,
         zone = "Silithus", creatureType = "Elemental", npcId = 11746,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["SLI08"] = {
         id = "SLI08", name = "Twilight Avenger", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

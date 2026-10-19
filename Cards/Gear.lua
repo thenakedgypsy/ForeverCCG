@@ -33,7 +33,7 @@ TTS:AddCards({
     -- Levels 1-10
     ["GEAR01"] = Gear("GEAR01", "Goldshire Shortsword", "{1}", 1, "C", "Elwynn Forest",
         { Alliance = 54 },   -- Corina Steele, Goldshire
-        1, 0, { "vigilance" }, "INV_Sword_04", "Equip target denizen you control: +1/+0 and Vigilant."),
+        1, 0, { "support" }, "INV_Sword_04", "Equip target denizen you control: +1/+0 and Support."),
     ["GEAR02"] = Gear("GEAR02", "Kharanos Hand Axe", "{1}", 1, "C", "Dun Morogh",
         { Alliance = 1273 },   -- Grawn Thromwyn, Kharanos
         1, 0, { "haste" }, "INV_Axe_04", "Equip target denizen you control: +1/+0 and Quick."),
@@ -59,7 +59,7 @@ TTS:AddCards({
         2, 0, { "firstStrike" }, "INV_Weapon_Rifle_01", "Equip target denizen you control: +2/+0 and Strikes-First."),
     ["GEAR09"] = Gear("GEAR09", "Auberdine Moonblade", "{2}", 2, "C", "Darkshore",
         { Alliance = 4183 },   -- Naram Longclaw, Auberdine
-        1, 1, { "vigilance" }, "INV_Sword_27", "Equip target denizen you control: +1/+1 and Vigilant."),
+        1, 1, { "support" }, "INV_Sword_27", "Equip target denizen you control: +1/+1 and Support."),
     ["GEAR10"] = Gear("GEAR10", "Sepulcher Recurve Bow", "{2}", 2, "C", "Silverpine Forest",
         { Horde = 9553 },   -- Nadia Vernon, the Sepulcher
         2, 0, { "reach" }, "INV_Weapon_Bow_04", "Equip target denizen you control: +2/+0 and Anti-Air."),
@@ -76,7 +76,7 @@ TTS:AddCards({
     -- Levels 20-30
     ["GEAR14"] = Gear("GEAR14", "Ashenvale Warglaive", "{3}", 3, "C", "Ashenvale",
         { Alliance = 11137, Horde = 6028 },   -- Xai'ander, Astranaar / Burkrum, Splintertree Post
-        2, 1, { "vigilance" }, "INV_Weapon_Halberd_02", "Equip target denizen you control: +2/+1 and Vigilant."),
+        2, 1, { "support" }, "INV_Weapon_Halberd_02", "Equip target denizen you control: +2/+1 and Support."),
     ["GEAR15"] = Gear("GEAR15", "Darkshire Silvered Sword", "{3}", 3, "C", "Duskwood",
         { Alliance = 225 },   -- Gavin Gnarltree, Darkshire
         2, 1, { "firstStrike" }, "INV_Sword_31", "Equip target denizen you control: +2/+1 and Strikes-First."),
@@ -96,7 +96,7 @@ TTS:AddCards({
         2, 1, { "hexproof" }, "INV_Sword_10", "Equip target denizen you control: +2/+1 and Warded."),
     ["GEAR20"] = Gear("GEAR20", "Stromgarde Warhammer", "{4}", 4, "C", "Arathi Highlands",
         { Alliance = 1471, Horde = 9555 },   -- Jannos Ironwill, Refuge Pointe / Mu'uta, Hammerfall
-        2, 2, { "vigilance" }, "INV_Hammer_05", "Equip target denizen you control: +2/+2 and Vigilant."),
+        2, 2, { "support" }, "INV_Hammer_05", "Equip target denizen you control: +2/+2 and Support."),
     ["GEAR21"] = Gear("GEAR21", "Kodo-Bone Maul", "{4}", 4, "C", "Desolace",
         { Alliance = 1322, Horde = 12045 },   -- Maxton Strang, Nijel's Point / Hae'Wilani, Shadowprey Village
         2, 2, { "trample" }, "INV_Mace_04", "Equip target denizen you control: +2/+2 and Brutish."),
@@ -145,7 +145,7 @@ TTS:AddCards({
         3, 2, { "firstStrike", "trample" }, "INV_Sword_36", "Equip target denizen you control: +3/+2, Strikes-First and Brutish."),
     ["GEAR35"] = Gear("GEAR35", "Argent Crusader's Hammer", "{6}", 6, "C", "Western Plaguelands",
         { Alliance = 10857, Horde = 10856 },   -- Argent Quartermasters Lightspark, Chillwind Camp / Hasana, the Bulwark
-        2, 3, { "vigilance" }, "INV_Hammer_19", "Equip target denizen you control: +2/+3, Vigilant and Shielded.",
+        2, 3, { "support" }, "INV_Hammer_19", "Equip target denizen you control: +2/+3, Support and Shielded.",
         { { op = "shielded", to = "target" } }),
 
     -- Levels 55-60

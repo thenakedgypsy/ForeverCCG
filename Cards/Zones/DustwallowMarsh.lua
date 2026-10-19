@@ -64,10 +64,10 @@ TTS:AddCards({
     },
     ["DUS08"] = {
         id = "DUS08", name = "Muckshell Pincer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 5, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 2599,
+        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 2599,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 4403,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["DUS09"] = {
         id = "DUS09", name = "Muckshell Scrabbler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",

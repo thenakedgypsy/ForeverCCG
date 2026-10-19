@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["EXC06"] = {
         id = "EXC06", name = "Dragonmaw Warder", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 2, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 4916,
+        power = 2, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 4916,
         zone = "Excavation Site", creatureType = "Humanoid", faction = "Blackrock", npcId = 275044,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["EXC07"] = {
         id = "EXC07", name = "Thicket Stalker", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

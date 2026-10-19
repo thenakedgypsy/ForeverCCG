@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["DAL07"] = {
         id = "DAL07", name = "Fragmented Sentry", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 2, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 130116,
+        power = 2, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 130116,
         zone = "City of Dalaran", creatureType = "Mechanical", npcId = 246664,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["DAL08"] = {
         id = "DAL08", name = "Kirin Tor Necromancer", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",

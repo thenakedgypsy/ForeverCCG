@@ -118,7 +118,8 @@ function E:HasKeyword(perm, isRemote, keyword)
         end
     end
 
-    if keyword == "vigilance" then
+    -- Emperor Dagran Thaurissan: other denizens you control have Support
+    if keyword == "support" then
         local teamField = isRemote and self.remoteState.field or self.localState.field
         for _, other in ipairs(teamField) do
             if other ~= perm and other.id == "BOSS18" then

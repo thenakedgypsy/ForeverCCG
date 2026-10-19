@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["HIL05"] = {
         id = "HIL05", name = "Syndicate Watchman", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 2, toughness = 3, vigilance = true, isMob = true, isBoss = true, displayId = 3623,
+        power = 2, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 3623,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Syndicate", npcId = 2261,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["HIL06"] = {
         id = "HIL06", name = "Vicious Gray Bear", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",

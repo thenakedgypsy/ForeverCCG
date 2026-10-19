@@ -107,10 +107,10 @@ TTS:AddCards({
     },
     ["DMA14"] = {
         id = "DMA14", name = "Guard Mol'dar", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 11561,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 11561,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14326,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["DMA15"] = {
         id = "DMA15", name = "Stomper Kreeg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -121,19 +121,19 @@ TTS:AddCards({
     },
     ["DMA16"] = {
         id = "DMA16", name = "Tendris Warpwood", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 7, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 14383,
+        power = 7, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 14383,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11489,
         anthem = { tag = "zone", value = "Dire Maul", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Dire Maul denizens you control get +1/+1."
+        text = "Support. Other Dire Maul denizens you control get +1/+1."
     },
     ["DMA17"] = {
         id = "DMA17", name = "Captain Kromcrush", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 8, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 11564,
+        power = 8, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 11564,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14325,
         anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant. Other Ogres you control get +1/+1."
+        text = "Support. Other Ogres you control get +1/+1."
     },
     ["DMA18"] = {
         id = "DMA18", name = "Immol'thar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",

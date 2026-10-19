@@ -78,11 +78,11 @@ TTS:AddCards({
     },
     ["SFK10"] = {
         id = "SFK10", name = "Commander Springvale", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 3223,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 3223,
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 4278,
         anthem = { tag = "zone", value = "Shadowfang Keep", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Shadowfang Keep denizens you control get +1/+1."
+        text = "Support. Other Shadowfang Keep denizens you control get +1/+1."
     },
     ["SFK11"] = {
         id = "SFK11", name = "Wolf Master Nandos", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",

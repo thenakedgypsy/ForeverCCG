@@ -98,7 +98,7 @@ TT.KEYWORDS = {
 -- that die if the current blocks are accepted.
 -- =========================================================================
 TT.SYMBOLS = {
-    W       = { name = "Holy",          text = "One Holy mana, made by Exhausting a Holy Prayer. Holy cards bring life gain, shielding, vigilant guards and board wipes." },
+    W       = { name = "Holy",          text = "One Holy mana, made by Exhausting a Holy Prayer. Holy cards bring life gain, shielding, supporting guards and board wipes." },
     U       = { name = "Arcane",        text = "One Arcane mana, made by Exhausting an Arcane Prayer. Arcane cards bring card draw, tempo, freezing and bounce." },
     B       = { name = "Shadow",        text = "One Shadow mana, made by Exhausting a Shadow Prayer. Shadow cards bring targeted removal, sacrifice, hand disruption and drain." },
     R       = { name = "Fire",          text = "One Fire mana, made by Exhausting a Fire Prayer. Fire cards bring aggression, direct burn, Quick denizens and burst damage." },

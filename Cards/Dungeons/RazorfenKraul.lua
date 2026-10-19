@@ -22,10 +22,10 @@ TTS:AddCards({
     },
     ["RFK02"] = {
         id = "RFK02", name = "Razorfen Quilguard", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 6108,
+        power = 2, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 6108,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4436,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["RFK03"] = {
         id = "RFK03", name = "Razorfen Geomancer", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["RFK07"] = {
         id = "RFK07", name = "Roogug", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 6110,
+        power = 6, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 6110,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 6168,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["RFK08"] = {
         id = "RFK08", name = "Aggem Thorncurse", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -78,10 +78,10 @@ TTS:AddCards({
     },
     ["RFK10"] = {
         id = "RFK10", name = "Earthcaller Halmgar", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 6102,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 6102,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4842,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["RFK11"] = {
         id = "RFK11", name = "Overlord Ramtusk", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

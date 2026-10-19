@@ -36,17 +36,17 @@ TTS:AddCards({
     },
     ["STK04"] = {
         id = "STK04", name = "Dextren Ward", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 5, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2149,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 2149,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1663,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["STK05"] = {
         id = "STK05", name = "Kam Deepfury", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 4, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 825,
+        power = 4, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 825,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1666,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["STK06"] = {
         id = "STK06", name = "Hamhock", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

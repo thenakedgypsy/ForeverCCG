@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["HOT05"] = {
         id = "HOT05", name = "Tormented Soul", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 143690,
+        power = 2, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 143690,
         zone = "The Hall of Thanes", creatureType = "Undead", npcId = 263390,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["HOT06"] = {
         id = "HOT06", name = "Dark Iron Engineer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",

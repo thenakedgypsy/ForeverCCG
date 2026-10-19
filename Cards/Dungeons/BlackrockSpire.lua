@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["BRS07"] = {
         id = "BRS07", name = "Blackhand Iron Guard", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 5, toughness = 6, vigilance = true, isMob = true, isBoss = true, displayId = 9696,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 9696,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 10319,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["BRS08"] = {
         id = "BRS08", name = "Rage Talon Dragonspawn", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -71,10 +71,10 @@ TTS:AddCards({
     },
     ["BRS09"] = {
         id = "BRS09", name = "Quartermaster Zigris", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 9738,
+        power = 6, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 9738,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["BRS10"] = {
         id = "BRS10", name = "Halycon", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -106,11 +106,11 @@ TTS:AddCards({
     },
     ["BRS14"] = {
         id = "BRS14", name = "Jed Runewatcher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 9686,
+        power = 6, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 9686,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 10509,
         anthem = { tag = "faction", value = "Blackrock", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Blackrock you control get +1/+1."
+        text = "Support. Other Blackrock you control get +1/+1."
     },
     ["BRS15"] = {
         id = "BRS15", name = "Spirestone Butcher", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -129,10 +129,10 @@ TTS:AddCards({
     },
     ["BRS17"] = {
         id = "BRS17", name = "Goraluk Anvilcrack", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 10222,
+        power = 6, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 10222,
         zone = "Blackrock Spire", creatureType = "Humanoid", npcId = 10899,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["BRS18"] = {
         id = "BRS18", name = "Pyroguard Emberseer", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

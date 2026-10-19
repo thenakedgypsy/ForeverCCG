@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["THO08"] = {
         id = "THO08", name = "Sparkleshell Borer", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 4, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 2307,
+        power = 4, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 2307,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 4144,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["THO09"] = {
         id = "THO09", name = "Scorpid Terror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",

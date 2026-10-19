@@ -57,11 +57,11 @@ TTS:AddCards({
     },
     ["SMO07"] = {
         id = "SMO07", name = "Scarlet Champion", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 3, toughness = 3, vigilance = true, isMob = true, isBoss = true, displayId = 2460,
+        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 2460,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4302,
         rally = { tag = "faction", value = "Scarlet Crusade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Gets +1/+1 for each other Scarlet Crusade you control."
+        text = "Support. Gets +1/+1 for each other Scarlet Crusade you control."
     },
     ["SMO08"] = {
         id = "SMO08", name = "Interrogator Vishas", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -87,10 +87,10 @@ TTS:AddCards({
     },
     ["SMO11"] = {
         id = "SMO11", name = "Ironspine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 5231,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 5231,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6489,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["SMO12"] = {
         id = "SMO12", name = "High Inquisitor Fairbanks", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -101,11 +101,11 @@ TTS:AddCards({
     },
     ["SMO13"] = {
         id = "SMO13", name = "Scarlet Commander Mograine", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 7, toughness = 8, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 2042,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 2042,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3976,
         anthem = { tag = "faction", value = "Scarlet Crusade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Vigilant. Other Scarlet Crusade you control get +1/+1."
+        text = "Support. Other Scarlet Crusade you control get +1/+1."
     },
     -- Solo reward
     ["SMO14"] = {

@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["FER09"] = {
         id = "FER09", name = "Sea Elemental", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 5, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 5450,
+        power = 5, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 5450,
         zone = "Feralas", creatureType = "Elemental", npcId = 5461,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["FER10"] = {
         id = "FER10", name = "Antilus the Soarer", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",

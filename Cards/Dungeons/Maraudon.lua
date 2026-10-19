@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["MAR05"] = {
         id = "MAR05", name = "Theradrim Guardian", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 11712,
+        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 11712,
         zone = "Maraudon", creatureType = "Elemental", npcId = 11784,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["MAR06"] = {
         id = "MAR06", name = "Razorlash", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -92,11 +92,11 @@ TTS:AddCards({
     },
     ["MAR12"] = {
         id = "MAR12", name = "Landslide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 7, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12293,
+        power = 7, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 12293,
         zone = "Maraudon", creatureType = "Giant", npcId = 12203,
         anthem = { tag = "zone", value = "Maraudon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Maraudon denizens you control get +1/+1."
+        text = "Support. Other Maraudon denizens you control get +1/+1."
     },
     -- Solo reward
     ["MAR13"] = {

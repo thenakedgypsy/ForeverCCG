@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["STR03"] = {
         id = "STR03", name = "Crimson Gallant", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 10512,
+        power = 3, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 10512,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Support."
+        text = "Support."
     },
     ["STR04"] = {
         id = "STR04", name = "Rockwing Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -106,17 +106,17 @@ TTS:AddCards({
     },
     ["STR14"] = {
         id = "STR14", name = "Archivist Galford", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 8, firstStrike = true, isMob = true, isBoss = true, displayId = 10544,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 10544,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10811,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["STR15"] = {
         id = "STR15", name = "Malor the Zealous", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 7, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 10458,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 10458,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 11032,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["STR16"] = {
         id = "STR16", name = "Baroness Anastari", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -134,10 +134,10 @@ TTS:AddCards({
     },
     ["STR18"] = {
         id = "STR18", name = "Stonespine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 8, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 7856,
+        power = 8, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 7856,
         zone = "Stratholme", creatureType = "Undead", npcId = 10809,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["STR19"] = {
         id = "STR19", name = "Maleki the Pallid", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
@@ -149,11 +149,11 @@ TTS:AddCards({
     },
     ["STR20"] = {
         id = "STR20", name = "Grand Crusader Dathrohan", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
-        power = 10, toughness = 10, lifelink = true, vigilance = true, isMob = true, isBoss = true, displayId = 10545,
+        power = 10, toughness = 10, lifelink = true, support = true, isMob = true, isBoss = true, displayId = 10545,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10812,
         anthem = { tag = "faction", value = "Scarlet Crusade", kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Vigilant. Other Scarlet Crusade you control have Drain."
+        text = "Drain. Support. Other Scarlet Crusade you control have Drain."
     },
     -- Solo reward
     ["STR21"] = {

@@ -71,10 +71,10 @@ TTS:AddCards({
     },
     ["BRD09"] = {
         id = "BRD09", name = "Molten War Golem", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 8179,
+        power = 7, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 8179,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 8908,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["BRD10"] = {
         id = "BRD10", name = "Houndmaster Grebmar", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -107,10 +107,10 @@ TTS:AddCards({
     },
     ["BRD14"] = {
         id = "BRD14", name = "Phalanx", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 7, toughness = 11, vigilance = true, isMob = true, isBoss = true, displayId = 8177,
+        power = 7, toughness = 11, support = true, isMob = true, isBoss = true, displayId = 8177,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9502,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["BRD15"] = {
         id = "BRD15", name = "Doom'rel", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -121,10 +121,10 @@ TTS:AddCards({
     },
     ["BRD16"] = {
         id = "BRD16", name = "Golem Lord Argelmach", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 8, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 8759,
+        power = 8, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 8759,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8983,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["BRD17"] = {
         id = "BRD17", name = "Ambassador Flamelash", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -142,10 +142,10 @@ TTS:AddCards({
     },
     ["BRD19"] = {
         id = "BRD19", name = "Lord Incendius", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 8, toughness = 9, firstStrike = true, isMob = true, isBoss = true, displayId = 1204,
+        power = 8, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 1204,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9017,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["BRD20"] = {
         id = "BRD20", name = "Panzor the Invincible", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
@@ -156,11 +156,11 @@ TTS:AddCards({
     },
     ["BRD21"] = {
         id = "BRD21", name = "General Angerforge", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, firstStrike = true, isMob = true, isBoss = true, displayId = 8756,
+        power = 9, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 8756,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9033,
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Dark Iron you control get +1/+1."
+        text = "Support. Other Dark Iron you control get +1/+1."
     },
     ["BRD22"] = {
         id = "BRD22", name = "Magmus", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

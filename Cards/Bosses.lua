@@ -171,7 +171,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isBoss = true, displayId = 8807, achievementId = 643,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron",
         modelCam = { zoom = 0.75, camScale = 0.95, z = 0.00, rotation = 0.15 },
-        text = "Other denizens you control gain +1/+1 and Vigilant."
+        text = "Other denizens you control gain +1/+1 and Support."
     },
 
     -- LBRS: Overlord Wyrmthalak

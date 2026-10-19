@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["AZS09"] = {
         id = "AZS09", name = "Coralshell Lurker", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 10947,
+        power = 4, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 10947,
         zone = "Azshara", creatureType = "Beast", npcId = 6352,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Support."
+        text = "Support."
     },
     ["AZS10"] = {
         id = "AZS10", name = "Monnos the Elder", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

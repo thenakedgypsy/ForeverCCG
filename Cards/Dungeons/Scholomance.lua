@@ -22,10 +22,10 @@ TTS:AddCards({
     },
     ["SCH02"] = {
         id = "SCH02", name = "Risen Guard", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 3, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 7848,
+        power = 3, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 7848,
         zone = "Scholomance", creatureType = "Undead", npcId = 10489,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["SCH03"] = {
         id = "SCH03", name = "Scholomance Necromancer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["SCH06"] = {
         id = "SCH06", name = "Risen Construct", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 12074,
+        power = 7, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 12074,
         zone = "Scholomance", creatureType = "Undead", npcId = 10488,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["SCH07"] = {
         id = "SCH07", name = "Marduk Blackpool", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -85,10 +85,10 @@ TTS:AddCards({
     },
     ["SCH11"] = {
         id = "SCH11", name = "Lorekeeper Polkelt", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 1, toughness = 5, deathtouch = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11492,
+        power = 1, toughness = 5, deathtouch = true, support = true, isMob = true, isBoss = true, displayId = 11492,
         zone = "Scholomance", creatureType = "Undead", npcId = 10901,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Strikes-First."
+        text = "Fatal. Support."
     },
     ["SCH12"] = {
         id = "SCH12", name = "Doctor Theolen Krastinov", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -128,11 +128,11 @@ TTS:AddCards({
     },
     ["SCH17"] = {
         id = "SCH17", name = "Ras Frostwhisper", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 8, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 7919,
+        power = 8, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 7919,
         zone = "Scholomance", creatureType = "Undead", npcId = 10508,
         anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Other Undead you control get +1/+1."
+        text = "Support. Other Undead you control get +1/+1."
     },
     -- Solo reward
     ["SCH18"] = {

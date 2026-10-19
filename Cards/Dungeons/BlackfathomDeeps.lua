@@ -58,10 +58,10 @@ TTS:AddCards({
     },
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 2, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 5027,
+        power = 2, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 5027,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4887,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["BFD08"] = {
         id = "BFD08", name = "Lorgus Jett", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",

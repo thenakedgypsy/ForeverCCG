@@ -70,17 +70,17 @@ TTS:AddCards({
     },
     ["EPL09"] = {
         id = "EPL09", name = "Stitched Horror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 5, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 1693,
+        power = 5, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 1693,
         zone = "Eastern Plaguelands", creatureType = "Undead", npcId = 8543,
         modelCam = { zoom = 0.80, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["EPL10"] = {
         id = "EPL10", name = "Nerubian Overseer", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 10, vigilance = true, isMob = true, isBoss = true, displayId = 14698,
+        power = 9, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 14698,
         zone = "Eastern Plaguelands", creatureType = "Undead", npcId = 16184,
         modelCam = { zoom = 0.75, camScale = 1.07, z = -0.11, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     -- Solo reward
     ["EPL11"] = {

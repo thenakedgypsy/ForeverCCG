@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["ROL03"] = {
         id = "ROL03", name = "Skeletal Soldier", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 2, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 7848,
+        power = 2, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 7848,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250626,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["ROL04"] = {
         id = "ROL04", name = "Broodwidow", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -93,10 +93,10 @@ TTS:AddCards({
     },
     ["ROL12"] = {
         id = "ROL12", name = "Flesh Golem", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1693,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 1693,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 255109,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["ROL13"] = {
         id = "ROL13", name = "The Baron", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -125,8 +125,8 @@ TTS:AddCards({
         id = "ROL16", name = "Captain Truman", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isReward = true, displayId = 5711,
         zone = "Ruins of Lordaeron", creatureType = "Humanoid", npcEntry = 265701,
-        anthem = { tag = "type", value = "Humanoid", p = 1, kw = { "vigilance" } },
+        anthem = { tag = "type", value = "Humanoid", p = 1, kw = { "support" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Humanoids you control get +1/+0 and Vigilant."
+        text = "Strikes-First. Other Humanoids you control get +1/+0 and Support."
     },
 })

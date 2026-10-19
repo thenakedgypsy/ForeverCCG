@@ -64,10 +64,10 @@ TTS:AddCards({
     },
     ["RED08"] = {
         id = "RED08", name = "Blackrock Champion", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 6, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 6044,
+        power = 6, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 6044,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["RED09"] = {
         id = "RED09", name = "Squiddic", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",

@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["WCV07"] = {
         id = "WCV07", name = "Kresh", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 4, toughness = 8, vigilance = true, isMob = true, isBoss = true, displayId = 5126,
+        power = 4, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 5126,
         zone = "Wailing Caverns", creatureType = "Beast", npcId = 3653,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["WCV08"] = {
         id = "WCV08", name = "Lady Anacondra", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -78,10 +78,10 @@ TTS:AddCards({
     },
     ["WCV10"] = {
         id = "WCV10", name = "Lord Pythas", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 4214,
+        power = 6, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 4214,
         zone = "Wailing Caverns", creatureType = "Humanoid", faction = "Druids of the Fang", npcId = 3670,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["WCV11"] = {
         id = "WCV11", name = "Lord Serpentis", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -93,11 +93,11 @@ TTS:AddCards({
     },
     ["WCV12"] = {
         id = "WCV12", name = "Verdan the Everliving", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 4256,
+        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 4256,
         zone = "Wailing Caverns", creatureType = "Elemental", npcId = 5775,
         anthem = { tag = "zone", value = "Wailing Caverns", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Wailing Caverns denizens you control get +1/+1."
+        text = "Support. Other Wailing Caverns denizens you control get +1/+1."
     },
     -- Solo reward
     ["WCV13"] = {

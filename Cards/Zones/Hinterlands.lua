@@ -56,10 +56,10 @@ TTS:AddCards({
     },
     ["HIN07"] = {
         id = "HIN07", name = "Revantusk Watcher", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 3, toughness = 4, vigilance = true, isMob = true, isBoss = true, displayId = 14760,
+        power = 3, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 14760,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 14730,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["HIN08"] = {
         id = "HIN08", name = "Vilebranch Shadow Hunter", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

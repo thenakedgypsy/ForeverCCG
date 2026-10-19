@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["RFC05"] = {
         id = "RFC05", name = "Oggleflint", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 4, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 11611,
+        power = 4, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 11611,
         zone = "Ragefire Chasm", creatureType = "Humanoid", npcId = 11517,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Support."
     },
     ["RFC06"] = {
         id = "RFC06", name = "Jergosh the Invoker", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

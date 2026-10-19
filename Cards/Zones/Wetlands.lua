@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["WET08"] = {
         id = "WET08", name = "Rumbling Exile", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 9587,
+        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 9587,
         zone = "Wetlands", creatureType = "Elemental", npcId = 2592,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Support."
     },
     ["WET09"] = {
         id = "WET09", name = "Burning Exile", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",

@@ -71,17 +71,17 @@ TTS:AddCards({
     },
     ["SIL09"] = {
         id = "SIL09", name = "Ravenclaw Guardian", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
-        power = 6, toughness = 7, vigilance = true, isMob = true, isBoss = true, displayId = 370,
+        power = 6, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 370,
         zone = "Silverpine Forest", creatureType = "Undead", npcId = 1973,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["SIL10"] = {
         id = "SIL10", name = "Ravenclaw Regent", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 8, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 1019,
+        power = 8, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 1019,
         zone = "Silverpine Forest", creatureType = "Undead", npcId = 2283,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     -- Solo reward
     ["SIL11"] = {

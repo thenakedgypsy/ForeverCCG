@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["SUN05"] = {
         id = "SUN05", name = "Nightmare Scalebane", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 5, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 7903,
+        power = 5, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 7903,
         zone = "Sunken Temple", creatureType = "Dragonkin", npcId = 5277,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     ["SUN06"] = {
         id = "SUN06", name = "Gasher", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -94,10 +94,10 @@ TTS:AddCards({
     },
     ["SUN12"] = {
         id = "SUN12", name = "Hazzas", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 7, toughness = 9, flying = true, vigilance = true, isMob = true, isBoss = true, displayId = 9584,
+        power = 7, toughness = 9, flying = true, support = true, isMob = true, isBoss = true, displayId = 9584,
         zone = "Sunken Temple", creatureType = "Dragonkin", npcId = 5722,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Airborne. Vigilant."
+        text = "Airborne. Support."
     },
     -- Solo reward
     ["SUN13"] = {

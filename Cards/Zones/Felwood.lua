@@ -77,10 +77,10 @@ TTS:AddCards({
     },
     ["FEL10"] = {
         id = "FEL10", name = "Mezzir the Howler", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
-        power = 9, toughness = 9, vigilance = true, isMob = true, isBoss = true, displayId = 3208,
+        power = 9, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 3208,
         zone = "Felwood", creatureType = "Humanoid", npcId = 10197,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant."
+        text = "Support."
     },
     -- Solo reward
     ["FEL11"] = {

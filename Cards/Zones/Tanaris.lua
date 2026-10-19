@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["TAN09"] = {
         id = "TAN09", name = "Surf Glider", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 4, toughness = 8, support = true, vigilance = true, isMob = true, isBoss = true, displayId = 7114,
+        power = 4, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 7114,
         zone = "Tanaris", creatureType = "Beast", npcId = 5431,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Support."
+        text = "Support."
     },
     ["TAN10"] = {
         id = "TAN10", name = "Cyclok the Mad", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
