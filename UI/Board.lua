@@ -2395,7 +2395,19 @@ function B.StartSlides(E)
     if TTS.Options and TTS.Options:Get("animateCards") == false then return end
     for _, group in ipairs(FIELD_GROUPS) do
         for _, f in ipairs(group) do
-            if f:IsShown() and f.perm and not flights[f.perm] then
+            local fl = f:IsShown() and f.perm and flights[f.perm]
+            if fl then
+                -- Still flying in from the hand and its slot moved (the row re-centred): aim
+                -- the rest of the flight from where the card is drawn now, so it doesn't skip
+                local old, sx, sy = oldField[f.perm], f.slot:GetCenter()
+                local left, bottom = B:GetLeft(), B:GetBottom()
+                local rest = (1 - math.min(1, fl.t / TIMING.FLY_TIME)) ^ 3
+                if old and sx and left and rest > 0.01 then
+                    sx, sy = sx - left, sy - bottom
+                    fl.x = (old.x - (1 - rest) * sx) / rest
+                    fl.y = (old.y - (1 - rest) * sy) / rest
+                end
+            elseif f:IsShown() and f.perm then
                 slides[f] = SlideFrom(f, oldField[f.perm])
             end
         end

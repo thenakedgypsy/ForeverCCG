@@ -821,6 +821,12 @@ end
 function E:EndTurn()
     if not self.isMyTurn then return end
     if self:UndoBlocksAction() then return end
+    -- A choice still open (e.g. a discard) would be made after the turn has passed: the
+    -- opponent's client could already have moved on (an undo there drops it), so finish it first
+    if self:HasPendingChoice() then
+        self:Log(L("undo.choice"), "ERROR")
+        return
+    end
     local bs = self.blockingState
     if self.phase == "COMBAT_ATTACK" and bs and #bs.attackers > 0 then
         self:CommitAttacksAndEndTurn()
