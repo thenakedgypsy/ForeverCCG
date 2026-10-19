@@ -748,8 +748,25 @@ function E:TryEndAfterCombat()
     self:EndTurn()
 end
 
+-- Seconds the blocks stay on the board (arrows and skulls) before a turn set to end after
+-- combat resolves them, so the player still sees who blocked what
+local AUTO_RESOLVE_DELAY = 0.5
+
+-- Our attack's blocks are in and the turn is set to end after combat: show them, then
+-- resolve (unless the player resolved, cancelled End Turn After Combat, or the match ended)
+function E:ResolveAfterCombatSoon()
+    local bs = self.blockingState
+    self:RefreshUI()
+    TTS:SafeAfter(AUTO_RESOLVE_DELAY, function()
+        if self.inMatch and self.isMyTurn and self.endAfterCombat and self.phase == "COMBAT_BLOCK"
+            and self.blockingState == bs and bs.blocksDeclared and not bs.isRemoteAttacking then
+            self:NextPhase()
+        end
+    end)
+end
+
 -- Commit to Attacks & End Turn (the End Turn button once attackers are declared): the attack
--- goes in and the turn ends as soon as combat is over, with the blocks resolved the moment
+-- goes in and the turn ends as soon as combat is over, with the blocks resolved shortly after
 -- they are in instead of waiting for a review
 function E:CommitAttacksAndEndTurn()
     local bs = self.blockingState
@@ -757,11 +774,11 @@ function E:CommitAttacksAndEndTurn()
     self.endAfterCombat = true
     self:Log(L("log.endAfterCombat"), "SYSTEM")
     self:NextPhase()
-    -- Solo: the AI's blocks are already in, so resolve now (PvP: when BLOCKS_DECLARED arrives)
+    -- Solo: the AI's blocks are already in (PvP: when BLOCKS_DECLARED arrives, Network.lua)
     bs = self.blockingState
     if self.endAfterCombat and self.isMyTurn and self.phase == "COMBAT_BLOCK" and bs and bs.blocksDeclared
         and not bs.isRemoteAttacking then
-        self:NextPhase()
+        self:ResolveAfterCombatSoon()
     end
 end
 

@@ -15,7 +15,7 @@
 *   cards that return a denizen card from a graveyard (Redemption, Ancestral Spirit, Kum'isha the Collector, Azshir the Sleepless) now let you choose which one
 *   Mutanus and Prince Tortheldrin's discards are no longer random: the player discarding picks the card (solo-mode opponents drop their least useful one)
 *   winning a solo-mode dungeon now announces it with an emote (and a cheer) when you accept the result
-*   once you've declared attackers, End Turn becomes Commit to Attacks & End Turn: the attack goes in and your turn ends as soon as combat is over (the blocks resolve the moment they're in, with no review)
+*   once you've declared attackers, End Turn becomes Commit to Attacks & End Turn: the attack goes in and your turn ends as soon as combat is over (the blocks show for half a second, then resolve, with no review)
 *   while your attack waits for blocks, End Turn becomes End Turn After Combat: click it and combat resolves as soon as the blocks are in, then your turn ends (click again before the blocks arrive to cancel)
 *   Concede and Clear Deck now ask you to confirm first
 *   the game log beside the board can be minimised to its title bar with its - button (it stays that way until you open it again)
