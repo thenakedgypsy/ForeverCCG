@@ -40,7 +40,10 @@ TTS:AddCards({
     ["BUGREPORTER"] = {
         id = "BUGREPORTER", name = "The Bug Reporter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 2, toughness = 3, isBeta = true,
-        displayId = 7125,   -- Tinkerer Gizlock (classic npc 13601): a gnome tinker
+        displayId = 7125,   -- Tinkerer Gizlock (classic npc 13601)
+        dressItems = {
+            10726,   -- Gnomish Mind Control Cap
+        },
         creatureType = "Humanoid",
         -- Targeted Arrival: the target is chosen as it's cast (CardLogic.lua GetCardTargetSpec)
         etb = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } },
