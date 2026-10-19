@@ -12,7 +12,8 @@ TTS = TTS or {}
 -- saved data (TTS_DataStamp.launch = true); data without the stamp (the beta's, or a beta
 -- file copied back in) is cleared once and stamped, so the collection starts afresh.
 -- Every saved variable is in the one ForeverCCG.lua file, so copying an old file over a
--- new one brings back its missing stamp too.
+-- new one brings back its missing stamp too. Beta players who start with no file at all are
+-- found by their Forever CCG community membership instead (BETA WELCOME below).
 --
 -- This file loads before the others that use the data, so its ADDON_LOADED runs before
 -- any of them reads it.
@@ -28,6 +29,27 @@ TTS.COLLECTION_VARS = CLEARED
 
 -- Given to every player whose beta collection was cleared (Cards\Special.lua)
 local BETA_CARD = "BUGREPORTER"
+
+-- A beta player who starts in a new game folder has nothing to clear, so is recognised by
+-- being in the Forever CCG Battle.net community (Community.lua): it belongs to the Battle.net
+-- account, so it carries over. If the client says when they joined (ClubInfo.joinTime),
+-- joining after BETA_END doesn't count; nil = any member counts.
+local BETA_END = time({ year = 2026, month = 10, day = 23, hour = 0 })   -- the beta ends on 22/10/2026
+-- Seconds after the world loads to look: the community list arrives a while after login
+local COMMUNITY_TRIES = { 5, 15, 30 }
+local checkCommunity = false
+
+local function JoinedInBeta()
+    local clubId = TTS.Community and TTS.Community:Stream()
+    if not clubId then return false end
+    if not BETA_END then return true end
+    local info = C_Club.GetClubInfo and C_Club.GetClubInfo(clubId)
+    local joined = info and tonumber(info.joinTime)
+    if not joined then return true end
+    -- Given in milli- or microseconds: scale down to seconds
+    while joined > 1e11 do joined = joined / 1000 end
+    return joined < BETA_END
+end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
@@ -48,8 +70,10 @@ frame:SetScript("OnEvent", function(self, event, addon)
     TTS_DataStamp = { launch = true, beta = had or nil }
     if had then
         if TTS.MarkCardNew then TTS:MarkCardNew(BETA_CARD) end
-        self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    else
+        checkCommunity = true
     end
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
 end)
 
 -- =========================================================================
@@ -119,9 +143,21 @@ function TTS:ShowBetaWelcome()
     TTS.PaintPreviewCard(f, card)
 end
 
--- The welcome waits until the world is loaded, so the chosen language is ready
+-- The welcome waits until the world is loaded, so the chosen language is ready. A new player
+-- is looked for in the community during this first session only, so joining later doesn't count.
 frame:HookScript("OnEvent", function(self, event)
     if event ~= "PLAYER_ENTERING_WORLD" then return end
     self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-    C_Timer.After(2, function() TTS:ShowBetaWelcome() end)
+    if TTS_DataStamp.beta then
+        C_Timer.After(2, function() TTS:ShowBetaWelcome() end)
+    elseif checkCommunity then
+        for _, delay in ipairs(COMMUNITY_TRIES) do
+            C_Timer.After(delay, function()
+                if TTS_DataStamp.beta or not JoinedInBeta() then return end
+                TTS_DataStamp.beta = true
+                TTS:MarkCardNew(BETA_CARD)
+                TTS:ShowBetaWelcome()
+            end)
+        end
+    end
 end)
