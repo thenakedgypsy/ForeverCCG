@@ -18,6 +18,7 @@ local Loc = TTS.Locale
 local DEFAULTS = {
     tooltipDelay = 0,       -- seconds before a tooltip appears
     extendedTooltipDelay = 0.8,  -- seconds between each further layer of detail after that
+    mobCardPreview = true,  -- card shown beside creature tooltips (MobTooltip.lua)
     boardScale = 1,         -- game board size (Board.lua)
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
@@ -132,7 +133,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 624)
+F:SetSize(340, 650)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -250,7 +251,7 @@ end
 -- =========================================================================
 -- TOOLTIP SECTION
 -- =========================================================================
-local tipSection = CreateSection("options.tooltips", 150)
+local tipSection = CreateSection("options.tooltips", 176)
 tipSection:SetPoint("TOPLEFT", soundSection, "BOTTOMLEFT", 0, -8)
 
 -- Slider for a delay setting labelled with locale labelKey (tooltip: labelKey .. ".desc"), snapped to DELAY_STEP and saved under key
@@ -313,6 +314,11 @@ local delaySlider = CreateDelaySlider("TTS_OptionsDelaySlider", "options.tooltip
 
 local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "options.extendedDelay",
     -92, EXTENDED_MAX, "extendedTooltipDelay")
+
+local mobCardCheck = CreateCheck(tipSection, 10, -144, "options.mobCardPreview")
+mobCardCheck:SetScript("OnClick", function(self)
+    O:Set("mobCardPreview", self:GetChecked() and true or false)
+end)
 
 -- =========================================================================
 -- BOARD SECTION
@@ -461,6 +467,7 @@ function O:SyncControls()
         sl:SetValue(db[sl.key] or 0)
         sl:ShowValue(db[sl.key] or 0)
     end
+    mobCardCheck:SetChecked(db.mobCardPreview ~= false)
     if TTS.BoardFrame and TTS.BoardFrame.soundCheck then
         TTS.BoardFrame.soundCheck:SetChecked(master)
     end
