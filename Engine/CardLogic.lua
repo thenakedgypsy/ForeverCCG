@@ -1274,7 +1274,7 @@ end
 -- Creatures play their own aggro sound instead. Respects the board's Sounds checkbox.
 function E:PlayNonCreatureCardSound()
     if TTS.Sound and TTS.Sound.enabled then
-        pcall(PlaySound, 829, "SFX")
+        pcall(PlaySound, 830, "SFX")   -- spellbook close (the Deckbuilder uses the open one)
     end
 end
 

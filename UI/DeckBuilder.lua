@@ -1485,6 +1485,7 @@ local function CreateTile(index)
     t.copyText:SetPoint("BOTTOM", t, "BOTTOM", 0, 1)
 
     hit:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    hit.ttsSilent = true   -- adding / removing plays its own sound (Sound.lua deckCard)
     hit:SetScript("OnClick", function(self, button)
         if not self.cardId then return end
         if TTS:TryLinkCard(self.cardId) then return end
@@ -1853,6 +1854,7 @@ local function GetDeckRow(i)
         if self.cardId then CardTooltip_OnEnter(self) end
     end)
     r:SetScript("OnLeave", CardTooltip_OnLeave)
+    r.ttsSilent = true   -- removing plays its own sound (Sound.lua deckCard)
     r:SetScript("OnClick", function(self)
         if not self.cardId then return end
         if TTS:TryLinkCard(self.cardId) then return end
@@ -2286,6 +2288,7 @@ function D:AddCardToDeck(cardId)
     if BreaksLastPlayableDeck(deck, TTS:DeckCardCount(deck) + 1) then return end
 
     deck.cards[cardId] = (deck.cards[cardId] or 0) + 1
+    if TTS.Sound then TTS.Sound:PlayUI("deckCard") end
     D:RefreshDeck()
 end
 
@@ -2297,6 +2300,7 @@ function D:RemoveCardFromDeck(cardId)
     if deck.cards[cardId] <= 0 then
         deck.cards[cardId] = nil
     end
+    if TTS.Sound then TTS.Sound:PlayUI("deckCard") end
     D:RefreshDeck()
 end
 

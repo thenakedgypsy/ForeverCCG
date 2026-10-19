@@ -828,6 +828,8 @@ local UI_SOUNDS = {
     button = { kit = "IG_MAINMENU_OPTION",             id = 852,  legacy = "igMainMenuOption" },
     card   = { kit = "IG_MAINMENU_OPTION_CHECKBOX_ON", id = 856,  legacy = "igMainMenuOptionCheckBoxOn" },
     tap    = { kit = "U_CHAT_SCROLL_BUTTON",           id = 1115, legacy = "uChatScrollButton" },
+    -- A card going into or coming out of a deck in the Deckbuilder: paper, like turning a page
+    deckCard = { kit = "IG_SPELLBOOK_OPEN", id = 829, legacy = "igSpellBookOpen" },
 }
 
 local function PlayRaw(sound)
@@ -888,8 +890,8 @@ local function Flush()
     end
 end
 
--- A token's card appearing (UI\Board.lua token spawns): its mob sound, or without one the
--- paper sound a prayer makes when played (E:PlayNonCreatureCardSound)
+-- A token's card appearing (UI\Board.lua token spawns): its mob sound, or without one a
+-- paper sound (spellbook open; a prayer being played has the close one, E:PlayNonCreatureCardSound)
 local PAPER_SOUND = 829
 function S:PlayTokenSound(cardId)
     if not self.enabled then return end

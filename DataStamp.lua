@@ -39,16 +39,22 @@ local BETA_END = time({ year = 2026, month = 10, day = 23, hour = 0 })   -- the 
 local COMMUNITY_TRIES = { 5, 15, 30 }
 local checkCommunity = false
 
-local function JoinedInBeta()
+-- Whether this account counts as a beta player by its community membership, plus whether it
+-- is a member, when it joined (seconds, nil if unknown) and BETA_END. Read only: the admin
+-- addon's /fccgadmin beta reports it.
+function TTS:BetaCommunityCheck()
     local clubId = TTS.Community and TTS.Community:Stream()
-    if not clubId then return false end
-    if not BETA_END then return true end
+    if not clubId then return false, false, nil, BETA_END end
     local info = C_Club.GetClubInfo and C_Club.GetClubInfo(clubId)
     local joined = info and tonumber(info.joinTime)
-    if not joined then return true end
     -- Given in milli- or microseconds: scale down to seconds
-    while joined > 1e11 do joined = joined / 1000 end
-    return joined < BETA_END
+    while joined and joined > 1e11 do joined = joined / 1000 end
+    local counts = not (BETA_END and joined) or joined < BETA_END
+    return counts, true, joined, BETA_END
+end
+
+local function JoinedInBeta()
+    return (TTS:BetaCommunityCheck())
 end
 
 local frame = CreateFrame("Frame")
