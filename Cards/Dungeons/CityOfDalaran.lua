@@ -65,7 +65,7 @@ TTS:AddCards({
     ["DAL08"] = {
         id = "DAL08", name = "Kirin Tor Necromancer", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
         power = 0, toughness = 3, isMob = true, isBoss = true, displayId = 145809,
-        zone = "City of Dalaran", creatureType = "Humanoid", faction = "Kirin Tor", npcId = 269134,
+        zone = "City of Dalaran", creatureType = "Humanoid", npcId = 269134,
         etb = { ops = { { op = "token", id = "TOK03", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Arrival: Spawn: 3 Skeleton Adds (1/1)."
@@ -173,7 +173,7 @@ TTS:AddCards({
     ["DAL22"] = {
         id = "DAL22", name = "Archmage Modera", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 4, hexproof = true, isReward = true, displayId = 130165,
-        zone = "City of Dalaran", creatureType = "Humanoid", faction = "Kirin Tor", npcEntry = 246748,
+        zone = "City of Dalaran", creatureType = "Humanoid", npcEntry = 246748,
         anthem = { tag = "zone", value = "City of Dalaran", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Warded. Other City of Dalaran denizens you control get +1/+1."

@@ -30,7 +30,7 @@ TTS:AddCards({
     ["EXC03"] = {
         id = "EXC03", name = "Dragonmaw Saboteur", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 4916,
-        zone = "Excavation Site", creatureType = "Humanoid", faction = "Dragonmaw", npcId = 275045,
+        zone = "Excavation Site", creatureType = "Humanoid", faction = "Blackrock", npcId = 275045,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick."
     },
@@ -51,7 +51,7 @@ TTS:AddCards({
     ["EXC06"] = {
         id = "EXC06", name = "Dragonmaw Warder", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 5, vigilance = true, isMob = true, isBoss = true, displayId = 4916,
-        zone = "Excavation Site", creatureType = "Humanoid", faction = "Dragonmaw", npcId = 275044,
+        zone = "Excavation Site", creatureType = "Humanoid", faction = "Blackrock", npcId = 275044,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant."
     },
@@ -93,10 +93,10 @@ TTS:AddCards({
     ["EXC12"] = {
         id = "EXC12", name = "Dragonmaw Thaumaturgist", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 4918,
-        zone = "Excavation Site", creatureType = "Humanoid", faction = "Dragonmaw", npcId = 275046,
-        anthem = { tag = "faction", value = "Dragonmaw", p = 1, t = 1 },
+        zone = "Excavation Site", creatureType = "Humanoid", faction = "Blackrock", npcId = 275046,
+        anthem = { tag = "faction", value = "Blackrock", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Dragonmaw you control get +1/+1."
+        text = "Other Blackrock you control get +1/+1."
     },
     ["EXC13"] = {
         id = "EXC13", name = "Captive Fire Elemental", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

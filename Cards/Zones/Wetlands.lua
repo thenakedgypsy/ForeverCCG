@@ -43,7 +43,7 @@ TTS:AddCards({
     ["WET05"] = {
         id = "WET05", name = "Dragonmaw Raider", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 4916,
-        zone = "Wetlands", creatureType = "Humanoid", npcId = 1034,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Blackrock", npcId = 1034,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
