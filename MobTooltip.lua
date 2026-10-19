@@ -286,6 +286,7 @@ local function AddCardLine(tooltip)
         CARD_BACK_ICON, TTS.L("mobtip.card"), color, copies, MAX_COPIES))
     tooltip:Show()
 
+    if TTS.Options and TTS.Options:Get("mobCardPreview") == false then return end
     ShowMobCard(tooltip, card)
 end
 
