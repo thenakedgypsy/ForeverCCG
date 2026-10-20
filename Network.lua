@@ -1636,6 +1636,21 @@ function TTS.Net:OnReceive(msg, sender)
                 end
             end
 
+        elseif actionType == "DAMAGE_ORDER" then
+            -- DAMAGE_ORDER:<attacker>:<blocker>:<blocker>...: the order an attacker blocked by
+            -- several creatures (Support) deals its damage in (sent just before RESOLVE_COMBAT)
+            local bs = E.blockingState
+            local atkIdx = tonumber(parts[3])
+            if bs and bs.isRemoteAttacking and atkIdx then
+                local order = {}
+                for i = 4, #parts do
+                    local b = tonumber(parts[i])
+                    if b then table.insert(order, b) end
+                end
+                bs.damageOrder = bs.damageOrder or {}
+                bs.damageOrder[atkIdx] = order
+            end
+
         elseif actionType == "RESOLVE_COMBAT" then
             if E.blockingState then
                 E:ResolveCombatDamage()

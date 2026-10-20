@@ -447,6 +447,43 @@ function E:AIDeclareAttack(indices)
     return true
 end
 
+-- Our attackers blocked by several creatures (Support): the most valuable blocker the
+-- damage left can still kill goes first, until none can be killed (then the rest, best first)
+function E:AIOrderDamage(bs)
+    bs.damageOrder = bs.damageOrder or {}
+    for _, atkIdx in ipairs(bs.attackers or {}) do
+        local atk = self.remoteState.field[atkIdx]
+        local rest = {}
+        for _, b in ipairs(self:BlockersOf(bs, atkIdx)) do
+            if self.localState.field[b] then table.insert(rest, b) end
+        end
+        if atk and #rest > 1 then
+            local left = self:GetCreatureStats(atk, true)
+            local fatal = self:HasKeyword(atk, true, "deathtouch")
+            local function Lethal(b)
+                local perm = self.localState.field[b]
+                local _, t = self:GetCreatureStats(perm, false)
+                local n = math.max(0, t - (perm.damage or 0))
+                return (fatal and n > 0) and 1 or n
+            end
+            table.sort(rest, function(a, b)
+                return self:AIPermValue(self.localState.field[a], false) > self:AIPermValue(self.localState.field[b], false)
+            end)
+            local order = {}
+            while #rest > 0 do
+                local pick = 1
+                for i, b in ipairs(rest) do
+                    if Lethal(b) <= left then pick = i; break end
+                end
+                local b = table.remove(rest, pick)
+                left = math.max(0, left - Lethal(b))
+                table.insert(order, b)
+            end
+            bs.damageOrder[atkIdx] = order
+        end
+    end
+end
+
 -- =========================================================================
 -- BLOCKING
 -- For each attacker, in order: a block that kills it and survives, a trade when the
@@ -538,7 +575,7 @@ function E:AIAssignBlocks()
     end
 
     -- 2b: Support creatures gang up on an attacker nothing kills on its own, as long as
-    -- each of them lives through the fight
+    -- each of them lives through the fight even when the attacker deals its damage to it first
     local function Dies(plan, perm)
         local t = plan.taken[perm]
         return t and not perm.regenerateShield and (perm.damage or 0) + t >= plan.info[perm].t
@@ -561,7 +598,9 @@ function E:AIAssignBlocks()
             local joined, kills = {}, false
             for _, bi in ipairs(helpers) do
                 self:AssignBlock(bs, bi, atkIdx, self.remoteState.field[bi], true)
+                bs.damageOrder = { [atkIdx] = { bi } }
                 local plan = self:PlanCombatDamage(bs)
+                bs.damageOrder = nil
                 if Dies(plan, self.remoteState.field[bi]) then
                     self:ClearBlock(bs, bi, atkIdx)
                 else

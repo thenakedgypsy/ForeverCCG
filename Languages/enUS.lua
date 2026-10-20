@@ -1310,6 +1310,9 @@ S["hint.doublePrayer"] = "Click to Exhaust it with another Prayer for %s and %s.
 S["choice.discard"] = "Choose a card to discard"
 S["choice.raise"] = "%s: choose a denizen card to return"
 S["choice.theirs"] = "%s (opponent's)"
+S["choice.damageOrder"] = "%s deals %d damage: choose the blocker it hits first"
+S["choice.damageOrderNext"] = "%s deals %d damage: choose the blocker it hits next"
+S["choice.damageOrderOption"] = "%s\n|cFFAAAAAA%d to kill|r"
 S["undo.choice"] = "Make your choice first."
 
 -- MINIMAP BUTTON

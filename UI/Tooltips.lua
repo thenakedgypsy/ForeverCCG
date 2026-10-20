@@ -34,6 +34,7 @@ local SIDE_ROOM   = 260   -- pixels a column of panels needs beside the main too
 
 local TEXTURE_ROOT = "Interface\\AddOns\\ForeverCCG\\Textures\\"
 local SKULL_TEX    = TEXTURE_ROOT .. "Symbols\\Skull.png"
+local SKULL_MAYBE_TEX = TEXTURE_ROOT .. "Symbols\\Skull_maybe.png"
 
 local TAG_COLORS = {
     Keyword = { 1.00, 0.82, 0.00 },
@@ -86,7 +87,7 @@ TT.KEYWORDS = {
     defender    = { name = "Blocker",       text = "Can't attack. It can still block." },
     unblockable = { name = "Invisible",     text = "Can't be blocked." },
     bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
-    support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Every denizen in that fight deals its full combat damage to each denizen on the other side." },
+    support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Each blocker deals its full combat damage to the attacker, while the attacker picks the order it hits them in: each takes enough to kill it before the next takes any." },
     -- Shown for cards with a rally (card.rally); on the card it reads "Defias Kinsmanship:" over "+1/+1"
     kinsmanship = { name = "Kinsmanship",   text = "Gets the bonus once for each other denizen you control that shares its tag." },
     unique      = { name = "Unique",        text = "You can have only one copy of it on your battlefield. You can't cast another while it's there, and if another arrives by an effect, the one already there is destroyed." },
@@ -109,11 +110,13 @@ TT.SYMBOLS = {
     GENERIC = { name = "Generic Mana",  text = "A number in brackets is generic mana: pay it with mana of any colour." },
     X       = { name = "X",             text = "X stands for a number chosen when the card is played." },
     SKULL   = { name = "Lethal",        text = "This denizen dies if the current blocks are accepted." },
+    SKULL_MAYBE = { name = "Possibly Lethal", text = "This denizen may die if the current blocks are accepted: it depends on the order the attacker deals its damage to its blockers in, picked when combat resolves." },
 }
 
 local function SymbolIcon(key, size)
     size = size or 16
     if key == "SKULL" then return string.format("|T%s:%d:%d:0:0|t", SKULL_TEX, size, size) end
+    if key == "SKULL_MAYBE" then return string.format("|T%s:%d:%d:0:0|t", SKULL_MAYBE_TEX, size, size) end
     if key == "GENERIC" then return Sym("{1}", size) end
     if key == "TAP1" then return Sym("{T}", size) .. "(1)" end
     return Sym("{" .. key .. "}", size)
@@ -991,7 +994,7 @@ local function SymbolPanels(card, ctx)
     if ctx.perm then
         if ctx.perm.tapped then add("T", L("tt.tappedSymbol")) end
         local deaths = TTS.BoardFrame and TTS.BoardFrame.predictedDeaths
-        if deaths and deaths[ctx.perm] then add("SKULL") end
+        if deaths and deaths[ctx.perm] then add(deaths[ctx.perm] == "maybe" and "SKULL_MAYBE" or "SKULL") end
     end
     return specs
 end

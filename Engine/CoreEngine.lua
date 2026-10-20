@@ -660,6 +660,7 @@ function E:NextPhase()
         if bs.isRemoteAttacking then
             if self.isSolo then
                 -- The AI has no button to click: resolve right away
+                self:AIOrderDamage(bs)
                 self:ResolveCombatDamage()
             elseif not bs.attacksDone then
                 -- More ATTACK messages may still be on their way
@@ -681,8 +682,21 @@ function E:NextPhase()
                 self:RefreshUI()
             end
         elseif bs.blocksDeclared then
-            -- Attacking: blocks are in and reviewed, resolve combat on both clients
-            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT") end
+            -- Attacking: blocks are in and reviewed. An attacker blocked by several creatures
+            -- (Support) first picks the order its damage goes in; then combat resolves on
+            -- both clients.
+            if self:ChooseDamageOrders(bs, function()
+                if self.blockingState == bs and self.phase == "COMBAT_BLOCK" then self:NextPhase() end
+            end) then return end
+            if not self.isSolo then
+                for _, atkIdx in ipairs(bs.attackers) do
+                    local order = bs.damageOrder and bs.damageOrder[atkIdx]
+                    if order and #order > 1 then
+                        TTS.Net:Send(self.opponent, "ACTION:DAMAGE_ORDER:" .. atkIdx .. ":" .. table.concat(order, ":"))
+                    end
+                end
+                TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT")
+            end
             self:ResolveCombatDamage()
         end
         return

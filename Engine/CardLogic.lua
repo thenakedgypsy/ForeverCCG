@@ -1538,7 +1538,8 @@ end
 -- bs.blocks[blockerIdx] = attackerIdx holds each blocker's (first) block. A Bulwark X
 -- creature (bulwark = X) can block up to X attackers: the ones after the first are listed
 -- in bs.moreBlocks[blockerIdx]. An attacker can be blocked by several creatures as long
--- as all but one of them have Support.
+-- as all but one of them have Support; it then splits its damage between them in the order
+-- its player picks (bs.damageOrder[atkIdx], E:DamageOrder).
 -- =========================================================================
 
 -- How many attackers a creature can block at once
@@ -1954,20 +1955,40 @@ end
 -- COMBAT RESOLUTION
 -- =========================================================================
 
+-- The order an attacker blocked by several creatures (Support) deals its damage in:
+-- bs.damageOrder[atkIdx] as the attacker picked it (E:ChooseDamageOrders), then any blocker
+-- it doesn't list, lowest field index first
+function E:DamageOrder(bs, atkIdx)
+    local blockers, order, listed = self:BlockersOf(bs, atkIdx), {}, {}
+    local isBlocker = {}
+    for _, b in ipairs(blockers) do isBlocker[b] = true end
+    for _, b in ipairs((bs.damageOrder and bs.damageOrder[atkIdx]) or {}) do
+        if isBlocker[b] and not listed[b] then listed[b] = true; table.insert(order, b) end
+    end
+    for _, b in ipairs(blockers) do
+        if not listed[b] then table.insert(order, b) end
+    end
+    return order
+end
+
 -- Works out the combat damage of the current blocks without dealing it. Strikes-First
 -- creatures strike first, and a creature they kill never strikes back. A Bulwark deals its
--- full damage to each attacker it blocks; an attacker blocked by several creatures (Support)
--- deals its full damage to each of them, and each of them deals its full damage to it.
--- Returns { fights = { { atkIdx, blkIdx, atk, blk } } in attack order, info[perm] = the
--- stats it fought with, taken[perm] = damage marked on it, dealt[perm] = damage it dealt
--- (for Drain), trample[atkPerm] = damage that carries over to the defending player }.
+-- full damage to each attacker it blocks. An attacker blocked by several creatures (Support)
+-- splits its damage between them in its damage order (E:DamageOrder): each one takes enough
+-- to kill it before the next takes any, and the last takes what is left (Brutish: what is
+-- left carries over to the defending player instead). Each blocker deals its full damage
+-- to the attacker.
+-- Returns { fights = { { atkIdx, blkIdx, atk, blk } } in attack and damage order,
+-- info[perm] = the stats it fought with, taken[perm] = damage marked on it, dealt[perm] =
+-- damage it dealt (for Drain), trample[atkPerm] = damage that carries over to the defending
+-- player, popped[perm] = it loses Shielded }.
 function E:PlanCombatDamage(bs)
     local atkRemote = bs.isRemoteAttacking and true or false
     local defRemote = not atkRemote
     local atkField = atkRemote and self.remoteState.field or self.localState.field
     local defField = atkRemote and self.localState.field or self.remoteState.field
 
-    local fights, info = {}, {}
+    local fights, info, groups = {}, {}, {}
     local function Info(perm, isRemote)
         if info[perm] then return end
         local p, t = self:GetCreatureStats(perm, isRemote)
@@ -1977,64 +1998,124 @@ function E:PlanCombatDamage(bs)
     end
     for _, atkIdx in ipairs(bs.attackers or {}) do
         local atk = atkField[atkIdx]
-        for _, blkIdx in ipairs(atk and self:BlockersOf(bs, atkIdx) or {}) do
+        local group = { atk = atk, blks = {} }
+        for _, blkIdx in ipairs(atk and self:DamageOrder(bs, atkIdx) or {}) do
             local blk = defField[blkIdx]
             if blk then
                 Info(atk, atkRemote)
                 Info(blk, defRemote)
                 table.insert(fights, { atkIdx = atkIdx, blkIdx = blkIdx, atk = atk, blk = blk })
+                table.insert(group.blks, blk)
             end
         end
+        if #group.blks > 0 then table.insert(groups, group) end
     end
 
     -- Shielded: the first hit a creature takes is negated (popped[perm] = it loses Shielded)
-    local taken, dealt, struck, popped = {}, {}, {}, {}
+    local taken, dealt, popped, trample = {}, {}, {}, {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
-    -- Strikes-First damage lands first, then everyone still standing strikes
-    for _, firstStep in ipairs({ true, false }) do
-        local hits = {}
-        for _, f in ipairs(fights) do
-            for _, h in ipairs({ { f.atk, f.blk }, { f.blk, f.atk } }) do
-                local src = info[h[1]]
-                if src.first == firstStep and src.p > 0 and (firstStep or not Down(h[1])) then
-                    table.insert(hits, h)
-                end
-            end
-        end
-        for _, h in ipairs(hits) do
-            local src = info[h[1]]
-            if h[2].shielded and not popped[h[2]] then
-                popped[h[2]] = true
-            else
-                taken[h[2]] = (taken[h[2]] or 0) + (src.fatal and 999 or src.p)
-                dealt[h[1]] = (dealt[h[1]] or 0) + src.p
-            end
-            struck[h[1]] = true
+    local function Strikes(perm, firstStep)
+        local src = info[perm]
+        return src.first == firstStep and src.p > 0 and (firstStep or not Down(perm))
+    end
+    local function Hit(src, dst, n)
+        if dst.shielded and not popped[dst] then
+            popped[dst] = true
+        else
+            taken[dst] = (taken[dst] or 0) + (info[src].fatal and 999 or n)
+            dealt[src] = (dealt[src] or 0) + n
         end
     end
-
-    -- Brutish: what its blockers' toughness can't soak up carries over. Toughness another
-    -- attacker already soaked up (a Bulwark's) doesn't hold this one back.
-    local trample, absorbed, done = {}, {}, {}
-    for _, f in ipairs(fights) do
-        local atk = f.atk
-        if not done[atk] then
-            done[atk] = true
-            local p, left = info[atk].p, 0
-            for _, g in ipairs(fights) do
-                if g.atk == atk then
-                    local l = math.max(0, info[g.blk].t - (absorbed[g.blk] or 0))
-                    absorbed[g.blk] = (absorbed[g.blk] or 0) + math.min(p, l)
-                    left = left + l
-                end
-            end
-            if struck[atk] and p > left and self:HasKeyword(atk, atkRemote, "trample") then
-                trample[atk] = p - left
-            end
+    -- Strikes-First damage lands first, then everyone still standing strikes
+    for _, firstStep in ipairs({ true, false }) do
+        local attackers, blockers = {}, {}
+        for _, g in ipairs(groups) do
+            if Strikes(g.atk, firstStep) then table.insert(attackers, g) end
         end
+        for _, f in ipairs(fights) do
+            if Strikes(f.blk, firstStep) then table.insert(blockers, f) end
+        end
+        for _, g in ipairs(attackers) do
+            local src = info[g.atk]
+            local tramples = self:HasKeyword(g.atk, atkRemote, "trample")
+            local left = src.p
+            for i, blk in ipairs(g.blks) do
+                -- Enough to kill it: what its toughness has left (1 is enough with Fatal)
+                local lethal = math.max(0, info[blk].t - (blk.damage or 0) - (taken[blk] or 0))
+                if src.fatal and lethal > 0 then lethal = 1 end
+                local n = (i == #g.blks and not tramples) and left or math.min(left, lethal)
+                if n > 0 then Hit(g.atk, blk, n) end
+                left = left - n
+            end
+            if left > 0 then trample[g.atk] = left end
+        end
+        for _, f in ipairs(blockers) do Hit(f.blk, f.atk, info[f.blk].p) end
     end
 
     return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped }
+end
+
+-- Our attackers blocked by several creatures: the player picks the order each deals its
+-- damage in, one blocker at a time (the last one left goes last). Returns true while a pick
+-- is open; onDone runs once an attacker's order is complete (and comes back here for the
+-- next). Without the popup (headless tests) the default order (E:DamageOrder) is kept.
+function E:ChooseDamageOrders(bs, onDone)
+    if not (TTS.Choice and TTS.Choice.frame) then return false end
+    bs.damageOrder = bs.damageOrder or {}
+    bs.damageOrderPicked = bs.damageOrderPicked or {}
+    local atkIdx, atk
+    for _, i in ipairs(bs.attackers or {}) do
+        local perm = self.localState.field[i]
+        if perm and not bs.damageOrderPicked[i] and #self:BlockersOf(bs, i) > 1 then
+            atkIdx, atk = i, perm
+            break
+        end
+    end
+    if not atkIdx then return false end
+
+    local defField = self.remoteState.field
+    local picked = {}
+    local function Ask()
+        local rest, options = {}, {}
+        local isPicked = {}
+        for _, b in ipairs(picked) do isPicked[b] = true end
+        for _, b in ipairs(self:BlockersOf(bs, atkIdx)) do
+            if not isPicked[b] and defField[b] then table.insert(rest, b) end
+        end
+        if #rest <= 1 then
+            for _, b in ipairs(rest) do table.insert(picked, b) end
+            bs.damageOrder[atkIdx] = picked
+            bs.damageOrderPicked[atkIdx] = true
+            onDone()
+            return
+        end
+        for _, b in ipairs(rest) do
+            local perm = defField[b]
+            local _, t = self:GetCreatureStats(perm, true)
+            table.insert(options, { value = b, cardId = perm.id,
+                text = L("choice.damageOrderOption", TTS:CardName(perm.id), math.max(0, t - (perm.damage or 0))) })
+        end
+        local power = self:GetCreatureStats(atk, false)
+        TTS.Choice:Show({
+            title = L(#picked == 0 and "choice.damageOrder" or "choice.damageOrderNext", TTS:CardName(atk.id), power),
+            options = options,
+            onChoose = function(b)
+                if self.blockingState ~= bs or self.phase ~= "COMBAT_BLOCK" then return end
+                table.insert(picked, b)
+                -- The skulls show the order picked so far
+                bs.damageOrder[atkIdx] = { unpack(picked) }
+                self:RefreshUI()
+                Ask()
+            end,
+            onCancel = function()
+                if self.blockingState ~= bs then return end
+                bs.damageOrder[atkIdx] = nil
+                self:RefreshUI()
+            end,
+        })
+    end
+    Ask()
+    return true
 end
 
 function E:ResolveCombatDamage()
