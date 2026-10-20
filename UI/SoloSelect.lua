@@ -117,6 +117,8 @@ local function StartBlocker(enc)
     if E and not E:HasPlayableDeck() then return L("solo.deckSize") end
     local unlocked, reason = TTS:IsEncounterUnlocked(enc)
     if not unlocked then return reason end
+    local wait = TTS:EncounterCooldownLeft(enc)
+    if wait > 0 then return L("solo.cooldown", math.ceil(wait / 60)) end
     return nil
 end
 
@@ -367,6 +369,183 @@ local function AddBreakdown(tip, enc)
 end
 
 -- =========================================================================
+-- STARTING AN ENCOUNTER
+-- =========================================================================
+-- The deck picker replaces this window; cancelling it comes back to the map
+local function PickDeckFor(enc)
+    local opponent = TTS:EncounterOpponent(enc)
+    S:Hide()
+    TTS.DeckPicker:Open({
+        opponent = opponent,
+        onPick = function()
+            if TTS.Engine.inMatch then return end
+            TTS.Engine:StartMatch(opponent, true, true, enc)
+            if TTS.Engine.inMatch then TTS:RecordEncounterAttempt(enc) end
+        end,
+        onCancel = function()
+            if not TTS.Engine.inMatch then S:Show() end
+        end,
+    })
+end
+
+-- =========================================================================
+-- DUNGEON ENTRY DIALOG
+-- Entering a dungeon asks first, over the map: the reward card, who waits inside, their
+-- life and AI, the boss rules, and that the dungeon can't be entered again for an hour.
+-- =========================================================================
+local ENTRY_W, ENTRY_TEXT_W = 520, 316
+local entry
+
+local function BuildEntryDialog()
+    local D = CreateFrame("Frame", "TTS_DungeonEntryFrame", UIParent, backdropTemplate)
+    D:SetWidth(ENTRY_W)
+    D:SetPoint("CENTER", S, "CENTER")
+    D:SetClampedToScreen(true)
+    D:SetFrameStrata("FULLSCREEN_DIALOG")
+    D:SetToplevel(true)
+    D:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 }
+    })
+    D:EnableMouse(true)
+    D:SetMovable(true)
+    D:RegisterForDrag("LeftButton")
+    D:SetScript("OnDragStart", D.StartMoving)
+    D:SetScript("OnDragStop", D.StopMovingOrSizing)
+    D:Hide()
+    tinsert(UISpecialFrames, "TTS_DungeonEntryFrame")
+
+    local bar = D:CreateTexture(nil, "ARTWORK")
+    bar:SetPoint("TOPLEFT", 12, -12)
+    bar:SetPoint("TOPRIGHT", -12, -12)
+    bar:SetHeight(25)
+    bar:SetColorTexture(0, 0, 0, 0.35)
+    local line = D:CreateTexture(nil, "ARTWORK")
+    line:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, 0)
+    line:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+    line:SetHeight(1)
+    line:SetColorTexture(1, 0.82, 0, 0.55)
+
+    D.title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    D.title:SetPoint("TOPLEFT", 16, -11)
+    D.kind = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    D.kind:SetPoint("LEFT", D.title, "RIGHT", 10, -1)
+
+    local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", -2, -2)
+
+    -- The reward card on the left (dimmed until earned, as on the map)
+    if TTS.CreateCardFrame then
+        D.card = TTS.CreateCardFrame(D, TTS.PREVIEW_W, TTS.PREVIEW_H)
+        D.card:EnableMouse(false)
+        D.card:SetScript("OnEnter", nil)
+        D.card:SetScript("OnLeave", nil)
+        D.card:ClearAllPoints()
+        D.card:SetPoint("TOPLEFT", D, "TOPLEFT", 22, -50)
+    end
+
+    D.body = D:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    D.body:SetWidth(ENTRY_TEXT_W)
+    D.body:SetJustifyH("LEFT")
+    D.body:SetJustifyV("TOP")
+    if D.body.SetWordWrap then D.body:SetWordWrap(true) end
+    D.body:SetPoint("TOPLEFT", D, "TOPLEFT", ENTRY_W - ENTRY_TEXT_W - 24, -52)
+
+    D.warning = D:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    D.warning:SetWidth(ENTRY_W - 48)
+    D.warning:SetJustifyH("CENTER")
+    D.warning:SetTextColor(1, 0.5, 0.25)
+    D.warning:SetPoint("BOTTOM", D, "BOTTOM", 0, 50)
+
+    D.enter = CreatePanelButton(D, 120, 24, "solo.enter")
+    D.enter:SetPoint("BOTTOMRIGHT", D, "BOTTOM", -6, 18)
+    D.cancel = CreateFrame("Button", nil, D, "UIPanelButtonTemplate")
+    D.cancel:SetSize(120, 24)
+    D.cancel:SetNormalFontObject("GameFontNormalSmall")
+    D.cancel:SetHighlightFontObject("GameFontHighlightSmall")
+    D.cancel:SetText(CANCEL or "Cancel")
+    D.cancel:SetPoint("BOTTOMLEFT", D, "BOTTOM", 6, 18)
+    D.cancel:SetScript("OnClick", function() D:Hide() end)
+
+    D.enter:SetScript("OnClick", function()
+        local enc = D.enc
+        D:Hide()
+        -- Something may have changed while the dialog was open (a queue, the Deckbuilder...)
+        local blocker = StartBlocker(enc)
+        if blocker then
+            hint:SetText(RED .. TTS:EncounterName(enc) .. ": " .. blocker .. "|r")
+            return
+        end
+        PickDeckFor(enc)
+    end)
+
+    -- The map's tooltip for the clicked button would sit on top of the dialog
+    D:SetScript("OnShow", function() if TT then TT:Hide() end end)
+    if TTS.Sound and TTS.Sound.HookButtons then TTS.Sound:HookButtons(D) end
+    return D
+end
+
+local function EntryText(enc)
+    local lines = {}
+    local function Add(s) lines[#lines + 1] = s end
+    Add(L("solo.opponent", GOLD .. TTS:EncounterOpponent(enc) .. "|r"))
+    if #(enc.bosses or {}) > 1 then
+        local names = {}
+        for _, b in ipairs(enc.bosses) do table.insert(names, TTS.Cards[b] and TTS:CardName(b) or b) end
+        Add(L("solo.bosses", GOLD .. table.concat(names, ", ") .. "|r"))
+    end
+    Add(L("solo.lifeAi", GOLD .. (enc.life or 20) .. "|r", GOLD .. AI_LABEL[enc.ai] .. "|r"))
+    for _, rule in ipairs(TTS:GetEncounterRuleLines(enc)) do
+        Add(" ")
+        Add(ORANGE .. rule.name .. "|r")
+        Add(rule.text)
+    end
+    local card = enc.reward and TTS.Cards[enc.reward]
+    if card then
+        Add(" ")
+        Add(L("solo.reward", GOLD .. TTS:CardName(card) .. "|r", TTS:GetOwnedCopies(card) or 0))
+        Add(GREY .. L("solo.onePerWin") .. "|r")
+    end
+    local wins = TTS:GetEncounterWins(enc.id)
+    if wins > 0 then
+        Add("|cFF33DD33" .. L(wins == 1 and "solo.clearedTimes.one" or "solo.clearedTimes.other", wins) .. "|r")
+    end
+    return table.concat(lines, "\n")
+end
+
+local function ConfirmDungeon(enc)
+    entry = entry or BuildEntryDialog()
+    HideRewardPreview()
+    entry.enc = enc
+    entry.title:SetText(TTS:EncounterName(enc))
+    entry.kind:SetText(L("solo.dungeon"))
+    entry.body:SetText(EntryText(enc))
+    entry.warning:SetText(L("solo.enterWarning"))
+
+    local card = enc.reward and TTS.Cards[enc.reward]
+    local cardH = 0
+    if entry.card then
+        if card and TTS.PaintPreviewCard then
+            TTS.PaintPreviewCard(entry.card, card)
+            local owned = TTS:GetOwnedCopies(card) or 0
+            local tone = owned > 0 and 1 or 0.45
+            entry.card.art:SetVertexColor(tone, tone, tone)
+            if entry.card.model and entry.card.model.SetAlpha then entry.card.model:SetAlpha(owned > 0 and 1 or 0.6) end
+            entry.card:Show()
+            cardH = TTS.PREVIEW_H
+        else
+            entry.card:Hide()
+        end
+    end
+    -- Tall enough for the card or the text, whichever is taller, plus the warning and buttons
+    local contentH = math.max(cardH, entry.body:GetStringHeight() or 0)
+    entry:SetHeight(52 + contentH + 16 + (entry.warning:GetStringHeight() or 14) + 60)
+    entry:Show()
+end
+
+-- =========================================================================
 -- BUTTONS
 -- =========================================================================
 local buttons = {}   -- [id] = button
@@ -429,20 +608,11 @@ local function CreateEncounterButton(enc)
             hint:SetText(RED .. TTS:EncounterName(self.enc) .. ": " .. blocker .. "|r")
             return
         end
-        local enc = self.enc
-        local opponent = TTS:EncounterOpponent(enc)
-        -- The picker replaces this window; cancelling it comes back to the map
-        S:Hide()
-        TTS.DeckPicker:Open({
-            opponent = opponent,
-            onPick = function()
-                if TTS.Engine.inMatch then return end
-                TTS.Engine:StartMatch(opponent, true, true, enc)
-            end,
-            onCancel = function()
-                if not TTS.Engine.inMatch then S:Show() end
-            end,
-        })
+        if self.enc.kind == "dungeon" then
+            ConfirmDungeon(self.enc)
+        else
+            PickDeckFor(self.enc)
+        end
     end)
     return b
 end
@@ -450,10 +620,12 @@ end
 local function PaintButton(b)
     local state = EncounterState(b.enc)
     local locked = state == "locked"
+    -- A dungeon waiting out its hour is dimmed, but keeps its colour
+    local dim = locked or TTS:EncounterCooldownLeft(b.enc) > 0
     if b.icon.SetDesaturated then b.icon:SetDesaturated(locked) end
-    b.icon:SetVertexColor(locked and 0.55 or 1, locked and 0.55 or 1, locked and 0.55 or 1)
-    b:SetAlpha(locked and 0.75 or 1)
-    if state == "open" then b.glow:Show() else b.glow:Hide() end
+    b.icon:SetVertexColor(dim and 0.55 or 1, dim and 0.55 or 1, dim and 0.55 or 1)
+    b:SetAlpha(dim and 0.75 or 1)
+    if state == "open" and not dim then b.glow:Show() else b.glow:Hide() end
     if state == "cleared" then b.check:Show() else b.check:Hide() end
     if b.label then
         if locked then b.label:SetTextColor(0.6, 0.6, 0.6)
@@ -557,7 +729,21 @@ end)
 S:SetScript("OnHide", function()
     if TT then TT:Hide() end
     HideRewardPreview()
+    if entry then entry:Hide() end
 end)
+
+-- Dungeons whose hour runs out while the map is open light up again
+do
+    local sinceRepaint = 0
+    S:SetScript("OnUpdate", function(_, elapsed)
+        sinceRepaint = sinceRepaint + elapsed
+        if sinceRepaint < 10 then return end
+        sinceRepaint = 0
+        for _, b in pairs(buttons) do
+            if b:IsShown() then PaintButton(b) end
+        end
+    end)
+end
 
 local loader = CreateFrame("Frame")
 loader:RegisterEvent("PLAYER_LOGIN")

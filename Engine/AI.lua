@@ -147,6 +147,13 @@ function E:AICanAfford(costString)
     return self:CanAffordWithLands(costString, true)
 end
 
+-- What casting a card from hand costs the AI: nothing when an encounter rule makes it free
+-- (Free Boss, SoloEncounters.lua)
+function E:AICardCost(card)
+    if self.EncounterFreeCast and self:EncounterFreeCast(card.id) then return "" end
+    return card.cost
+end
+
 function E:AIPlanLandTaps(costString)
     return self:PlanLandTaps(costString, true)
 end
@@ -948,15 +955,16 @@ function E:AIChooseAction(profile, phase, skip)
 
     for i, id in ipairs(self.remoteState.hand) do
         local c = Card(id)
-        if c and c.type ~= "Land" and not (skip and skip[id]) and self:AICanAfford(c.cost) then
+        local cost = c and self:AICardCost(c)
+        if c and c.type ~= "Land" and not (skip and skip[id]) and self:AICanAfford(cost) then
             if c.type == "Creature" then
                 -- Haste creatures go out before combat; others whenever there is mana for them
-                Consider({ kind = "creature", handIdx = i, card = c, cost = c.cost,
+                Consider({ kind = "creature", handIdx = i, card = c, cost = cost,
                     score = CreatureCardValue(self, c, true) + (c.haste and phase == 1 and 1 or 0) })
             elseif c.effect and profile.spells then
                 local tgt, s = ScoreSpell(self, c, profile, phase)
                 if s and s > 0.5 then
-                    Consider({ kind = "spell", handIdx = i, card = c, cost = c.cost, tgt = tgt or nil, score = s + 1 })
+                    Consider({ kind = "spell", handIdx = i, card = c, cost = cost, tgt = tgt or nil, score = s + 1 })
                 end
             end
         end
@@ -976,8 +984,9 @@ function E:AIChooseAction(profile, phase, skip)
     if not profile.spells and best and best.kind == "creature" then
         for i, id in ipairs(self.remoteState.hand) do
             local c = Card(id)
-            if c and c.type == "Creature" and self:AICanAfford(c.cost) and (c.cmc or 0) > (best.card.cmc or 0) then
-                best = { kind = "creature", handIdx = i, card = c, cost = c.cost, score = best.score }
+            local cost = c and self:AICardCost(c)
+            if c and c.type == "Creature" and self:AICanAfford(cost) and (c.cmc or 0) > (best.card.cmc or 0) then
+                best = { kind = "creature", handIdx = i, card = c, cost = cost, score = best.score }
             end
         end
     end
@@ -996,7 +1005,11 @@ function E:AIExecute(a)
         if self.remoteState.hand[a.handIdx] ~= a.card.id or not self:PayMana(a.cost, true) then return false end
         local cardId = table.remove(self.remoteState.hand, a.handIdx)
         self.remoteState.handCount = #self.remoteState.hand
-        self:Log(L("log.aiCastCost", self.opponent, TTS:CardName(a.card), a.card.cost or "0"), "ACTION")
+        if a.cost == "" and (a.card.cost or "") ~= "" then
+            self:Log("|cFFFF4444" .. L("log.aiCastFree", self.opponent, TTS:CardName(a.card)) .. "|r", "ACTION")
+        else
+            self:Log(L("log.aiCastCost", self.opponent, TTS:CardName(a.card), a.card.cost or "0"), "ACTION")
+        end
         self:PutCreatureOntoBattlefield(cardId, true)
         return true
     elseif a.kind == "spell" then

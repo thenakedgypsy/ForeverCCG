@@ -1282,11 +1282,21 @@ function E:PlayNonCreatureCardSound()
 end
 
 
--- card (optional): the spell being cast. A Gear card tinkers (Engineering) instead.
-local GEAR_SOUND = 7141   -- Engineering(1): the engineering craft sound
+-- card (optional): the spell being cast. A Gear card is hammered out (Blacksmithing) instead.
+-- Craft sounds can loop until the game stops them (normally when the cast ends), so it is
+-- stopped after GEAR_SOUND_TIME seconds, fading out over GEAR_SOUND_FADE ms.
+local GEAR_SOUND = 4614   -- BlackSmithing: the blacksmithing craft sound
+local GEAR_SOUND_TIME, GEAR_SOUND_FADE = 1.2, 300
 function E:PlaySpellCastSound(card)
     if not (TTS.Sound and TTS.Sound.enabled) then return end
-    pcall(PlaySound, (card and card.subType == "Gear") and GEAR_SOUND or 1430, "SFX")
+    if not (card and card.subType == "Gear") then
+        pcall(PlaySound, 1430, "SFX")
+        return
+    end
+    local ok, willPlay, handle = pcall(PlaySound, GEAR_SOUND, "SFX")
+    if ok and willPlay and handle and StopSound then
+        TTS:SafeAfter(GEAR_SOUND_TIME, function() pcall(StopSound, handle, GEAR_SOUND_FADE) end)
+    end
 end
 
 function E:PlayCard(handIndex)

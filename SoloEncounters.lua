@@ -432,7 +432,8 @@ end
 
 -- =========================================================================
 -- PROGRESS & REWARDS
--- TTS_SoloProgress = { cleared = { [encounterId] = wins }, rewards = { [cardId] = copies } }
+-- TTS_SoloProgress = { cleared = { [encounterId] = wins }, rewards = { [cardId] = copies },
+--                      attempts = { [dungeonId] = server time its last game started or ended } }
 -- =========================================================================
 local MAX_REWARD_COPIES = 4
 
@@ -440,7 +441,30 @@ local function Progress()
     TTS_SoloProgress = TTS_SoloProgress or {}
     TTS_SoloProgress.cleared = TTS_SoloProgress.cleared or {}
     TTS_SoloProgress.rewards = TTS_SoloProgress.rewards or {}
+    TTS_SoloProgress.attempts = TTS_SoloProgress.attempts or {}
     return TTS_SoloProgress
+end
+
+-- A dungeon can be attempted again an hour after its last game, won or lost (zones have
+-- no wait). The wait is set as a game starts too, so leaving one with a /reload still counts.
+-- Server time, so changing the computer's clock doesn't bring it forward.
+local DUNGEON_COOLDOWN = 3600
+local function Now() return (GetServerTime and GetServerTime()) or time() end
+
+function TTS:RecordEncounterAttempt(enc)
+    if not (enc and enc.kind == "dungeon") then return end
+    Progress().attempts[enc.id] = Now()
+end
+
+-- Seconds before the encounter can be attempted again (0 = it can now)
+function TTS:EncounterCooldownLeft(enc)
+    if not (enc and enc.kind == "dungeon") then return 0 end
+    local last = tonumber(Progress().attempts[enc.id])
+    if not last then return 0 end
+    -- More than an hour ahead: a bad saved time, not a real wait
+    local left = last + DUNGEON_COOLDOWN - Now()
+    if left > DUNGEON_COOLDOWN then return 0 end
+    return math.max(0, left)
 end
 
 function TTS:GetEncounterWins(id)
@@ -589,7 +613,8 @@ end
 -- =========================================================================
 -- BOSS RULES
 -- Each rule may implement onStart, onAITurnStart, onPlayerTurnStart, onCreatureDeath and
--- statBonus (perm, isRemote -> p, t). Hooks receive (engine, encounter, ...).
+-- statBonus (perm, isRemote -> p, t) and freeCast (cardId -> true if the AI casts it for
+-- nothing). Hooks receive (engine, encounter, ...).
 -- =========================================================================
 local function BossName(id)
     local c = TTS.Cards[id]
@@ -626,10 +651,13 @@ end
 
 TTS.EncounterRules = {
     OPENING_BOSS = {
-        name = "Opening Boss",
-        text = "The boss starts on the battlefield, ready to fight.",
-        onStart = function(self, enc)
-            for _, b in ipairs(enc.bosses or {}) do BringInBoss(self, b, "solo.bossAwaits") end
+        name = "Free Boss",
+        text = "The boss costs the opponent nothing: it's cast as soon as it's drawn.",
+        freeCast = function(self, enc, cardId)
+            for _, b in ipairs(enc.bosses or {}) do
+                if b == cardId then return true end
+            end
+            return false
         end,
     },
     HEAD_START = {
@@ -734,6 +762,17 @@ function E:EncounterStatBonus(perm, isRemote)
         end
     end
     return p, t
+end
+
+-- True if a rule lets the AI cast this card for nothing (Free Boss)
+function E:EncounterFreeCast(cardId)
+    local enc = self.encounter
+    if not (self.isSolo and enc and enc.rules) then return false end
+    for _, ruleId in ipairs(enc.rules) do
+        local rule = TTS.EncounterRules[ruleId]
+        if rule and rule.freeCast and rule.freeCast(self, enc, cardId) then return true end
+    end
+    return false
 end
 
 -- Rule names and text for display, one line each

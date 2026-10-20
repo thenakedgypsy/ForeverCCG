@@ -192,6 +192,11 @@ function E:EndMatch(outcome, reason)
     self.inMatch = false
     self:ClearChoices()
 
+    -- A finished dungeon can't be attempted again for an hour (SoloEncounters.lua)
+    if self.isSolo and self.encounter and TTS.RecordEncounterAttempt then
+        TTS:RecordEncounterAttempt(self.encounter)
+    end
+
     -- A solo encounter win records progress and grants the encounter's reward card
     local rewardText, rewardCard
     if outcome == "won" and self.isSolo and self.encounter then
