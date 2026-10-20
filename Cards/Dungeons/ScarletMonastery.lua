@@ -110,11 +110,11 @@ TTS:AddCards({
     -- Solo reward
     ["SMO14"] = {
         id = "SMO14", name = "Azshir the Sleepless", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 5, toughness = 5, isReward = true, displayId = 5534,
+        power = 5, toughness = 6, isReward = true, displayId = 5534,
         zone = "Scarlet Monastery", creatureType = "Undead", npcEntry = 6490,
         anthem = { tag = "zone", value = "Scarlet Monastery", p = 1, t = 1 },
-        onDeath = { ops = { { op = "raise", src = "own" } } },
+        etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Martyrdom: Return a denizen card from your graveyard to the battlefield. Other Scarlet Monastery denizens you control get +1/+1."
+        text = "Arrival: Return a denizen card from your graveyard to the battlefield. Other Scarlet Monastery denizens you control get +1/+1."
     },
 })
