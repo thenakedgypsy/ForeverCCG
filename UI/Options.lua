@@ -147,7 +147,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 724)
+F:SetSize(340, 798)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -482,6 +482,27 @@ langButton:SetScript("OnEnter", function(self)
     if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L("options.language"), L("options.language.desc")) end
 end)
 langButton:SetScript("OnLeave", function(self)
+    if TTS.Tooltip then TTS.Tooltip:Hide(self) end
+end)
+
+-- =========================================================================
+-- DEVELOPER SECTION
+-- The last game's log, for bug reports (MatchRecorder.lua)
+-- =========================================================================
+local devSection = CreateSection("options.dev", 66)
+devSection:SetPoint("TOPLEFT", langSection, "BOTTOMLEFT", 0, -8)
+
+local copyLogButton = CreateFrame("Button", nil, devSection, "UIPanelButtonTemplate")
+copyLogButton:SetSize(170, 22)
+copyLogButton:SetPoint("TOPLEFT", devSection, "TOPLEFT", 12, -32)
+Loc:Bind(copyLogButton, "options.dev.copyLog")
+copyLogButton:SetScript("OnClick", function()
+    if TTS.MatchRecorder then TTS.MatchRecorder:ShowCopyWindow() end
+end)
+copyLogButton:SetScript("OnEnter", function(self)
+    if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L("options.dev.copyLog"), L("options.dev.copyLog.desc")) end
+end)
+copyLogButton:SetScript("OnLeave", function(self)
     if TTS.Tooltip then TTS.Tooltip:Hide(self) end
 end)
 

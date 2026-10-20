@@ -87,6 +87,15 @@ S["options.controls.both.desc"] = "Clicking and dragging both work."
 S["options.language"] = "Language"
 S["options.language.desc"] = "The language of cards, rules and windows. More languages come with the ForeverCCG_Languages addon. Takes effect after a /reload."
 S["options.language.reloadNow"] = "Reload now"
+S["options.dev"] = "Developer"
+S["options.dev.copyLog"] = "Copy Last Match Log"
+S["options.dev.copyLog.desc"] = "Opens a log of your last game (plays, messages with your opponent, the board at each turn and any errors) ready to copy into a bug report."
+
+-- MATCH LOG (MatchRecorder.lua)
+S["matchLog.title"] = "Last Match Log"
+S["matchLog.hint"] = "The log is selected: press Ctrl+C to copy it."
+S["matchLog.selectAll"] = "Select All"
+S["matchLog.none"] = "No game has been recorded yet. Play a game, then open this again."
 
 -- MAIN WINDOW
 S["main.yourDeck"] = "Your Deck"
