@@ -132,9 +132,9 @@ end
 
 if E and E.PlaySpellCastSound then
     local origSpellSound = E.PlaySpellCastSound
-    function E:PlaySpellCastSound()
+    function E:PlaySpellCastSound(...)
         if not S:IsOn("cards") then return end
-        return origSpellSound(self)
+        return origSpellSound(self, ...)
     end
 end
 

@@ -14,7 +14,8 @@ TTS = TTS or {}
 --  * When the target is chosen, an arrow flashes from the card to it, with a sound.
 --  * When a player takes damage, their life plate flashes red, the amount
 --    floats up off it, and a hit sound plays. Unblocked attackers flash an
---    arrow to the player they hit.
+--    arrow to the player they hit: blue, with the hit sound, when the player's
+--    damage shield soaks all of it.
 -- Sounds respect the Sounds checkbox and the "Targeting & hit sounds" option.
 -- Load after UI\Board.lua.
 -- =========================================================================
@@ -28,6 +29,7 @@ local SOUND_HIT    = 8959   -- RAID_WARNING
 local AIM_COLOR    = { 1.0, 0.82, 0.0, 0.85 }
 local TARGET_COLOR = { 1.0, 0.82, 0.0, 1.0 }
 local HIT_COLOR    = { 1.0, 0.15, 0.15, 1.0 }
+local SOAK_COLOR   = { 0.25, 0.55, 1.0, 1.0 }   -- an attack the player's damage shield soaked up
 
 local ARROW_THICKNESS = 4
 local ARROW_HEAD_LEN  = 16
@@ -330,6 +332,24 @@ local function ShowHit(isRemote, amount)
     h.num:Show()
 end
 
+-- Damage a player's shield soaked up entirely: the hit sound, without the red flash
+local function ShowSoak(isRemote)
+    local h = hits[isRemote and true or false]
+    hitShown = true
+    local now = GetTime()
+    if not (h.soakAt and now - h.soakAt < 0.25) and not (h.t and h.t < 0.25) then PlayFX(SOUND_HIT) end
+    h.soakAt = now
+end
+
+-- A player's damage shield as this client sees it (the PvP opponent's is our copy of theirs)
+local function ShieldOf(E, isRemote)
+    if isRemote and not E.isSolo then
+        local m = E.remoteState.mirror
+        return m and m.shield or 0
+    end
+    return (isRemote and E.remoteState or E.localState).damageShield or 0
+end
+
 local function UpdateHit(h, dt)
     if not h.t then return end
     h.t = h.t + dt
@@ -533,9 +553,13 @@ local function InstallHooks()
         local origDamage = E.DamagePlayer
         E.DamagePlayer = function(self, isRemote, amount, reason, ...)
             local state = isRemote and self.remoteState or self.localState
-            local before = state.life
+            local before, shield = state.life, ShieldOf(self, isRemote)
             local results = { origDamage(self, isRemote, amount, reason, ...) }
-            if state.life < before then ShowHit(isRemote, before - state.life) end
+            if state.life < before then
+                ShowHit(isRemote, before - state.life)
+            elseif ShieldOf(self, isRemote) < shield then
+                ShowSoak(isRemote)
+            end
             return unpack(results)
         end
     end
@@ -544,17 +568,18 @@ local function InstallHooks()
         local origCombat = E.ResolveCombatDamage
         E.ResolveCombatDamage = function(self, ...)
             local bs = self.blockingState
-            local arrows, state, before, defRemote = {}, nil, nil, nil
+            local arrows, state, before, shield, defRemote = {}, nil, nil, nil, nil
             -- PvP, defending: the attacker's client sends the damage to us afterwards
             -- (ACTION:DAMAGE), so our life doesn't change here; arrow every unblocked
-            -- attacker that will hit (the hit itself plays when that damage arrives)
-            local damageArrives = false
+            -- attacker that will hit (the hit itself plays when that damage arrives), in
+            -- blue if our damage shield will soak all of it
+            local damageArrives, incoming = false, 0
             if bs then
                 local atkRemote = bs.isRemoteAttacking and true or false
                 defRemote = not atkRemote
                 damageArrives = atkRemote and not self.isSolo and not self.preventCombatDamage
                 state = defRemote and self.remoteState or self.localState
-                before = state.life
+                before, shield = state.life, ShieldOf(self, defRemote)
 
                 local blocked = {}
                 for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
@@ -562,21 +587,31 @@ local function InstallHooks()
                 local dst = Pos(defRemote and B.oppLifeBtn or B.myLifeBtn)
                 for _, atkIdx in ipairs(bs.attackers or {}) do
                     local perm = atkField[atkIdx]
-                    if perm and not blocked[atkIdx] and (self:GetCreatureStats(perm, atkRemote) or 0) > 0 then
+                    local power = perm and (self:GetCreatureStats(perm, atkRemote) or 0) or 0
+                    if perm and not blocked[atkIdx] and power > 0 then
+                        incoming = incoming + power
                         local src = Pos(FindFieldFrame(atkRemote, atkIdx))
                         if src and dst then table.insert(arrows, { src, dst }) end
                     end
+                end
+                if damageArrives then
+                    for _, n in pairs(self:PlanCombatDamage(bs).trample) do incoming = incoming + n end
                 end
             end
 
             hitShown = false
             local results = { origCombat(self, ...) }
             if damageArrives then
-                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
+                local color = (incoming > 0 and shield >= incoming) and SOAK_COLOR or HIT_COLOR
+                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], color, HIT_ARROW_HOLD) end
             elseif state and state.life < before then
                 for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
                 -- Combat that changes life without going through DamagePlayer still gets a hit
                 if not hitShown then ShowHit(defRemote, before - state.life) end
+            elseif state and ShieldOf(self, defRemote) < shield then
+                -- The damage shield soaked up every point
+                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], SOAK_COLOR, HIT_ARROW_HOLD) end
+                if not hitShown then ShowSoak(defRemote) end
             end
             return unpack(results)
         end

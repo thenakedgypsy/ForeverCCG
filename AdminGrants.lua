@@ -13,8 +13,9 @@ local L = TTS.L
 -- prefix of their own, and they are obeyed only from the characters in ADMINS. The server
 -- sets the sender of an addon whisper, so it can't be faked (unlike the <from> inside a
 -- TTS_NET envelope).
---   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE
--- answered with  HAS:<cardId>:<copies>:<max>,  WIPED  or  ERR:<reason>[:<cardId>].
+--   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL
+-- answered with  HAS:<cardId>:<copies>:<max>,  WIPED,  GRANTEDALL:<cards that gained copies>
+-- or  ERR:<reason>[:<cardId>].
 -- Copies are written where the card's own way of being earned keeps them (kills, solo
 -- rewards, NPC gifts, the beta flag), so the rest of the addon sees an ordinary collection.
 -- =========================================================================
@@ -24,8 +25,6 @@ local PREFIX = "TTS_ADM"
 local ADMINS = {}
 for _, name in ipairs({
     "Aekku Sekenzen",
-    "Aeku Skenzen",
-    "Aeku Kyuta",
 }) do
     ADMINS[name:lower()] = true
 end
@@ -111,11 +110,33 @@ local function Wipe()
     DEFAULT_CHAT_FRAME:AddMessage(L("admin.wiped"))
 end
 
+-- Every collectible card up to its most copies. Returns how many cards gained copies.
+local function GrantAll()
+    local changed = 0
+    for _, card in pairs(TTS.Cards or {}) do
+        if Grantable(card) then
+            local max = MaxCopies(card)
+            if (TTS:GetOwnedCopies(card) or 0) < max then
+                SetCopies(card, max)
+                TTS:MarkCardNew(card.id)
+                changed = changed + 1
+            end
+        end
+    end
+    RefreshCollection()
+    DEFAULT_CHAT_FRAME:AddMessage(L("admin.grantedAll", changed))
+    return changed
+end
+
 local function OnAdminMessage(msg, sender)
     local cmd, cardId, count = strsplit(":", msg)
     if cmd == "WIPE" then
         Wipe()
         Reply(sender, "WIPED")
+        return
+    end
+    if cmd == "GRANTALL" then
+        Reply(sender, "GRANTEDALL:" .. GrantAll())
         return
     end
 
@@ -156,7 +177,7 @@ frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
     if prefix ~= PREFIX or channel ~= "WHISPER" or type(msg) ~= "string" then return end
     -- Replies are never answered, or two clients (or one whispering itself) would bounce
     -- errors back and forth forever
-    if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" then return end
+    if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" or msg:match("^GRANTEDALL:") then return end
     local from = NormalizeName(sender)
     if ADMINS[from:lower()] then
         OnAdminMessage(msg, from)

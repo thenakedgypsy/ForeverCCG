@@ -1282,9 +1282,11 @@ function E:PlayNonCreatureCardSound()
 end
 
 
-function E:PlaySpellCastSound()
+-- card (optional): the spell being cast. A Gear card tinkers (Engineering) instead.
+local GEAR_SOUND = 7141   -- Engineering(1): the engineering craft sound
+function E:PlaySpellCastSound(card)
     if not (TTS.Sound and TTS.Sound.enabled) then return end
-    pcall(PlaySound, 1430, "SFX")
+    pcall(PlaySound, (card and card.subType == "Gear") and GEAR_SOUND or 1430, "SFX")
 end
 
 function E:PlayCard(handIndex)
@@ -1392,7 +1394,7 @@ function E:PlayCard(handIndex)
 
         table.remove(self.localState.hand, handIndex)
         table.insert(self.localState.graveyard, cardId)
-        self:PlaySpellCastSound()
+        self:PlaySpellCastSound(card)
         -- Sent before resolving, so the opponent sees the card before the damage it causes
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
         self:ResolveSpell(card, nil)
@@ -1518,7 +1520,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     end
 
     table.insert(self.localState.graveyard, cardId)
-    self:PlaySpellCastSound()
+    self:PlaySpellCastSound(card)
     -- Sent before resolving, so the opponent sees the card and its target before the damage
     -- it causes. Target: PLAYER or CREATURE, MINE/THEIRS from our side, and its field index.
     if not self.isSolo then

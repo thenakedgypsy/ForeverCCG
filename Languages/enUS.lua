@@ -31,7 +31,8 @@ S["stamp.betaPopup"] = "Welcome to the launch of Forever: CCG!\n\nBeta collectio
 -- ADMIN (AdminGrants.lua)
 S["admin.granted"] = "|cFF00FF00[TTSE]|r The developer gave you %s! |cFF00FFFF(%d/%d copies)|r."
 S["admin.revoked"] = "|cFFFFA500[TTSE]|r The developer removed copies of %s. |cFF00FFFF(%d/%d copies)|r."
-S["admin.wiped"] = "|cFFFFA500[TTSE]|r The developer reset your Forever: CCG collection."
+S["admin.grantedAll"] = "|cFF00FF00[TTSE]|r The developer gave you every collectible card! |cFF00FFFF(%d cards topped up)|r."
+S["admin.wiped"] ="|cFFFFA500[TTSE]|r The developer reset your Forever: CCG collection."
 
 -- OPTIONS
 S["options.title"] = "Options"

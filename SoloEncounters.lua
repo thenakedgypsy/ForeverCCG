@@ -230,12 +230,13 @@ end
 -- =========================================================================
 -- DECK GENERATION
 -- 40 cards: the zone's creatures (2 copies each), or for a dungeon its boss card(s) padded
--- to 22 creatures with the dungeon's creatures; then a few class spells the AI can use;
--- prayers fill the rest, split by the colour share of the creatures' pips.
+-- to 22 creatures with the dungeon's creatures; then a few class spells the AI can use
+-- (and for a zone, 2 copies of its Gear Card); prayers fill the rest, split by the colour share of the creatures' pips.
 -- =========================================================================
 local DECK_SIZE = 40
 local DUNGEON_CREATURES = 22
 local SPELLS_BY_PROFILE = { dummy = 0, basic = 2, tactical = 3, expert = 4 }
+local ZONE_GEAR_COPIES = 2   -- copies of the zone's Gear Card in a zone opponent's deck
 local PRAYER_IDS = { W = "W01", U = "U01", B = "B01", R = "R01", G = "G01" }
 
 -- Spell ops the AI knows how to use well
@@ -244,7 +245,7 @@ local AI_SPELL_OPS = { damage = true, dot = true, destroy = true, freeze = true,
 
 local function IsAIFriendlySpell(card)
     if card.type ~= "Sorcery" or not card.effect or not card.effect.ops then return false end
-    if card.isGift then return false end   -- Gear is earned from merchants, never dealt to the AI
+    if card.isGift then return false end   -- Gear is the zone's own (ZONE_GEAR_COPIES), not a class spell
     for _, op in ipairs(card.effect.ops) do
         if not AI_SPELL_OPS[op.op] then return false end
         if op.to == "self_player" and op.op == "damage" then return false end
@@ -374,6 +375,19 @@ function E:BuildEncounterDeck(enc)
             local id = Pick(other)
             if not id then break end
             table.insert(spells, id)
+        end
+    end
+
+    -- A zone opponent arms its denizens with the zone's own Gear Card (colourless, so
+    -- always castable). The dummy casts no spells, so it gets none.
+    if enc.kind == "zone" and want > 0 then
+        local gear = {}
+        for id, c in pairs(TTS.Cards) do
+            if c.subType == "Gear" and c.zone == enc.zone then table.insert(gear, id) end
+        end
+        table.sort(gear)
+        for _, id in ipairs(gear) do
+            for _ = 1, ZONE_GEAR_COPIES do table.insert(spells, id) end
         end
     end
 

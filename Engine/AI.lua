@@ -718,8 +718,16 @@ local function ScoreOpOn(self, op, d, card, profile)
         local f = (op.op == "freeze") and 0.45 or 0.3
         return enemy and v * f or -v * f
     elseif op.op == "buff" then
-        local gain = (op.p or 0) + (op.t or 0) + (op.kw and #op.kw * 0.5 or 0)
-        if op.perm then return enemy and -gain or gain end
+        local gain = (op.p or 0) + (op.t or 0)
+        for _, k in ipairs(op.kw or {}) do
+            -- A keyword it already has adds nothing
+            if not self:HasKeyword(perm, d.isRemote, k) then gain = gain + (KEYWORD_VALUE[k] or 0.5) end
+        end
+        if op.perm then
+            if enemy then return -gain end
+            -- Lasting (Gear): on the creature worth most, as it stays as long as that one does
+            return gain + v * 0.05
+        end
         -- Temporary buffs are judged separately (only worth it before a fight)
         return 0
     elseif op.op == "hot" then
@@ -1000,7 +1008,7 @@ function E:AIExecute(a)
         self.remoteState.handCount = #self.remoteState.hand
         table.insert(self.remoteState.graveyard, cardId)
         self:Log(L("log.aiCast", self.opponent, TTS:CardName(a.card), TargetText(self, a.tgt)), "ACTION")
-        self:PlaySpellCastSound()
+        self:PlaySpellCastSound(a.card)
         self:ResolveSpell(a.card, a.tgt, true)
         return true
     elseif a.kind == "ability" then
