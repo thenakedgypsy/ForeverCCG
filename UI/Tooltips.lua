@@ -50,6 +50,12 @@ local function Sym(str, size)
     return str
 end
 
+-- A card's cost: (1)+[B] (TTS:FormatCost)
+local function Cost(str, size)
+    if TTS.FormatCost then return TTS:FormatCost(str, size) end
+    return Sym(str, size)
+end
+
 -- "1 turn" / "3 turns": the language's <key>.one / <key>.other form, filled with n
 local function Plural(n, key)
     return L(key .. (n == 1 and ".one" or ".other"), n)
@@ -407,6 +413,7 @@ end
 
 local function RenderPanel(spec)
     local p = AcquirePanel()
+    p:SetScale(mainTip:GetScale())
     p:SetOwner(UIParent, "ANCHOR_NONE")
     p:ClearLines()
     local c = spec.color or TAG_COLORS[spec.tag] or TAG_COLORS.Card
@@ -430,11 +437,13 @@ end
 -- A panel that would run off the bottom of the screen starts a new column.
 local function LayoutPanels()
     if #usedPanels == 0 then return end
+    -- The tooltips are scaled (TT:GetScale): their edges are in their own units, the screen's in UIParent's
+    local k = mainTip:GetScale()
     local left, right = mainTip:GetLeft(), mainTip:GetRight()
     local screenRight, screenBottom = UIParent:GetRight() or 0, UIParent:GetBottom() or 0
     local toRight = true
     if left and right then
-        local roomRight, roomLeft = screenRight - right, left
+        local roomRight, roomLeft = screenRight - right * k, left * k
         toRight = roomRight >= SIDE_ROOM or roomRight >= roomLeft
     end
     local near, far = "TOPLEFT", "TOPRIGHT"
@@ -451,7 +460,7 @@ local function LayoutPanels()
         else
             p:SetPoint(near, prev, below, 0, -PANEL_GAP)
             local bottom = p:GetBottom()
-            if bottom and bottom < screenBottom + 4 then
+            if bottom and bottom * k < screenBottom + 4 then
                 -- New column beside the widest panel of the last one, level with its top
                 p:ClearAllPoints()
                 local dy = (colHead:GetTop() or 0) - (widest:GetTop() or 0)
@@ -484,6 +493,12 @@ function TT:GetExtendedDelay()
     return tonumber(d) or 0.8
 end
 
+-- Size of the main tooltip and its panels (options menu: tooltip scale)
+function TT:GetScale()
+    local s = tonumber(TTS.Options and TTS.Options.Get and TTS.Options:Get("tooltipScale")) or 1
+    return math.max(0.5, math.min(2, s))
+end
+
 local function RenderMain()
     local st = state
     -- Owner and anchor are set once; later stages only redraw the lines
@@ -511,6 +526,7 @@ local function RenderAll()
     local st = state
     rendering = true
     ReleasePanels()
+    mainTip:SetScale(TT:GetScale())
     RenderMain()
     for _, spec in ipairs(st.base) do RenderPanel(spec) end
     for i = 1, st.stageShown do
@@ -653,6 +669,8 @@ end
 --   perm, isRemote, fieldIndex  the card is on the battlefield (live stats and states)
 --   header(tip)                 extra lines under the name (e.g. collection status)
 --   hint                        grey line at the bottom (e.g. click instructions)
+--   foil                        the card is shown as a foil: its name and a "Foil" line in its
+--                               colour (TTS.FoilColors), as the name on the card is
 -- =========================================================================
 local function DisplayType(card)
     if not card.type then return L("tt.card") end
@@ -670,10 +688,16 @@ local function FormatPT(power, toughness, damage, colorCode)
 end
 
 local function BuildCardMain(tip, card, ctx)
-    tip:AddLine(TTS:CardName(card), 1, 1, 1)
+    local foil = (ctx.foil or card.alwaysFoil) and TTS.FoilColors and TTS.FoilColors(card)[1]
+    if foil then
+        tip:AddLine(TTS:CardName(card), foil[1], foil[2], foil[3])
+        tip:AddLine(L("tt.foil"), foil[1], foil[2], foil[3])
+    else
+        tip:AddLine(TTS:CardName(card), 1, 1, 1)
+    end
     if ctx.header then ctx.header(tip) end
 
-    local costStr = (card.cost and card.cost ~= "") and Sym(card.cost, 18) or "0"
+    local costStr = (card.cost and card.cost ~= "") and Cost(card.cost, 18) or "0"
     tip:AddLine(L("tt.cost", costStr), 0.8, 0.8, 0.8)
     tip:AddLine(DisplayType(card), 0.8, 0.8, 0.8)
     local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
@@ -710,7 +734,7 @@ local function AttachedPanels(perm)
         local aCard = TTS.Cards[attId]
         if aCard then
             local isEquip = type(att) == "table" and att.isEquipment or (aCard.type == "Equipment" or aCard.isEquipment or aCard.subType == "Equipment")
-            local aCost = (aCard.cost and aCard.cost ~= "") and Sym(aCard.cost, 16) or "0"
+            local aCost = (aCard.cost and aCard.cost ~= "") and Cost(aCard.cost, 16) or "0"
             local lines = { { L("tt.cost", aCost), 0.8, 0.8, 0.8 } }
             if aCard.text and aCard.text ~= "" then table.insert(lines, { Sym(TTS:CardRulesText(aCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, {
@@ -724,7 +748,7 @@ local function AttachedPanels(perm)
     if TTS.Engine and TTS.Engine.GetPermEffectCards then
         for _, effId in ipairs(TTS.Engine:GetPermEffectCards(perm)) do
             local eCard = TTS.Cards[effId]
-            local eCost = (eCard.cost and eCard.cost ~= "") and Sym(eCard.cost, 16) or "0"
+            local eCost = (eCard.cost and eCard.cost ~= "") and Cost(eCard.cost, 16) or "0"
             local lines = {
                 { L("tt.cost", eCost), 0.8, 0.8, 0.8 },
                 { eCard.type and DisplayType(eCard) or L("type.Spell"), 0.8, 0.8, 0.8 },

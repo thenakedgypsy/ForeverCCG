@@ -944,7 +944,8 @@ function E:NewCreaturePerm(cardId, isRemote)
         damage = 0,
         tempPower = 0,
         tempToughness = 0,
-        uid = self:NewUid()
+        uid = self:NewUid(),
+        foil = self:IsFoil(cardId, isRemote),   -- cosmetic (E:IsPermFoil)
     }
 end
 

@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["DUN10"] = {
         id = "DUN10", name = "Hammerspine", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 830,
+        power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 830,
         zone = "Dun Morogh", creatureType = "Humanoid", npcId = 1119,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."

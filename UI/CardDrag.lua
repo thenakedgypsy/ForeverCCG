@@ -60,14 +60,14 @@ local function Ghost()
     return ghost
 end
 
-local function ShowGhost(card, scale)
+local function ShowGhost(card, scale, foil)
     local g = Ghost()
-    TTS.SetupCardVisual(g, card)
+    TTS.SetupCardVisual(g, card, foil)
     TTS.ApplyFrameTexture(g.border, card)
     g.border:SetVertexColor(1, 1, 1)
     g.title:SetText(TTS:CardName(card) or "")
     if card.cost and card.cost ~= "" then
-        g.cost:SetText(TTS:FormatSymbols(card.cost, 16))
+        g.cost:SetText(TTS:FormatCost(card.cost, 16))
         g.cost:Show()
     else
         g.cost:Hide()
@@ -135,7 +135,7 @@ local function BeginHandDrag(f)
             targetType = targetType, cardName = TTS:CardName(card) }
         SetAim(f, AIM_TARGET)
     else
-        ShowGhost(card, f.baseScale or 1)
+        ShowGhost(card, f.baseScale or 1, f.isFoil)
         MoveGhost()
         f:SetAlpha(0.3)
     end

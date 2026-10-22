@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["DSK10"] = {
         id = "DSK10", name = "Nefaru", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 11181,
+        power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 11181,
         zone = "Duskwood", creatureType = "Humanoid", npcId = 534,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
         text = "Fatal."

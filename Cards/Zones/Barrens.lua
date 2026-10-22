@@ -49,7 +49,7 @@ TTS:AddCards({
     },
     ["BRN06"] = {
         id = "BRN06", name = "Stormsnout", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 1537,
+        power = 3, toughness = 3, isMob = true, isNamed = true, isBoss = true, displayId = 1537,
         zone = "The Barrens", creatureType = "Beast", npcId = 3240,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
@@ -70,14 +70,14 @@ TTS:AddCards({
     },
     ["BRN09"] = {
         id = "BRN09", name = "Stormhide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
-        power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1539,
+        power = 6, toughness = 6, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 1539,
         zone = "The Barrens", creatureType = "Beast", npcId = 3238,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
     ["BRN10"] = {
         id = "BRN10", name = "Azzere the Skyblade", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 8, toughness = 8, flying = true, isMob = true, isBoss = true, displayId = 2702,
+        power = 8, toughness = 8, flying = true, isMob = true, isNamed = true, isBoss = true, displayId = 2702,
         zone = "The Barrens", creatureType = "Beast", npcId = 5834,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Airborne."

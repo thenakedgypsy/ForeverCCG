@@ -238,7 +238,7 @@ local function ShowMobCard(tooltip, card)
 
     FitMobCardToTooltip(tooltip)
 
-    if TTS.SetupCardVisual then TTS.SetupCardVisual(f, card) end
+    if TTS.SetupCardVisual then TTS.SetupCardVisual(f, card, TTS:HasFoil(card.id)) end
     if TTS.ApplyFrameTexture then TTS.ApplyFrameTexture(f.border, card) end
     f.border:SetVertexColor(1, 1, 1)
     if TTS.TintArt then TTS.TintArt(f.art, card) else f.art:SetVertexColor(1, 1, 1) end
@@ -255,7 +255,7 @@ local function ShowMobCard(tooltip, card)
     end
 
     if card.cost and card.cost ~= "" then
-        f.cost:SetText(TTS:FormatSymbols(card.cost, 18))
+        f.cost:SetText(TTS:FormatCost(card.cost, 18))
         f.cost:Show()
     else
         f.cost:Hide()
@@ -284,6 +284,11 @@ local function AddCardLine(tooltip)
 
     tooltip:AddLine(string.format("|T%s:20:10|t |cFFFFD200%s|r %s%d/%d|r",
         CARD_BACK_ICON, TTS.L("mobtip.card"), color, copies, MAX_COPIES))
+    -- Your foil of it, in the card's colour (as on the card)
+    if TTS:HasFoil(card.id) then
+        local rgb = TTS.FoilColors and TTS.FoilColors(card)[1] or { 1, 0.82, 0 }
+        tooltip:AddLine(TTS.L("link.ownFoil"), rgb[1], rgb[2], rgb[3])
+    end
     tooltip:Show()
 
     if TTS.Options and TTS.Options:Get("mobCardPreview") == false then return end

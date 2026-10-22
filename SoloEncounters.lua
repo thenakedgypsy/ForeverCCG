@@ -508,10 +508,13 @@ end
 -- innkeepers' gift prayers, Gear the weapon merchants' gift spells.
 -- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total,
 -- gear collected, gear mastered, gear total.
+-- Foils (BossTracker.lua) count with the mastered cards: the denizens that drop from kills
+-- can each have one (fTotal), and every foil owned adds to the multiplier.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
     local hTotal, hCollected, hMastered = 0, 0, 0
     local gTotal, gCollected, gMastered = 0, 0, 0
+    local fTotal, fCollected = 0, 0
     for _, card in pairs(TTS.Cards or {}) do
         if card.isBeta then
             -- Beta players only: no one else can get it, so it never counts towards a collection
@@ -520,6 +523,10 @@ function TTS:GetCollectionScore()
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end
             if copies >= 4 then mastered = mastered + 1 end
+            if card.isMob and not card.isReward then
+                fTotal = fTotal + 1
+                if self:HasFoil(card.id) then fCollected = fCollected + 1 end
+            end
         elseif card.type == "Land" and card.isGift then
             hTotal = hTotal + 1
             local copies = self:GetOwnedCopies(card) or 0
@@ -532,8 +539,9 @@ function TTS:GetCollectionScore()
             if copies >= MAX_REWARD_COPIES then gMastered = gMastered + 1 end
         end
     end
-    local score = (hCollected + gCollected + collected) * (hMastered + gMastered + mastered + 1)
-    return score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal
+    local score = (hCollected + gCollected + collected) * (hMastered + gMastered + mastered + fCollected + 1)
+    return score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
+        fCollected, fTotal
 end
 
 -- "1,234,567" (falls back to plain digits if the client lacks BreakUpLargeNumbers)
@@ -561,9 +569,9 @@ local maxScore
 function TTS:ColoredScore(n)
     if not n then return "|cFF888888?|r" end
     if not maxScore then
-        local _, _, _, total, _, _, hTotal, _, _, gTotal = self:GetCollectionScore()
+        local _, _, _, total, _, _, hTotal, _, _, gTotal, _, fTotal = self:GetCollectionScore()
         local all = hTotal + gTotal + total
-        maxScore = all * (all + 1)
+        maxScore = all * (all + fTotal + 1)
     end
     return self:TierColored(maxScore > 0 and math.sqrt(n / maxScore) or 0, self:FormatScore(n))
 end

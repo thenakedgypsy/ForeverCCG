@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["MUL10"] = {
         id = "MUL10", name = "Snagglespear", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 275,
+        power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 275,
         zone = "Mulgore", creatureType = "Humanoid", faction = "Quilboar", npcId = 5786,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."

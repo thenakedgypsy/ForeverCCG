@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["DUR10"] = {
         id = "DUR10", name = "Death Flayer", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 6, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 2491,
+        power = 6, toughness = 8, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 2491,
         zone = "Durotar", creatureType = "Beast", npcId = 5823,
         anthem = { tag = "zone", value = "Durotar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },

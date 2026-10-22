@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["DES10"] = {
         id = "DES10", name = "Kaskk", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, deathtouch = true, isMob = true, isBoss = true, displayId = 14255,
+        power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 14255,
         zone = "Desolace", creatureType = "Demon", npcId = 14226,
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
         text = "Fatal."

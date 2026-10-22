@@ -1006,6 +1006,29 @@ function E:OnRemoteEndTurn()
     self:RefreshUI()
 end
 
+-- Whether a side's copies of a card are foil (cosmetic only: nothing in the rules reads it)
+function E:IsFoil(cardId, isRemote)
+    if TTS.Cards[cardId] and TTS.Cards[cardId].alwaysFoil then return true end
+    local foils = isRemote and self.remoteFoils or self.localFoils
+    return foils and foils[cardId] and true or false
+end
+
+-- A permanent keeps the foil of the side it entered on (perm.foil, see NewCreaturePerm),
+-- so a creature that changes control still shows its owner's; others go by their side
+function E:IsPermFoil(perm, isRemote)
+    if perm.foil ~= nil then return perm.foil end
+    return self:IsFoil(perm.id, isRemote)
+end
+
+-- ACTION:FOILS payload: card ids, comma-separated
+function E:AddRemoteFoils(list)
+    self.remoteFoils = self.remoteFoils or {}
+    for cardId in tostring(list or ""):gmatch("[^,]+") do
+        if TTS.Cards[cardId] then self.remoteFoils[cardId] = true end
+    end
+    self:RefreshUI()
+end
+
 function E:StartMatch(opponentName, isHost, isSolo, encounter)
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         self:Log(L("err.deckbuilderOpen"), "ERROR")
@@ -1091,6 +1114,14 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
             end
         end
     end
+
+    -- Foils (BossTracker.lua) play as foils on both clients: ours are the deck's cards whose
+    -- foil we own, sent to the opponent; theirs arrive in their ACTION:FOILS (Network.lua)
+    self.localFoils, self.remoteFoils = {}, {}
+    for _, cardId in ipairs(self.localState.deck) do
+        if TTS:HasFoil(cardId) then self.localFoils[cardId] = true end
+    end
+    if not self.isSolo then TTS.Net:SendFoils(self.opponent, self.localFoils) end
 
     if not (scripted and scripted.fixedOrder) then
         for i = #self.localState.deck, 2, -1 do

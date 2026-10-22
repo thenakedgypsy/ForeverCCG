@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["UNG10"] = {
         id = "UNG10", name = "Uhk'loc", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 8129,
+        power = 9, toughness = 8, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 8129,
         zone = "Un'Goro Crater", creatureType = "Beast", npcId = 6585,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."

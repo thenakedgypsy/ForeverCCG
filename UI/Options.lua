@@ -18,6 +18,7 @@ local Loc = TTS.Locale
 local DEFAULTS = {
     tooltipDelay = 0,       -- seconds before a tooltip appears
     extendedTooltipDelay = 0.8,  -- seconds between each further layer of detail after that
+    tooltipScale = 1,       -- size of tooltips and their detail panels (Tooltips.lua)
     mobCardPreview = true,  -- card shown beside creature tooltips (MobTooltip.lua)
     tooltipPanels = {       -- kinds of detail panel stacked beside tooltips (Tooltips.lua)
         keyword  = true,
@@ -48,6 +49,7 @@ local DEFAULTS = {
 
 local DELAY_MIN, DELAY_MAX, DELAY_STEP = 0, 2, 0.1
 local EXTENDED_MAX = 3
+local SCALE_MIN, SCALE_MAX, SCALE_STEP = 0.5, 2, 0.05
 
 -- Sound categories shown under the master switch, in order (label / tooltip: options.sound.<key>[.desc])
 O.SOUND_CATEGORIES = { "creatures", "cards", "ui", "combat", "turn" }
@@ -147,7 +149,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 798)
+F:SetSize(340, 856)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -270,11 +272,12 @@ end
 -- =========================================================================
 -- TOOLTIP SECTION
 -- =========================================================================
-local tipSection = CreateSection("options.tooltips", 250)
+local tipSection = CreateSection("options.tooltips", 308)
 tipSection:SetPoint("TOPLEFT", soundSection, "BOTTOMLEFT", 0, -8)
 
--- Slider for a delay setting labelled with locale labelKey (tooltip: labelKey .. ".desc"), snapped to DELAY_STEP and saved under key
-local function CreateDelaySlider(name, labelKey, y, maxValue, key)
+-- Slider labelled with locale labelKey (tooltip: labelKey .. ".desc"), snapped to step and saved
+-- under key. Its ends are labelled with edgeKey (value * edgeMul); ShowValue is set by the caller.
+local function CreateSlider(name, labelKey, y, minValue, maxValue, step, key, edgeKey, edgeMul)
     local text = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     text:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 12, y)
     Loc:Bind(text, labelKey)
@@ -293,28 +296,21 @@ local function CreateDelaySlider(name, labelKey, y, maxValue, key)
         insets = { left = 3, right = 3, top = 6, bottom = 6 }
     })
     slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-    slider:SetMinMaxValues(DELAY_MIN, maxValue)
-    slider:SetValueStep(DELAY_STEP)
+    slider:SetMinMaxValues(minValue, maxValue)
+    slider:SetValueStep(step)
     if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
 
     local lowText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     lowText:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 2, 0)
-    Loc:Bind(lowText, "options.secondsShort", DELAY_MIN)
+    Loc:Bind(lowText, edgeKey, minValue * (edgeMul or 1))
 
     local highText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     highText:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", -2, 0)
-    Loc:Bind(highText, "options.secondsShort", maxValue)
+    Loc:Bind(highText, edgeKey, maxValue * (edgeMul or 1))
 
-    function slider:ShowValue(v)
-        if v <= 0 then
-            value:SetText(L("options.instant"))
-        else
-            value:SetText(L("options.seconds", v))
-        end
-    end
-
+    slider.valueText = value
     slider:SetScript("OnValueChanged", function(self, v)
-        v = math.floor(v / DELAY_STEP + 0.5) * DELAY_STEP
+        v = math.floor(v / step + 0.5) * step
         O:Set(key, v)
         self:ShowValue(v)
     end)
@@ -328,26 +324,45 @@ local function CreateDelaySlider(name, labelKey, y, maxValue, key)
     return slider
 end
 
+-- Slider for a delay setting, in seconds from DELAY_MIN
+local function CreateDelaySlider(name, labelKey, y, maxValue, key)
+    local slider = CreateSlider(name, labelKey, y, DELAY_MIN, maxValue, DELAY_STEP, key, "options.secondsShort")
+    function slider:ShowValue(v)
+        if v <= 0 then
+            self.valueText:SetText(L("options.instant"))
+        else
+            self.valueText:SetText(L("options.seconds", v))
+        end
+    end
+    return slider
+end
+
+local scaleSlider = CreateSlider("TTS_OptionsTooltipScaleSlider", "options.tooltipScale",
+    -34, SCALE_MIN, SCALE_MAX, SCALE_STEP, "tooltipScale", "options.percent", 100)
+function scaleSlider:ShowValue(v)
+    self.valueText:SetText(L("options.percent", math.floor(v * 100 + 0.5)))
+end
+
 local delaySlider = CreateDelaySlider("TTS_OptionsDelaySlider", "options.tooltipDelay",
-    -34, DELAY_MAX, "tooltipDelay")
+    -92, DELAY_MAX, "tooltipDelay")
 
 local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "options.extendedDelay",
-    -92, EXTENDED_MAX, "extendedTooltipDelay")
+    -150, EXTENDED_MAX, "extendedTooltipDelay")
 
-local mobCardCheck = CreateCheck(tipSection, 10, -144, "options.mobCardPreview")
+local mobCardCheck = CreateCheck(tipSection, 10, -202, "options.mobCardPreview")
 mobCardCheck:SetScript("OnClick", function(self)
     O:Set("mobCardPreview", self:GetChecked() and true or false)
 end)
 
 -- Which kinds of detail panel stack beside tooltips: three columns of switches
 local panelsText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-panelsText:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, -176)
+panelsText:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, -234)
 Loc:Bind(panelsText, "options.tipPanels")
 
 local panelChecks = {}
 for i, kind in ipairs(O.TOOLTIP_PANELS) do
     local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
-    local cb = CreateCheck(tipSection, 10 + col * 100, -192 - row * 24, "options.tipPanel." .. kind)
+    local cb = CreateCheck(tipSection, 10 + col * 100, -250 - row * 24, "options.tipPanel." .. kind)
     cb:SetScript("OnClick", function(self)
         O:GetDB().tooltipPanels[kind] = self:GetChecked() and true or false
     end)
@@ -522,6 +537,8 @@ function O:SyncControls()
         sl:SetValue(db[sl.key] or 0)
         sl:ShowValue(db[sl.key] or 0)
     end
+    scaleSlider:SetValue(db.tooltipScale or 1)
+    scaleSlider:ShowValue(db.tooltipScale or 1)
     mobCardCheck:SetChecked(db.mobCardPreview ~= false)
     for kind, cb in pairs(panelChecks) do cb:SetChecked(db.tooltipPanels[kind] ~= false) end
     if TTS.BoardFrame and TTS.BoardFrame.soundCheck then

@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["BAD10"] = {
         id = "BAD10", name = "Anathemus", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 10040,
+        power = 10, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 10040,
         zone = "Badlands", creatureType = "Giant", npcId = 2754,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
         text = "Brutish."

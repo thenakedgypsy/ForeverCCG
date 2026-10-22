@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["SWA10"] = {
         id = "SWA10", name = "Zekkis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 11, isMob = true, isBoss = true, displayId = 6693,
+        power = 9, toughness = 11, isMob = true, isNamed = true, isBoss = true, displayId = 6693,
         zone = "Swamp of Sorrows", creatureType = "Undead", npcId = 5400,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = ""

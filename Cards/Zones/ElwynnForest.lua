@@ -80,7 +80,7 @@ TTS:AddCards({
     },
     ["ELW10"] = {
         id = "ELW10", name = "Gruff Swiftbite", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 175,
+        power = 8, toughness = 8, isMob = true, isNamed = true, isBoss = true, displayId = 175,
         zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 100,
         anthem = { tag = "zone", value = "Elwynn Forest", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },

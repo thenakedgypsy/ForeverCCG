@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["SEA10"] = {
         id = "SEA10", name = "Smoldar", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 8, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 5781,
+        power = 8, toughness = 10, support = true, isMob = true, isNamed = true, isBoss = true, displayId = 5781,
         zone = "Searing Gorge", creatureType = "Elemental", npcId = 8278,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Support."

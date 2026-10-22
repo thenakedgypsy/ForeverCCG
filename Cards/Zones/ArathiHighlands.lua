@@ -70,7 +70,7 @@ TTS:AddCards({
     },
     ["ARA09"] = {
         id = "ARA09", name = "Darbel Montrose", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
-        power = 6, toughness = 7, isMob = true, isBoss = true, displayId = 4027,
+        power = 6, toughness = 7, isMob = true, isNamed = true, isBoss = true, displayId = 4027,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2598,
         anthem = { tag = "faction", value = "Syndicate", p = 1, t = 1 },
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["ARA10"] = {
         id = "ARA10", name = "Foulbelly", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 10, isMob = true, isBoss = true, displayId = 11551,
+        power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 11551,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2601,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = ""

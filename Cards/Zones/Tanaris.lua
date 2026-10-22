@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["TAN10"] = {
         id = "TAN10", name = "Cyclok the Mad", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 11532,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isNamed = true, isBoss = true, displayId = 11532,
         zone = "Tanaris", creatureType = "Humanoid", faction = "Ogre", npcId = 8202,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Warded."

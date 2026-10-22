@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["WIN10"] = {
         id = "WIN10", name = "Lady Hederine", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 10, toughness = 10, isMob = true, isBoss = true, displayId = 10925,
+        power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 10925,
         zone = "Winterspring", creatureType = "Demon", npcId = 10201,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
         text = ""

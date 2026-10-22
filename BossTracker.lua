@@ -29,6 +29,20 @@ function TTS:ClearNewCards()
     TTS_NewCards = {}
 end
 
+-- =========================================================================
+-- FOIL CARDS
+-- A foil is a cosmetic variant of a creature card, one per card, kept in TTS_FoilCards
+-- (card id -> true) apart from the copies owned (TTS_KilledBosses). Every copy of a card
+-- whose foil you own plays foil (Engine\CoreEngine.lua sends them to the opponent).
+-- =========================================================================
+-- An alwaysFoil card (Cards\Special.lua) has its foil with its first copy.
+function TTS:HasFoil(cardId)
+    local card = TTS.Cards and TTS.Cards[cardId]
+    if not card then return false end
+    if card.alwaysFoil then return (TTS.GetOwnedCopies and TTS:GetOwnedCopies(card) or 0) > 0 end
+    return TTS_FoilCards and TTS_FoilCards[cardId] and true or false
+end
+
 local tracker = CreateFrame("Frame")
 tracker:RegisterEvent("ADDON_LOADED")
 
@@ -40,7 +54,6 @@ local isMidnight = buildNum >= 120000
                    or type(CombatLogGetCurrentEventInfo) ~= "function"
 
 local wasInInstance = false
-local achievementUIPatched = false
 
 -- Recent processed GUID cache to prevent multiple credit triggers per single kill
 local recentKilledGUIDs = {}
@@ -55,6 +68,12 @@ local pendingNameKills = {}
 -- Chance (in %) that a creature kill awards the next copy of its card, indexed by
 -- the copy being rolled for: 1st copy is guaranteed, then 25%, 12% and 6%.
 local COPY_DROP_CHANCE = { 100, 25, 12, 6 }
+-- The same for bosses, dungeon creatures and named characters (card.isNamed): 50%, 12%, 6% and 3%
+local RARE_COPY_DROP_CHANCE = { 50, 12, 6, 3 }
+
+-- Chance (in %) that a kill awards the card's foil, rolled on its own once a copy is owned
+-- (the kill that drops the first copy included): it never changes the copy drops above
+local FOIL_CHANCE = { normal = 0.5, rare = 1, boss = 2 }
 
 -- Fast lookup maps for open-world mob cards
 local mobCardsByNpcID = {}
@@ -145,49 +164,6 @@ local function ExtractNpcID(guid)
     return nil
 end
 
-local function EnsureAchievementUI()
-    if achievementUIPatched then return end
-    if C_AddOns and C_AddOns.LoadAddOn then
-        pcall(C_AddOns.LoadAddOn, "Blizzard_AchievementUI")
-    elseif LoadAddOn then
-        pcall(LoadAddOn, "Blizzard_AchievementUI")
-    end
-    achievementUIPatched = true
-end
-
--- =========================================================================
--- CACHING & STATS
--- =========================================================================
-local cachedStatisticsByName = {}
-local cachedStatisticsByID = {}
-
-local function RefreshClientStatisticsCache()
-    EnsureAchievementUI()
-    local cats = SafeCall(GetStatisticsCategoryList)
-    if type(cats) ~= "table" then return end
-
-    for _, categoryID in ipairs(cats) do
-        local count = SafeCall(GetCategoryNumAchievements, categoryID) or 0
-        for index = 1, count do
-            local id, name = SafeCall(GetAchievementInfo, categoryID, index)
-            if id and not IsSecret(id) and name and not IsSecret(name) and name ~= "" then
-                local rawVal = SafeCall(GetStatistic, id)
-                if rawVal ~= nil and not IsSecret(rawVal) then
-                    local parsed = tonumber(rawVal)
-                    if not parsed and type(rawVal) == "string" then
-                        local digits = rawVal:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("[,%.%s]", ""):match("^%d+$")
-                        parsed = tonumber(digits)
-                    end
-                    if parsed then
-                        cachedStatisticsByID[id] = parsed
-                        cachedStatisticsByName[Normalize(name)] = parsed
-                    end
-                end
-            end
-        end
-    end
-end
-
 function TTS.BossTracker:BuildMobCardCache()
     mobCardsByNpcID = {}
     mobCardsByName = {}
@@ -212,8 +188,8 @@ end
 -- =========================================================================
 -- INSTANCE CARD NOTICE
 -- On entering a dungeon or raid, tell the player if it still has cards they
--- haven't collected 4/4. Dungeon creature cards carry their instance in
--- card.zone; the final boss cards have no zone, so they are listed here.
+-- haven't collected 4/4. Every dungeon card carries its instance in card.zone;
+-- each final boss card is listed here with its instance too.
 -- =========================================================================
 local BOSS_CARD_INSTANCES = {
     BOSS01 = "Ragefire Chasm",
@@ -282,6 +258,25 @@ local INSTANCE_IDS = {
 local INSTANCE_KEY_BY_ID = {}
 for key, id in pairs(INSTANCE_IDS) do INSTANCE_KEY_BY_ID[id] = key end
 
+-- Every instance with cards: its bosses and creatures (card.zone) drop at RARE_COPY_DROP_CHANCE
+local DUNGEON_KEYS = {}
+for _, instance in pairs(BOSS_CARD_INSTANCES) do DUNGEON_KEYS[InstanceKey(instance)] = true end
+
+-- Chances (in %) for copies 1-4 of a card: its own (card.dropChance), or by kind of creature
+local function DropChances(card)
+    if card.dropChance then return card.dropChance end
+    if card.isNamed or (card.zone and DUNGEON_KEYS[InstanceKey(card.zone)]) then return RARE_COPY_DROP_CHANCE end
+    return COPY_DROP_CHANCE
+end
+
+-- Foil chance by kind of creature: final dungeon bosses, then the rare kinds (named
+-- characters and dungeon creatures, as for RARE_COPY_DROP_CHANCE), then everything else
+local function FoilChance(card)
+    if BOSS_CARD_INSTANCES[card.id] then return FOIL_CHANCE.boss end
+    if card.isNamed or (card.zone and DUNGEON_KEYS[InstanceKey(card.zone)]) then return FOIL_CHANCE.rare end
+    return FOIL_CHANCE.normal
+end
+
 -- instanceId (optional) wins over the name, which only matches on English clients
 function TTS.BossTracker:InstanceHasLockedCards(instanceName, instanceId)
     local key = instanceId and INSTANCE_KEY_BY_ID[instanceId] or InstanceKey(instanceName)
@@ -331,11 +326,9 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
     TTS_KilledBosses = TTS_KilledBosses or {}
 
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
-    if currentKills < 4 then
+    if currentKills < 4 and math.random() * 100 < (DropChances(card)[currentKills + 1] or 0) then
         local newKills = currentKills + 1
-        -- A card may set its own chances (card.dropChance, in %, fractions allowed)
-        local chance = (card.dropChance or COPY_DROP_CHANCE)[newKills] or 0
-        if math.random() * 100 >= chance then return end
+        currentKills = newKills
         TTS_KilledBosses[card.id] = newKills
         TTS:MarkCardNew(card.id)
         local zoneText = card.zone and string.format(" (%s)", TTS.Locale:Term("zone", card.zone)) or ""
@@ -350,6 +343,29 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
             TTS.DeckBuilderFrame:RefreshAll()
         end
+    end
+
+    -- The foil's own roll, whether or not this kill dropped a copy
+    if currentKills > 0 then self:RollFoil(card, msgKey == "boss.deathUnlock" and "boss.foilDeath" or nil) end
+end
+
+-- msgKey: the chat line for the foil (default boss.foilSlain, as boss.mobSlain is for a copy)
+function TTS.BossTracker:RollFoil(card, msgKey)
+    if card.alwaysFoil or TTS:HasFoil(card.id) or math.random() * 100 >= FoilChance(card) then return end
+    TTS_FoilCards = TTS_FoilCards or {}
+    TTS_FoilCards[card.id] = true
+    TTS:MarkCardNew(card.id)   -- NEW in the Deckbuilder, as a new copy is
+    local zoneText = card.zone and string.format(" (%s)", TTS.Locale:Term("zone", card.zone)) or ""
+    local cardText = TTS.CardLink and TTS:CardLink(card.id, true) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+    DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.foilSlain", cardText .. zoneText))
+    local text = L("boss.foilPopup", TTS:CardName(card) or card.id)
+    if RaidNotice_AddMessage and RaidWarningFrame then
+        RaidNotice_AddMessage(RaidWarningFrame, text, { r = 0.6, g = 0.9, b = 1 })
+    elseif UIErrorsFrame then
+        UIErrorsFrame:AddMessage(text, 0.6, 0.9, 1)
+    end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
+        TTS.DeckBuilderFrame:RefreshAll()
     end
 end
 
@@ -407,95 +423,6 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
     end
 end
 
-function TTS.BossTracker:GetBossKills(card)
-    if not card then return 0 end
-
-    if card.isMob then
-        return SanitizeKillCount(TTS_KilledBosses and TTS_KilledBosses[card.id])
-    end
-
-    EnsureAchievementUI()
-    local kills = 0
-
-    if card.statisticId then
-        if cachedStatisticsByID[card.statisticId] then
-            kills = cachedStatisticsByID[card.statisticId]
-        else
-            local statVal = SafeCall(GetStatistic, card.statisticId)
-            if statVal and not IsSecret(statVal) then
-                local parsed = tonumber(statVal)
-                if not parsed and type(statVal) == "string" then
-                    local digits = statVal:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("[,%.%s]", ""):match("^%d+$")
-                    parsed = tonumber(digits)
-                end
-                if parsed and parsed > 0 then kills = parsed end
-            end
-        end
-    end
-
-    -- Statistic names are in the client's language: try the English and the translated card name
-    if kills == 0 and card.name then
-        for _, cardName in ipairs({ card.name, TTS:CardName(card) }) do
-            local targetName = Normalize(cardName)
-            for statName, val in pairs(cachedStatisticsByName) do
-                if targetName ~= "" and statName:find(targetName, 1, true) and val > kills then
-                    kills = val
-                end
-            end
-        end
-    end
-
-    if kills == 0 and card.metaAchievementId and card.criteriaIndex and GetAchievementCriteriaInfo then
-        local _, _, completed, quantity = SafeCall(GetAchievementCriteriaInfo, card.metaAchievementId, card.criteriaIndex)
-        if quantity and not IsSecret(quantity) and quantity > 0 then
-            kills = quantity
-        elseif completed and not IsSecret(completed) and completed == true then
-            kills = 1
-        end
-    end
-
-    if kills == 0 and card.achievementId and GetAchievementInfo then
-        local _, _, completed = SafeCall(GetAchievementInfo, card.achievementId)
-        if completed and not IsSecret(completed) and completed == true then
-            kills = 1
-        end
-    end
-
-    return kills
-end
-
-function TTS.BossTracker:ScanAllBosses()
-    EnsureAchievementUI()
-    RefreshClientStatisticsCache()
-    self:BuildMobCardCache()
-
-    TTS_KilledBosses = TTS_KilledBosses or {}
-    local anyChange = false
-
-    for cardId, card in pairs(TTS.Cards or {}) do
-        if card.isBoss and not card.isMob then
-            local kills = self:GetBossKills(card)
-            -- Copies taken away by the developer stay away (AdminGrants.lua)
-            local cap = TTS_AdminCaps and tonumber(TTS_AdminCaps[cardId])
-            if cap then kills = math.min(kills, cap) end
-            local oldKills = SanitizeKillCount(TTS_KilledBosses[cardId])
-
-            if kills > oldKills then
-                TTS_KilledBosses[cardId] = kills
-                if oldKills < 4 then TTS:MarkCardNew(cardId) end
-                anyChange = true
-                DEFAULT_CHAT_FRAME:AddMessage(L("boss.tracked", TTS:CardName(card), kills))
-            elseif TTS_KilledBosses[cardId] == nil then
-                TTS_KilledBosses[cardId] = oldKills
-            end
-        end
-    end
-
-    if anyChange and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
-        TTS.DeckBuilderFrame:RefreshAll()
-    end
-end
-
 -- =========================================================================
 -- EVENT REGISTRATION & HANDLERS (KILLDEX LOGIC)
 -- =========================================================================
@@ -546,7 +473,6 @@ tracker:SetScript("OnEvent", function(self, event, ...)
                     TTS_KilledBosses[k] = v and 1 or 0
                 end
             end
-            EnsureAchievementUI()
             TTS.BossTracker:BuildMobCardCache()
             RegisterEvents()
         end
@@ -556,13 +482,6 @@ tracker:SetScript("OnEvent", function(self, event, ...)
         local inInstance = SafeCall(IsInInstance) or false
 
         TTS.BossTracker:BuildMobCardCache()
-
-        if isInitialLogin or isReloadingUI or (wasInInstance and not inInstance) then
-            local function scan() TTS.BossTracker:ScanAllBosses() end
-            C_Timer.After(1, scan)
-            C_Timer.After(3, scan)
-            C_Timer.After(7, scan)
-        end
 
         -- Entering a dungeon or raid: mention any cards still to unlock there
         if inInstance and not wasInInstance then

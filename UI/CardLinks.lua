@@ -18,6 +18,9 @@ local L = TTS.L
 -- preview window on click. The id lets players using different languages read each
 -- other's links (each sees the card's name in their own language); tags from older
 -- versions carry only the English name, which is still recognised.
+-- A foil (BossTracker.lua) is linked with an F straight after its id ("#ELW03F", and
+-- "...:card:ELW03:F" in the link): it shows as "[Foil <name>]" in the card's colour, and its
+-- preview window shows it as a foil.
 -- =========================================================================
 local TAG_PATTERN = "%[Forever CCG: ([^%]]+)%]"
 -- Borrowed "garrmission" link type (as WeakAuras does): Blizzard's handler finds no valid
@@ -40,46 +43,61 @@ local function FindCardByName(name)
     return cardIdByName[name:lower()]
 end
 
-local function CardTag(card)
-    return "[Forever CCG: " .. TTS:CardName(card) .. " #" .. card.id .. "]"
+-- foil: the tag is for the card's foil
+local function CardTag(card, foil)
+    return "[Forever CCG: " .. TTS:CardName(card) .. " #" .. card.id .. (foil and "F" or "") .. "]"
 end
 
 -- The tag for a card, for chat the addon sends itself (e.g. the gift emotes)
-function TTS:CardTag(cardId)
+function TTS:CardTag(cardId, foil)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not (card and card.name) then return tostring(cardId) end
-    return CardTag(card)
+    return CardTag(card, foil)
 end
 
--- Shift-clicking a card while a chat box is open inserts its tag. Returns true when it did,
--- so click handlers can stop there instead of also playing / adding the card.
-function TTS:TryLinkCard(cardId)
+-- Shift-clicking a card while a chat box is open inserts its tag (foil: the card shown is a
+-- foil). Returns true when it did, so click handlers can stop there instead of also
+-- playing / adding the card.
+function TTS:TryLinkCard(cardId, foil)
     if not (cardId and IsShiftKeyDown and IsShiftKeyDown()) then return false end
     local card = TTS.Cards and TTS.Cards[cardId]
     if not (card and card.name) then return false end
     local editBox = ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
     if not editBox then return false end
-    editBox:Insert(CardTag(card))
+    editBox:Insert(CardTag(card, foil))
     return true
 end
 
 -- =========================================================================
 -- INCOMING CHAT: tag -> clickable link
 -- =========================================================================
--- Clickable gold [Card Name] link for local chat messages (e.g. unlock notices)
-function TTS:CardLink(cardId)
+-- Clickable gold [Card Name] link for local chat messages (e.g. unlock notices); a foil's
+-- reads [Foil Card Name], in the card's colour (TTS.FoilColors, UI\Board.lua)
+function TTS:CardLink(cardId, foil)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not (card and card.name) then return tostring(cardId) end
-    return LINK_COLOR .. "|H" .. LINK_PREFIX .. cardId .. "|h[" .. TTS:CardName(card) .. "]|h|r"
+    local color, name = LINK_COLOR, TTS:CardName(card)
+    foil = foil or card.alwaysFoil   -- only comes as a foil (Cards\Special.lua)
+    if foil then
+        local rgb = TTS.FoilColors and TTS.FoilColors(card)[1]
+        if rgb then color = string.format("|cFF%02X%02X%02X", rgb[1] * 255, rgb[2] * 255, rgb[3] * 255) end
+        name = L("link.foilName", name)
+    end
+    return color .. "|H" .. LINK_PREFIX .. cardId .. (foil and ":F" or "") .. "|h[" .. name .. "]|h|r"
 end
 
 local function ReplaceTag(inner)
     local id = inner:match("#([%w_]+)%s*$")
+    local foil = false
+    -- "#<id>F" is the card's foil (an id that is itself a card wins)
+    if id and TTS.Cards and not TTS.Cards[id] and id:sub(-1) == "F" and TTS.Cards[id:sub(1, -2)] then
+        id, foil = id:sub(1, -2), true
+    end
     if not (id and TTS.Cards and TTS.Cards[id]) then
         id = FindCardByName(inner)
     end
     if not id then return nil end -- not a card we know: leave the text as it is
-    return TTS:CardLink(id)
+    return TTS:CardLink(id, foil)
 end
 
 local function ChatFilter(self, event, msg, ...)
@@ -100,10 +118,12 @@ if ChatFrame_AddMessageEventFilter then
     end
 end
 
+-- The card id in one of our links, and whether it is the foil
 local function LinkCardId(link)
     if type(link) ~= "string" then return nil end
-    local id = link:match("^" .. LINK_PREFIX:gsub("%p", "%%%0") .. "([%w_]+)")
-    return id and TTS.Cards and TTS.Cards[id] and id or nil
+    local id, foil = link:match("^" .. LINK_PREFIX:gsub("%p", "%%%0") .. "([%w_]+)(:?F?)")
+    if not (id and TTS.Cards and TTS.Cards[id]) then return nil end
+    return id, foil == ":F"
 end
 
 -- =========================================================================
@@ -154,6 +174,10 @@ local function CollectionStatus(card)
     end
     if card.isBoss or card.isReward or card.isGift or card.isBeta then
         local copies = TTS:GetOwnedCopies(card) or 0
+        -- A beta card is one copy at most (DataStamp.lua)
+        if card.isBeta and copies > 0 then
+            return "|cFF00FF00" .. L("link.ownedOf", copies, 1) .. "|r"
+        end
         if copies >= 4 then
             return "|cFF00FF00" .. L("link.mastered") .. "|r"
         elseif copies > 0 then
@@ -182,16 +206,17 @@ local function CollectionStatus(card)
     return "|cFF00FF00" .. L("link.unlocked") .. "|r"
 end
 
-function TTS:ShowCardPreview(cardId)
+-- foil: shown as the card's foil
+function TTS:ShowCardPreview(cardId, foil)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not (card and TTS.CreateCardFrame and TTS.PaintPreviewCard) then return end
     if not previewCard then
         previewCard = TTS.CreateCardFrame(P, TTS.PREVIEW_W, TTS.PREVIEW_H)
         previewCard:SetPoint("TOP", P, "TOP", 0, CARD_TOP)
         previewCard:EnableMouse(true)
-        previewCard:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId) end)
+        previewCard:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId, self.isFoil) end)
         previewCard:SetScript("OnEnter", function(self)
-            if TTS.Tooltip then TTS.Tooltip:ShowCard(self, "ANCHOR_RIGHT", self.cardId) end
+            if TTS.Tooltip then TTS.Tooltip:ShowCard(self, "ANCHOR_RIGHT", self.cardId, { foil = self.isFoil }) end
         end)
         previewCard:SetScript("OnLeave", function(self)
             if TTS.Tooltip then TTS.Tooltip:Hide(self) end
@@ -199,8 +224,15 @@ function TTS:ShowCardPreview(cardId)
     end
     previewCard.cardId = cardId
     P:Show()
-    TTS.PaintPreviewCard(previewCard, card)
-    statusText:SetText(CollectionStatus(card))
+    TTS.PaintPreviewCard(previewCard, card, foil)
+    local status = CollectionStatus(card)
+    -- Your own foil of it, whichever version was linked, in the card's colour
+    if TTS:HasFoil(cardId) then
+        local rgb = TTS.FoilColors and TTS.FoilColors(card)[1] or { 1, 0.82, 0 }
+        status = status .. "\n" .. string.format("|cFF%02X%02X%02X", rgb[1] * 255, rgb[2] * 255, rgb[3] * 255)
+            .. L("link.ownFoil") .. "|r"
+    end
+    statusText:SetText(status)
 end
 
 -- =========================================================================
@@ -209,14 +241,14 @@ end
 -- any other link), then we act on our own links.
 -- =========================================================================
 local function OnLinkClicked(link)
-    local id = LinkCardId(link)
+    local id, foil = LinkCardId(link)
     if not id then return end
     -- Shift-click a link while typing: pass the card on, like an item link
-    if TTS:TryLinkCard(id) then return end
-    if P:IsShown() and previewCard and previewCard.cardId == id then
+    if TTS:TryLinkCard(id, foil) then return end
+    if P:IsShown() and previewCard and previewCard.cardId == id and (previewCard.isFoil and true or false) == foil then
         P:Hide()
     else
-        TTS:ShowCardPreview(id)
+        TTS:ShowCardPreview(id, foil)
     end
 end
 
@@ -225,8 +257,8 @@ if hooksecurefunc and SetItemRef then
 end
 
 local function OnHyperlinkEnter(frame, link)
-    local id = LinkCardId(link)
-    if id and TTS.Tooltip then TTS.Tooltip:ShowCard(frame, "ANCHOR_CURSOR", id) end
+    local id, foil = LinkCardId(link)
+    if id and TTS.Tooltip then TTS.Tooltip:ShowCard(frame, "ANCHOR_CURSOR", id, { foil = foil }) end
 end
 
 local function OnHyperlinkLeave(frame)

@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["BUR10"] = {
         id = "BUR10", name = "Volchan", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12232,
+        power = 10, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 12232,
         zone = "Burning Steppes", creatureType = "Giant", npcId = 10119,
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
         text = "Brutish."

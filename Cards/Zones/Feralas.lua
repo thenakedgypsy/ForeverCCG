@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["FER10"] = {
         id = "FER10", name = "Antilus the Soarer", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, flying = true, isMob = true, isBoss = true, displayId = 10889,
+        power = 9, toughness = 9, flying = true, isMob = true, isNamed = true, isBoss = true, displayId = 10889,
         zone = "Feralas", creatureType = "Beast", npcId = 5347,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Airborne."

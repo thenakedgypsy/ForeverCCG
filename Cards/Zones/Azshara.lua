@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["AZS10"] = {
         id = "AZS10", name = "Monnos the Elder", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 10042,
+        power = 10, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 10042,
         zone = "Azshara", creatureType = "Giant", npcId = 6646,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
         text = "Brutish."

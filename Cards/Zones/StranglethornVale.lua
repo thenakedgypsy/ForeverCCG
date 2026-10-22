@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["STV10"] = {
         id = "STV10", name = "Lord Sakrasis", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 4910,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isNamed = true, isBoss = true, displayId = 4910,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 2541,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Warded."

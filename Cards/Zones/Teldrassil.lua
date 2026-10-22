@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["TEL10"] = {
         id = "TEL10", name = "Blackmoss the Fetid", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 8, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 1549,
+        power = 8, toughness = 10, support = true, isMob = true, isNamed = true, isBoss = true, displayId = 1549,
         zone = "Teldrassil", creatureType = "Elemental", npcId = 3535,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Support."

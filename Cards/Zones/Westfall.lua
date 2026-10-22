@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["WES10"] = {
         id = "WES10", name = "Vultros", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
-        power = 7, toughness = 7, flying = true, isMob = true, isBoss = true, displayId = 507,
+        power = 7, toughness = 7, flying = true, isMob = true, isNamed = true, isBoss = true, displayId = 507,
         zone = "Westfall", creatureType = "Beast", npcId = 462,
         anthem = { tag = "zone", value = "Westfall", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },

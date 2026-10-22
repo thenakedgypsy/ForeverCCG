@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["BLA10"] = {
         id = "BLA10", name = "Dreadscorn", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 7844,
+        power = 9, toughness = 9, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 7844,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 8304,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Drain."

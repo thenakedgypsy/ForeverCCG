@@ -1058,6 +1058,25 @@ function TTS.Net:ResendAttackDeclaration(target, declarationId)
     end
 end
 
+-- ACTION:FOILS:<card id,card id,...> - the cards in our deck that play foil (cosmetic),
+-- in as many messages as it takes; each adds to the last. Nothing is sent without foils.
+function TTS.Net:SendFoils(target, foils)
+    local ids = {}
+    for cardId in pairs(foils or {}) do ids[#ids + 1] = cardId end
+    table.sort(ids)
+    local current
+    for _, cardId in ipairs(ids) do
+        local candidate = current and (current .. "," .. cardId) or cardId
+        if current and #WrapMessage(target, "ACTION:FOILS:" .. candidate) > MAX_ADDON_MESSAGE_LENGTH then
+            self:Send(target, "ACTION:FOILS:" .. current)
+            current = cardId
+        else
+            current = candidate
+        end
+    end
+    if current then self:Send(target, "ACTION:FOILS:" .. current) end
+end
+
 local function NextProtocolId(net, key)
     net[key] = (net[key] or 0) + 1
     return tostring(net[key])
@@ -1835,6 +1854,7 @@ function TTS.Net:OnReceive(msg, sender)
         -- (the client blocks it from the deck picker's), as the match result's is
         TTS.Net.acceptedBy = sender
         TTS.Net.earlyHero = nil
+        TTS.Net.earlyFoils = nil
         local acceptedAt = GetTime()
         -- No way back from here: unclicked, the popup times out into the deck picker
         -- (without the emote), which plays the selected deck when its own time runs out
@@ -1854,6 +1874,11 @@ function TTS.Net:OnReceive(msg, sender)
                     if early and SameName(early.name, sender) and TTS.Hero then
                         local p = early.parts
                         TTS.Hero:SetOpponent(sender, p[3], p[4], p[5], p[6], p[7])
+                    end
+                    local foils = TTS.Net.earlyFoils
+                    TTS.Net.earlyFoils = nil
+                    if foils and SameName(foils.name, sender) then
+                        for _, list in ipairs(foils.lists) do TTS.Engine:AddRemoteFoils(list) end
                     end
                     TTS.Engine:RefreshUI()
                 end,
@@ -1928,6 +1953,15 @@ function TTS.Net:OnReceive(msg, sender)
             TTS.Net.earlyHero = { name = sender, parts = parts }
             return
         end
+        -- Their foils follow the hero: kept the same way
+        if actionType == "FOILS" and (SameName(TTS.Net.acceptedBy, sender)
+            or (TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender))) then
+            if not (TTS.Net.earlyFoils and SameName(TTS.Net.earlyFoils.name, sender)) then
+                TTS.Net.earlyFoils = { name = sender, lists = {} }
+            end
+            table.insert(TTS.Net.earlyFoils.lists, parts[3])
+            return
+        end
 
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
@@ -1941,6 +1975,10 @@ function TTS.Net:OnReceive(msg, sender)
         if actionType == "HEROINFO" then
             -- HEROINFO:<level>:<class>:<race id>:<sex>:<item ids>, sent as the match starts
             if TTS.Hero then TTS.Hero:SetOpponent(sender, parts[3], parts[4], parts[5], parts[6], parts[7]) end
+
+        elseif actionType == "FOILS" then
+            -- FOILS:<card ids>, sent as the match starts (E:StartMatch)
+            E:AddRemoteFoils(parts[3])
 
         elseif actionType == "CONCEDE" then
             E:WinMatch(L("end.oppConceded", sender))

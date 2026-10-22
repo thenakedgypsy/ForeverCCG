@@ -210,7 +210,7 @@ local function RevealSpell(card, casterIsRemote, targets)
     -- Scaled as a whole so the printed rules keep their layout; offsets are in the card's scale
     f:SetScale(REVEAL_SCALE)
     f:SetPoint("CENTER", B, "CENTER", 0, REVEAL_Y[casterIsRemote and true or false] / REVEAL_SCALE)
-    TTS.PaintPreviewCard(f, card)
+    TTS.PaintPreviewCard(f, card, TTS.Engine:IsFoil(card.id, casterIsRemote and true or false))
     f:SetAlpha(1)
     f.t = 0
     local src = Pos(f)

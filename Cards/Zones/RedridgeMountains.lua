@@ -71,7 +71,7 @@ TTS:AddCards({
     },
     ["RED09"] = {
         id = "RED09", name = "Squiddic", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 5243,
+        power = 6, toughness = 6, isMob = true, isNamed = true, isBoss = true, displayId = 5243,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 14270,
         anthem = { tag = "faction", value = "Murloc", p = 1, t = 1 },
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
@@ -79,7 +79,7 @@ TTS:AddCards({
     },
     ["RED10"] = {
         id = "RED10", name = "Kazon", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 6041,
+        power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 6041,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 584,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Brutish."

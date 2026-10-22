@@ -11,16 +11,19 @@
 -- Collectible cards that belong to no zone or dungeon.
 --   unlockOnDeath = true: copies come from your own deaths instead of kills (BossTracker.lua,
 --                         PLAYER_DEAD), with the usual drop chances unless dropChance is set
---   dropChance = { %, %, %, % }: chance per kill/death for copies 1-4 (default 100/25/12/6)
+--   dropChance = { %, %, %, % }: chance per kill/death for copies 1-4 (default 100/25/12/6; 50/12/6/3 for
+--                                bosses, dungeon denizens and isNamed ones: BossTracker DropChances)
 --   diesAtTurnStart = true: dies at the start of its controller's turn (CoreEngine.lua BeginTurn)
 --   dressItems = { itemIds }: its display model wears these (UI\Board.lua, Hero.lua DressModel)
 --   isBeta = true: one copy for players whose beta collection was cleared at launch
 --                  (DataStamp.lua sets TTS_DataStamp.beta; SoloEncounters.lua GetOwnedCopies)
+--   alwaysFoil = true: only comes as a foil: every copy shows as one and has no foil to find
+--                      (BossTracker.lua HasFoil / RollFoil, UI\Board.lua SetCardFoil)
 -- =========================================================================
 TTS:AddCards({
     ["LEEROY"] = {
         id = "LEEROY", name = "Leeroy Jenkins", cost = "{3}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 1, toughness = 4, isMob = true, isBoss = true, unlockOnDeath = true, diesAtTurnStart = true,
+        power = 1, toughness = 4, isMob = true, isBoss = true, unlockOnDeath = true, diesAtTurnStart = true, alwaysFoil = true,
         dropChance = { 4, 2, 1, 0.5 },   -- % per death for copies 1-4 (BossTracker RecordMobKill)
         -- An NPC display's outfit is baked into its body texture, so items painted onto the body
         -- (chest, tabard, ...) can't go over it; only separate pieces (helm, shoulders, weapon)
@@ -39,7 +42,7 @@ TTS:AddCards({
     },
     ["BUGREPORTER"] = {
         id = "BUGREPORTER", name = "The Bug Reporter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 2, toughness = 3, isBeta = true,
+        power = 2, toughness = 3, isBeta = true, alwaysFoil = true,
         displayId = 7125,   -- Tinkerer Gizlock (classic npc 13601)
         dressItems = {
             10726,   -- Gnomish Mind Control Cap

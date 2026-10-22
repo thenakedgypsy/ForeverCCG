@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["THO10"] = {
         id = "THO10", name = "Vile Sting", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 8, toughness = 10, deathtouch = true, isMob = true, isBoss = true, displayId = 10988,
+        power = 8, toughness = 10, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 10988,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 5937,
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
         text = "Fatal."

@@ -164,7 +164,7 @@ local function SetupRuleCard(f, cardId, rulesOpts)
     if f.title then f.title:SetText(TTS:CardName(card) or "") end
     if f.cost then
         if card.cost and card.cost ~= "" then
-            f.cost:SetText(FormatTextWithSymbols(card.cost, rulesOpts and 18 or 16))
+            f.cost:SetText(TTS.FormatCost and TTS:FormatCost(card.cost, rulesOpts and 18 or 16) or FormatTextWithSymbols(card.cost, rulesOpts and 18 or 16))
             f.cost:Show()
         else
             f.cost:Hide()

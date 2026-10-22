@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["HIL10"] = {
         id = "HIL10", name = "Zalas Witherbark", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 4003,
+        power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 4003,
         zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2605,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
         text = "Brutish."

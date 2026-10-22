@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["DUS10"] = {
         id = "DUS10", name = "Lord Angler", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 9, toughness = 9, hexproof = true, isMob = true, isBoss = true, displayId = 14257,
+        power = 9, toughness = 9, hexproof = true, isMob = true, isNamed = true, isBoss = true, displayId = 14257,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 14236,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
         text = "Warded."

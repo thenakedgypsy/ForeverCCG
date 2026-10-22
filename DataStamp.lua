@@ -22,7 +22,7 @@ TTS = TTS or {}
 -- Cleared when the stamp is missing
 local CLEARED = {
     "TTS_KilledBosses", "TTS_SoloProgress", "TTS_NpcGifts", "TTS_HeroChoices",
-    "TTS_SavedDecks", "TTS_ActiveDeckIndex", "TTS_NewCards",
+    "TTS_SavedDecks", "TTS_ActiveDeckIndex", "TTS_NewCards", "TTS_FoilCards",
 }
 -- AdminGrants.lua clears the same data when told to wipe a player
 TTS.COLLECTION_VARS = CLEARED

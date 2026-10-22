@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["STO10"] = {
         id = "STO10", name = "Sorrow Wing", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 10, toughness = 10, isMob = true, isBoss = true, displayId = 11012,
+        power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 11012,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 5928,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
         text = ""

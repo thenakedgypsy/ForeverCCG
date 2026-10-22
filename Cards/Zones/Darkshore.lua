@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["DAR10"] = {
         id = "DAR10", name = "Apothecary Falthis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 4156,
+        power = 9, toughness = 9, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 4156,
         zone = "Darkshore", creatureType = "Humanoid", npcId = 3735,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Drain."

@@ -78,7 +78,7 @@ TTS:AddCards({
     },
     ["TIR10"] = {
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 7, toughness = 9, isMob = true, isBoss = true, displayId = 5430,
+        power = 7, toughness = 9, isMob = true, isNamed = true, isBoss = true, displayId = 5430,
         zone = "Tirisfal Glades", creatureType = "Undead", npcId = 10358,
         anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },

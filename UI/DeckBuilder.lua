@@ -151,6 +151,13 @@ local SPHERE_RGB = {
 local SPHERE_NAME = { W = "Holy", U = "Arcane", B = "Shadow", R = "Fire", G = "Nature" }
 local NEUTRAL_RGB = { 0.55, 0.55, 0.58 }
 
+-- A card's colour in the Deckbuilder. A hero's colour is its class's (Hero.lua), but its
+-- cost is generic: it pips, filters, sorts and counts as colourless.
+local function CardColor(card)
+    if card.isHero then return nil end
+    return card.color
+end
+
 local function RGBHex(rgb)
     return string.format("|cFF%02X%02X%02X", math.floor(rgb[1] * 255), math.floor(rgb[2] * 255), math.floor(rgb[3] * 255))
 end
@@ -159,6 +166,12 @@ end
 local function Sym(str, size, tapSize)
     if TTS.FormatSymbols then return TTS:FormatSymbols(str, size, tapSize) end
     return str
+end
+
+-- A card's cost: (1)+[B] (TTS:FormatCost)
+local function Cost(str, size)
+    if TTS.FormatCost then return TTS:FormatCost(str, size) end
+    return Sym(str, size)
 end
 
 -- Gives any frame SetBackdrop (built in on old clients, a mixin on newer ones)
@@ -453,7 +466,7 @@ local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if not typeOn[GetTypeGroup(card)] then return false end
-    if card.color and colorOn[card.color] == false then return false end
+    if CardColor(card) and colorOn[CardColor(card)] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
     -- A zone shows its denizens and its Gear
@@ -494,7 +507,7 @@ local SORT_LABEL = setmetatable({}, { __index = function(_, mode) return L("db.s
 -- shown next to the card (nil = no label)
 local SORT_KEY = {
     COLOR = function(card)
-        local r = SPHERE_RANK[card.color]
+        local r = SPHERE_RANK[CardColor(card)]
         if r then return 1, r, nil end
         return 2, 0, nil
     end,
@@ -790,7 +803,7 @@ end
 -- Fills a card frame with a card's art, frame, name, cost and stats
 local function PaintCardFrame(f, card, costSize)
     if TTS.SetupCardVisual then
-        TTS.SetupCardVisual(f, card)
+        TTS.SetupCardVisual(f, card, TTS:HasFoil(card.id))   -- foils show in the collection too
     else
         if card.displayId and f.model then
             f.art:Hide()
@@ -814,7 +827,7 @@ local function PaintCardFrame(f, card, costSize)
     f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
-        f.cost:SetText(Sym(card.cost, costSize))
+        f.cost:SetText(Cost(card.cost, costSize))
         f.cost:Show()
     else
         f.cost:Hide()
@@ -986,6 +999,7 @@ local function CardTooltip_OnEnter(self)
     -- 2. Tooltip at the mouse cursor, with the collection status under the name
     local cardId = self.cardId
     TT:ShowCard(self, "ANCHOR_CURSOR", cardId, {
+        foil = TTS:HasFoil(cardId),
         hint = self.hint and L(self.hint),
         header = function(tip)
             if IsCollectible(card) then
@@ -1488,7 +1502,7 @@ local function CreateTile(index)
     hit.ttsSilent = true   -- adding / removing plays its own sound (Sound.lua deckCard)
     hit:SetScript("OnClick", function(self, button)
         if not self.cardId then return end
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, TTS:HasFoil(self.cardId)) then return end
         if button == "RightButton" then
             D:RemoveCardFromDeck(self.cardId)
         else
@@ -1558,8 +1572,8 @@ end
 local function UpdateTile(t, id, card, deck)
     t.cardId = id
     t.hit.cardId = id
-    -- Repainting resets creature models, so only do it when the card changes
-    if t.paintedId ~= id then
+    -- Repainting resets creature models, so only do it when the card (or its foil) changes
+    if t.paintedId ~= id or (t.card.isFoil and true or false) ~= ((TTS:HasFoil(id) or card.alwaysFoil) and true or false) then
         PaintCardFrame(t.card, card, 12)
         t.paintedId = id
     end
@@ -1599,7 +1613,7 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 -- Collected = at least 1 copy of a creature card, Mastered = all 4 copies,
 -- and the same for Hearthstones (the innkeepers' gift prayers) and Gear Cards (the weapon
 -- merchants' gift spells, all 38 whichever faction gives them). Two lines: collected,
--- then mastered and the score.
+-- then mastered, foils (the denizens' foils owned, BossTracker.lua) and the score.
 -- =========================================================================
 local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 10)
@@ -1607,12 +1621,13 @@ collectionLabel:SetJustifyH("LEFT")
 collectionLabel:SetSpacing(2)
 
 local function UpdateCollectionProgress()
-    local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal = TTS:GetCollectionScore()
-    -- In the order of the score: (Hearthstones + Gear + creatures collected) x (... mastered + 1)
-    collectionLabel:SetText(L("db.collection",
+    local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
+        fCollected, fTotal = TTS:GetCollectionScore()
+    -- In the order of the score: (Hearthstones + Gear + creatures collected) x (... mastered + foils + 1)
+    collectionLabel:SetText(L("db.collectionFoils",
         TTS:ColoredCount(hCollected, hTotal), TTS:ColoredCount(gCollected, gTotal), TTS:ColoredCount(collected, total),
         TTS:ColoredCount(hMastered, hTotal), TTS:ColoredCount(gMastered, gTotal), TTS:ColoredCount(mastered, total),
-        TTS:ColoredScore(score)))
+        TTS:ColoredCount(fCollected, fTotal), TTS:ColoredScore(score)))
 end
 
 -- =========================================================================
@@ -1857,7 +1872,7 @@ local function GetDeckRow(i)
     r.ttsSilent = true   -- removing plays its own sound (Sound.lua deckCard)
     r:SetScript("OnClick", function(self)
         if not self.cardId then return end
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, TTS:HasFoil(self.cardId)) then return end
         D:RemoveCardFromDeck(self.cardId)
         -- Rows shift after a removal, so refresh what's under the cursor
         if self:IsShown() and self.cardId and self:IsMouseOver() then
@@ -1899,7 +1914,7 @@ local function SetupCardRow(r, cardId, card, count)
     for _, col in ipairs(SPHERE_ORDER) do
         if card.cost and card.cost:find("{" .. col .. "}", 1, true) then table.insert(colors, col) end
     end
-    if #colors == 0 then colors[1] = card.color end
+    if #colors == 0 then colors[1] = CardColor(card) end
     for k, s in ipairs(r.stripes) do
         if colors[k] ~= nil or k == 1 then
             local rgb = SPHERE_RGB[colors[k]] or NEUTRAL_RGB
@@ -1912,7 +1927,7 @@ local function SetupCardRow(r, cardId, card, count)
     r.count:SetText(count .. "x")
     r.count:Show()
     if card.cost and card.cost ~= "" then
-        r.cost:SetText(Sym(card.cost, 12))
+        r.cost:SetText(Cost(card.cost, 12))
     else
         r.cost:SetText("")
     end
@@ -2086,8 +2101,9 @@ function D:UpdateColorDistribution(deck)
     if deck and deck.cards then
         for id, count in pairs(deck.cards) do
             local c = TTS.Cards and TTS.Cards[id]
-            if c and count > 0 and GetTypeGroup(c) ~= "Prayer" and counts[c.color] then
-                counts[c.color] = counts[c.color] + count
+            local col = c and CardColor(c)
+            if col and count > 0 and GetTypeGroup(c) ~= "Prayer" and counts[col] then
+                counts[col] = counts[col] + count
                 total = total + count
             end
         end

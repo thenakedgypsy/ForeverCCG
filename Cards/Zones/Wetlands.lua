@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["WET10"] = {
         id = "WET10", name = "Molok the Crusher", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 536,
+        power = 9, toughness = 8, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 536,
         zone = "Wetlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = "Brutish."

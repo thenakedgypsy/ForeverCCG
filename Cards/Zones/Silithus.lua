@@ -77,7 +77,7 @@ TTS:AddCards({
     },
     ["SLI10"] = {
         id = "SLI10", name = "Mistress Natalia Mar'alith", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 10, toughness = 10, isMob = true, isBoss = true, displayId = 15330,
+        power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 15330,
         zone = "Silithus", creatureType = "Humanoid", npcId = 15215,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""

@@ -128,6 +128,14 @@ function TTS:FormatSymbols(str, size, tapSize)
     return formatted
 end
 
+-- A card's cost as shown over the card and in tooltips: as FormatSymbols, with a "+"
+-- between the generic part and the spheres, e.g. (1)+[B]
+function TTS:FormatCost(cost, size)
+    if not cost or cost == "" then return "" end
+    cost = cost:gsub("({[%dXx]+})({[WUBRGwubrg]})", "%1{+}%2", 1)
+    return (self:FormatSymbols(cost, size):gsub("{%+}", "|cFF8E939B+|r"))
+end
+
 -- Creature type, faction and zone as one tooltip line, e.g. "Humanoid  •  Defias  •  The Deadmines"
 -- (Gear shows its zone)
 function TTS:GetCardTagLine(card)
@@ -905,7 +913,7 @@ end
 local function ReloadHandModel(f)
     if f.currentCard and f.model and f.model:IsShown() and TTS.SetupCardVisual then
         f.visualCard = nil
-        TTS.SetupCardVisual(f, f.currentCard)
+        TTS.SetupCardVisual(f, f.currentCard, f.isFoil)
     end
 end
 
@@ -920,9 +928,9 @@ local function Card_OnEnter(self)
 
     local card = TTS.Cards[self.cardId]
     if not card then return end
-    if ShowBoardPreview then ShowBoardPreview(self, card) end
+    if ShowBoardPreview then ShowBoardPreview(self, card, self.isFoil) end
 
-    local ctx = {}
+    local ctx = { foil = self.isFoil }
     if self.fieldIndex then
         ctx.perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
         ctx.isRemote = self.isRemote
@@ -1009,6 +1017,155 @@ local function ApplyBackTexture(t)
 end
 
 -- =========================================================================
+-- FOIL GLOW
+-- A foil card (BossTracker.lua) glows in its colour: a soft halo round its edges and a rim
+-- inside its art window, pulsing slowly, with sparkles twinkling off its edges; a two-colour
+-- card fades between both. Purely a look; each client paints it for both players' cards
+-- (E:IsFoil / E:IsPermFoil).
+-- =========================================================================
+local FOIL_GLOW_TEX = TEXTURE_ROOT .. "FoilGlow.tga"   -- the card fills its middle 192 of 256 px
+local FOIL_GLOW_PAD = 32 / 192   -- halo width beyond the card, as a share of the card's size
+local FOIL_RIM_TEX  = TEXTURE_ROOT .. "FoilRim.tga"    -- glow fading in from the art window's edges
+local FOIL_RIM_ALPHA = 0.8   -- the rim's strength, at the top of the pulse
+local FOIL_PULSE = 1.2    -- pulse speed (radians per second)
+local FOIL_FADE  = 0.8    -- a two-colour card's fade between its colours (radians per second)
+-- The spheres' colours, as the Deckbuilder shows them; colourless cards glow gold
+local FOIL_RGB = {
+    W = { 1.00, 0.82, 0.00 },  -- Holy
+    U = { 0.40, 0.73, 1.00 },  -- Arcane
+    B = { 0.60, 0.40, 1.00 },  -- Shadow
+    R = { 1.00, 0.27, 0.27 },  -- Fire
+    G = { 0.27, 1.00, 0.27 },  -- Nature
+}
+local FOIL_GOLD = { 1.00, 0.82, 0.20 }
+
+-- The card's colours as its frame picks them (DualFrameTexture / SingleFrameTexture): its
+-- two colours, or its colour, school or first colour in its cost
+local function FoilColors(card)
+    local list = {}
+    if card then
+        for _, col in ipairs(card.colors or { "W", "U", "B", "R", "G" }) do
+            if card.colors or (card.cost and card.cost:find("{" .. col .. "}", 1, true)) then
+                list[#list + 1] = FOIL_RGB[col]
+            end
+        end
+        if #list ~= 2 then
+            local col = card.color or card.school or (card.cost and card.cost:match("{([WUBRGwubrg])}"))
+            list = { FOIL_RGB[col and string.upper(col)] }
+        end
+    end
+    if not list[1] then list = { FOIL_GOLD } end
+    return list
+end
+
+-- Sparkles: little stars that twinkle on round the card's edge and drift off it, in the
+-- glow's colour washed towards white. Made on the overlay (over the model and frame) the
+-- first time a frame shows a foil.
+local FOIL_SPARKLE_TEX = TEXTURE_ROOT .. "FoilSparkle.tga"
+local FOIL_SPARKS      = 6       -- alive at once per card
+local FOIL_SPARK_SIZE  = 0.22    -- largest size, as a share of the card's width
+local FOIL_SPARK_LIFE  = { 0.7, 1.5 }   -- seconds, shortest and longest
+local FOIL_SPARK_DRIFT = 6       -- px per second off the card's edge (card's own scale)
+local FOIL_SPARK_RISE  = 5       -- px per second upwards
+local FOIL_SPARK_WHITE = 0.45    -- how far towards white the colour is washed
+
+-- A new sparkle somewhere on the card's edge (w x h), after a short random wait
+local function SpawnSpark(s, w, h)
+    local u = math.random() * 2 * (w + h)
+    if u < w then s.x, s.y, s.nx, s.ny = u, h, 0, 1
+    elseif u < w + h then s.x, s.y, s.nx, s.ny = w, h - (u - w), 1, 0
+    elseif u < 2 * w + h then s.x, s.y, s.nx, s.ny = w - (u - w - h), 0, 0, -1
+    else s.x, s.y, s.nx, s.ny = 0, u - 2 * w - h, -1, 0 end
+    -- A little either side of the edge
+    local off = (math.random() - 0.3) * w * 0.08
+    s.x, s.y = s.x + s.nx * off, s.y + s.ny * off
+    s.t = -math.random() * 0.6
+    s.life = FOIL_SPARK_LIFE[1] + math.random() * (FOIL_SPARK_LIFE[2] - FOIL_SPARK_LIFE[1])
+    s.spin = (math.random() - 0.5) * 2
+    s.size = w * FOIL_SPARK_SIZE * (0.6 + 0.4 * math.random())
+end
+
+local function UpdateSparks(self, elapsed, r, g, b)
+    local w, h = self.w, self.h
+    local shade = self.shade or 1
+    r, g, b = r + (1 - r) * FOIL_SPARK_WHITE, g + (1 - g) * FOIL_SPARK_WHITE, b + (1 - b) * FOIL_SPARK_WHITE
+    for _, s in ipairs(self.sparks) do
+        s.t = s.t + elapsed
+        if s.t >= s.life then SpawnSpark(s, w, h) end
+        local tex = s.tex
+        if s.t < 0 then
+            tex:Hide()
+        else
+            local k = math.sin(math.pi * s.t / s.life)   -- 0 -> 1 -> 0 over its life
+            local size = s.size * (0.3 + 0.7 * k)
+            tex:SetSize(size, size)
+            tex:ClearAllPoints()
+            tex:SetPoint("CENTER", self.anchor, "BOTTOMLEFT",
+                s.x + s.nx * FOIL_SPARK_DRIFT * s.t, s.y + s.ny * FOIL_SPARK_DRIFT * s.t + FOIL_SPARK_RISE * s.t)
+            tex:SetVertexColor(r, g, b, k * shade)
+            if tex.SetRotation then tex:SetRotation(s.spin * s.t) end
+            tex:Show()
+        end
+    end
+end
+
+local function HideSparks(foil)
+    for _, s in ipairs(foil.sparks or {}) do s.tex:Hide() end
+end
+
+local function MakeSparks(foil)
+    if foil.sparks then return end
+    foil.sparks = {}
+    for k = 1, FOIL_SPARKS do
+        local tex = foil.anchor:CreateTexture(nil, "OVERLAY", nil, 6)
+        tex:SetTexture(FOIL_SPARKLE_TEX)
+        tex:SetBlendMode("ADD")
+        tex:Hide()
+        local s = { tex = tex }
+        SpawnSpark(s, foil.w, foil.h)
+        s.t = -(k - 1) * FOIL_SPARK_LIFE[2] / FOIL_SPARKS   -- staggered from the start
+        foil.sparks[k] = s
+    end
+end
+
+local function Foil_OnUpdate(self, elapsed)
+    self.t = (self.t or 0) + elapsed
+    local a, b = self.colors[1], self.colors[2] or self.colors[1]
+    local mix = 0.5 + 0.5 * math.sin(self.t * FOIL_FADE)
+    local r, g, bl = a[1] + (b[1] - a[1]) * mix, a[2] + (b[2] - a[2]) * mix, a[3] + (b[3] - a[3]) * mix
+    local pulse = 0.5 + 0.5 * math.sin(self.t * FOIL_PULSE)
+    self.glow:SetVertexColor(r, g, bl, (0.4 + 0.6 * pulse) * (self.shade or 1))
+    self.rim:SetVertexColor(r, g, bl, FOIL_RIM_ALPHA * (0.4 + 0.6 * pulse) * (self.shade or 1))
+    self.title:SetTextColor(r, g, bl)
+    UpdateSparks(self, elapsed, r, g, bl)
+end
+
+-- foil: show the glow (true) or not, in the card's colours, with the card's name in them too.
+-- shade (default 1) dims it with the card, e.g. a tapped one (TintArt).
+local function SetCardFoil(f, foil, card, shade)
+    if not f.foil then return end
+    foil = foil or (card and card.alwaysFoil)   -- only comes as a foil (Cards\Special.lua)
+    f.isFoil = foil and true or nil
+    f.foil.shade = shade or 1
+    if foil then
+        f.foil.colors = FoilColors(card)
+        local c = f.foil.colors[1]
+        f.title:SetTextColor(c[1], c[2], c[3])
+        MakeSparks(f.foil)
+        f.foil.glow:Show()
+        f.foil.rim:Show()
+        f.foil:Show()
+    else
+        f.foil:Hide()
+        f.foil.glow:Hide()
+        f.foil.rim:Hide()
+        HideSparks(f.foil)
+        local c = f.foil.titleColor
+        f.title:SetTextColor(c[1] or 1, c[2] or 1, c[3] or 1)
+    end
+end
+
+-- =========================================================================
 -- CARD FRAME FACTORY
 -- =========================================================================
 local function CreateCardFrame(parent, sizeX, sizeY)
@@ -1071,9 +1228,35 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.model:EnableMouse(false)
     f.model:Hide()
 
+    -- Foil glow (SetCardFoil): a halo just outside the card, under the card's own background.
+    -- f.foil only runs its pulse while shown.
+    local glowX, glowY = sizeX * FOIL_GLOW_PAD, sizeY * FOIL_GLOW_PAD
+    f.foil = CreateFrame("Frame", nil, f)
+    f.foil:SetSize(1, 1)
+    f.foil:SetPoint("CENTER", f, "CENTER")
+    f.foil:EnableMouse(false)
+    f.foil.glow = f:CreateTexture(nil, "BACKGROUND", nil, -8)
+    f.foil.glow:SetPoint("TOPLEFT", f, "TOPLEFT", -glowX, glowY)
+    f.foil.glow:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", glowX, -glowY)
+    f.foil.glow:SetTexture(FOIL_GLOW_TEX)
+    f.foil.glow:SetBlendMode("ADD")
+    f.foil.glow:Hide()
+    f.foil:SetScript("OnUpdate", Foil_OnUpdate)
+    f.foil:Hide()
+
     f.overlay = CreateFrame("Frame", nil, f)
     f.overlay:SetAllPoints(f)
     f.overlay:EnableMouse(false)
+    -- The foil's sparkles go on the overlay (MakeSparks), positioned in the card's own size
+    f.foil.anchor, f.foil.w, f.foil.h = f.overlay, sizeX, sizeY
+    -- The foil's rim round the art window: on the overlay, so over the art and model, and
+    -- under the card frame (OVERLAY layer), which covers its outer edge
+    f.foil.rim = f.overlay:CreateTexture(nil, "ARTWORK")
+    f.foil.rim:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft - iconPadX, -(artTop - iconPadY))
+    f.foil.rim:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight + iconPadX, artBottom - iconPadY)
+    f.foil.rim:SetTexture(FOIL_RIM_TEX)
+    f.foil.rim:SetBlendMode("ADD")
+    f.foil.rim:Hide()
 
     local function SyncFrameLevels(baseLevel)
         local base = baseLevel or f:GetFrameLevel() or 10
@@ -1104,6 +1287,8 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.title:SetPoint("BOTTOMLEFT", f.overlay, "TOPLEFT", -6, 3)
     f.title:SetPoint("BOTTOMRIGHT", f.overlay, "TOPRIGHT", 6, 3)
     f.title:SetJustifyH("CENTER")
+    -- A foil card's name takes its colours (SetCardFoil); its own colour is kept to go back to
+    f.foil.title, f.foil.titleColor = f.title, { f.title:GetTextColor() }
 
     f.cost = f.overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.cost:SetPoint("BOTTOM", f.title, "TOP", 0, 1)
@@ -1222,7 +1407,7 @@ local function ReloadModels(list)
     for f in pairs(list) do
         if f:IsShown() and f.currentCard and f.model and f.model:IsShown() and TTS.SetupCardVisual then
             f.visualCard = nil
-            TTS.SetupCardVisual(f, f.currentCard)
+            TTS.SetupCardVisual(f, f.currentCard, f.isFoil)
         end
     end
 end
@@ -1485,7 +1670,7 @@ for i = 1, 10 do
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
         if self.dragEnded == GetTime() then return end   -- the mouse-up that ended a drag
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1593,7 +1778,7 @@ local function WithFieldSound(handler)
         if self.dragEnded == GetTime() then return end   -- the mouse-up that ended a drag
         local perm = self.fieldIndex and TTS.Engine.localState.field[self.fieldIndex]
         local wasTapped = perm and perm.tapped
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
         handler(self, btn)
         PlayFieldClickSound(perm, wasTapped)
     end
@@ -1621,7 +1806,7 @@ for i = 1, 12 do
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1640,7 +1825,7 @@ for i = 1, LAYOUT.MAX_CREATURE_FRAMES do
     AttachSlot(f)
     f:SetScript("OnClick", function(self, btn)
         if not TTS.Engine.inMatch then return end
-        if TTS:TryLinkCard(self.cardId) then return end
+        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
         PlayUISound("card")
         if btn == "RightButton" and TTS.Engine.targeting then
             TTS.Engine:CancelTargeting()
@@ -1710,7 +1895,7 @@ do
 
     local function GraveRow_OnEnter(self)
         local card = self.cardId and TTS.Cards[self.cardId]
-        if card and ShowBoardPreview then ShowBoardPreview(self, card) end
+        if card and ShowBoardPreview then ShowBoardPreview(self, card, self.isFoil) end
     end
 
     local function GraveRow_OnLeave(self)
@@ -1735,7 +1920,7 @@ do
         row.text:SetWordWrap(false)
         row:SetScript("OnEnter", GraveRow_OnEnter)
         row:SetScript("OnLeave", GraveRow_OnLeave)
-        row:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId) end)   -- shift-click links it
+        row:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId, self.isFoil) end)   -- shift-click links it
         row:SetScript("OnHide", GraveRow_OnLeave)
         list.rows[r] = row
         return row
@@ -1754,8 +1939,9 @@ do
             local card = TTS.Cards[cardId]
             local row = GraveyardRow(list, r)
             row.cardId = cardId
+            row.isFoil = TTS.Engine:IsFoil(cardId, list.isRemote)
             row.text:SetText(card and TTS:CardName(card) or tostring(cardId))
-            row.cost:SetText((card and card.cost and card.cost ~= "") and TTS:FormatSymbols(card.cost, 12) or "")
+            row.cost:SetText((card and card.cost and card.cost ~= "") and TTS:FormatCost(card.cost, 12) or "")
             row:Show()
         end
         for r = shown + 1, #list.rows do list.rows[r]:Hide() end
@@ -1961,7 +2147,9 @@ TTS.TintArt = TintArt
 local modelGeneration = 0
 function TTS.RedrawCardModels() modelGeneration = modelGeneration + 1 end
 
-local function SetupCardVisual(f, card)
+-- foil (optional): the card shows as a foil (SetCardFoil); left out, it doesn't
+local function SetupCardVisual(f, card, foil)
+    SetCardFoil(f, foil, card)
     -- The same card still showing on this frame keeps its model: reloading it on every
     -- refresh made models flicker (worst on dressed ones like hero cards and Leeroy)
     if card and f.visualCard == card and f.visualGen == modelGeneration and f:IsShown() then
@@ -2083,17 +2271,18 @@ local function EnsureBoardPreview()
     return f
 end
 
--- Paints a full-size preview card (a CreateCardFrame of LAYOUT.PREVIEW_W x LAYOUT.PREVIEW_H) and shows it
-local function PaintPreviewCard(f, card)
+-- Paints a full-size preview card (a CreateCardFrame of LAYOUT.PREVIEW_W x LAYOUT.PREVIEW_H) and shows it.
+-- foil (optional): shown as a foil.
+local function PaintPreviewCard(f, card, foil)
     f.visualCard = nil   -- a preview always loads its model afresh (e.g. a card's model was changed)
-    SetupCardVisual(f, card)
+    SetupCardVisual(f, card, foil)
     ApplyFrameTexture(f.border, card)
     f.border:SetVertexColor(1, 1, 1)
     TintArt(f.art, card)
     f.title:SetText(TTS:CardName(card) or "")
 
     if card.cost and card.cost ~= "" then
-        f.cost:SetText(TTS:FormatSymbols(card.cost, 18))
+        f.cost:SetText(TTS:FormatCost(card.cost, 18))
         f.cost:Show()
     else
         f.cost:Hide()
@@ -2105,14 +2294,14 @@ local function PaintPreviewCard(f, card)
     UpdateCardRules(f, PREVIEW_RULES)
 end
 
-ShowBoardPreview = function(owner, card)
+ShowBoardPreview = function(owner, card, foil)
     local f = EnsureBoardPreview()
     previewOwner = owner
 
     -- Card name and cost sit above the frame, so leave room for them
     f:ClearAllPoints()
     f:SetPoint("TOPRIGHT", B, "TOPLEFT", -12, -76)
-    PaintPreviewCard(f, card)
+    PaintPreviewCard(f, card, foil)
 end
 
 -- owner (optional): only hide if this card is the one being previewed
@@ -2811,12 +3000,12 @@ function B:UpdateDisplay()
             local card = TTS.Cards[cardId]
             local f = myHandFrames[i]
             f.cardId = cardId
-            SetupCardVisual(f, card)
+            SetupCardVisual(f, card, E:IsFoil(cardId, false))
             ApplyFrameTexture(f.border, card)
             f.title:SetText(TTS:CardName(card))
 
             if card.cost and card.cost ~= "" then
-                f.cost:SetText(TTS:FormatSymbols(card.cost, 16))
+                f.cost:SetText(TTS:FormatCost(card.cost, 16))
                 f.cost:Show()
             else
                 f.cost:Hide()
@@ -2858,7 +3047,7 @@ function B:UpdateDisplay()
                 f.fieldIndex = i
                 f.perm = perm
                 f.cardId = perm.id
-                SetupCardVisual(f, card)
+                SetupCardVisual(f, card, E:IsPermFoil(perm, false))
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(TTS:CardName(card))
 
@@ -2890,6 +3079,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 TintArt(f.art, card, shade)
+                SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
@@ -2945,7 +3135,7 @@ function B:UpdateDisplay()
                 f.fieldIndex = i
                 f.perm = perm
                 f.cardId = perm.id
-                SetupCardVisual(f, card)
+                SetupCardVisual(f, card, E:IsPermFoil(perm, true))
                 ApplyFrameTexture(f.border, card)
                 f.title:SetText(TTS:CardName(card))
 
@@ -2967,6 +3157,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 TintArt(f.art, card, shade)
+                SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelAlpha)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
@@ -3015,6 +3206,8 @@ footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 -- =========================================================================
 TTS.CreateCardFrame     = CreateCardFrame
 TTS.SetupCardVisual     = SetupCardVisual
+TTS.SetCardFoil         = SetCardFoil      -- foil glow on any card made by CreateCardFrame
+TTS.FoilColors          = FoilColors       -- a card's foil colours, { { r, g, b }, ... } (card links, tooltips)
 TTS.ApplyFrameTexture   = ApplyFrameTexture
 TTS.GetCardFrameTexture = GetCardFrameTexture
 TTS.CARD_FRAME_DEF      = CARD_FRAME_DEF

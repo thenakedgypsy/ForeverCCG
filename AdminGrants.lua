@@ -62,7 +62,7 @@ local function MaxCopies(card)
 end
 
 -- Same order as TTS:GetOwnedCopies (SoloEncounters.lua), so the copies land where it reads them
-local function SetCopies(card, n, revoking)
+local function SetCopies(card, n)
     local id = card.id
     if card.isReward then
         TTS_SoloProgress = TTS_SoloProgress or {}
@@ -71,16 +71,6 @@ local function SetCopies(card, n, revoking)
     elseif card.isBoss then
         TTS_KilledBosses = TTS_KilledBosses or {}
         TTS_KilledBosses[id] = n
-        -- Dungeon bosses are read back from the character's statistics at every login
-        -- (BossTracker.lua ScanAllBosses): the cap stops that undoing a revoke
-        if not card.isMob then
-            TTS_AdminCaps = TTS_AdminCaps or {}
-            if n >= MAX_COPIES then
-                TTS_AdminCaps[id] = nil
-            elseif revoking or TTS_AdminCaps[id] then
-                TTS_AdminCaps[id] = n
-            end
-        end
     elseif card.isGift then
         TTS_NpcGifts = TTS_NpcGifts or {}
         TTS_NpcGifts.copies = TTS_NpcGifts.copies or {}
@@ -105,11 +95,8 @@ local function Wipe()
         -- Emptied in place, in case anything kept a reference to the table
         if type(_G[name]) == "table" then wipe(_G[name]) else _G[name] = nil end
     end
-    TTS_AdminCaps = nil
     if type(TTS_DataStamp) == "table" then TTS_DataStamp.beta = nil end
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
-    -- Dungeon bosses the character has really killed come back from its statistics
-    if TTS.BossTracker and TTS.BossTracker.ScanAllBosses then TTS.BossTracker:ScanAllBosses() end
     RefreshCollection()
     DEFAULT_CHAT_FRAME:AddMessage(L("admin.wiped"))
 end
@@ -163,7 +150,7 @@ local function OnAdminMessage(msg, sender)
     elseif cmd == "REVOKE" then
         local new = math.max(0, have - n)
         if new < have then
-            SetCopies(card, new, true)
+            SetCopies(card, new)
             RefreshCollection()
             DEFAULT_CHAT_FRAME:AddMessage(L("admin.revoked", CardText(card), new, max))
         end
