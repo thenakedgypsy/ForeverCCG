@@ -1945,7 +1945,13 @@ local function SetupCardRow(r, cardId, card, count)
         r.cost:SetText("")
     end
     r.cost:Show()
-    r.name:SetText((TTS:CardName(card) or cardId) .. SortSuffix(card))
+    local name = TTS:CardName(card) or cardId
+    -- A foil's name in its colour, as on the card (TTS.FoilColors, UI\Board.lua)
+    local foil = (TTS:HasFoil(cardId) or card.alwaysFoil) and TTS.FoilColors and TTS.FoilColors(card)[1]
+    if foil then
+        name = string.format("|cFF%02X%02X%02X", foil[1] * 255, foil[2] * 255, foil[3] * 255) .. name .. "|r"
+    end
+    r.name:SetText(name .. SortSuffix(card))
     r.name:Show()
     r.header:Hide()
     r.headerCount:Hide()
