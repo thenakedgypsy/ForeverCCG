@@ -1,7 +1,5 @@
 ## 1.0.0
 
-*   added cards for the new City of Dalaran dungeon
-*   thank you, beta testers! Your beta collection doesn't carry over, but a popup welcomes you to launch with a card only beta players who joined the community have: The Bug Reporter 
 *   denizens can now have a targeted Arrival: choose its target as you cast it, like a spell (if there's nothing to target, it's cast as usual)
 *   new: your Hero card - you, but as a card. Its keyword and stats come from your class; every 10 levels choose to upgrade it or take another copy (the Hero button in the deckbuilder). Choices are shared by your alts
 *   your opponent's Hero card shows their real character when you can see them (target, mouseover or group). Out of sight, it's a class trainer of their race and gender, wearing their gear
@@ -43,6 +41,16 @@
 *   collection score: Hearthstones collected and mastered now show at the bottom of the deckbuilder and count towards your score alongside denizens
 *   added new art for hearthstones
 *   collection scores are coloured by how close they are to the best possible score: grey, white, green, blue, purple, orange, and red once complete (deckbuilder, main window, waiting room, board and minimap tooltips). The deckbuilder's collected/mastered counters use the same colours
+*   new: Foil cards - a shiny version of a denizen card, one per card. Once you own a copy, every kill of that denizen has its own small chance to drop its foil (higher for named denizens and dungeon creatures, highest for final bosses), and every copy of that card then plays foil, for your opponent too. Leeroy Jenkins and The Bug Reporter always come in foil. The deckbuilder shows foil names in colour and counts your foils towards your score
+*   named denizens (e.g. Gruff Swiftbite) are now rarer drops: 50% for the first copy, then 12%, 6% and 3%
+*   every dungeon denizen, bosses included, now drops its card at the named-denizen rates. Final bosses no longer always give a copy, and no longer track your kills through achievements
+*   new: health bars on the life plates - green when full, through yellow to red, with the life just lost draining away
+*   options: new Tooltip scale slider for card tooltips and the detail panels beside them
+*   card tooltips show the cost and the card type on separate lines
+*   Azshir the Sleepless: Martyrdom became Arrival, and toughness 5 -> 6
+*   fix for an opponent's Hero card sometimes showing your own character instead of theirs
+*   fix for card costs sometimes missing from the deckbuilder's tiles when it first opens
+*   PvP: attack and block declarations are now sent in one go, so large attacks arrive faster and more reliably
 *   balance changes too long to list here.
 *   the regeneration shield from Blessing of Protection and Vanish is now called Soulstone (it works the same way)
 *   new names: many keywords adjusted to be less... tragic
