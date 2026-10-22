@@ -1220,8 +1220,6 @@ end
 
 local ATTACK_PART_TIMEOUT = 5
 local ATTACK_PART_MAX_RESENDS = 2
-local LEGACY_ATTACK_SETTLE_DELAY = 2
-local LEGACY_COMBAT_SETTLE_DELAY = 3
 
 local function EnsureRemoteAttackState(E)
     local bs = E.blockingState
@@ -1359,40 +1357,6 @@ local function ReceiveSequencedAttackDone(E, sender, id, total)
     end
 end
 
-local function ReceiveLegacyAttack(E, sender, idx)
-    if not idx or idx < 1 or idx ~= math.floor(idx) or not E.remoteState.field[idx] then return end
-    local bs = EnsureRemoteAttackState(E)
-    if not bs or bs.attacksDone then return end
-    bs.legacyAttackers = bs.legacyAttackers or {}
-    bs.legacyAttackerSet = bs.legacyAttackerSet or {}
-    if not bs.legacyAttackerSet[idx] then
-        bs.legacyAttackerSet[idx] = true
-        bs.legacyAttackers[#bs.legacyAttackers + 1] = idx
-    end
-    if bs.legacyDone then
-        bs.legacyFinishToken = (bs.legacyFinishToken or 0) + 1
-        local token = bs.legacyFinishToken
-        TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
-            if E.inMatch and E.blockingState == bs and not bs.attacksDone and bs.legacyFinishToken == token then
-                FinishRemoteAttacks(E, sender, bs, bs.legacyAttackers)
-            end
-        end)
-    end
-end
-
-local function ReceiveLegacyAttacksDone(E, sender)
-    local bs = EnsureRemoteAttackState(E)
-    if not bs or bs.attacksDone then return end
-    bs.legacyDone = true
-    bs.legacyFinishToken = (bs.legacyFinishToken or 0) + 1
-    local token = bs.legacyFinishToken
-    TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
-        if E.inMatch and E.blockingState == bs and not bs.attacksDone and bs.legacyFinishToken == token then
-            FinishRemoteAttacks(E, sender, bs, bs.legacyAttackers or {})
-        end
-    end)
-end
-
 local function EnsureBlockState(E)
     local bs = E.blockingState
     if not bs or bs.isRemoteAttacking then return nil end
@@ -1518,41 +1482,6 @@ local function ReceiveBlockDeclaration(E, sender, id, total)
     ArmProtocolRecovery(E, sender, bs, transfer, "BLOCKS_RESEND", "Block assignments")
 end
 
-local function ReceiveLegacyBlock(E, sender, blockerIdx, attackerIdx)
-    local bs = EnsureBlockState(E)
-    if not bs or bs.blocksDeclared or not blockerIdx or not attackerIdx
-        or blockerIdx < 1 or attackerIdx < 1
-        or blockerIdx ~= math.floor(blockerIdx) or attackerIdx ~= math.floor(attackerIdx) then
-        return
-    end
-    bs.legacyBlockPairs = bs.legacyBlockPairs or {}
-    local pair = { blockerIdx, attackerIdx }
-    bs.legacyBlockPairs[#bs.legacyBlockPairs + 1] = pair
-    if ApplyRemoteBlock(E, sender, bs, pair) then E:RefreshUI() end
-    if bs.legacyBlocksDone then
-        bs.legacyBlockToken = (bs.legacyBlockToken or 0) + 1
-        local token = bs.legacyBlockToken
-        TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
-            if E.inMatch and E.blockingState == bs and not bs.blocksDeclared and bs.legacyBlockToken == token then
-                FinishRemoteBlocks(E, sender, bs, bs.legacyBlockPairs)
-            end
-        end)
-    end
-end
-
-local function ReceiveLegacyBlocksDone(E, sender)
-    local bs = EnsureBlockState(E)
-    if not bs or bs.blocksDeclared then return end
-    bs.legacyBlocksDone = true
-    bs.legacyBlockToken = (bs.legacyBlockToken or 0) + 1
-    local token = bs.legacyBlockToken
-    TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
-        if E.inMatch and E.blockingState == bs and not bs.blocksDeclared and bs.legacyBlockToken == token then
-            FinishRemoteBlocks(E, sender, bs, bs.legacyBlockPairs or {})
-        end
-    end)
-end
-
 local function ParseDamageOrders(encoded, allowEmpty)
     if (not encoded or encoded == "") and allowEmpty then return {} end
     local orders, seen = {}, {}
@@ -1637,45 +1566,6 @@ local function ReceiveDamageDeclaration(E, sender, id, total)
         bs.damageTransfer = transfer
     end
     ArmProtocolRecovery(E, sender, bs, transfer, "DAMAGE_RESEND", "Damage orders")
-end
-
-local function ResolveLegacyCombatSoon(E, bs)
-    if not bs or bs.remoteResolutionDone then return end
-    bs.legacyResolveToken = (bs.legacyResolveToken or 0) + 1
-    local token = bs.legacyResolveToken
-    TTS:SafeAfter(LEGACY_COMBAT_SETTLE_DELAY, function()
-        if E.inMatch and E.blockingState == bs and not bs.remoteResolutionDone
-            and bs.legacyResolveToken == token then
-            ResolveRemoteCombat(E, bs)
-        end
-    end)
-end
-
-local function ReceiveLegacyDamageOrder(E, parts)
-    local bs = E.blockingState
-    local attacker = tonumber(parts[3])
-    if not bs or not bs.isRemoteAttacking or bs.remoteResolutionDone
-        or not attacker or attacker < 1 or attacker ~= math.floor(attacker) then
-        return
-    end
-    local order, seen = {}, {}
-    for i = 4, #parts do
-        local blocker = tonumber(parts[i])
-        if not blocker or blocker < 1 or blocker ~= math.floor(blocker) or seen[blocker] then return end
-        seen[blocker] = true
-        order[#order + 1] = blocker
-    end
-    if #order < 2 then return end
-    bs.damageOrder = bs.damageOrder or {}
-    bs.damageOrder[attacker] = order
-    if bs.legacyResolveReceived then ResolveLegacyCombatSoon(E, bs) end
-end
-
-local function ReceiveLegacyCombatResolve(E)
-    local bs = E.blockingState
-    if not bs then return end
-    bs.legacyResolveReceived = true
-    ResolveLegacyCombatSoon(E, bs)
 end
 
 -- Closes the "accepted your challenge" popup if it is for this player (without sending a
@@ -2255,32 +2145,8 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "ATTACK_PART" then
             ReceiveAttackPart(E, sender, parts[3], tonumber(parts[4]), tonumber(parts[5]), parts[6])
 
-        elseif actionType == "ATTACK" then
-            -- Compatibility with older builds. Defer completion briefly after the legacy end
-            -- marker because their individually sent ATTACK messages can arrive out of order.
-            ReceiveLegacyAttack(E, sender, tonumber(parts[3]))
-
-        elseif actionType == "ASSIGN_BLOCK" then
-            local blockerIdx = tonumber(parts[3])
-            local attackerIdx = tonumber(parts[4])
-            -- A second blocker on the same attacker is ignored unless one of them has Support.
-            -- A Bulwark sends one ASSIGN_BLOCK per attacker it blocks.
-            local bs = E.blockingState
-            if bs and blockerIdx and attackerIdx and E.remoteState.field[blockerIdx]
-                and not E:BlockInTheWay(bs, attackerIdx, blockerIdx, true)
-                and E:AssignBlock(bs, blockerIdx, attackerIdx, E.remoteState.field[blockerIdx], true) then
-                local blockerCard = E.remoteState.field[blockerIdx] and TTS.Cards[E.remoteState.field[blockerIdx].id]
-                local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
-                E:Log(L("log.oppAssignedBlock", sender, blockerCard and TTS:CardName(blockerCard) or L("type.Creature"), attackerCard and TTS:CardName(attackerCard) or L("type.Creature")), "COMBAT")
-                E:RefreshUI()
-            end
-
         elseif actionType == "ATTACKS_DONE" then
-            if parts[3] and parts[4] then
-                ReceiveSequencedAttackDone(E, sender, parts[3], tonumber(parts[4]))
-            else
-                ReceiveLegacyAttacksDone(E, sender)
-            end
+            ReceiveSequencedAttackDone(E, sender, parts[3], tonumber(parts[4]))
 
         elseif actionType == "ATTACKS_RESEND" then
             TTS.Net:ResendAttackDeclaration(sender, parts[3])
@@ -2297,14 +2163,7 @@ function TTS.Net:OnReceive(msg, sender)
             TTS.Net:ResendBlockDeclaration(sender, parts[3])
 
         elseif actionType == "BLOCKS_DECLARED" then
-            if parts[3] and parts[4] then
-                ReceiveBlockDeclaration(E, sender, parts[3], tonumber(parts[4]))
-            else
-                ReceiveLegacyBlocksDone(E, sender)
-            end
-
-        elseif actionType == "DAMAGE_ORDER" then
-            ReceiveLegacyDamageOrder(E, parts)
+            ReceiveBlockDeclaration(E, sender, parts[3], tonumber(parts[4]))
 
         elseif actionType == "DAMAGE_PART" then
             ReceiveDamagePart(E, sender, parts[3], tonumber(parts[4]), tonumber(parts[5]), parts[6])
@@ -2321,10 +2180,12 @@ function TTS.Net:OnReceive(msg, sender)
             end
 
         elseif actionType == "RESOLVE_COMBAT" then
+            -- RESOLVE_COMBAT:<id>:<parts> ends chunked damage orders; plain RESOLVE_COMBAT
+            -- (no orders) resolves now, as the sender already has
             if parts[3] and parts[4] then
                 ReceiveDamageDeclaration(E, sender, parts[3], tonumber(parts[4]))
-            else
-                ReceiveLegacyCombatResolve(E, sender)
+            elseif E.blockingState then
+                ResolveRemoteCombat(E, E.blockingState)
             end
 
         elseif actionType == "UNDO_REQUEST" then
