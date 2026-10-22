@@ -1569,6 +1569,18 @@ local function UpdateTileState(t, deck)
     t.dim:SetShown(CheckAdd(id, card, deck) ~= nil)
 end
 
+-- The cost over a tile's card. Set on every refresh, not only when the card is repainted:
+-- the card frame hides its cost whenever it is hidden (UI\Board.lua), and the frames made
+-- as the Deckbuilder first opens can get that hide after their first paint.
+local function ShowTileCost(t, card)
+    if card.cost and card.cost ~= "" then
+        t.card.cost:SetText(Cost(card.cost, 12))
+        t.card.cost:Show()
+    else
+        t.card.cost:Hide()
+    end
+end
+
 local function UpdateTile(t, id, card, deck)
     t.cardId = id
     t.hit.cardId = id
@@ -1577,6 +1589,7 @@ local function UpdateTile(t, id, card, deck)
         PaintCardFrame(t.card, card, 12)
         t.paintedId = id
     end
+    ShowTileCost(t, card)
     PrintCardRules(t.card, card)
     UpdateTileState(t, deck)
 
@@ -2391,6 +2404,14 @@ D:SetScript("OnShow", function()
     UpdateSearchVisuals()
     D:RefreshPool()
     D:RefreshDeck()
+    -- Once the window's first frame has drawn, the costs again (ShowTileCost)
+    C_Timer.After(0, function()
+        if not D:IsShown() then return end
+        for _, t in ipairs(tiles) do
+            local card = t:IsShown() and t.cardId and TTS.Cards[t.cardId]
+            if card then ShowTileCost(t, card) end
+        end
+    end)
 end)
 
 -- Chat notice for every class spell that unlocks at the level just reached
