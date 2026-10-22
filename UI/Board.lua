@@ -765,6 +765,86 @@ end)
 B.myLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 -- =========================================================================
+-- HEALTH BARS
+-- Each life plate fills with a bar behind its text: green when full, through yellow to
+-- red. It slides to a new value, and a pale chunk shows life just lost, then drains.
+-- Full is the side's starting life (20, or a solo encounter's own); healing above it
+-- keeps the bar full. B.SetLifeBar is called from UpdateDisplay.
+-- =========================================================================
+local LIFE_BAR_TEX   = "Interface\\TargetingFrame\\UI-StatusBar"
+local LIFE_INSET     = 3      -- inside the plate's border
+local LIFE_SLIDE     = 6      -- how fast the bar moves to its new value (share of the gap per second)
+local LIFE_LOST_WAIT = 0.45   -- seconds the lost chunk stays before draining
+local LIFE_LOST_RATE = 0.6    -- bar widths per second the lost chunk drains
+
+local function LifeColor(frac)
+    if frac > 0.5 then
+        local k = (frac - 0.5) * 2   -- yellow -> green
+        return 1 - 0.9 * k, 0.85 - 0.05 * k, 0.1 * k
+    end
+    local k = frac * 2               -- red -> yellow
+    return 0.9 + 0.1 * k, 0.1 + 0.75 * k, 0.1 - 0.1 * k
+end
+
+local function LifeBar_OnUpdate(self, elapsed)
+    local bar = self.bar
+    local target = bar.target or 0
+    bar.cur = bar.cur or target
+    bar.cur = bar.cur + (target - bar.cur) * math.min(1, elapsed * LIFE_SLIDE)
+    if math.abs(target - bar.cur) < 0.002 then bar.cur = target end
+    bar.lost = math.max(bar.lost or 0, bar.cur)
+    if bar.lostWait and bar.lostWait > 0 then
+        bar.lostWait = bar.lostWait - elapsed
+    elseif bar.lost > bar.cur then
+        bar.lost = math.max(bar.cur, bar.lost - elapsed * LIFE_LOST_RATE)
+    end
+    local inner = math.max(1, bar.plate:GetWidth() - 2 * LIFE_INSET)
+    local function Size(t, frac)
+        if frac <= 0.001 then t:Hide() else t:SetWidth(inner * math.min(1, frac)); t:Show() end
+    end
+    Size(bar.fill, bar.cur)
+    Size(bar.lostTex, bar.lost)
+    bar.fill:SetVertexColor(LifeColor(math.max(0, math.min(1, bar.cur))))
+    if bar.cur == target and bar.lost <= bar.cur then self:Hide() end   -- settled: stop updating
+end
+
+local function MakeLifeBar(plate)
+    local bar = { plate = plate }
+    bar.lostTex = plate:CreateTexture(nil, "ARTWORK", nil, 1)
+    bar.fill = plate:CreateTexture(nil, "ARTWORK", nil, 2)
+    for _, t in ipairs({ bar.lostTex, bar.fill }) do
+        t:SetTexture(LIFE_BAR_TEX)
+        t:SetPoint("TOPLEFT", plate, "TOPLEFT", LIFE_INSET, -LIFE_INSET)
+        t:SetPoint("BOTTOMLEFT", plate, "BOTTOMLEFT", LIFE_INSET, LIFE_INSET)
+        t:Hide()
+    end
+    bar.lostTex:SetVertexColor(1, 0.9, 0.7, 0.85)
+    bar.driver = CreateFrame("Frame", nil, plate)
+    bar.driver.bar = bar
+    bar.driver:SetScript("OnUpdate", LifeBar_OnUpdate)
+    plate.lifeBar = bar
+end
+MakeLifeBar(B.oppLifeBtn)
+MakeLifeBar(B.myLifeBtn)
+
+-- The plate's text in an outline, to read over the bar
+for _, text in ipairs({ B.oppLifeText, B.myLifeText }) do
+    local font, size = text:GetFont()
+    if font then text:SetFont(font, size, "OUTLINE") end
+end
+
+-- life out of full (full: the side's starting life, or more after healing above it)
+function B.SetLifeBar(plate, life, full)
+    local bar = plate.lifeBar
+    if not bar then return end
+    local frac = math.max(0, math.min(1, life / math.max(1, full, life)))
+    if bar.target and frac < bar.target then bar.lostWait = LIFE_LOST_WAIT end
+    if frac > (bar.target or 0) then bar.lost = bar.cur end   -- healing: nothing lost to show
+    bar.target = frac
+    bar.driver:Show()
+end
+
+-- =========================================================================
 -- MANA COUNTER
 -- "Mana:" then one hoverable slot per sphere, so each symbol has its tooltip
 -- =========================================================================
@@ -2842,6 +2922,9 @@ function B:UpdateDisplay()
         B.oppScoreText:SetText("")
     end
     B.myLifeText:SetText(L("board.life", E.localState.life))
+    -- Health bars: full is 20, or a solo encounter's own starting life for the opponent
+    B.SetLifeBar(B.myLifeBtn, E.localState.life, 20)
+    B.SetLifeBar(B.oppLifeBtn, E.remoteState.life, (E.isSolo and E.encounter and E.encounter.life) or 20)
 
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
     UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
