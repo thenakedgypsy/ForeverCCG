@@ -1881,17 +1881,19 @@ function E:WithdrawAttacker(perm, fieldIndex)
 end
 
 -- Commit to Attacks: the attackers are final. Their Aggro happens now, and the opponent
--- hears of each one (ACTION:ATTACK, then ACTION:ATTACKS_DONE from E:NextPhase).
+-- receives the complete attacker list in one message (or count-checked chunks if needed).
 function E:CommitAttackers()
     local bs = self.blockingState
+    local attackers = {}
     for _, fieldIndex in ipairs((bs and bs.attackers) or {}) do
         local perm = self.localState.field[fieldIndex]
         if perm then
+            attackers[#attackers + 1] = fieldIndex
             perm.attackUndo = nil
             self:OnCreatureAttack(perm, false)
-            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:ATTACK:" .. fieldIndex) end
         end
     end
+    if not self.isSolo then TTS.Net:SendAttackers(self.opponent, attackers) end
 end
 
 function E:ClickOpponentCard(fieldIndex)

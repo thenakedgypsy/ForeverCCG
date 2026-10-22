@@ -673,15 +673,12 @@ function E:NextPhase()
             elseif not bs.blocksDeclared and next(bs.blocks) == nil then
                 -- No blocks to show the attacker: resolve on both clients straight away
                 bs.selectedBlocker = nil
-                TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT")
+                TTS.Net:SendCombatResolution(self.opponent)
                 self:ResolveCombatDamage()
             elseif not bs.blocksDeclared then
                 -- Defending: send our blocks and hand control back to the attacker
                 bs.selectedBlocker = nil
-                for _, p in ipairs(self:BlockPairs(bs)) do
-                    TTS.Net:Send(self.opponent, string.format("ACTION:ASSIGN_BLOCK:%d:%d", p[1], p[2]))
-                end
-                TTS.Net:Send(self.opponent, "ACTION:BLOCKS_DECLARED")
+                TTS.Net:SendBlocks(self.opponent, self:BlockPairs(bs))
                 bs.blocksDeclared = true
                 self:Log(L("log.blocksDeclaredWait"), "SYSTEM")
                 self:RefreshUI()
@@ -694,13 +691,7 @@ function E:NextPhase()
                 if self.blockingState == bs and self.phase == "COMBAT_BLOCK" then self:NextPhase() end
             end) then return end
             if not self.isSolo then
-                for _, atkIdx in ipairs(bs.attackers) do
-                    local order = bs.damageOrder and bs.damageOrder[atkIdx]
-                    if order and #order > 1 then
-                        TTS.Net:Send(self.opponent, "ACTION:DAMAGE_ORDER:" .. atkIdx .. ":" .. table.concat(order, ":"))
-                    end
-                end
-                TTS.Net:Send(self.opponent, "ACTION:RESOLVE_COMBAT")
+                TTS.Net:SendCombatResolution(self.opponent, bs.damageOrder)
             end
             self:ResolveCombatDamage()
         end
@@ -738,8 +729,7 @@ function E:NextPhase()
                 self.blockingState.blocksDeclared = true
                 self:Log(L("log.oppBlockers", self.opponent), "SYSTEM")
             else
-                -- Every ATTACK has gone out: the defender may now block
-                TTS.Net:Send(self.opponent, "ACTION:ATTACKS_DONE")
+                -- The complete attacker list was sent atomically by CommitAttackers.
                 self:Log(L("log.waitBlockers"), "SYSTEM")
             end
         else

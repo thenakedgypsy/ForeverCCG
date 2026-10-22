@@ -26,6 +26,7 @@ end
 TTS.VERSION = ReadAddonVersion()
 
 local PREFIX = "TTS_NET"
+local MAX_ADDON_MESSAGE_LENGTH = 255
 if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
     C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
 elseif RegisterAddonMessagePrefix then
@@ -356,6 +357,13 @@ end
 -- chatType is one of the fallback routes; target (a waiting-room name) is only used for "WHISPER"
 local function SendDirect(msg, chatType, target, low)
     QueueSend(msg, chatType, target and CharName(target), low)
+end
+
+local function WrapMessage(target, msg)
+    if TTS.Net.matchId and IsMatchOpponent(target) then
+        return "M:" .. TTS.Net.matchId .. ":" .. MyName() .. ":" .. msg
+    end
+    return "T:" .. target .. ":" .. MyName() .. ":" .. msg
 end
 
 local function NameMatchesUnit(name, unit)
@@ -963,11 +971,10 @@ function TTS.Net:Send(target, msg)
         return
     end
     target = NormalizeName(target)
-    local envelope
-    if self.matchId and IsMatchOpponent(target) then
-        envelope = "M:" .. self.matchId .. ":" .. MyName() .. ":" .. msg
-    else
-        envelope = "T:" .. target .. ":" .. MyName() .. ":" .. msg
+    local envelope = WrapMessage(target, msg)
+    if #envelope > MAX_ADDON_MESSAGE_LENGTH then
+        Print("Network message exceeds the 255-character limit and was not sent.")
+        return false
     end
     -- One route per message: FCCGTTSE unless a fallback route is set for this player
     -- and it can still reach them
@@ -979,6 +986,210 @@ function TTS.Net:Send(target, msg)
     else
         SendChannel(envelope, low)
     end
+    return true
+end
+
+-- Attack declarations are normally one atomic message, so the receiver never sees a
+-- completion marker before a late attacker. Large lists are chunked and count-checked.
+function TTS.Net:SendAttackers(target, attackers)
+    if not target or target == "" then return false end
+    local unique, seen = {}, {}
+    for _, idx in ipairs(attackers or {}) do
+        idx = tonumber(idx)
+        if idx and idx > 0 and idx == math.floor(idx) and not seen[idx] then
+            seen[idx] = true
+            unique[#unique + 1] = idx
+        end
+    end
+    local compact = "ACTION:ATTACKS:" .. table.concat(unique, ",")
+    if #WrapMessage(NormalizeName(target), compact) <= MAX_ADDON_MESSAGE_LENGTH then
+        return self:Send(target, compact)
+    end
+
+    self.attackDeclarationId = (self.attackDeclarationId or 0) + 1
+    local declarationId = tostring(self.attackDeclarationId)
+    local parts, current = {}, nil
+    for _, idx in ipairs(unique) do
+        local candidate = current and (current .. "," .. idx) or tostring(idx)
+        local sequence = #parts + 1
+        local probe = "ACTION:ATTACK_PART:" .. declarationId .. ":" .. sequence .. ":"
+            .. #unique .. ":" .. candidate
+        if #WrapMessage(NormalizeName(target), probe) > MAX_ADDON_MESSAGE_LENGTH and current then
+            parts[#parts + 1] = current
+            current = tostring(idx)
+            sequence = #parts + 1
+            probe = "ACTION:ATTACK_PART:" .. declarationId .. ":" .. sequence .. ":"
+                .. #unique .. ":" .. current
+        else
+            current = candidate
+        end
+        if #WrapMessage(NormalizeName(target), probe) > MAX_ADDON_MESSAGE_LENGTH then
+            Print("An attacker ID cannot fit in a network message; the attack list was not sent.")
+            return false
+        end
+    end
+    if current then parts[#parts + 1] = current end
+
+    local messages = {}
+    for sequence, ids in ipairs(parts) do
+        messages[#messages + 1] = "ACTION:ATTACK_PART:" .. declarationId .. ":" .. sequence
+            .. ":" .. #parts .. ":" .. ids
+    end
+    messages[#messages + 1] = "ACTION:ATTACKS_DONE:" .. declarationId .. ":" .. #parts
+    self.lastAttackDeclaration = {
+        id = declarationId,
+        target = NormalizeName(target):lower(),
+        messages = messages,
+    }
+    for _, message in ipairs(messages) do
+        if not self:Send(target, message) then return false end
+    end
+    return true
+end
+
+function TTS.Net:ResendAttackDeclaration(target, declarationId)
+    local declaration = self.lastAttackDeclaration
+    if not declaration or declaration.id ~= declarationId
+        or declaration.target ~= NormalizeName(target):lower() then
+        return
+    end
+    for _, message in ipairs(declaration.messages) do
+        self:Send(target, message)
+    end
+end
+
+local function NextProtocolId(net, key)
+    net[key] = (net[key] or 0) + 1
+    return tostring(net[key])
+end
+
+local function BuildChunkMessages(target, action, id, entries, separator)
+    local chunks, current = {}, nil
+    for _, entry in ipairs(entries) do
+        local candidate = current and (current .. separator .. entry) or entry
+        local sequence = #chunks + 1
+        local probe = "ACTION:" .. action .. ":" .. id .. ":" .. sequence .. ":" .. #entries .. ":" .. candidate
+        if #WrapMessage(target, probe) > MAX_ADDON_MESSAGE_LENGTH and current then
+            chunks[#chunks + 1] = current
+            current = entry
+            sequence = #chunks + 1
+            probe = "ACTION:" .. action .. ":" .. id .. ":" .. sequence .. ":" .. #entries .. ":" .. current
+        else
+            current = candidate
+        end
+        if #WrapMessage(target, probe) > MAX_ADDON_MESSAGE_LENGTH then
+            Print("A combat message entry cannot fit in the network message limit.")
+            return nil
+        end
+    end
+    if current then chunks[#chunks + 1] = current end
+
+    local messages = {}
+    for sequence, payload in ipairs(chunks) do
+        local message = "ACTION:" .. action .. ":" .. id .. ":" .. sequence .. ":" .. #chunks .. ":" .. payload
+        if #WrapMessage(target, message) > MAX_ADDON_MESSAGE_LENGTH then
+            Print("A combat message exceeds the network message limit.")
+            return nil
+        end
+        messages[#messages + 1] = message
+    end
+    return messages, #chunks
+end
+
+local function CacheProtocolMessages(net, key, target, id, messages)
+    net[key] = {
+        id = id,
+        target = NormalizeName(target):lower(),
+        messages = messages,
+    }
+end
+
+local function ResendProtocolMessages(net, key, target, id)
+    local declaration = net[key]
+    if not declaration or declaration.id ~= id or declaration.target ~= NormalizeName(target):lower() then
+        return
+    end
+    for _, message in ipairs(declaration.messages) do
+        net:Send(target, message)
+    end
+end
+
+function TTS.Net:SendBlocks(target, blockPairs)
+    if not target or target == "" then return false end
+    local entries, seen = {}, {}
+    for _, pair in ipairs(blockPairs or {}) do
+        local blocker, attacker = tonumber(pair[1]), tonumber(pair[2])
+        if blocker and attacker and blocker > 0 and attacker > 0
+            and blocker == math.floor(blocker) and attacker == math.floor(attacker) then
+            local entry = blocker .. "," .. attacker
+            if not seen[entry] then
+                seen[entry] = true
+                entries[#entries + 1] = entry
+            end
+        end
+    end
+    local normalizedTarget = NormalizeName(target)
+    local compact = "ACTION:BLOCKS:" .. table.concat(entries, ";")
+    if #WrapMessage(normalizedTarget, compact) <= MAX_ADDON_MESSAGE_LENGTH then
+        return self:Send(target, compact)
+    end
+
+    local id = NextProtocolId(self, "blockDeclarationId")
+    local messages, total = BuildChunkMessages(normalizedTarget, "BLOCK_PART", id, entries, ";")
+    if not messages then return false end
+    messages[#messages + 1] = "ACTION:BLOCKS_DECLARED:" .. id .. ":" .. total
+    CacheProtocolMessages(self, "lastBlockDeclaration", normalizedTarget, id, messages)
+    for _, message in ipairs(messages) do
+        if not self:Send(target, message) then return false end
+    end
+    return true
+end
+
+function TTS.Net:ResendBlockDeclaration(target, id)
+    ResendProtocolMessages(self, "lastBlockDeclaration", target, id)
+end
+
+function TTS.Net:SendCombatResolution(target, damageOrder)
+    if not target or target == "" then return false end
+    local entries = {}
+    for attacker, order in pairs(damageOrder or {}) do
+        local atk = tonumber(attacker)
+        if atk and atk > 0 and atk == math.floor(atk) and order and #order > 1 then
+            local blockers = {}
+            for _, blocker in ipairs(order) do
+                local idx = tonumber(blocker)
+                if idx and idx > 0 and idx == math.floor(idx) then
+                    blockers[#blockers + 1] = tostring(idx)
+                end
+            end
+            if #blockers > 1 then
+                entries[#entries + 1] = atk .. "=" .. table.concat(blockers, ",")
+            end
+        end
+    end
+    if #entries == 0 then
+        return self:Send(target, "ACTION:RESOLVE_COMBAT")
+    end
+
+    local normalizedTarget = NormalizeName(target)
+    local compact = "ACTION:RESOLVE_COMBAT_DATA:" .. table.concat(entries, ";")
+    if #WrapMessage(normalizedTarget, compact) <= MAX_ADDON_MESSAGE_LENGTH then
+        return self:Send(target, compact)
+    end
+
+    local id = NextProtocolId(self, "damageDeclarationId")
+    local messages, total = BuildChunkMessages(normalizedTarget, "DAMAGE_PART", id, entries, ";")
+    if not messages then return false end
+    messages[#messages + 1] = "ACTION:RESOLVE_COMBAT:" .. id .. ":" .. total
+    CacheProtocolMessages(self, "lastDamageDeclaration", normalizedTarget, id, messages)
+    for _, message in ipairs(messages) do
+        if not self:Send(target, message) then return false end
+    end
+    return true
+end
+
+function TTS.Net:ResendDamageDeclaration(target, id)
+    ResendProtocolMessages(self, "lastDamageDeclaration", target, id)
 end
 
 -- Older builds sent "INVITE" / "ACCEPT" with no version at all
@@ -1005,6 +1216,466 @@ end
 local HERO_SWAP = { HERO = "HEROOPP", HEROOPP = "HERO" }
 local function SwapHeroIds(msg)
     return (msg:gsub("[^:,;]+", HERO_SWAP))
+end
+
+local ATTACK_PART_TIMEOUT = 5
+local ATTACK_PART_MAX_RESENDS = 2
+local LEGACY_ATTACK_SETTLE_DELAY = 2
+local LEGACY_COMBAT_SETTLE_DELAY = 3
+
+local function EnsureRemoteAttackState(E)
+    local bs = E.blockingState
+    if bs and not bs.isRemoteAttacking then return nil end
+    if not bs then
+        bs = {
+            attackers = {},
+            blocks = {},
+            isRemoteAttacking = true,
+            selectedBlocker = nil,
+        }
+        E.blockingState = bs
+    end
+    bs.attackers = bs.attackers or {}
+    bs.attackerSet = bs.attackerSet or {}
+    return bs
+end
+
+local function ApplyRemoteAttacker(E, sender, bs, idx)
+    local perm = E.remoteState.field[idx]
+    if not perm or bs.attackerSet[idx] then return end
+    bs.attackerSet[idx] = true
+    table.insert(bs.attackers, idx)
+    local card = TTS.Cards[perm.id]
+    if not E:HasKeyword(perm, true, "vigilance") then
+        perm.tapped = true
+    end
+    perm.isAttacking = true
+    E:Log(L("log.oppDeclaredAttacker", sender, card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
+    if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
+    E:RunMirrored(function() E:OnCreatureAttack(perm, true) end)
+end
+
+local function FinishRemoteAttacks(E, sender, bs, indices)
+    if bs.attacksDone then return end
+    for _, idx in ipairs(indices) do
+        ApplyRemoteAttacker(E, sender, bs, idx)
+    end
+    bs.attacksDone = true
+    E:SetPhase("COMBAT_BLOCK")
+    E:Log(L("log.oppAttacksDone", sender), "COMBAT")
+    E:RefreshUI()
+    E:AutoPassBlocksSoon()
+end
+
+local function ParseAttackerIds(encoded, allowEmpty)
+    if (not encoded or encoded == "") and allowEmpty then return {} end
+    local indices, seen = {}, {}
+    for value in (encoded or ""):gmatch("[^,]+") do
+        local idx = tonumber(value)
+        if not idx or idx <= 0 or idx ~= math.floor(idx) then return nil end
+        if not seen[idx] then
+            seen[idx] = true
+            indices[#indices + 1] = idx
+        end
+    end
+    return #indices > 0 and indices or nil
+end
+
+local function ArmAttackPartRecovery(E, sender, bs, transfer)
+    if transfer.recoveryFailed then return end
+    transfer.timerToken = (transfer.timerToken or 0) + 1
+    local token = transfer.timerToken
+    TTS:SafeAfter(ATTACK_PART_TIMEOUT, function()
+        if not E.inMatch or E.blockingState ~= bs or bs.attackTransfer ~= transfer
+            or bs.attacksDone or transfer.timerToken ~= token then
+            return
+        end
+        if transfer.retries < ATTACK_PART_MAX_RESENDS then
+            transfer.retries = transfer.retries + 1
+            TTS.Net:Send(sender, "ACTION:ATTACKS_RESEND:" .. transfer.id)
+            ArmAttackPartRecovery(E, sender, bs, transfer)
+        else
+            transfer.recoveryFailed = true
+            E:Log("Attack declaration from " .. sender .. " is incomplete after resend attempts; blockers remain disabled.", "ERROR")
+        end
+    end)
+end
+
+local function GetAttackTransfer(E, id, total)
+    local bs = EnsureRemoteAttackState(E)
+    if not bs or bs.attacksDone or not id or id == "" or not total or total < 1
+        or total ~= math.floor(total) or total > 10000 then
+        return
+    end
+    local transfer = bs.attackTransfer
+    if transfer and (transfer.id ~= id or transfer.total ~= total) then return end
+    if not transfer then
+        transfer = { id = id, total = total, parts = {}, received = 0, retries = 0 }
+        bs.attackTransfer = transfer
+    end
+    return bs, transfer
+end
+
+local function ReceiveAttackPart(E, sender, id, sequence, total, encoded)
+    local bs, transfer = GetAttackTransfer(E, id, total)
+    if not bs or not sequence or sequence < 1 or sequence > total
+        or sequence ~= math.floor(sequence) then
+        return
+    end
+    local indices = ParseAttackerIds(encoded)
+    if not indices then return end
+    if not transfer.parts[sequence] then
+        transfer.parts[sequence] = indices
+        transfer.received = transfer.received + 1
+    end
+    if transfer.received == transfer.total then
+        local all = {}
+        for i = 1, transfer.total do
+            local part = transfer.parts[i]
+            if not part then return end
+            for _, idx in ipairs(part) do all[#all + 1] = idx end
+        end
+        bs.attackTransfer = nil
+        FinishRemoteAttacks(E, sender, bs, all)
+        return
+    end
+    ArmAttackPartRecovery(E, sender, bs, transfer)
+end
+
+local function ReceiveSequencedAttackDone(E, sender, id, total)
+    local bs, transfer = GetAttackTransfer(E, id, total)
+    if not bs then return end
+    if transfer.received == transfer.total then
+        local all = {}
+        for i = 1, transfer.total do
+            local part = transfer.parts[i]
+            if not part then return end
+            for _, idx in ipairs(part) do all[#all + 1] = idx end
+        end
+        bs.attackTransfer = nil
+        FinishRemoteAttacks(E, sender, bs, all)
+    else
+        ArmAttackPartRecovery(E, sender, bs, transfer)
+    end
+end
+
+local function ReceiveLegacyAttack(E, sender, idx)
+    if not idx or idx < 1 or idx ~= math.floor(idx) or not E.remoteState.field[idx] then return end
+    local bs = EnsureRemoteAttackState(E)
+    if not bs or bs.attacksDone then return end
+    bs.legacyAttackers = bs.legacyAttackers or {}
+    bs.legacyAttackerSet = bs.legacyAttackerSet or {}
+    if not bs.legacyAttackerSet[idx] then
+        bs.legacyAttackerSet[idx] = true
+        bs.legacyAttackers[#bs.legacyAttackers + 1] = idx
+    end
+    if bs.legacyDone then
+        bs.legacyFinishToken = (bs.legacyFinishToken or 0) + 1
+        local token = bs.legacyFinishToken
+        TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
+            if E.inMatch and E.blockingState == bs and not bs.attacksDone and bs.legacyFinishToken == token then
+                FinishRemoteAttacks(E, sender, bs, bs.legacyAttackers)
+            end
+        end)
+    end
+end
+
+local function ReceiveLegacyAttacksDone(E, sender)
+    local bs = EnsureRemoteAttackState(E)
+    if not bs or bs.attacksDone then return end
+    bs.legacyDone = true
+    bs.legacyFinishToken = (bs.legacyFinishToken or 0) + 1
+    local token = bs.legacyFinishToken
+    TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
+        if E.inMatch and E.blockingState == bs and not bs.attacksDone and bs.legacyFinishToken == token then
+            FinishRemoteAttacks(E, sender, bs, bs.legacyAttackers or {})
+        end
+    end)
+end
+
+local function EnsureBlockState(E)
+    local bs = E.blockingState
+    if not bs or bs.isRemoteAttacking then return nil end
+    bs.blocks = bs.blocks or {}
+    return bs
+end
+
+local function ParseBlockPairs(encoded, allowEmpty)
+    if (not encoded or encoded == "") and allowEmpty then return {} end
+    local pairs, seen = {}, {}
+    for value in (encoded or ""):gmatch("[^;]+") do
+        local blockerText, attackerText = value:match("^(%d+),(%d+)$")
+        local blocker, attacker = tonumber(blockerText), tonumber(attackerText)
+        if not blocker or not attacker or blocker < 1 or attacker < 1 then return nil end
+        local key = blocker .. ":" .. attacker
+        if not seen[key] then
+            seen[key] = true
+            pairs[#pairs + 1] = { blocker, attacker }
+        end
+    end
+    return #pairs > 0 and pairs or nil
+end
+
+local function ApplyRemoteBlock(E, sender, bs, pair)
+    local blockerIdx, attackerIdx = pair[1], pair[2]
+    local blocker = E.remoteState.field[blockerIdx]
+    if not blocker or not E.localState.field[attackerIdx] then return false end
+    bs.remoteBlockSet = bs.remoteBlockSet or {}
+    local key = blockerIdx .. ":" .. attackerIdx
+    if bs.remoteBlockSet[key] then return false end
+    if E:BlockInTheWay(bs, attackerIdx, blockerIdx, true)
+        or not E:AssignBlock(bs, blockerIdx, attackerIdx, blocker, true) then
+        return false
+    end
+    bs.remoteBlockSet[key] = true
+    local blockerCard = TTS.Cards[blocker.id]
+    local attackerCard = E.localState.field[attackerIdx] and TTS.Cards[E.localState.field[attackerIdx].id]
+    E:Log(L("log.oppAssignedBlock", sender,
+        blockerCard and TTS:CardName(blockerCard) or L("type.Creature"),
+        attackerCard and TTS:CardName(attackerCard) or L("type.Creature")), "COMBAT")
+    return true
+end
+
+local function FinishRemoteBlocks(E, sender, bs, pairs)
+    if bs.blocksDeclared then return end
+    for _, pair in ipairs(pairs) do
+        ApplyRemoteBlock(E, sender, bs, pair)
+    end
+    bs.blocksDeclared = true
+    E:Log(L("log.oppBlockers", sender), "COMBAT")
+    if E.endAfterCombat then
+        E:ResolveAfterCombatSoon()
+    else
+        E:RefreshUI()
+    end
+end
+
+local function ArmProtocolRecovery(E, sender, bs, transfer, requestAction, message)
+    if transfer.recoveryFailed then return end
+    transfer.timerToken = (transfer.timerToken or 0) + 1
+    local token = transfer.timerToken
+    TTS:SafeAfter(ATTACK_PART_TIMEOUT, function()
+        if not E.inMatch or E.blockingState ~= bs or bs[transfer.key] ~= transfer
+            or transfer.timerToken ~= token then
+            return
+        end
+        if transfer.retries < ATTACK_PART_MAX_RESENDS then
+            transfer.retries = transfer.retries + 1
+            TTS.Net:Send(sender, "ACTION:" .. requestAction .. ":" .. transfer.id)
+            ArmProtocolRecovery(E, sender, bs, transfer, requestAction, message)
+        else
+            transfer.recoveryFailed = true
+            E:Log(message .. " from " .. sender .. " is incomplete after resend attempts.", "ERROR")
+        end
+    end)
+end
+
+local function ReceiveBlockPart(E, sender, id, sequence, total, encoded)
+    local bs = EnsureBlockState(E)
+    if not bs or bs.blocksDeclared or not id or id == "" or not sequence or not total
+        or total < 1 or total > 10000 or total ~= math.floor(total)
+        or sequence < 1 or sequence > total or sequence ~= math.floor(sequence) then
+        return
+    end
+    local pairs = ParseBlockPairs(encoded)
+    if not pairs then return end
+    local transfer = bs.blockTransfer
+    if transfer and (transfer.id ~= id or transfer.total ~= total) then return end
+    if not transfer then
+        transfer = { key = "blockTransfer", id = id, total = total, parts = {}, received = 0, retries = 0 }
+        bs.blockTransfer = transfer
+    end
+    if not transfer.parts[sequence] then
+        transfer.parts[sequence] = pairs
+        transfer.received = transfer.received + 1
+    end
+    if transfer.received == transfer.total then
+        local all = {}
+        for i = 1, transfer.total do
+            local part = transfer.parts[i]
+            if not part then return end
+            for _, pair in ipairs(part) do all[#all + 1] = pair end
+        end
+        bs.blockTransfer = nil
+        FinishRemoteBlocks(E, sender, bs, all)
+    else
+        ArmProtocolRecovery(E, sender, bs, transfer, "BLOCKS_RESEND", "Block assignments")
+    end
+end
+
+local function ReceiveBlockDeclaration(E, sender, id, total)
+    local bs = EnsureBlockState(E)
+    if not bs or bs.blocksDeclared or not id or id == "" or not total
+        or total < 1 or total > 10000 or total ~= math.floor(total) then
+        return
+    end
+    local transfer = bs.blockTransfer
+    if transfer and (transfer.id ~= id or transfer.total ~= total) then return end
+    if not transfer then
+        transfer = { key = "blockTransfer", id = id, total = total, parts = {}, received = 0, retries = 0 }
+        bs.blockTransfer = transfer
+    end
+    ArmProtocolRecovery(E, sender, bs, transfer, "BLOCKS_RESEND", "Block assignments")
+end
+
+local function ReceiveLegacyBlock(E, sender, blockerIdx, attackerIdx)
+    local bs = EnsureBlockState(E)
+    if not bs or bs.blocksDeclared or not blockerIdx or not attackerIdx
+        or blockerIdx < 1 or attackerIdx < 1
+        or blockerIdx ~= math.floor(blockerIdx) or attackerIdx ~= math.floor(attackerIdx) then
+        return
+    end
+    bs.legacyBlockPairs = bs.legacyBlockPairs or {}
+    local pair = { blockerIdx, attackerIdx }
+    bs.legacyBlockPairs[#bs.legacyBlockPairs + 1] = pair
+    if ApplyRemoteBlock(E, sender, bs, pair) then E:RefreshUI() end
+    if bs.legacyBlocksDone then
+        bs.legacyBlockToken = (bs.legacyBlockToken or 0) + 1
+        local token = bs.legacyBlockToken
+        TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
+            if E.inMatch and E.blockingState == bs and not bs.blocksDeclared and bs.legacyBlockToken == token then
+                FinishRemoteBlocks(E, sender, bs, bs.legacyBlockPairs)
+            end
+        end)
+    end
+end
+
+local function ReceiveLegacyBlocksDone(E, sender)
+    local bs = EnsureBlockState(E)
+    if not bs or bs.blocksDeclared then return end
+    bs.legacyBlocksDone = true
+    bs.legacyBlockToken = (bs.legacyBlockToken or 0) + 1
+    local token = bs.legacyBlockToken
+    TTS:SafeAfter(LEGACY_ATTACK_SETTLE_DELAY, function()
+        if E.inMatch and E.blockingState == bs and not bs.blocksDeclared and bs.legacyBlockToken == token then
+            FinishRemoteBlocks(E, sender, bs, bs.legacyBlockPairs or {})
+        end
+    end)
+end
+
+local function ParseDamageOrders(encoded, allowEmpty)
+    if (not encoded or encoded == "") and allowEmpty then return {} end
+    local orders, seen = {}, {}
+    for value in (encoded or ""):gmatch("[^;]+") do
+        local attackerText, blockersText = value:match("^(%d+)=([%d,]+)$")
+        local attacker = tonumber(attackerText)
+        if not attacker or attacker < 1 or seen[attacker] then return nil end
+        local blockers, blockerSeen = {}, {}
+        for blockerText in blockersText:gmatch("[^,]+") do
+            local blocker = tonumber(blockerText)
+            if not blocker or blocker < 1 or blocker ~= math.floor(blocker) or blockerSeen[blocker] then return nil end
+            blockerSeen[blocker] = true
+            blockers[#blockers + 1] = blocker
+        end
+        if #blockers < 2 then return nil end
+        seen[attacker] = true
+        orders[attacker] = blockers
+    end
+    if not allowEmpty and not next(orders) then return nil end
+    return orders
+end
+
+local function ApplyDamageOrders(bs, orders)
+    bs.damageOrder = bs.damageOrder or {}
+    for attacker, order in pairs(orders) do
+        bs.damageOrder[attacker] = order
+    end
+end
+
+local function ResolveRemoteCombat(E, bs)
+    if E.blockingState ~= bs or bs.remoteResolutionDone then return end
+    bs.remoteResolutionDone = true
+    E:ResolveCombatDamage()
+end
+
+local function ReceiveDamagePart(E, sender, id, sequence, total, encoded)
+    local bs = E.blockingState
+    if not bs or not bs.isRemoteAttacking or bs.remoteResolutionDone or not id or id == ""
+        or not sequence or not total or total < 1 or total > 10000 or total ~= math.floor(total)
+        or sequence < 1 or sequence > total or sequence ~= math.floor(sequence) then
+        return
+    end
+    local orders = ParseDamageOrders(encoded)
+    if not orders then return end
+    local transfer = bs.damageTransfer
+    if transfer and (transfer.id ~= id or transfer.total ~= total) then return end
+    if not transfer then
+        transfer = { key = "damageTransfer", id = id, total = total, parts = {}, received = 0, retries = 0 }
+        bs.damageTransfer = transfer
+    end
+    if not transfer.parts[sequence] then
+        transfer.parts[sequence] = orders
+        transfer.received = transfer.received + 1
+    end
+    if transfer.received == transfer.total then
+        local all = {}
+        for i = 1, transfer.total do
+            local part = transfer.parts[i]
+            if not part then return end
+            for attacker, order in pairs(part) do
+                all[attacker] = order
+            end
+        end
+        bs.damageTransfer = nil
+        ApplyDamageOrders(bs, all)
+        ResolveRemoteCombat(E, bs)
+    else
+        ArmProtocolRecovery(E, sender, bs, transfer, "DAMAGE_RESEND", "Damage orders")
+    end
+end
+
+local function ReceiveDamageDeclaration(E, sender, id, total)
+    local bs = E.blockingState
+    if not bs or not bs.isRemoteAttacking or bs.remoteResolutionDone or not id or id == ""
+        or not total or total < 1 or total > 10000 or total ~= math.floor(total) then
+        return
+    end
+    local transfer = bs.damageTransfer
+    if transfer and (transfer.id ~= id or transfer.total ~= total) then return end
+    if not transfer then
+        transfer = { key = "damageTransfer", id = id, total = total, parts = {}, received = 0, retries = 0 }
+        bs.damageTransfer = transfer
+    end
+    ArmProtocolRecovery(E, sender, bs, transfer, "DAMAGE_RESEND", "Damage orders")
+end
+
+local function ResolveLegacyCombatSoon(E, bs)
+    if not bs or bs.remoteResolutionDone then return end
+    bs.legacyResolveToken = (bs.legacyResolveToken or 0) + 1
+    local token = bs.legacyResolveToken
+    TTS:SafeAfter(LEGACY_COMBAT_SETTLE_DELAY, function()
+        if E.inMatch and E.blockingState == bs and not bs.remoteResolutionDone
+            and bs.legacyResolveToken == token then
+            ResolveRemoteCombat(E, bs)
+        end
+    end)
+end
+
+local function ReceiveLegacyDamageOrder(E, parts)
+    local bs = E.blockingState
+    local attacker = tonumber(parts[3])
+    if not bs or not bs.isRemoteAttacking or bs.remoteResolutionDone
+        or not attacker or attacker < 1 or attacker ~= math.floor(attacker) then
+        return
+    end
+    local order, seen = {}, {}
+    for i = 4, #parts do
+        local blocker = tonumber(parts[i])
+        if not blocker or blocker < 1 or blocker ~= math.floor(blocker) or seen[blocker] then return end
+        seen[blocker] = true
+        order[#order + 1] = blocker
+    end
+    if #order < 2 then return end
+    bs.damageOrder = bs.damageOrder or {}
+    bs.damageOrder[attacker] = order
+    if bs.legacyResolveReceived then ResolveLegacyCombatSoon(E, bs) end
+end
+
+local function ReceiveLegacyCombatResolve(E)
+    local bs = E.blockingState
+    if not bs then return end
+    bs.legacyResolveReceived = true
+    ResolveLegacyCombatSoon(E, bs)
 end
 
 -- Closes the "accepted your challenge" popup if it is for this player (without sending a
@@ -1574,29 +2245,20 @@ function TTS.Net:OnReceive(msg, sender)
             -- Snapshot of the over-time effects / shields the opponent is tracking (display only)
             E:ReceiveEffects(parts[3], parts[4])
 
-        elseif actionType == "ATTACK" then
-            local idx = tonumber(parts[3])
-            if idx and E.remoteState.field[idx] then
-                local perm = E.remoteState.field[idx]
-                local card = TTS.Cards[perm.id]
-                if not E:HasKeyword(perm, true, "vigilance") then
-                    perm.tapped = true
-                end
-                perm.isAttacking = true
-
-                E.blockingState = E.blockingState or {
-                    attackers = {},
-                    blocks = {},
-                    isRemoteAttacking = true,
-                    selectedBlocker = nil
-                }
-                table.insert(E.blockingState.attackers, idx)
-                E:SetPhase("COMBAT_BLOCK")
-                E:Log(L("log.oppDeclaredAttacker", sender, card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
-                if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
-                E:RunMirrored(function() E:OnCreatureAttack(perm, true) end)
-                E:RefreshUI()
+        elseif actionType == "ATTACKS" then
+            local indices = ParseAttackerIds(parts[3], true)
+            local bs = EnsureRemoteAttackState(E)
+            if indices and bs then
+                FinishRemoteAttacks(E, sender, bs, indices)
             end
+
+        elseif actionType == "ATTACK_PART" then
+            ReceiveAttackPart(E, sender, parts[3], tonumber(parts[4]), tonumber(parts[5]), parts[6])
+
+        elseif actionType == "ATTACK" then
+            -- Compatibility with older builds. Defer completion briefly after the legacy end
+            -- marker because their individually sent ATTACK messages can arrive out of order.
+            ReceiveLegacyAttack(E, sender, tonumber(parts[3]))
 
         elseif actionType == "ASSIGN_BLOCK" then
             local blockerIdx = tonumber(parts[3])
@@ -1614,46 +2276,55 @@ function TTS.Net:OnReceive(msg, sender)
             end
 
         elseif actionType == "ATTACKS_DONE" then
-            -- The attacker has declared every attacker: blocks can be declared now
-            if E.blockingState and E.blockingState.isRemoteAttacking then
-                E.blockingState.attacksDone = true
-                E:Log(L("log.oppAttacksDone", sender), "COMBAT")
-                E:RefreshUI()
-                E:AutoPassBlocksSoon()
+            if parts[3] and parts[4] then
+                ReceiveSequencedAttackDone(E, sender, parts[3], tonumber(parts[4]))
+            else
+                ReceiveLegacyAttacksDone(E, sender)
             end
 
+        elseif actionType == "ATTACKS_RESEND" then
+            TTS.Net:ResendAttackDeclaration(sender, parts[3])
+
+        elseif actionType == "BLOCKS" then
+            local pairs = ParseBlockPairs(parts[3], true)
+            local bs = EnsureBlockState(E)
+            if pairs and bs then FinishRemoteBlocks(E, sender, bs, pairs) end
+
+        elseif actionType == "BLOCK_PART" then
+            ReceiveBlockPart(E, sender, parts[3], tonumber(parts[4]), tonumber(parts[5]), parts[6])
+
+        elseif actionType == "BLOCKS_RESEND" then
+            TTS.Net:ResendBlockDeclaration(sender, parts[3])
+
         elseif actionType == "BLOCKS_DECLARED" then
-            -- The defender is done: control comes back to us to review the blocks and resolve
-            if E.blockingState then
-                E.blockingState.blocksDeclared = true
-                E:Log(L("log.oppBlockers", sender), "COMBAT")
-                -- End Turn After Combat (or Commit to Attacks & End Turn) was pressed while we
-                -- waited: show the blocks for a moment, then resolve
-                if E.endAfterCombat and not E.blockingState.isRemoteAttacking then
-                    E:ResolveAfterCombatSoon()
-                else
-                    E:RefreshUI()
-                end
+            if parts[3] and parts[4] then
+                ReceiveBlockDeclaration(E, sender, parts[3], tonumber(parts[4]))
+            else
+                ReceiveLegacyBlocksDone(E, sender)
             end
 
         elseif actionType == "DAMAGE_ORDER" then
-            -- DAMAGE_ORDER:<attacker>:<blocker>:<blocker>...: the order an attacker blocked by
-            -- several creatures (Support) deals its damage in (sent just before RESOLVE_COMBAT)
+            ReceiveLegacyDamageOrder(E, parts)
+
+        elseif actionType == "DAMAGE_PART" then
+            ReceiveDamagePart(E, sender, parts[3], tonumber(parts[4]), tonumber(parts[5]), parts[6])
+
+        elseif actionType == "DAMAGE_RESEND" then
+            TTS.Net:ResendDamageDeclaration(sender, parts[3])
+
+        elseif actionType == "RESOLVE_COMBAT_DATA" then
             local bs = E.blockingState
-            local atkIdx = tonumber(parts[3])
-            if bs and bs.isRemoteAttacking and atkIdx then
-                local order = {}
-                for i = 4, #parts do
-                    local b = tonumber(parts[i])
-                    if b then table.insert(order, b) end
-                end
-                bs.damageOrder = bs.damageOrder or {}
-                bs.damageOrder[atkIdx] = order
+            local orders = ParseDamageOrders(parts[3])
+            if bs and bs.isRemoteAttacking and orders and not bs.remoteResolutionDone then
+                ApplyDamageOrders(bs, orders)
+                ResolveRemoteCombat(E, bs)
             end
 
         elseif actionType == "RESOLVE_COMBAT" then
-            if E.blockingState then
-                E:ResolveCombatDamage()
+            if parts[3] and parts[4] then
+                ReceiveDamageDeclaration(E, sender, parts[3], tonumber(parts[4]))
+            else
+                ReceiveLegacyCombatResolve(E, sender)
             end
 
         elseif actionType == "UNDO_REQUEST" then
