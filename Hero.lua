@@ -327,12 +327,8 @@ local function FindUnit(name)
 end
 
 -- Puts a hero card's character on a model frame. Returns false when it can't be shown
--- (the caller shows the class icon instead).
--- This client can only dress a model made from a real character (no SetCustomRace, and
--- bare race displays load untextured), so an opponent out of sight is drawn as your own
--- character in their gear when you share race and gender, and if not as a class trainer
--- of their race and gender (TRAINER_BY_RACE), their race, or their faction, dressed in
--- their gear (NPC displays take TryOn; bare race displays don't).
+-- (the caller shows the class icon instead). An opponent is shown live when possible;
+-- otherwise a class trainer is used, dressed in the opponent's gear.
 function H:SetModel(model, card, onDressed)
     local info = card.heroInfo
     if not (model and info) then return false end
@@ -342,14 +338,6 @@ function H:SetModel(model, card, onDressed)
     local unit = FindUnit(info.name)
     self.oppDrawnLive = unit and pcall(model.SetUnit, model, unit) or false
     if self.oppDrawnLive then return true end
-
-    local race = UnitRace and select(3, UnitRace("player"))
-    local sex = UnitSex and UnitSex("player")
-    if race == info.race and sex == info.sex and model.TryOn and pcall(model.SetUnit, model, "player") then
-        if model.Undress then pcall(model.Undress, model) end
-        for _, itemId in ipairs(info.items or {}) do pcall(model.TryOn, model, "item:" .. itemId) end
-        return true
-    end
 
     local displayId
     local byRace = TRAINER_BY_RACE[info.class]

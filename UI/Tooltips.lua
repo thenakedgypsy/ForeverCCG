@@ -674,7 +674,8 @@ local function BuildCardMain(tip, card, ctx)
     if ctx.header then ctx.header(tip) end
 
     local costStr = (card.cost and card.cost ~= "") and Sym(card.cost, 18) or "0"
-    tip:AddLine(L("tt.cost", costStr) .. "  |  " .. DisplayType(card), 0.8, 0.8, 0.8)
+    tip:AddLine(L("tt.cost", costStr), 0.8, 0.8, 0.8)
+    tip:AddLine(DisplayType(card), 0.8, 0.8, 0.8)
     local tagLine = TTS.GetCardTagLine and TTS:GetCardTagLine(card)
     if tagLine then tip:AddLine(tagLine, 1, 1, 1) end
 
@@ -724,7 +725,10 @@ local function AttachedPanels(perm)
         for _, effId in ipairs(TTS.Engine:GetPermEffectCards(perm)) do
             local eCard = TTS.Cards[effId]
             local eCost = (eCard.cost and eCard.cost ~= "") and Sym(eCard.cost, 16) or "0"
-            local lines = { { L("tt.cost", eCost) .. "  |  " .. (eCard.type and DisplayType(eCard) or L("type.Spell")), 0.8, 0.8, 0.8 } }
+            local lines = {
+                { L("tt.cost", eCost), 0.8, 0.8, 0.8 },
+                { eCard.type and DisplayType(eCard) or L("type.Spell"), 0.8, 0.8, 0.8 },
+            }
             if eCard.text and eCard.text ~= "" then table.insert(lines, { Sym(TTS:CardRulesText(eCard), 14), 0.9, 0.9, 0.6 }) end
             table.insert(specs, { title = TTS:CardName(eCard), tag = "Affected by", color = { 0.69, 0.5, 1.0 }, lines = lines })
         end
