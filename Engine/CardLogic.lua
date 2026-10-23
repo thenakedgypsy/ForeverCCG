@@ -1300,7 +1300,9 @@ function E:PlaySpellCastSound(card)
     end
 end
 
-function E:PlayCard(handIndex)
+-- bounceIndex (optional): for a prayer that returns a basic prayer to hand as it arrives
+-- (card.bouncesPrayer), the field index of the prayer returned; without one the player picks it.
+function E:PlayCard(handIndex, bounceIndex)
     -- Hand is full and a draw is waiting: clicking a card discards it instead
     if self.pendingDiscard then
         self:DiscardForDraw(handIndex)
@@ -1327,14 +1329,67 @@ function E:PlayCard(handIndex)
             return
         end
 
+        local field = self.localState.field
+        -- Only a basic prayer (no colors) can be returned
+        local function IsBasic(p)
+            local c = p and TTS.Cards[p.id]
+            return c and c.type == "Land" and not c.colors
+        end
+        local bounced = card.bouncesPrayer and bounceIndex and field[bounceIndex]
+        if card.bouncesPrayer and not IsBasic(bounced) then
+            local options = {}
+            for i, p in ipairs(field) do
+                local c = TTS.Cards[p.id]
+                if IsBasic(p) then
+                    table.insert(options, { value = i, perm = p, cardId = p.id, tapped = p.tapped,
+                        text = p.tapped and L("choice.exhaustedPrayer", TTS:CardName(c)) or nil })
+                end
+            end
+            if #options == 0 then
+                self:Log(L("err.bounceNeedsPrayer", TTS:CardName(card)), "ERROR")
+                return
+            end
+            -- Exhausted ones first (returning one costs no mana this turn); one option per
+            -- kind of prayer and state, since which copy goes back makes no difference
+            table.sort(options, function(a, b)
+                if (a.tapped or false) ~= (b.tapped or false) then return a.tapped and true or false end
+                return a.value < b.value
+            end)
+            local seen, shown = {}, {}
+            for _, o in ipairs(options) do
+                local key = o.cardId .. (o.tapped and "T" or "")
+                if not seen[key] then seen[key] = true; table.insert(shown, o) end
+            end
+            if #shown == 1 or not (TTS.Choice and TTS.Choice.frame) then
+                self:PlayCard(handIndex, shown[1].value)
+            else
+                -- Cards played while it's open can move both: find them again
+                TTS.Choice:Show({ title = L("choice.bouncePrayer", TTS:CardName(card)), options = shown,
+                    onChoose = function(_, o)
+                        local h, f
+                        for i, id in ipairs(self.localState.hand) do if id == cardId then h = i; break end end
+                        for i, p in ipairs(self.localState.field) do if p == o.perm then f = i; break end end
+                        if h and f then self:PlayCard(h, f) end
+                    end })
+            end
+            return
+        end
+
         local undoSnap = self:BeginUndoablePlay()
         table.remove(self.localState.hand, handIndex)
-        table.insert(self.localState.field, { id = cardId, tapped = false, uid = time() + handIndex })
+        if bounced then
+            table.remove(field, bounceIndex)
+            self:PutInZone(self.localState.hand, bounced.id)
+        end
+        table.insert(field, { id = cardId, tapped = card.entersTapped and true or false, uid = time() + handIndex })
         self.landPlayedThisTurn = true
         self:Log(L("log.playedPrayer", TTS:CardName(card)), "ACTION")
+        if bounced then self:Log(L("log.bouncedPrayer", TTS:CardName(bounced.id)), "ACTION") end
         self:PlayNonCreatureCardSound()
 
-        if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId) end
+        if not self.isSolo then
+            TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId .. (bounced and (":" .. bounceIndex) or ""))
+        end
         self:CommitUndoablePlay(undoSnap, cardId)
         self:RefreshUI()
         return
@@ -1730,6 +1785,18 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         return
     end
     if self:UndoBlocksAction() then return end
+
+    -- A double prayer that needs no partner (card.noPartner): both colours on its own
+    if card.type == "Land" and not perm.tapped and card.makesBoth and card.noPartner then
+        perm.tapped = true
+        for _, col in ipairs(card.colors) do
+            self.localState.mana[col] = (self.localState.mana[col] or 0) + 1
+        end
+        self:Log(L("log.tappedBoth", TTS:CardName(card), card.colors[1], card.colors[2]), "MANA")
+        if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex) end
+        self:RefreshUI()
+        return
+    end
 
     if card.type == "Land" and not perm.tapped and card.makesBoth then
         local field = self.localState.field

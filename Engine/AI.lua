@@ -182,7 +182,9 @@ end
 -- =========================================================================
 -- PRAYERS
 -- Play the colour whose shortfall blocks the most expensive card in hand; otherwise
--- the colour least represented on the battlefield.
+-- the colour least represented on the battlefield. Of the prayers that make a colour, one
+-- that arrives Exhausted (entersTapped) is only picked when there's no other, and one that
+-- returns a prayer to hand (bouncesPrayer) only once there's a basic prayer to return.
 -- =========================================================================
 local function LandCounts(self)
     local n = { W = 0, U = 0, B = 0, R = 0, G = 0 }
@@ -199,19 +201,25 @@ end
 
 function E:AIChoosePrayer(profile)
     local hand = self.remoteState.hand
+    local canBounce = self:AIBounceTarget() ~= nil
+    local function Playable(c)
+        return c and c.type == "Land" and (canBounce or not c.bouncesPrayer)
+    end
     local landIdx = {}
     for i, id in ipairs(hand) do
         local c = Card(id)
-        if c and c.type == "Land" then
+        if Playable(c) then
             for _, col in ipairs(self:ManaColorsOf(c)) do
-                if not landIdx[col] then landIdx[col] = i end
+                if not landIdx[col] or (Card(hand[landIdx[col]]).entersTapped and not c.entersTapped) then
+                    landIdx[col] = i
+                end
             end
         end
     end
     if not next(landIdx) then return nil end
     if not profile.smartPrayer then
         for i, id in ipairs(hand) do
-            if Card(id).type == "Land" then return i end
+            if Playable(Card(id)) then return i end
         end
     end
 
@@ -236,13 +244,33 @@ function E:AIChoosePrayer(profile)
     return landIdx[best]
 end
 
+-- The field index of the prayer the AI would return to hand for a bouncesPrayer prayer, or
+-- nil: only basics can go back; an Exhausted one first, then the colour it has most of
+function E:AIBounceTarget()
+    local have = LandCounts(self)
+    local best, bestScore
+    for i, p in ipairs(self.remoteState.field) do
+        local c = Card(p.id)
+        if c and c.type == "Land" and not c.colors then
+            local score = (p.tapped and 100 or 0) + (have[c.color] or 0)
+            if not bestScore or score > bestScore then best, bestScore = i, score end
+        end
+    end
+    return best
+end
+
 function E:AIPlayLand(handIdx)
     local cardId = table.remove(self.remoteState.hand, handIdx)
     local card = Card(cardId)
-    table.insert(self.remoteState.field, { id = cardId, tapped = false, uid = self:NewUid() })
+    local field = self.remoteState.field
+    local bounceIdx = card and card.bouncesPrayer and self:AIBounceTarget()
+    local bounced = bounceIdx and table.remove(field, bounceIdx)
+    if bounced then self:PutInZone(self.remoteState.hand, bounced.id) end
+    table.insert(field, { id = cardId, tapped = card and card.entersTapped and true or false, uid = self:NewUid() })
     self.remoteState.handCount = #self.remoteState.hand
     self.remoteLandPlayed = true
     self:Log(L("log.aiPlayedPrayer", self.opponent, TTS:CardName(card)), "ACTION")
+    if bounced then self:Log(L("log.oppBouncedPrayer", self.opponent, TTS:CardName(bounced.id)), "ACTION") end
     self:PlayNonCreatureCardSound()
 end
 

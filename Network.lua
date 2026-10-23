@@ -2026,15 +2026,23 @@ function TTS.Net:OnReceive(msg, sender)
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()   -- saves the board first, in case they ask to undo this card
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
+            -- Optional: the field index of the prayer it returned to their hand (card.bouncesPrayer)
+            local bounceIdx = tonumber(parts[4])
+            local bounced = bounceIdx and E.remoteState.field[bounceIdx]
+            if bounced then
+                table.remove(E.remoteState.field, bounceIdx)
+                E.remoteState.handCount = E.remoteState.handCount + 1
+            end
             table.insert(E.remoteState.field, {
                 id = cardId,
-                tapped = false,
+                tapped = card and card.entersTapped and true or false,
                 damage = 0,
                 tempPower = 0,
                 tempToughness = 0,
                 uid = time() + #E.remoteState.field
             })
             E:Log(L("log.oppPlayedPrayer", sender, card and TTS:CardName(card) or cardId), "ACTION")
+            if bounced then E:Log(L("log.oppBouncedPrayer", sender, TTS:CardName(bounced.id)), "ACTION") end
             E:PlayNonCreatureCardSound()
             E:RefreshUI()
 

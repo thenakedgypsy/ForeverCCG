@@ -44,6 +44,7 @@
 *   new: Foil cards - a shiny version of a denizen card, one per card. Once you own a copy, every kill of that denizen has its own small chance to drop its foil (higher for named denizens and dungeon creatures, highest for final bosses), and every copy of that card then plays foil, for your opponent too. Leeroy Jenkins and The Bug Reporter always come in foil. The deckbuilder shows foil names in colour and counts your foils towards your score
 *   named denizens (e.g. Gruff Swiftbite) are now rarer drops: 50% for the first copy, then 12%, 6% and 3%
 *   every dungeon denizen, bosses included, now drops its card at the named-denizen rates. Final bosses no longer always give a copy, and no longer track your kills through achievements
+*   new: Dark Hearthstones - ten more dual-colour prayers, one for every colour pair, that make both colours at once. They arrive Exhausted and return one of your basic prayers to your hand. Sixteen more innkeepers across Azeroth have them to spare, from Sentinel Hill to Feathermoon Stronghold, and the goblin innkeepers of Ratchet, Booty Bay, Gadgetzan and Everlook will serve either faction
 *   new: health bars on the life plates - green when full, through yellow to red, with the life just lost draining away
 *   options: new Tooltip scale slider for card tooltips and the detail panels beside them
 *   card tooltips show the cost and the card type on separate lines

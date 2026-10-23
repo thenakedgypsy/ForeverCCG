@@ -1016,7 +1016,7 @@ local function Card_OnEnter(self)
         ctx.isRemote = self.isRemote
         ctx.fieldIndex = self.fieldIndex
         if card.colors and not self.isRemote then
-            ctx.hint = L(card.makesBoth and "hint.doublePrayer" or "hint.dualPrayer",
+            ctx.hint = L(card.noPartner and "hint.bothPrayer" or card.makesBoth and "hint.doublePrayer" or "hint.dualPrayer",
                 TT:Def("symbol", card.colors[1], "name"), TT:Def("symbol", card.colors[2], "name"))
         end
     end

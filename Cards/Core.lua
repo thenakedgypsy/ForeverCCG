@@ -47,6 +47,7 @@ TTS.Cards = {
     -- =========================================================================
     -- NON-BASIC PRAYERS
     -- nameHorde = the name Horde players see; colors = the colours it can make;
+    -- entersTapped = arrives Exhausted;
     -- isGift = handed out by NPCs (giftNpcs = the npcId
     -- in each faction, Alliance / Horde / Neutral; they share one cooldown per card, see
     -- UI\NpcGossip.lua), one copy a day up to 4
@@ -116,6 +117,46 @@ TTS.Cards = {
     },
 
     -- =========================================================================
+    -- DARK HEARTHSTONES: one per colour pair, from the innkeepers of the smaller towns
+    -- (Neutral ones serve both factions). They arrive Exhausted (entersTapped), return a
+    -- basic prayer to hand as they do (bouncesPrayer), and make both colours on their own
+    -- (makesBoth, noPartner).
+    -- =========================================================================
+    -- Levels 10-25
+    ["PRY21"] = { id = "PRY21", name = "Sentinel Hill Dark Hearth", nameHorde = "Taurajo Dark Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "G" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 8931, Horde = 7714 },   -- Heather, Sentinel Hill / Byula, Camp Taurajo
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {W}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_Y_G.png" },
+    ["PRY22"] = { id = "PRY22", name = "Ratchet Dark Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "R" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Neutral = 6791 },   -- Wiley, Ratchet
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {U}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_U_R.png" },
+    ["PRY23"] = { id = "PRY23", name = "Stonetalon Dark Hearth", nameHorde = "Freewind Dark Hearth", cost = "", cmc = 0, color = "R", colors = { "R", "G" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 16458, Horde = 11116 },   -- Faralia, Stonetalon Peak / Abeqwa, Freewind Post
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {R}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_R_G.png" },
+    -- Levels 20-40
+    ["PRY24"] = { id = "PRY24", name = "Menethil Dark Hearth", nameHorde = "Hammerfall Dark Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "B" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 1464, Horde = 9501 },   -- Helbrek, Menethil Harbor / Adegwa, Hammerfall
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {W}{B}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_Y_P.png" },
+    ["PRY25"] = { id = "PRY25", name = "Astranaar Dark Hearth", nameHorde = "Stonard Dark Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "G" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 6738, Horde = 6930 },   -- Kimlya, Astranaar / Karakul, Stonard
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {B}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_P_G.png" },
+    ["PRY26"] = { id = "PRY26", name = "Nijel's Point Dark Hearth", nameHorde = "Shadowprey Dark Hearth", cost = "", cmc = 0, color = "B", colors = { "B", "R" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 11103, Horde = 11106 },   -- Lyshaerya, Nijel's Point / Sikewa, Shadowprey Village
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {B}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_P_R.png" },
+    ["PRY27"] = { id = "PRY27", name = "Booty Bay Dark Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "B" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Neutral = 6807 },   -- Skindle, Booty Bay
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {U}{B}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_U_P.png" },
+    -- Levels 40-60
+    ["PRY28"] = { id = "PRY28", name = "Feathermoon Dark Hearth", nameHorde = "Mojache Dark Hearth", cost = "", cmc = 0, color = "U", colors = { "U", "G" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Alliance = 7736, Horde = 7737 },   -- Shyria, Feathermoon Stronghold / Greul, Camp Mojache
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {U}{G}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_U_G.png" },
+    ["PRY29"] = { id = "PRY29", name = "Gadgetzan Dark Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "R" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Neutral = 7733 },   -- Fizzgrimble, Gadgetzan
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {W}{R}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_Y_R.png" },
+    ["PRY30"] = { id = "PRY30", name = "Everlook Dark Hearth", cost = "", cmc = 0, color = "W", colors = { "W", "U" }, makesBoth = true, noPartner = true, entersTapped = true, bouncesPrayer = true, type = "Land",
+        isGift = true, giftNpcs = { Neutral = 11118 },   -- Vizzie, Everlook
+        text = "Arrives Exhausted. Arrival: Return a basic Prayer you control to your hand. {T}: Add {W}{U}.", art = "Interface\\AddOns\\ForeverCCG\\Textures\\Hearths\\dark_rune_Y_U.png" },
+
+    -- =========================================================================
     -- GREATER HEARTHSTONES: make both colours at once (makesBoth), but another untapped
     -- prayer of yours is tapped with them. Any capital city innkeeper (TTS.GIFT_POOLS.capital)
     -- hands out a random one the player doesn't have all 4 of; one wait for the whole pool.
@@ -145,12 +186,14 @@ TTS.Cards = {
 -- Gift trails for each faction, by level: once an NPC has given all its copies, it points
 -- the player to the next one on its trail still worth visiting, by name and place
 -- (npc.<npcId>.name, place.<npcId>), and after the last to the trail's pool if it has one
--- (UI\NpcGossip.lua). inn: the town innkeepers, then the capitals; gear: the zones' weapon
--- merchants (added by Cards\Gear.lua).
+-- (UI\NpcGossip.lua). inn: the town innkeepers (Neutral ones on both trails), then the
+-- capitals; gear: the zones' weapon merchants (added by Cards\Gear.lua).
 TTS.GIFT_TRAILS = {
     inn = {
-        Alliance = { 295, 1247, 6736, 6734, 6737, 6727, 6790, 2352, 6272, 7744 },
-        Horde = { 6928, 6747, 5688, 3934, 6739, 7731, 12196, 2388, 9356, 14731 },
+        Alliance = { 295, 1247, 6736, 6734, 6737, 8931, 6791, 6727, 16458, 6738, 6790, 1464, 2352,
+            11103, 6807, 6272, 7733, 7736, 7744, 11118 },
+        Horde = { 6928, 6747, 5688, 3934, 6739, 7714, 6791, 7731, 12196, 2388, 11116, 9501, 11106,
+            6807, 6930, 9356, 7733, 7737, 14731, 11118 },
         pool = "capital",
     },
 }

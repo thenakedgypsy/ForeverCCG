@@ -410,7 +410,8 @@ end
 
 -- One side's untapped prayers: basics by colour { W = { perm, ... }, ... }, the prayers
 -- that make one of two colours (duals), and those that make both at once when another
--- untapped prayer is tapped with them (doubles, card.makesBoth)
+-- untapped prayer is tapped with them (doubles, card.makesBoth), or on their own
+-- (card.noPartner too)
 function E:UntappedLands(isRemote)
     local lands = { W = {}, U = {}, B = {}, R = {}, G = {} }
     local duals, doubles = {}, {}
@@ -493,6 +494,15 @@ function E:PlanLandTaps(costString, isRemote)
         Try(i + 1, lands, duals, doubles, pool, front, partnerOf, used)   -- not used
         if d.planPartner then return end   -- already the partner of an earlier double
         local c = TTS.Cards[d.id]
+        if c.noPartner then
+            -- Both colours on its own
+            local p2, f2 = Copy(pool), { unpack(front) }
+            p2[c.colors[1]] = p2[c.colors[1]] + 1
+            p2[c.colors[2]] = p2[c.colors[2]] + 1
+            table.insert(f2, d)
+            Try(i + 1, lands, duals, doubles, p2, f2, partnerOf, used + 1)
+            return
+        end
         local partners = {}
         for _, col in ipairs(MANA_COLORS) do
             if lands[col][1] then table.insert(partners, lands[col][1]) end   -- one of each colour is enough
