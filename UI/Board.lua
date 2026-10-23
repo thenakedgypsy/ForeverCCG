@@ -613,7 +613,7 @@ B.undoBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 -- Shuffles the opening hand back for a new one (shown until the hand is kept, CoreEngine.lua)
 B.mulliganBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.mulliganBtn:SetSize(80, 24)
-B.mulliganBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
+B.mulliganBtn:SetPoint("BOTTOM", B.nextPhaseBtn, "TOP", 0, 6)
 Loc:Bind(B.mulliganBtn, "board.mulligan")
 StyleButton(B.mulliganBtn)
 if B.mulliganBtn.SetMotionScriptsWhileDisabled then B.mulliganBtn:SetMotionScriptsWhileDisabled(true) end
@@ -628,6 +628,20 @@ B.mulliganBtn:SetScript("OnEnter", function(self)
     TT:ShowText(self, "ANCHOR_TOP", L("board.mulligan"), nil, { r = 1, g = 0.82, b = 0, lines = lines })
 end)
 B.mulliganBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
+-- Flashes while a mulligan can be taken: an additive highlight pulsed over the button
+local MULLIGAN_FLASH = 4   -- pulse speed (radians per second)
+B.mulliganBtn.flash = B.mulliganBtn:CreateTexture(nil, "OVERLAY")
+B.mulliganBtn.flash:SetTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+B.mulliganBtn.flash:SetTexCoord(0, 0.625, 0, 0.6875)
+B.mulliganBtn.flash:SetBlendMode("ADD")
+B.mulliganBtn.flash:SetAllPoints()
+B.mulliganBtn.flash:SetAlpha(0)
+B.mulliganBtn:SetScript("OnUpdate", function(self, elapsed)
+    if not self:IsEnabled() then self.flash:SetAlpha(0); return end
+    self.flashT = (self.flashT or 0) + elapsed
+    self.flash:SetAlpha(0.5 + 0.5 * math.sin(self.flashT * MULLIGAN_FLASH))
+end)
 B.mulliganBtn:Hide()
 
 B.phaseText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -731,7 +745,7 @@ B.oppLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 B.myLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.myLifeBtn:SetSize(160, 30)
-B.myLifeBtn:SetPoint("BOTTOMLEFT", 30, 14)
+B.myLifeBtn:SetPoint("BOTTOM", 0, 20)   -- centred, mirroring the opponent's; clears the footer below
 Skin(B.myLifeBtn, "control", STYLE.controlBg, STYLE.controlBorder)
 B.myLifeBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
@@ -851,7 +865,7 @@ end
 local MANA_ORDER = { "W", "U", "B", "R", "G" }
 
 B.manaText = B:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-B.manaText:SetPoint("BOTTOMLEFT", 205, 20)
+B.manaText:SetPoint("BOTTOMLEFT", 30, 26)
 Loc:Bind(B.manaText, "board.mana")
 
 B.manaSlots = {}
@@ -2085,11 +2099,9 @@ do
     B.oppGraveBtn = CreateGraveyardButton(true)
     B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -34, 0)
 
-    -- Yours sits left of Undo, with Mulligan (while it is up) moved left of it
+    -- Yours sits left of Undo
     B.myGraveBtn = CreateGraveyardButton(false)
     B.myGraveBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
-    B.mulliganBtn:ClearAllPoints()
-    B.mulliganBtn:SetPoint("RIGHT", B.myGraveBtn, "LEFT", -8, 0)
 
     -- Button labels with the counts, and any open list refilled (UpdateDisplay)
     function B:UpdateGraveyards()
