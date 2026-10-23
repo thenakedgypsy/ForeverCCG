@@ -64,6 +64,7 @@ local ZONES = {
     { "BUR", "Burning Steppes",      "Burning Steppes Brutes",          "BurningSteppes",      "expert" },
     { "WPL", "Western Plaguelands",  "Western Plaguelands Wretches",    "WesternPlaguelands",  "expert" },
     { "EPL", "Eastern Plaguelands",  "Eastern Plaguelands Eradicators", "EasternPlaguelands",  "expert" },
+    { "RIV", "Riverglades",          "Riverglades Renegades",           "Riverglades",         "expert" },
     -- Kalimdor
     { "DUR", "Durotar",              "Durotar Despoilers",              "Durotar",             "basic" },
     { "MUL", "Mulgore",              "Mulgore Marauders",               "Mulgore",             "basic" },
@@ -97,6 +98,7 @@ TTS.SoloConnections = {
     { "HIL", "ALT" }, { "HIL", "SIL" }, { "HIL", "HIN" },
     { "ALT", "SIL" }, { "ALT", "WPL" }, { "SIL", "TIR" }, { "TIR", "WPL" },
     { "WPL", "EPL" }, { "WPL", "HIN" }, { "HIN", "EPL" },
+    { "RIV", "RED" }, { "RIV", "BUR" }, { "RIV", "BAD" }, { "RIV", "SWA" },
     -- Kalimdor
     { "TEL", "DAR" }, { "DAR", "ASH" },
     { "ASH", "AZS" }, { "ASH", "FEL" }, { "ASH", "STO" }, { "ASH", "BRN" }, { "FEL", "WIN" },
@@ -229,7 +231,7 @@ end
 
 -- =========================================================================
 -- DECK GENERATION
--- 40 cards: the zone's creatures (2 copies each), or for a dungeon its boss card(s) padded
+-- 40 cards: the zone's creatures (2 copies each; past the 10th, the most expensive get 1), or for a dungeon its boss card(s) padded
 -- to 22 creatures with the dungeon's creatures; then a few class spells the AI can use
 -- (and for a zone, 2 copies of its Gear Card); prayers fill the rest, split by the colour share of the creatures' pips.
 -- =========================================================================
@@ -237,6 +239,7 @@ local DECK_SIZE = 40
 local DUNGEON_CREATURES = 22
 local SPELLS_BY_PROFILE = { dummy = 0, basic = 2, tactical = 3, expert = 4 }
 local ZONE_GEAR_COPIES = 2   -- copies of the zone's Gear Card in a zone opponent's deck
+local ZONE_DENIZENS = 10     -- a zone's usual creature count; the most expensive beyond it get 1 copy, not 2
 local PRAYER_IDS = { W = "W01", U = "U01", B = "B01", R = "R01", G = "G01" }
 
 -- Spell ops the AI knows how to use well
@@ -327,9 +330,11 @@ function E:BuildEncounterDeck(enc)
             end
         end
     else
-        for _, id in ipairs(pool) do
+        -- The pool is sorted cheapest first, so the singles are the most expensive
+        local doubles = math.min(#pool, ZONE_DENIZENS)
+        for i, id in ipairs(pool) do
             table.insert(creatures, id)
-            table.insert(creatures, id)
+            if i <= doubles then table.insert(creatures, id) end
         end
     end
 

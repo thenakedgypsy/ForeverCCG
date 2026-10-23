@@ -60,6 +60,8 @@ Cards\Zones\Felwood.lua
 Cards\Zones\UngoroCrater.lua
 Cards\Zones\Silithus.lua
 Cards\Zones\Winterspring.lua
+Cards\Zones\Riverglades.lua
+Cards\Zones\ZephrasIsle.lua
 Cards\Dungeons\RagefireChasm.lua
 Cards\Dungeons\Deadmines.lua
 Cards\Dungeons\WailingCaverns.lua

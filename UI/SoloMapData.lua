@@ -46,6 +46,7 @@ TTS.SoloMapPositions = {
     ROL = { "EK", 0.4490, 0.2400 },   -- the ruins above the Undercity
     EXC = { "EK", 0.5065, 0.4690 },   -- western Wetlands
     DAL = { "EK", 0.4455, 0.3065 },   -- Dalaran, western Alterac Mountains
+    RIV = { "EK", 0.5600, 0.6800 },   -- Riverglades, between Redridge, Burning Steppes, Badlands and Swamp of Sorrows
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
     LOC = { "EK", 0.5504, 0.5486 },
