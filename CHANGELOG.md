@@ -45,7 +45,8 @@
 *   named denizens (e.g. Gruff Swiftbite) are now rarer drops: 50% for the first copy, then 12%, 6% and 3%
 *   every dungeon denizen, bosses included, now drops its card at the named-denizen rates. Final bosses no longer always give a copy, and no longer track your kills through achievements
 *   new: Dark Hearthstones - ten more dual-colour prayers, one for every colour pair, that make both colours at once. They arrive Exhausted and return one of your basic prayers to your hand. Sixteen more innkeepers across Azeroth have them to spare, from Sentinel Hill to Feathermoon Stronghold, and the goblin innkeepers of Ratchet, Booty Bay, Gadgetzan and Everlook will serve either faction
-*   new: health bars on the life plates - green when full, through yellow to red, with the life just lost draining away
+*   new: health bars on the life plates - green when full, through yellow to red, with the life just lost draining away. Your life plate now sits in the middle at the bottom of the board, facing your opponent's, with your mana on the left
+*   the Mulligan button now sits above To Combat and flashes while you can take a mulligan
 *   options: new Tooltip scale slider for card tooltips and the detail panels beside them
 *   card tooltips show the cost and the card type on separate lines
 *   Azshir the Sleepless: Martyrdom became Arrival, and toughness 5 -> 6
