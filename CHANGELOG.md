@@ -56,6 +56,8 @@
 *   balance changes too long to list here.
 *   the regeneration shield from Blessing of Protection and Vanish is now called Soulstone (it works the same way)
 *   new names: many keywords adjusted to be less... tragic
+*   cards for the new zones added: Riverglades (Twilight's Hammer cultists led by Overlord Kilgar, plus the zone's boars, bats, buzzards, tallstriders and crocolisks) and Zephras Isle (the Al'Aketh, the High Order under Elaadrin Evengale, and the isle's Cirrusflies, Ursera, Galestriders and wind elementals). Kill them out in the world to collect them
+*   new solo-mode zone: Riverglades, between Redridge Mountains, Burning Steppes, the Badlands and Swamp of Sorrows. Clear it to earn Demar Brant, Knight Commander of the Brotherhood of the Horse
 
 ## 0.15.7
 
