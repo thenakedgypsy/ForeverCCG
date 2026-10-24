@@ -65,7 +65,7 @@ TTS:AddCards({
     },
     ["BFD08"] = {
         id = "BFD08", name = "Lorgus Jett", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 12822,
+        power = 5, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 12822,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 12902,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick."

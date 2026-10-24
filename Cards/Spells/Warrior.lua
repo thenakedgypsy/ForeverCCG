@@ -15,21 +15,21 @@ TTS:AddCards({
     -- WARRIOR
     ["WAR01"] = {
         id = "WAR01", name = "Heroic Strike", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target denizen you control gets +3/+0 until end of turn.",
+        text = "Target denizen you control permanently gets +2/+1.",
         art = "Interface\\Icons\\Ability_Rogue_Ambush",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3 } } }
+        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, t = 1, perm = true } } }
     },
     ["WAR02"] = {
         id = "WAR02", name = "Charge", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target denizen you control gets +1/+0 and gains Quick until end of turn.",
+        text = "Target denizen you control permanently gets +2/+0 and gains Quick.",
         art = "Interface\\Icons\\Ability_Warrior_Charge",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, kw = { "haste" } } } }
+        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, kw = { "haste" }, perm = true } } }
     },
     ["WAR03"] = {
         id = "WAR03", name = "Rend", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target enemy denizen: DoT 1 for 4 turns.",
+        text = "Deal 3 damage to target enemy denizen, then DoT 1 for 3 turns.",
         art = "Interface\\Icons\\Ability_Gouge",
-        effect = { target = "enemy_creature", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
     ["WAR04"] = {
         id = "WAR04", name = "Bloodrage", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
@@ -45,21 +45,21 @@ TTS:AddCards({
     },
     ["WAR06"] = {
         id = "WAR06", name = "Overpower", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target denizen you control gets +3/+0 and gains Strikes-First until end of turn.",
+        text = "Target denizen you control permanently gets +2/+2 and gains Strikes-First.",
         art = "Interface\\Icons\\Ability_MeleeDamage",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, kw = { "firstStrike" } } } }
+        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, t = 2, kw = { "firstStrike" }, perm = true } } }
     },
     ["WAR07"] = {
-        id = "WAR07", name = "Execute", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Destroy target enemy denizen that has been dealt damage.",
+        id = "WAR07", name = "Execute", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Warrior",
+        text = "Deal 1 damage to target enemy denizen, then destroy it if it has been dealt damage.",
         art = "Interface\\Icons\\INV_Sword_48",
-        effect = { target = "enemy_creature", ops = { { op = "destroy", to = "target", damaged = true } } }
+        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 1 }, { op = "destroy", to = "target", damaged = true } } }
     },
     ["WAR08"] = {
         id = "WAR08", name = "Shield Wall", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Warrior",
-        text = "Prevent the next 6 damage to you.",
+        text = "Prevent the next 6 damage to you. Draw 1.",
         art = "Interface\\Icons\\Ability_Warrior_ShieldWall",
-        effect = { ops = { { op = "shield", to = "self_player", n = 6 } } }
+        effect = { ops = { { op = "shield", to = "self_player", n = 6 }, { op = "draw", n = 1 } } }
     },
     ["WAR09"] = {
         id = "WAR09", name = "Mortal Strike", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Warrior",

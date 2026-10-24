@@ -15,27 +15,27 @@ TTS:AddCards({
     -- PRIEST
     ["PRI01"] = {
         id = "PRI01", name = "Power Word: Shield", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "Prevent the next 4 damage to you, or target denizen you control gains Shielded.",
+        text = "Prevent the next 4 damage to you, or target denizen you control gains Shielded and permanently gets +1/+1.",
         art = "Interface\\Icons\\Spell_Holy_PowerWordShield",
-        effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4, playerOnly = true }, { op = "shielded", to = "target" } } }
+        effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4, playerOnly = true }, { op = "shielded", to = "target" }, { op = "buff", to = "target", p = 1, t = 1, perm = true } } }
     },
     ["PRI02"] = {
         id = "PRI02", name = "Renew", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "You or target denizen you control: HoT 2 for 3 turns.",
+        text = "You or target denizen you control: HoT 2 for 3 turns. Draw 1.",
         art = "Interface\\Icons\\Spell_Holy_Renew",
-        effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 } } }
+        effect = { target = "friendly_any", ops = { { op = "hot", to = "target", n = 2, turns = 3 }, { op = "draw", n = 1 } } }
     },
     ["PRI03"] = {
         id = "PRI03", name = "Flash Heal", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Priest",
-        text = "You regain 5 health, or target denizen you control permanently gets +0/+2.",
+        text = "You regain 5 health, or target denizen you control permanently gets +0/+2. Draw 1.",
         art = "Interface\\Icons\\Spell_Holy_FlashHeal",
-        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 5, t = 2 } } }
+        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 5, t = 2 }, { op = "draw", n = 1 } } }
     },
     ["PRI04"] = {
-        id = "PRI04", name = "Prayer of Healing", cost = "{3}{W}", cmc = 4, color = "W", type = "Sorcery", class = "Priest",
-        text = "You regain 4 health and denizens you control permanently get +0/+1.",
+        id = "PRI04", name = "Prayer of Healing", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Priest",
+        text = "You regain 4 health and denizens you control permanently get +0/+1. Draw 1.",
         art = "Interface\\Icons\\Spell_Holy_PrayerOfHealing",
-        effect = { ops = { { op = "heal", to = "self_player", n = 4 }, { op = "heal", to = "friendly_creatures", n = 4, t = 1 } } }
+        effect = { ops = { { op = "heal", to = "self_player", n = 4 }, { op = "heal", to = "friendly_creatures", n = 4, t = 1 }, { op = "draw", n = 1 } } }
     },
     ["PRI05"] = {
         id = "PRI05", name = "Smite", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Priest",
@@ -51,9 +51,9 @@ TTS:AddCards({
     },
     ["PRI07"] = {
         id = "PRI07", name = "Shadow Word: Pain", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Priest",
-        text = "Target enemy denizen or the opponent: DoT 1 for 4 turns.",
+        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
-        effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
     ["PRI08"] = {
         id = "PRI08", name = "Mind Blast", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Priest",

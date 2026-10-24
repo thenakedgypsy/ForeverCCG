@@ -21,15 +21,15 @@ TTS:AddCards({
     },
     ["WLK02"] = {
         id = "WLK02", name = "Corruption", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Target enemy denizen or the opponent: DoT 2 for 3 turns.",
+        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Shadow_AbominationExplosion",
-        effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["WLK03"] = {
         id = "WLK03", name = "Curse of Agony", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Target enemy denizen or the opponent: DoT 1 for 4 turns.",
+        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Spell_Shadow_CurseOfSargeras",
-        effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
     ["WLK04"] = {
         id = "WLK04", name = "Drain Life", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Warlock",

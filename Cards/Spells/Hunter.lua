@@ -15,15 +15,15 @@ TTS:AddCards({
     -- HUNTER
     ["HUN01"] = {
         id = "HUN01", name = "Arcane Shot", cost = "{U}", cmc = 1, color = "U", type = "Sorcery", class = "Hunter",
-        text = "Deal 2 damage to target enemy denizen or the opponent.",
+        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Ability_ImpalingBolt",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["HUN02"] = {
         id = "HUN02", name = "Serpent Sting", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target enemy denizen or the opponent: DoT 1 for 4 turns.",
+        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Ability_Hunter_Quickshot",
-        effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
     ["HUN03"] = {
         id = "HUN03", name = "Aimed Shot", cost = "{2}{G}", cmc = 3, color = "G", type = "Sorcery", class = "Hunter",
@@ -39,9 +39,9 @@ TTS:AddCards({
     },
     ["HUN05"] = {
         id = "HUN05", name = "Concussive Shot", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Exhaust target enemy denizen.",
+        text = "Exhaust target enemy denizen. Draw 1.",
         art = "Interface\\Icons\\Spell_Frost_Stun",
-        effect = { target = "enemy_creature", ops = { { op = "tap", to = "target" } } }
+        effect = { target = "enemy_creature", ops = { { op = "tap", to = "target" }, { op = "draw", n = 1 } } }
     },
     ["HUN06"] = {
         id = "HUN06", name = "Freezing Trap", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Hunter",
@@ -51,26 +51,26 @@ TTS:AddCards({
     },
     ["HUN07"] = {
         id = "HUN07", name = "Immolation Trap", cost = "{2}{R}", cmc = 3, color = "R", type = "Sorcery", class = "Hunter",
-        text = "Target enemy denizen or the opponent: DoT 2 for 3 turns.",
+        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
-        effect = { target = "enemy_any", ops = { { op = "dot", to = "target", n = 2, turns = 3 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["HUN08"] = {
         id = "HUN08", name = "Mend Pet", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target denizen you control permanently gets +0/+1, then HoT 1 for 3 turns.",
+        text = "Target denizen you control permanently gets +0/+1, then HoT 1 for 3 turns. Draw 1.",
         art = "Interface\\Icons\\Ability_Hunter_MendPet",
-        effect = { target = "friendly_creature", ops = { { op = "heal", to = "target", n = 3, t = 1 }, { op = "hot", to = "target", n = 1, turns = 3 } } }
+        effect = { target = "friendly_creature", ops = { { op = "heal", to = "target", n = 3, t = 1 }, { op = "hot", to = "target", n = 1, turns = 3 }, { op = "draw", n = 1 } } }
     },
     ["HUN09"] = {
         id = "HUN09", name = "Hunter's Mark", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target enemy denizen permanently gets -2/-1.",
+        text = "Target enemy denizen permanently gets -2/-2.",
         art = "Interface\\Icons\\Ability_Hunter_SniperShot",
-        effect = { target = "enemy_creature", ops = { { op = "buff", to = "target", p = -2, t = -1, perm = true } } }
+        effect = { target = "enemy_creature", ops = { { op = "buff", to = "target", p = -2, t = -2, perm = true } } }
     },
     ["HUN10"] = {
         id = "HUN10", name = "Bestial Wrath", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target denizen you control gets +3/+3 and gains Brutish until end of turn.",
+        text = "Target denizen you control permanently gets +3/+3 and gains Brutish.",
         art = "Interface\\Icons\\Ability_Druid_FerociousBite",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, t = 3, kw = { "trample" } } } }
+        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, t = 3, kw = { "trample" }, perm = true } } }
     },
 })

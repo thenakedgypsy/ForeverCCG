@@ -54,6 +54,9 @@
 *   fix for card costs sometimes missing from the deckbuilder's tiles when it first opens
 *   PvP: attack and block declarations are now sent in one go, so large attacks arrive faster and more reliably
 *   balance changes too long to list here.
+*   `Drain` now restores life only from combat damage dealt to the opponent (Brutish damage carried over blockers included), not from damage dealt to denizens
+*   class spells rebalanced: combat tricks now last instead of wearing off at end of turn (Heroic Strike, Blessing of Might, Rockbiter Weapon, Charge, Overpower, Thorns, Bestial Wrath, Sprint, Evasion, Vanish, Slice and Dice, Stoneskin Totem); heals and utility spells also draw a card (Flash of Light, Holy Light, Flash Heal, Renew, Rejuvenation, Regrowth, Healing Touch, Healing Wave, Prayer of Healing, Mend Pet, Shield Wall, Purge, Concussive Shot, Gouge); damage over time spells now hit up front too (Rend, Garrote, Shadow Word: Pain, Curse of Agony, Corruption, Serpent Sting, Immolation Trap, Flame Shock, Moonfire, Arcane Shot, Fire Blast); plus changes to Execute, Earth Shock, Sinister Strike, Hunter's Mark, Mark of the Wild, Power Word: Shield, Blessing of Protection, Redemption and Ancestral Spirit
+*   solo opponents now cast Bloodrage, Innervate, Life Tap, Enslave Demon, Mind Control, Purge and Vanish
 *   the regeneration shield from Blessing of Protection and Vanish is now called Soulstone (it works the same way)
 *   new names: many keywords adjusted to be less... tragic
 *   cards for the new zones added: Riverglades (Twilight's Hammer cultists led by Overlord Kilgar, plus the zone's boars, bats, buzzards, tallstriders and crocolisks) and Zephras Isle (the Al'Aketh, the High Order under Elaadrin Evengale, and the isle's Cirrusflies, Ursera, Galestriders and wind elementals). Kill them out in the world to collect them

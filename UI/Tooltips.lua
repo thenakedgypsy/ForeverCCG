@@ -86,7 +86,7 @@ TT.KEYWORDS = {
     vigilance   = { name = "Vigilant",      text = "Attacking doesn't Exhaust this denizen, so it is still ready to block on your opponent's turn." },
     firstStrike = { name = "Strikes-First", text = "Deals its combat damage before denizens without Strikes-First. If that damage is lethal, the other denizen dies before it can strike back." },
     deathtouch  = { name = "Fatal",         text = "Any combat damage this denizen deals to a denizen is lethal." },
-    lifelink    = { name = "Drain",         text = "Combat damage this denizen deals also restores that much life to its controller." },
+    lifelink    = { name = "Drain",         text = "Combat damage this denizen deals to the opponent also restores that much life to its controller." },
     trample     = { name = "Brutish",       text = "When blocked, combat damage beyond the blocker's toughness carries over to the defending player." },
     hexproof    = { name = "Warded",        text = "Can't be the target of your opponent's spells or abilities." },
     shielded    = { name = "Shielded",      text = "The next instance of damage this denizen would take is negated, and it loses Shielded." },

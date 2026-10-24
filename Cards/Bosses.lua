@@ -13,7 +13,7 @@ TTS:AddCards({
     -- RFC: Bazzalan
     ["BOSS01"] = {
         id = "BOSS01", name = "Bazzalan", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2007,
+        power = 3, toughness = 4, isMob = true, isBoss = true, displayId = 2007,
         zone = "Ragefire Chasm", creatureType = "Demon", faction = "Burning Blade", npcId = 11519,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
         text = "{T}: Deal 2 damage to the opponent. You gain 2 life."
@@ -141,7 +141,7 @@ TTS:AddCards({
     -- Zul'Farrak: Chief Ukorz Sandscalp
     ["BOSS15"] = {
         id = "BOSS15", name = "Chief Ukorz Sandscalp", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 8, toughness = 7, haste = true, trample = true, isMob = true, isBoss = true, displayId = 6439,
+        power = 7, toughness = 7, haste = true, trample = true, isMob = true, isBoss = true, displayId = 6439,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7267,
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
         text = "Brutish. Quick. Gets +3/+0 while your life is 10 or less."

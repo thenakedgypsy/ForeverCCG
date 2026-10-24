@@ -21,15 +21,15 @@ TTS:AddCards({
     },
     ["SHA02"] = {
         id = "SHA02", name = "Earth Shock", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Deal 2 damage to target enemy denizen.",
+        text = "Deal 3 damage to target enemy denizen.",
         art = "Interface\\Icons\\Spell_Nature_EarthShock",
-        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 2 } } }
+        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 } } }
     },
     ["SHA03"] = {
         id = "SHA03", name = "Flame Shock", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Shaman",
-        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 1 for 3 turns.",
+        text = "Deal 3 damage to target enemy denizen or the opponent, then DoT 1 for 3 turns.",
         art = "Interface\\Icons\\Spell_Fire_FlameShock",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
     ["SHA04"] = {
         id = "SHA04", name = "Frost Shock", cost = "{1}{U}", cmc = 2, color = "U", type = "Sorcery", class = "Shaman",
@@ -45,30 +45,30 @@ TTS:AddCards({
     },
     ["SHA06"] = {
         id = "SHA06", name = "Healing Wave", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Shaman",
-        text = "You regain 7 health, or target denizen you control permanently gets +0/+2.",
+        text = "You regain 7 health, or target denizen you control permanently gets +0/+2. Draw 1.",
         art = "Interface\\Icons\\Spell_Nature_MagicImmunity",
-        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 7, t = 2 } } }
+        effect = { target = "friendly_any", ops = { { op = "heal", to = "target", n = 7, t = 2 }, { op = "draw", n = 1 } } }
     },
     ["SHA07"] = {
         id = "SHA07", name = "Rockbiter Weapon", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Target denizen you control gets +2/+0 until end of turn.",
+        text = "Target denizen you control permanently gets +2/+1.",
         art = "Interface\\Icons\\Spell_Nature_RockBiter",
-        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2 } } }
+        effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, t = 1, perm = true } } }
     },
     ["SHA08"] = {
-        id = "SHA08", name = "Stoneskin Totem", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Denizens you control get +0/+2 until end of turn.",
+        id = "SHA08", name = "Stoneskin Totem", cost = "{2}{G}", cmc = 3, color = "G", type = "Sorcery", class = "Shaman",
+        text = "Denizens you control permanently get +1/+1.",
         art = "Interface\\Icons\\Spell_Nature_StoneSkinTotem",
-        effect = { ops = { { op = "buff", to = "friendly_creatures", t = 2 } } }
+        effect = { ops = { { op = "buff", to = "friendly_creatures", p = 1, t = 1, perm = true } } }
     },
     ["SHA09"] = {
         id = "SHA09", name = "Purge", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Shaman",
-        text = "Remove beneficial effects from target enemy denizen, or harmful effects from target denizen you control.",
+        text = "Remove beneficial effects from target enemy denizen, or harmful effects from target denizen you control. Draw 1.",
         art = "Interface\\Icons\\Spell_Holy_Dizzy",
-        effect = { target = "creature", ops = { { op = "dispel", to = "target" } } }
+        effect = { target = "creature", ops = { { op = "dispel", to = "target" }, { op = "draw", n = 1 } } }
     },
     ["SHA10"] = {
-        id = "SHA10", name = "Ancestral Spirit", cost = "{4}{W}", cmc = 5, color = "W", type = "Sorcery", class = "Shaman",
+        id = "SHA10", name = "Ancestral Spirit", cost = "{3}{W}", cmc = 4, color = "W", type = "Sorcery", class = "Shaman",
         text = "Return a denizen card from any graveyard to the battlefield under your control.",
         art = "Interface\\Icons\\Spell_Nature_Regenerate",
         effect = { ops = { { op = "raise", src = "any" } } }

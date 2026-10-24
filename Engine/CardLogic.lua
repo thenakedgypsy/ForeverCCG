@@ -2223,12 +2223,15 @@ function E:ResolveCombatDamage()
             self:Log(L("log.shieldedAbsorbed", CreatureName(perm)), "COMBAT")
         end
         for perm, n in pairs(plan.taken) do perm.damage = (perm.damage or 0) + n end
-        for perm, n in pairs(plan.dealt) do
-            local isRemote = info[perm].isRemote
-            if n > 0 and self:HasKeyword(perm, isRemote, "lifelink") then
-                local state = isRemote and self.remoteState or self.localState
-                state.life = state.life + n
-            end
+    end
+
+    -- Drain: combat damage the attacker deals to the opponent (unblocked, or Brutish damage
+    -- carried over its blockers) restores that much of its controller's life. Damage dealt
+    -- to denizens restores none. Both clients apply it, so PvP life totals stay in step.
+    local function Drain(perm, amount)
+        if amount > 0 and self:HasKeyword(perm, isRemoteAttacking, "lifelink") then
+            local state = isRemoteAttacking and self.remoteState or self.localState
+            state.life = state.life + amount
         end
     end
 
@@ -2265,6 +2268,7 @@ function E:ResolveCombatDamage()
             if blocked then
                 if not self.preventCombatDamage and plan.trample[atkPerm] then
                     DamageDefender(plan.trample[atkPerm], atkCard.id .. "/trample")
+                    Drain(atkPerm, plan.trample[atkPerm])
                 end
             else
                 if not self.preventCombatDamage then
@@ -2281,10 +2285,7 @@ function E:ResolveCombatDamage()
                         end
                     end
 
-                    if self:HasKeyword(atkPerm, isRemoteAttacking, "lifelink") and atkPower > 0 then
-                        if isRemoteAttacking then self.remoteState.life = self.remoteState.life + atkPower
-                        else self.localState.life = self.localState.life + atkPower end
-                    end
+                    Drain(atkPerm, atkPower)
                 else
                     self:Log(L("log.combatPrevented", TTS:CardName(atkCard)), "COMBAT")
                 end

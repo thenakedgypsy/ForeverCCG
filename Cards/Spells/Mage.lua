@@ -21,9 +21,9 @@ TTS:AddCards({
     },
     ["MAG02"] = {
         id = "MAG02", name = "Fire Blast", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Mage",
-        text = "Deal 2 damage to target enemy denizen or the opponent.",
+        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Spell_Fire_Fireball",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["MAG03"] = {
         id = "MAG03", name = "Flamestrike", cost = "{3}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Mage",

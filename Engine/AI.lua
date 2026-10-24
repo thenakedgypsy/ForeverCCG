@@ -708,7 +708,8 @@ local function ScoreOpOn(self, op, d, card, profile)
     if d.kind == "PLAYER" then
         local st = d.isRemote and self.remoteState or self.localState
         if op.op == "damage" then
-            if not enemy then return -op.n end
+            -- Paying life (Bloodrage, Life Tap): never with life it can't spare
+            if not enemy then return (op.n >= life - 2) and -1000 or -op.n end
             local hp = st.life + (st.damageShield or 0)
             if op.n >= hp then return 1000 end
             return op.n * 0.6
@@ -737,7 +738,15 @@ local function ScoreOpOn(self, op, d, card, profile)
         return kills and -v or -n * 0.2
     elseif op.op == "destroy" then
         local c = Card(perm.id)
-        if op.damaged and (perm.damage or 0) <= 0 then return 0 end
+        if op.damaged and (perm.damage or 0) <= 0 then
+            -- Execute deals its own damage first; a Shielded target soaks it and survives
+            local hitsFirst = false
+            for _, o in ipairs(card and card.effect and card.effect.ops or {}) do
+                if o == op then break end
+                if o.op == "damage" and o.to == "target" and (o.n or 0) > 0 then hitsFirst = true end
+            end
+            if not hitsFirst or perm.shielded then return 0 end
+        end
         if op.nonColor and c and c.color == op.nonColor then return 0 end
         return enemy and v or -v
     elseif op.op == "tuck" then
@@ -777,8 +786,54 @@ local function ScoreOpOn(self, op, d, card, profile)
     elseif op.op == "shielded" then
         if perm.shielded then return 0 end
         return enemy and -1 or 0.4 + v * 0.15
+    elseif op.op == "regen" then
+        -- Soulstone: it comes back the next time it would die
+        if perm.regenerateShield then return 0 end
+        return enemy and -1 or 0.5 + v * 0.2
+    elseif op.op == "steal" then
+        if not enemy then return 0 end
+        if op.maxPower and self:GetCreatureStats(perm, d.isRemote) > op.maxPower then return 0 end
+        -- Until end of turn (cast before combat only, see ScoreSpell): one blocker fewer for
+        -- them and one more attacker for us. For good: removal that also adds to our side.
+        if op.untilEnd then return v * 0.5 + (self:GetCreatureStats(perm, d.isRemote)) * 0.5 end
+        return v * 1.6
+    elseif op.op == "dispel" then
+        if enemy then
+            -- Its lasting bonuses (Gear, Mark of the Wild...), keywords and protections
+            local s = math.max(0, perm.permPower or 0) + math.max(0, perm.permToughness or 0)
+            for _ in pairs(perm.permKw or {}) do s = s + 1 end
+            if perm.shielded then s = s + 1 end
+            if perm.regenerateShield then s = s + 1.5 end
+            if perm.hots and #perm.hots > 0 then s = s + 0.5 end
+            return s
+        end
+        -- Our own denizen: the harm it cleanses
+        local s = -math.min(0, perm.permPower or 0) - math.min(0, perm.permToughness or 0)
+        if perm.dots and #perm.dots > 0 then s = s + #perm.dots end
+        if perm.freezeUntap then s = s + 1.5 end
+        return s
     end
     return 0
+end
+
+-- What a ritual (op mana) lets the AI cast this turn that it otherwise couldn't: the value
+-- of the best such denizen in hand, paying for the ritual as well (0 if none)
+local function RitualValue(self, op, card)
+    local pool = self.remoteState.mana
+    local best = 0
+    for _, id in ipairs(self.remoteState.hand) do
+        local c = Card(id)
+        if c and c.type == "Creature" then
+            local cost = self:AICardCost(c)
+            if cost ~= "" and not self:AICanAfford(cost) then
+                pool[op.color] = (pool[op.color] or 0) + op.n
+                local ok = self:AICanAfford(cost .. (card and card.cost or ""))
+                pool[op.color] = pool[op.color] - op.n
+                if ok then best = math.max(best, CreatureCardValue(self, c, true)) end
+            end
+        end
+    end
+    return best
 end
 
 -- Score of a whole effect from the AI's side with a chosen target (tgt may be nil)
@@ -803,7 +858,7 @@ function E:AIScoreEffect(eff, tgt, card, profile)
             end
             total = total + best
         elseif op.op == "mana" then
-            total = total + 0
+            total = total + RitualValue(self, op, card)
         elseif op.op == "token" then
             local tok = Card(op.id)
             if tok then total = total + (op.n or 1) * CreatureCardValue(self, tok, true) end
@@ -896,6 +951,8 @@ local function ScoreSpell(self, card, profile, phase)
     local tempBuff
     for _, op in ipairs(eff.ops) do
         if op.op == "buff" and not op.perm and op.to == "target" then tempBuff = op end
+        -- A denizen borrowed until end of turn is only worth it with combat still to come
+        if op.op == "steal" and op.untilEnd and phase ~= 1 then return nil end
     end
     if tempBuff then
         if phase ~= 1 then return nil end
