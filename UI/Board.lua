@@ -1556,10 +1556,12 @@ local function UpdateCardRules(f, opts)
     local onScreen = w * f:GetEffectiveScale() / UIParent:GetEffectiveScale() / (f.hovered and 1.18 or 1)
 
     TTS.PlaceCardStats(f)
-    if card and card.text and card.text ~= "" and onScreen >= RULES.CARD_TEXT_MIN_WIDTH then
-        -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for a new card
-        if f.rulesCard ~= card or f.rulesPT ~= hasPT then
-            f.rulesCard, f.rulesPT = card, hasPT
+    -- On the battlefield (f.perm) the text also shows keywords the denizen gained or lost
+    local text = card and TTS:CardRulesText(card, true, f.perm, f.isRemote)
+    if text and text ~= "" and onScreen >= RULES.CARD_TEXT_MIN_WIDTH then
+        -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for new text
+        if f.rulesText ~= text or f.rulesPT ~= hasPT then
+            f.rulesText, f.rulesPT = text, hasPT
             f.rules:ClearAllPoints()
             f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1 + dx, -h * TEXT_BOX.top - 1 - dy)
             f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right + dx,
@@ -1568,7 +1570,7 @@ local function UpdateCardRules(f, opts)
             local fontPath = f.rules:GetFont() or STANDARD_TEXT_FONT
             for size = fontMax, fontMin, -1 do
                 f.rules:SetFont(fontPath, size, "")
-                f.rules:SetText(TTS:FormatSymbols(TTS:CardRulesText(card, true), size + 2 + RULES.RULES_TAP_EXTRA, size + 2 + RULES.RULES_TAP_EXTRA))
+                f.rules:SetText(TTS:FormatSymbols(text, size + 2 + RULES.RULES_TAP_EXTRA, size + 2 + RULES.RULES_TAP_EXTRA))
                 if not (f.rules.IsTruncated and f.rules:IsTruncated()) then break end
             end
         end
