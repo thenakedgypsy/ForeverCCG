@@ -309,9 +309,9 @@ local function ColoredNames()
     return list
 end
 
--- lost (optional): keyword names to grey out instead, each at its first mention above any
--- Aura / Kinsmanship line (those name what the card gives others, not what it has)
-local function ColorNames(text, color, lost)
+-- lost (optional): keyword names to grey out instead (in lostColor), each at its first mention
+-- above any Aura / Kinsmanship line (those name what the card gives others, not what it has)
+local function ColorNames(text, color, lost, lostColor)
     local names, found = ColoredNames(), {}
     -- First mark every match, so a shorter name can't match inside one already found
     for _, e in ipairs(names) do
@@ -342,7 +342,7 @@ local function ColorNames(text, color, lost)
             if m.kind == "bonus" then inBonus = true end
             if lost and lost[m.text] and not inBonus then
                 lost[m.text] = nil
-                return TT.KW_CHANGE_COLORS.lost .. m.text .. "|r"
+                return lostColor .. m.text .. "|r"
             end
             return color .. m.text .. "|r"
         end)
@@ -359,6 +359,9 @@ end
 TT.KW_CHANGE_COLORS = {
     lost   = "|cFF8C8378",   -- faded grey-brown, on the card's light face
     gained = "|cFF1E7A1E",   -- dark green
+    -- the same in a tooltip, on its dark background
+    lostTip   = "|cFF7F7F7F",
+    gainedTip = "|cFF40FF40",
 }
 local KW_NOT_TRACKED = { kinsmanship = true, unique = true }
 
@@ -389,6 +392,9 @@ end
 function TTS:CardRulesText(card, onCard, perm, isRemote)
     local text = PlainRulesText(card) or ""
     local gained, lost = TT:KeywordChanges(card, perm, isRemote)
+    local changeColors = TT.KW_CHANGE_COLORS
+    local lostColor = onCard and changeColors.lost or changeColors.lostTip
+    local gainedColor = onCard and changeColors.gained or changeColors.gainedTip
     if text ~= "" then
         -- A signed stat change ("+1/+0", "-2/-1") always starts a line of its own
         text = text:gsub("[ \t]+([%+%-]%d+/[%+%-]?%d+)", "\n%1")
@@ -400,14 +406,14 @@ function TTS:CardRulesText(card, onCard, perm, isRemote)
                 lostNames = lostNames or {}
                 lostNames[TT:Def("keyword", kw, "name")] = true
             end
-            text = ColorNames(text, onCard and TT.TEXT_COLORS.card or TT.TEXT_COLORS.tip, lostNames)
+            text = ColorNames(text, onCard and TT.TEXT_COLORS.card or TT.TEXT_COLORS.tip, lostNames, lostColor)
         end
     end
     if gained then
         local names = {}
         for i, kw in ipairs(gained) do names[i] = TT:Def("keyword", kw, "name") end
         local stop = Loc.code == "zhCN" and "。" or ". "
-        local line = TT.KW_CHANGE_COLORS.gained .. table.concat(names, stop) .. (stop:gsub(" $", "")) .. "|r"
+        local line = gainedColor .. table.concat(names, stop) .. (stop:gsub(" $", "")) .. "|r"
         text = text ~= "" and (line .. "\n" .. text) or line
     end
     return text
@@ -775,8 +781,10 @@ local function BuildCardMain(tip, card, ctx)
         tip:AddLine(FormatPT(p, t, damage, "|cFFFFCC00"), 1, 0.8, 0)
     end
 
-    if card.text and card.text ~= "" then
-        tip:AddLine(Sym(TTS:CardRulesText(card), 16), 0.9, 0.9, 0.5, true)
+    -- On the battlefield (ctx.perm) with the keywords the denizen has gained and lost
+    local rules = TTS:CardRulesText(card, false, ctx.perm, ctx.isRemote)
+    if rules and rules ~= "" then
+        tip:AddLine(Sym(rules, 16), 0.9, 0.9, 0.5, true)
     end
 
     tip:AddLine(" ")

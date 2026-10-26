@@ -55,6 +55,11 @@ local ART_BOX = {
     bottom  = 0.45,
     shiftUp = 0.01,
 }
+-- While a card effect plays (CardFX.lua) the card shows its full-art frame (<frame>_full.png,
+-- faded in over FULL_ART_FADE seconds) and the art window grows down to that frame's window,
+-- whose bottom edge is FULL_ART_BOTTOM of the card's height up from the bottom
+local FULL_ART_BOTTOM = 0.045
+local FULL_ART_FADE   = 0.15
 
 -- Rules-text box printed on the card, as fractions of the card's size.
 -- top: down from the card's top edge. bottom: up from the bottom edge
@@ -1087,18 +1092,26 @@ local function GetCardFrameTexture(card)
     return (card and DualFrameTexture(card)) or SingleFrameTexture(card)
 end
 
+-- t.full (optional): the card's full-art frame texture (CreateCardFrame), set to the same
+-- frame's <name>_full.png, or cleared when there isn't one
 local function ApplyFrameTexture(t, card)
     local tex = GetCardFrameTexture(card)
     t:SetTexture(tex)
     -- A missing dual frame falls back to the single-colour one, then the default
     if not t:GetTexture() and card then
-        t:SetTexture(SingleFrameTexture(card))
+        tex = SingleFrameTexture(card)
+        t:SetTexture(tex)
     end
     if not t:GetTexture() then
-        t:SetTexture(CARD_FRAME_DEF)
+        tex = CARD_FRAME_DEF
+        t:SetTexture(tex)
         if not t:GetTexture() then
+            tex = nil
             t:SetTexture(FALLBACK_BORDER)
         end
+    end
+    if t.full then
+        t.full:SetTexture(tex and (tex:gsub("%.png$", "_full.png")) or nil)
     end
 end
 
@@ -1319,6 +1332,16 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.model = okModel and model or CreateFrame("PlayerModel", nil, f)
     f.model:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
     f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, artBottom)
+    -- While an effect plays (SetModelInFront) the art window grows down to the full-art frame's,
+    -- over the rules box, on a backing of the card's own background. The taller window would
+    -- draw the creature bigger, so its camera stands back by as much (f.modelFullCam).
+    f.model.fxBack = f.model:CreateTexture(nil, "BACKGROUND")
+    f.model.fxBack:SetAllPoints(f.model)
+    f.model.fxBack:SetColorTexture(0.08, 0.08, 0.08, 0.95)
+    f.model.fxBack:Hide()
+    f.modelArtBottom, f.modelArtRight = artBottom, artRight
+    f.modelFullBottom = math.floor(sizeY * FULL_ART_BOTTOM)
+    f.modelFullCam = (sizeY - artTop - f.modelFullBottom) / boxH
     f.model:EnableMouse(false)
     f.model:Hide()
 
@@ -1351,6 +1374,15 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.foil.rim:SetTexture(FOIL_RIM_TEX)
     f.foil.rim:SetBlendMode("ADD")
     f.foil.rim:Hide()
+    -- While the model is in front (SetModelInFront) the rim moves above it, round the grown window
+    f.foil.rimFront = CreateFrame("Frame", nil, f)
+    f.foil.rimFront:SetAllPoints(f)
+    f.foil.rimFront:EnableMouse(false)
+    f.foil.rimBottom = {
+        [false] = artBottom - iconPadY,
+        [true]  = math.floor(sizeY * FULL_ART_BOTTOM) - iconPadY,
+    }
+    f.foil.rimRight = -artRight + iconPadX
 
     local function SyncFrameLevels(baseLevel)
         local base = baseLevel or f:GetFrameLevel() or 10
@@ -1359,9 +1391,39 @@ local function CreateCardFrame(parent, sizeX, sizeY)
                 tf:SetFrameLevel(math.max(1, base - k))
             end
         end
-        if f.model then f.model:SetFrameLevel(base + 1) end
+        -- (CardFX.lua brings the model in front of the frame and tap symbol while an effect plays)
+        if f.model then f.model:SetFrameLevel(base + (f.modelInFront and 4 or 1)) end
         if f.overlay then f.overlay:SetFrameLevel(base + 2) end
         if f.tapLayer then f.tapLayer:SetFrameLevel(base + 3) end
+        if f.foil and f.foil.rimFront then f.foil.rimFront:SetFrameLevel(base + 5) end
+    end
+
+    function f:SetModelInFront(on)
+        on = on and true or false
+        if f.modelInFront == on then return end
+        f.modelInFront = on
+        SyncFrameLevels()
+        if not f.model then return end
+        -- In front it drops its tapped / summoning-sick shade (f.modelAlpha), and takes it back after
+        if not f.spawning then f.model:SetAlpha(on and 1 or (f.modelAlpha or 1)) end
+        -- The art window grows down to the full-art frame's, which fades in over the usual one
+        f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -f.modelArtRight, on and f.modelFullBottom or f.modelArtBottom)
+        f.model.fxBack:SetShown(on)
+        local rim = f.foil.rim
+        rim:SetParent(on and f.foil.rimFront or f.overlay)
+        rim:SetDrawLayer("ARTWORK")
+        rim:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", f.foil.rimRight, f.foil.rimBottom[on])
+        if f.model.SetCamDistanceScale and f.modelCamScale then
+            f.model:SetCamDistanceScale(f.modelCamScale * (on and f.modelFullCam or 1))
+        end
+        if f.borderFull then
+            f.borderFull:SetVertexColor(f.border:GetVertexColor())
+            local fader = f.fullArtFader
+            fader.target = on and 1 or 0
+            fader:Show()
+            -- (a card not showing never ticks: straight there)
+            if not f:IsVisible() then fader:GetScript("OnUpdate")(fader, FULL_ART_FADE) end
+        end
     end
 
     f:SetFrameLevel(10)
@@ -1375,7 +1437,30 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     f.border = f.overlay:CreateTexture(nil, "OVERLAY")
     f.border:SetAllPoints(f.overlay)
+    -- The full-art frame (SetModelInFront), kept in step with the usual one by ApplyFrameTexture
+    f.borderFull = f.overlay:CreateTexture(nil, "OVERLAY")
+    f.borderFull:SetAllPoints(f.overlay)
+    f.borderFull:SetAlpha(0)
+    f.border.full = f.borderFull
     ApplyFrameTexture(f.border)
+
+    -- Fades between the two frames (target: 1 full art, 0 the usual); a card not showing goes
+    -- straight there. A card without a full-art frame keeps its usual one.
+    f.fullArtFader = CreateFrame("Frame", nil, f)
+    f.fullArtFader.alpha, f.fullArtFader.target = 0, 0
+    f.fullArtFader:Hide()
+    f.fullArtFader:SetScript("OnUpdate", function(self, elapsed)
+        local target = f.borderFull:GetTexture() and self.target or 0
+        local step = (elapsed or 0) / FULL_ART_FADE
+        if self.alpha < target then
+            self.alpha = math.min(target, self.alpha + step)
+        else
+            self.alpha = math.max(target, self.alpha - step)
+        end
+        f.border:SetAlpha(1 - self.alpha)
+        f.borderFull:SetAlpha(self.alpha)
+        if self.alpha == target then self:Hide() end
+    end)
 
     f.title = f.overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.title:SetPoint("BOTTOMLEFT", f.overlay, "TOPLEFT", -6, 3)
@@ -2101,9 +2186,9 @@ do
     B.oppGraveBtn = CreateGraveyardButton(true)
     B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -34, 0)
 
-    -- Yours sits left of Undo
+    -- Yours sits left of your health
     B.myGraveBtn = CreateGraveyardButton(false)
-    B.myGraveBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
+    B.myGraveBtn:SetPoint("RIGHT", B.myLifeBtn, "LEFT", -8, 0)
 
     -- Button labels with the counts, and any open list refilled (UpdateDisplay)
     function B:UpdateGraveyards()
@@ -2217,7 +2302,11 @@ end
 local function ApplyModelCamera(f, card)
     local cam = card.modelCam or {}
     if f.model.SetPortraitZoom then f.model:SetPortraitZoom(cam.zoom or 0.75) end
-    if f.model.SetCamDistanceScale then f.model:SetCamDistanceScale(cam.camScale or 1.0) end
+    -- (a grown art window, SetModelInFront, stands its camera further back)
+    f.modelCamScale = cam.camScale or 1.0
+    if f.model.SetCamDistanceScale then
+        f.model:SetCamDistanceScale(f.modelCamScale * (f.modelInFront and f.modelFullCam or 1))
+    end
 
     local baseZ = cam.z or -0.10
     local currentScale = B:GetScale() or 1.0
@@ -2261,6 +2350,7 @@ local function SetupCardVisual(f, card, foil)
         f.model:ClearModel()
         hero = TTS.Hero:SetModel(f.model, card, function() ApplyModelCamera(f, card) end)
         if hero then ApplyModelCamera(f, card) end
+        if hero and TTS.CardFX then TTS.CardFX:ModelReset(f) end
     end
     if hero then
         -- the hero card (Hero.lua) shows the character itself
@@ -2280,6 +2370,7 @@ local function SetupCardVisual(f, card, foil)
         f.model:Show()
         f.model:ClearModel()
         f.model:SetDisplayInfo(card.displayId)
+        if TTS.CardFX then TTS.CardFX:ModelReset(f) end
         -- A card can dress its display in items (e.g. Leeroy Jenkins, Cards\Special.lua)
         if card.dressItems and TTS.Hero then
             TTS.Hero:DressModel(f.model, card.dressItems, function() ApplyModelCamera(f, card) end)
@@ -2395,6 +2486,9 @@ ShowBoardPreview = function(owner, card, foil)
     -- Card name and cost sit above the frame, so leave room for them
     f:ClearAllPoints()
     f:SetPoint("TOPRIGHT", B, "TOPLEFT", -12, -76)
+    -- A denizen on the battlefield previews with the keywords it has gained and lost
+    f.perm = owner and owner.fieldIndex and owner.perm or nil
+    f.isRemote = f.perm and owner.isRemote or nil
     PaintPreviewCard(f, card, foil)
 end
 
@@ -2452,6 +2546,7 @@ end
 -- closes up: red with a skull when it died, blue when it went to a hand or library.
 -- =========================================================================
 TIMING.LEAVE_TIME = 1.0
+TIMING.DIED_LEAVE_TIME = 1.6   -- a death, with card effects on: its death animation plays out first
 local LEAVE_COLORS = { died = { 1.0, 0.2, 0.2 }, returned = { 0.3, 0.55, 1.0 } }
 local LEAVE_SKULL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull.png"
 
@@ -2866,8 +2961,11 @@ local function BattlefieldList(E, isRemote)
         local card = TTS.Cards[p.id]
         if not present[p] and not leavingPerms[p] and card and card.type == "Creature" then
             leavingPerms[p] = true
-            table.insert(leaving[isRemote], { perm = p, kind = diedPerms[p] and "died" or "returned", untilT = now + TIMING.LEAVE_TIME, slot = slot })
-            TTS:SafeAfter(TIMING.LEAVE_TIME + 0.05, function() E:RefreshUI() end)
+            local kind = diedPerms[p] and "died" or "returned"
+            -- With card effects on, a death stays long enough for its animation (CardFX.lua)
+            local stay = (kind == "died" and TTS.CardFX and TTS.CardFX:Enabled()) and TIMING.DIED_LEAVE_TIME or TIMING.LEAVE_TIME
+            table.insert(leaving[isRemote], { perm = p, kind = kind, untilT = now + stay, slot = slot })
+            TTS:SafeAfter(stay + 0.05, function() E:RefreshUI() end)
         end
     end
     local list = leaving[isRemote]
@@ -3178,9 +3276,10 @@ function B:UpdateDisplay()
                 TintArt(f.art, card, shade)
                 SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
-                f.model:SetAlpha(f.modelAlpha)
+                f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
+                f.leavingKind = leavingKind   -- read by CardFX.lua (death animation)
                 f:Show()
                 if card.type == "Creature" then TrackDamage(perm, false, f) end
             end
@@ -3256,9 +3355,10 @@ function B:UpdateDisplay()
                 TintArt(f.art, card, shade)
                 SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
-                f.model:SetAlpha(f.modelAlpha)
+                f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
                 PaintLeaving(f, leavingKind)
+                f.leavingKind = leavingKind   -- read by CardFX.lua (death animation)
                 f:Show()
                 if card.type == "Creature" then TrackDamage(perm, true, f) end
             end
@@ -3289,6 +3389,7 @@ function B:UpdateDisplay()
     StartFlights(E)
     ApplyFlights()
     B.ApplySpawns()
+    if TTS.CardFX then TTS.CardFX:SyncBoard() end
 end
 
 -- =========================================================================
@@ -3319,6 +3420,7 @@ B.myLandFrames          = myLandFrames
 B.myNonLandFrames       = myNonLandFrames
 B.oppLandFrames         = oppLandFrames
 B.oppNonLandFrames      = oppNonLandFrames
+B.QueueModelReload      = QueueModelReload  -- CardFX.lua: a model loads again to drop its spell visuals
 B.HAND_W, B.HAND_H      = LAYOUT.HAND_W, LAYOUT.HAND_H
 B.HAND_TOP              = LAYOUT.HAND_BOTTOM + LAYOUT.HAND_H * LAYOUT.HAND_MAX_SCALE   -- top of the hand row, in board coordinates
 B.MIDLINE               = (ROW_Y.myNonLand + ROW_Y.oppNonLand) / 2 -- between the two creature rows

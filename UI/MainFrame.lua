@@ -311,6 +311,9 @@ SlashCmdList["TRAGIC"] = function(msg)
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("options.language") .. ": " .. Loc:GetChoice() .. " (" .. Loc.code .. ")")
         end
+    elseif cmd:match("^fx") then
+        -- /tragic fx [kit <id> | anim <id>]: what card effects worked, or try one (CardFX.lua)
+        if TTS.CardFX and TTS.CardFX.Command then TTS.CardFX:Command(msg:trim():match("^%S+%s*(.*)$")) end
     elseif cmd == "tutorial" then
         if TTS.StartTutorial then TTS:StartTutorial() end
     elseif cmd == "solo" or cmd == "encounters" then

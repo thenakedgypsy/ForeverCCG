@@ -134,7 +134,8 @@ end
 local REVEAL_HOLD = 1.0    -- seconds the card stays fully visible
 local REVEAL_SCALE = 0.75  -- size of the shown card relative to the full preview card
 local REVEAL_FADE = 0.25   -- then fades out over this long
-local REVEAL_Y = { [true] = 150, [false] = -40 }   -- card centre above the board's centre, by caster
+local REVEAL_Y = { [true] = 170, [false] = -20 }   -- card centre above the board's centre, by caster
+local REVEAL_GAP = 10      -- shown in the middle; over a card it moves right until clear of it by this much
 
 local reveal
 local function RevealFrame()
@@ -202,14 +203,49 @@ local function EffectTargets(eff, tgt, casterIsRemote)
     return list
 end
 
+-- A frame's rectangle on screen (left, right, bottom, top), or nil when it isn't laid out
+local function ScreenRect(fr)
+    local l, r, b, t = fr:GetLeft(), fr:GetRight(), fr:GetBottom(), fr:GetTop()
+    if not (l and r and b and t) then return end
+    local s = fr:GetEffectiveScale()
+    return l * s, r * s, b * s, t * s
+end
+
+-- The card the reveal's rectangle overlaps that reaches furthest right (its right edge on
+-- screen), or nil when it is clear of every card on the board
+local function OverlappedRight(f)
+    local l, r, b, t = ScreenRect(f)
+    if not l then return end
+    local right
+    for _, group in ipairs({ B.myHandFrames, B.oppHandFrames, B.myLandFrames, B.myNonLandFrames,
+        B.oppLandFrames, B.oppNonLandFrames }) do
+        for _, c in ipairs(group or {}) do
+            if c:IsVisible() then
+                local cl, cr, cb, ct = ScreenRect(c)
+                if cl and cl < r and cr > l and cb < t and ct > b and (not right or cr > right) then right = cr end
+            end
+        end
+    end
+    return right
+end
+
 -- Shows a cast card (and arrows to its targets' positions) on the caster's side
 local function RevealSpell(card, casterIsRemote, targets)
     local f = RevealFrame()
     if not (f and card and TTS.PaintPreviewCard) then return end
-    f:ClearAllPoints()
     -- Scaled as a whole so the printed rules keep their layout; offsets are in the card's scale
     f:SetScale(REVEAL_SCALE)
-    f:SetPoint("CENTER", B, "CENTER", 0, REVEAL_Y[casterIsRemote and true or false] / REVEAL_SCALE)
+    local y = REVEAL_Y[casterIsRemote and true or false] / REVEAL_SCALE
+    -- In the middle, then moved right past any card it would cover (never off the board)
+    local x, maxX = 0, (B:GetWidth() / 2 - REVEAL_GAP) / REVEAL_SCALE - f:GetWidth() / 2
+    for _ = 1, 20 do
+        f:ClearAllPoints()
+        f:SetPoint("CENTER", B, "CENTER", x, y)
+        local right = OverlappedRight(f)
+        if not right or x >= maxX then break end
+        local left = ScreenRect(f)
+        x = math.min(maxX, x + (right - left) / f:GetEffectiveScale() + REVEAL_GAP / REVEAL_SCALE)
+    end
     TTS.PaintPreviewCard(f, card, TTS.Engine:IsFoil(card.id, casterIsRemote and true or false))
     f:SetAlpha(1)
     f.t = 0

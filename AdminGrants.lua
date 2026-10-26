@@ -28,7 +28,8 @@ for _, name in ipairs({
     "Aeku Kyuta",
     "Ae Ku",
     "Aekku Skenzen",
-    "Aeku Skenzen"
+    "Aeku Skenzen",
+    "Bryek"
 }) do
     ADMINS[name:lower()] = true
 end

@@ -821,6 +821,110 @@ TTS.CreatureSounds = {
 }
 
 -- =========================================================================
+-- SPELL SOUND DATA
+-- [cardId] = SoundKit ID played when the spell card is cast (E:PlaySpellCastSound).
+-- A spell card may also carry its own castSound field, which takes priority. A spell in
+-- neither (and Gear, which is hammered out) keeps the generic cast sound.
+--
+-- Generated from the client tables (build 1.60.1.70532): the card's name -> SpellName
+-- (lowest spell id with a sound) -> SpellXSpellVisual -> SpellVisualEvent ->
+-- SpellVisualKitEffect (type 5, a SoundKit). The cast event's sound is used, else the
+-- impact's, else the aura's.
+-- =========================================================================
+TTS.SpellSounds = {
+    ["DRU01"] = 2561, -- Wrath
+    ["DRU02"] = 1641, -- Moonfire
+    ["DRU03"] = 2561, -- Healing Touch
+    ["DRU04"] = 2561, -- Rejuvenation
+    ["DRU05"] = 2561, -- Regrowth
+    ["DRU06"] = 2561, -- Mark of the Wild
+    ["DRU07"] = 2561, -- Entangling Roots
+    ["DRU08"] = 2561, -- Thorns
+    ["DRU09"] = 2561, -- Innervate
+    ["DRU10"] = 1641, -- Starfire
+    ["HUN01"] = 3333, -- Arcane Shot
+    ["HUN02"] = 1501, -- Serpent Sting
+    ["HUN03"] = 3333, -- Aimed Shot
+    ["HUN04"] = 3071, -- Multi-Shot
+    ["HUN05"] = 3333, -- Concussive Shot
+    ["HUN06"] = 29, -- Freezing Trap
+    ["HUN07"] = 38, -- Immolation Trap
+    ["HUN08"] = 1432, -- Mend Pet
+    ["HUN09"] = 2561, -- Hunter's Mark
+    ["HUN10"] = 1641, -- Bestial Wrath
+    ["MAG01"] = 1484, -- Fireball
+    ["MAG02"] = 1484, -- Fire Blast
+    ["MAG03"] = 1484, -- Flamestrike
+    ["MAG04"] = 1484, -- Pyroblast
+    ["MAG05"] = 2559, -- Frostbolt
+    ["MAG06"] = 3076, -- Frost Nova
+    ["MAG07"] = 2559, -- Blizzard
+    ["MAG08"] = 1641, -- Polymorph
+    ["MAG09"] = 1641, -- Arcane Missiles
+    ["MAG10"] = 1641, -- Arcane Intellect
+    ["PAL01"] = 2562, -- Holy Light
+    ["PAL02"] = 2562, -- Flash of Light
+    ["PAL03"] = 2562, -- Blessing of Might
+    ["PAL04"] = 2562, -- Blessing of Protection
+    ["PAL05"] = 2562, -- Divine Shield
+    ["PAL06"] = 2562, -- Hammer of Justice
+    ["PAL07"] = 2562, -- Exorcism
+    ["PAL08"] = 2562, -- Consecration
+    ["PAL09"] = 2562, -- Lay on Hands
+    ["PAL10"] = 1455, -- Redemption
+    ["PRI01"] = 2562, -- Power Word: Shield
+    ["PRI02"] = 2562, -- Renew
+    ["PRI03"] = 2562, -- Flash Heal
+    ["PRI04"] = 2562, -- Prayer of Healing
+    ["PRI05"] = 2562, -- Smite
+    ["PRI06"] = 1484, -- Holy Fire
+    ["PRI07"] = 2560, -- Shadow Word: Pain
+    ["PRI08"] = 2560, -- Mind Blast
+    ["PRI09"] = 2560, -- Mind Control
+    ["PRI10"] = 3113, -- Psychic Scream
+    ["ROG01"] = 3091, -- Sinister Strike
+    ["ROG02"] = 3091, -- Backstab
+    ["ROG03"] = 3091, -- Eviscerate
+    ["ROG04"] = 3091, -- Gouge
+    ["ROG05"] = 3091, -- Cheap Shot
+    ["ROG06"] = 3339, -- Sprint
+    ["ROG07"] = 3324, -- Vanish
+    ["ROG08"] = 2560, -- Evasion
+    ["ROG09"] = 349040, -- Slice and Dice
+    ["ROG10"] = 3134, -- Garrote
+    ["SHA01"] = 348052, -- Lightning Bolt
+    ["SHA02"] = 2561, -- Earth Shock
+    ["SHA03"] = 1484, -- Flame Shock
+    ["SHA04"] = 2559, -- Frost Shock
+    ["SHA05"] = 305443, -- Chain Lightning
+    ["SHA06"] = 2561, -- Healing Wave
+    ["SHA07"] = 2561, -- Rockbiter Weapon
+    ["SHA08"] = 2552, -- Stoneskin Totem
+    ["SHA09"] = 2561, -- Purge
+    ["SHA10"] = 2561, -- Ancestral Spirit
+    ["WLK01"] = 2560, -- Shadow Bolt
+    ["WLK02"] = 2560, -- Corruption
+    ["WLK03"] = 2560, -- Curse of Agony
+    ["WLK04"] = 2560, -- Drain Life
+    ["WLK05"] = 3113, -- Howl of Terror
+    ["WLK06"] = 2560, -- Death Coil
+    ["WLK07"] = 1484, -- Immolate
+    ["WLK08"] = 1484, -- Soul Fire
+    ["WLK09"] = 2560, -- Life Tap
+    ["WLK10"] = 2560, -- Enslave Demon (as Subjugate Demon)
+    ["WAR01"] = 3091, -- Heroic Strike
+    ["WAR02"] = 3330, -- Charge
+    ["WAR03"] = 3091, -- Rend
+    ["WAR04"] = 4120, -- Bloodrage
+    ["WAR05"] = 3090, -- Thunder Clap
+    ["WAR06"] = 3091, -- Overpower
+    ["WAR07"] = 3091, -- Execute
+    ["WAR08"] = 3660, -- Shield Wall
+    ["WAR09"] = 3091, -- Mortal Strike
+    ["WAR10"] = 5674, -- Whirlwind
+}
+
+-- =========================================================================
 -- UI FEEDBACK SOUNDS
 -- kit = SOUNDKIT key (modern clients), id = numeric fallback, legacy = pre-SOUNDKIT name
 -- =========================================================================
