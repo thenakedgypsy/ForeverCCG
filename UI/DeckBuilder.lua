@@ -348,6 +348,7 @@ local function ScaleGrip_OnUpdate(self)
     local grow = ((cx - self.startX) / self.startW + (self.startY - cy) / self.startH) / 2
     local scale = math.max(LAYOUT.MIN_SCALE, math.min(LAYOUT.MAX_SCALE, self.startScale * (1 + grow)))
     D:SetScale(scale)
+    if D.RefitCardModels then D:RefitCardModels(false) end
     -- Saved so the Deckbuilder always reopens at this size
     if TTS.Options then TTS.Options:Set("deckBuilderScale", scale) end
     local eff = D:GetEffectiveScale()
@@ -370,6 +371,7 @@ scaleGrip:SetScript("OnMouseUp", function(self)
     self:SetScript("OnUpdate", nil)
     -- Cards that got too small (or big enough) for printed rules text
     if D.RefreshCardText then D:RefreshCardText() end
+    if D.RefitCardModels then D:RefitCardModels(true) end
 end)
 scaleGrip:SetScript("OnHide", function(self)
     self:SetScript("OnUpdate", nil)
@@ -792,12 +794,41 @@ end
 
 LAYOUT.PREVIEW_W, LAYOUT.PREVIEW_H = 150, 212
 
--- A card in Board.lua's design (or the identical standalone copy if Board.lua isn't loaded)
+-- A card in Board.lua's design (or the identical standalone copy if Board.lua isn't loaded).
+-- Its model's camera follows the Deckbuilder's scale as the board's follow the board's
+-- (camScaleRoot, Board.lua's ModelCamZ); cardDesigns lists them to re-aim on a rescale.
+local cardDesigns = {}
 local function CreateCardDesign(parent, w, h, name)
+    local f
     if TTS.CreateCardFrame then
-        return TTS.CreateCardFrame(parent, w, h)
+        f = TTS.CreateCardFrame(parent, w, h)
+    else
+        f = BuildStandaloneCardPreview(parent, w, h, name)
     end
-    return BuildStandaloneCardPreview(parent, w, h, name)
+    f.camScaleRoot = D
+    table.insert(cardDesigns, f)
+    return f
+end
+
+-- After a rescale: every model re-aimed at once, and (once the drag ends) loaded again,
+-- as a model already showing keeps its old size otherwise
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("DISPLAY_SIZE_CHANGED")
+    watcher:RegisterEvent("UI_SCALE_CHANGED")
+    watcher:SetScript("OnEvent", function()
+        if D:IsShown() then D:RefitCardModels(true) end
+    end)
+end
+
+function D:RefitCardModels(reload)
+    for _, f in ipairs(cardDesigns) do
+        if f:IsVisible() and f.model and f.model:IsShown() then
+            if TTS.RefitModelCamera then TTS.RefitModelCamera(f) end
+            local B = TTS.BoardFrame
+            if reload and B and B.QueueModelReload then B.QueueModelReload(f) end
+        end
+    end
 end
 
 -- Fills a card frame with a card's art, frame, name, cost and stats
@@ -817,6 +848,7 @@ local function PaintCardFrame(f, card, costSize)
             if TTS.TintArt then TTS.TintArt(f.art, card) end
         end
     end
+    if D.ApplyFullArtTo then D.ApplyFullArtTo(f, card) end
 
     if TTS.ApplyFrameTexture then
         TTS.ApplyFrameTexture(f.border, card)
@@ -1606,6 +1638,45 @@ end
 local poolCountText = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 poolCountText:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 12, -568)
 
+-- Show full art (beside the card count, saved): every denizen here shows its full-art frame,
+-- its model over the rules box, as on the board while an effect plays (Board.lua's
+-- SetModelInFront; f.fullArtPinned keeps it there through repaints). Applied as each card
+-- is painted (PaintCardFrame), since a frame shows a different card on every page.
+local fullArtCheck = CreateFrame("CheckButton", nil, poolPanel, "UICheckButtonTemplate")
+fullArtCheck:SetSize(22, 22)
+fullArtCheck:SetPoint("LEFT", poolCountText, "RIGHT", 14, 0)
+
+local fullArtLabel = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+fullArtLabel:SetPoint("LEFT", fullArtCheck, "RIGHT", 0, 1)
+Loc:Bind(fullArtLabel, "db.fullArt")
+fullArtCheck:SetHitRectInsets(0, -(fullArtLabel:GetStringWidth() + 4), 0, 0)
+
+function D.ApplyFullArtTo(f, card)
+    local on = (D.fullArt and card and card.type == "Creature") and true or false
+    f.fullArtPinned = on
+    if f.SetModelInFront then f:SetModelInFront(on) end
+    -- (a denizen with no model keeps its art: its rules text hides rather than float in the window)
+    if f.rules then f.rules:SetAlpha(on and 0 or 1) end
+end
+
+function D:SetFullArt(on)
+    self.fullArt = on and true or false
+    fullArtCheck:SetChecked(self.fullArt)
+    for _, f in ipairs(cardDesigns) do
+        if f.currentCard then D.ApplyFullArtTo(f, f.currentCard) end
+    end
+end
+
+fullArtCheck:SetScript("OnClick", function(self)
+    local on = self:GetChecked() and true or false
+    if TTS.Options then TTS.Options:Set("deckBuilderFullArt", on) end
+    D:SetFullArt(on)
+end)
+fullArtCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("db.fullArt"), L("db.fullArtDesc"))
+end)
+fullArtCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
 nextBtn.label:SetJustifyH("CENTER")
@@ -1629,7 +1700,7 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 -- then mastered, foils (the denizens' foils owned, BossTracker.lua) and the score.
 -- =========================================================================
 local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 10)
+collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 13)
 collectionLabel:SetJustifyH("LEFT")
 collectionLabel:SetSpacing(2)
 
@@ -2458,6 +2529,7 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
     if saved then
         D:SetScale(math.max(LAYOUT.MIN_SCALE, math.min(LAYOUT.MAX_SCALE, saved)))
     end
+    D:SetFullArt(TTS.Options and TTS.Options:Get("deckBuilderFullArt"))
 end)
 
 D:SetScript("OnHide", function()

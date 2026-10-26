@@ -1308,7 +1308,7 @@ local function SetCardFoil(f, foil, card, shade)
         f.title:SetTextColor(c[1], c[2], c[3])
         MakeSparks(f.foil)
         f.foil.glow:Show()
-        f.foil.rim:Show()
+        f.foil.rim:SetShown(not f.modelInFront)   -- (none round the full-art window, SetModelInFront)
         f.foil:Show()
     else
         f.foil:Hide()
@@ -1429,15 +1429,6 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.foil.rim:SetTexture(FOIL_RIM_TEX)
     f.foil.rim:SetBlendMode("ADD")
     f.foil.rim:Hide()
-    -- While the model is in front (SetModelInFront) the rim moves above it, round the grown window
-    f.foil.rimFront = CreateFrame("Frame", nil, f)
-    f.foil.rimFront:SetAllPoints(f)
-    f.foil.rimFront:EnableMouse(false)
-    f.foil.rimBottom = {
-        [false] = artBottom - iconPadY,
-        [true]  = math.floor(sizeY * FULL_ART_BOTTOM) - iconPadY,
-    }
-    f.foil.rimRight = -artRight + iconPadX
 
     local function SyncFrameLevels(baseLevel)
         local base = baseLevel or f:GetFrameLevel() or 10
@@ -1450,11 +1441,11 @@ local function CreateCardFrame(parent, sizeX, sizeY)
         if f.model then f.model:SetFrameLevel(base + (f.modelInFront and 4 or 1)) end
         if f.overlay then f.overlay:SetFrameLevel(base + 2) end
         if f.tapLayer then f.tapLayer:SetFrameLevel(base + 3) end
-        if f.foil and f.foil.rimFront then f.foil.rimFront:SetFrameLevel(base + 5) end
     end
 
+    -- f.fullArtPinned (the Deckbuilder's Show full art) keeps it in front whatever asks otherwise
     function f:SetModelInFront(on)
-        on = on and true or false
+        on = (on or f.fullArtPinned) and true or false
         if f.modelInFront == on then return end
         f.modelInFront = on
         SyncFrameLevels()
@@ -1471,10 +1462,8 @@ local function CreateCardFrame(parent, sizeX, sizeY)
             f.model:SetCamDistanceScale(f.modelCamScale * (on and f.modelFullCam or 1))
         end
         f.model.fxBack:SetShown(on)
-        local rim = f.foil.rim
-        rim:SetParent(on and f.foil.rimFront or f.overlay)
-        rim:SetDrawLayer("ARTWORK")
-        rim:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", f.foil.rimRight, f.foil.rimBottom[on])
+        -- A foil's rim glows round the usual art window only, not the full-art one
+        f.foil.rim:SetShown(f.isFoil and not on or false)
         if f.borderFull then
             f.borderFull:SetVertexColor(f.border:GetVertexColor())
             local fader = f.fullArtFader
@@ -2386,9 +2375,10 @@ LAYOUT.MODEL_SMALL_LIFT = 0.25  -- how far a model rises in its frame as its car
 -- The model's height in its frame: the card's own, adjusted for the card's size on screen
 -- (the board's scale times the card's own, shrunk to fit a crowded row). Bigger cards sit a
 -- little higher; smaller ones rise more and more, as small models otherwise sink out of view.
+-- The window's scale is the board's, or f.camScaleRoot's for a card in another window (the Deckbuilder).
 local function ModelCamZ(f, cam)
     local z = cam.z or -0.10
-    local size = (B:GetScale() or 1.0) * (f.baseScale or 1)
+    local size = ((f.camScaleRoot or B):GetScale() or 1.0) * (f.baseScale or 1)
     if size >= 1 then
         return z + (size - 1.0) * 0.18
     end
@@ -3501,6 +3491,10 @@ footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 -- =========================================================================
 TTS.CreateCardFrame     = CreateCardFrame
 TTS.SetupCardVisual     = SetupCardVisual
+-- Re-aims a card's model (its window was rescaled, e.g. the Deckbuilder's)
+TTS.RefitModelCamera    = function(f)
+    if f.currentCard and f.model and f.model:IsShown() then ApplyModelCamera(f, f.currentCard) end
+end
 TTS.SetCardFoil         = SetCardFoil      -- foil glow on any card made by CreateCardFrame
 TTS.FoilColors          = FoilColors       -- a card's foil colours, { { r, g, b }, ... } (card links, tooltips)
 TTS.ApplyFrameTexture   = ApplyFrameTexture
