@@ -304,6 +304,16 @@ for _, list in ipairs({ B.myHandFrames, B.myNonLandFrames }) do
     end
 end
 
+-- Denizen frames the board makes later, for a crowded battlefield (Board.lua's FieldFrame)
+if B.fieldFrameHooks then
+    table.insert(B.fieldFrameHooks, function(f, group)
+        if group ~= B.myNonLandFrames then return end
+        f:SetScript("OnDragStart", OnDragStart)
+        f:SetScript("OnDragStop", OnDragStop)
+        if TTS.CardControls and TTS.CardControls() ~= "click" then f:RegisterForDrag("LeftButton") end
+    end)
+end
+
 -- Cards only start drags when the controls allow it, so in Click mode a
 -- slightly moving click is still a click
 function TTS.ApplyCardControls()

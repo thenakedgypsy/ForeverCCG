@@ -878,6 +878,7 @@ end
 -- battlefield stops at LAYOUT.BF_RIGHT), a little above the middle: the opponent's above,
 -- yours below, each number coloured like its life bar and changing with it (LifeBar_OnUpdate)
 -- =========================================================================
+do
 local TRACKER_W, TRACKER_H = 70, 96
 local TRACKER_X, TRACKER_Y = -23, 46   -- from the middle of the board's right edge
 
@@ -905,6 +906,7 @@ trackerLine:SetColorTexture(1, 0.82, 0, 0.5)
 
 B.oppLifeBtn.lifeBar.row = B.lifeTracker.opp
 B.myLifeBtn.lifeBar.row = B.lifeTracker.me
+end
 
 -- =========================================================================
 -- MANA COUNTER
@@ -1586,7 +1588,8 @@ LAYOUT.BF_START_X = 35
 LAYOUT.BF_RIGHT   = 1045   -- right edge stops short of your effects bar
 LAYOUT.LAND_MAX_SCALE     = 1.0
 LAYOUT.CREATURE_MAX_SCALE = 1.2
-LAYOUT.MAX_CREATURE_FRAMES = 16   -- cards each creature row can show; they shrink to fit (FitScale)
+LAYOUT.MAX_CREATURE_FRAMES = 16   -- frames each creature row starts with; more are made as needed (FieldFrame)
+LAYOUT.BF_MIN_SCALE = 0.15        -- battlefield cards shrink to fit (FitScale) down to this
 
 -- Vertical centre of each battlefield row, measured up from the board's bottom edge. Rows
 -- stack up from BF_BOTTOM, each leaving room above its cards for a two-line title
@@ -1614,11 +1617,12 @@ local function AttachSlot(f)
     f:SetPoint("CENTER", f.slot, "CENTER", 0, 0)
 end
 
--- Largest scale (up to maxScale) at which n cards fit between left and right
-local function FitScale(n, cardW, step, left, right, maxScale)
+-- Largest scale (up to maxScale) at which n cards fit between left and right, but no
+-- smaller than minScale (default 0.5)
+local function FitScale(n, cardW, step, left, right, maxScale, minScale)
     if n <= 0 then return maxScale end
     local need = (n - 1) * step + cardW
-    return math.max(0.5, math.min(maxScale, (right - left) / need))
+    return math.max(minScale or 0.5, math.min(maxScale, (right - left) / need))
 end
 
 -- A card whose size changed (its row gained or lost a card, or its slot is used for the first
@@ -1648,14 +1652,27 @@ local function QueueModelReload(f)
     resizedFrames[f] = true
 end
 
--- Any resize on the battlefield (a row rescaling, or the board itself) reloads every
--- battlefield model, not just the cards whose size changed
+-- Any resize on the battlefield (a row rescaling, the board itself, or the game window / UI
+-- scale) reloads every model on the board, hand included, not just the cards whose size
+-- changed: a model left at its old size drifts off its card
 QueueBoardModelReload = function()
-    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
         for _, f in ipairs(group) do
             if f.model and f:IsShown() then QueueModelReload(f) end
         end
     end
+end
+
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("DISPLAY_SIZE_CHANGED")
+    watcher:RegisterEvent("UI_SCALE_CHANGED")
+    watcher:SetScript("OnEvent", function()
+        if not B:IsShown() then return end
+        if RefreshAllModelCameras then RefreshAllModelCameras() end
+        if RefreshCardText then RefreshCardText() end
+        QueueBoardModelReload()
+    end)
 end
 
 -- Returns true when the card's size changed
@@ -2010,64 +2027,72 @@ local function WithFieldSound(handler)
     end
 end
 
-for i = 1, 12 do
+local FieldFrame   -- (group, i): a battlefield row's i-th card frame, made if it doesn't exist yet
+do
+local function NewFieldFrame(isRemote, onClick)
     local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
-    f.isRemote = false
+    f.isRemote = isRemote
     AttachSlot(f)
-    f:SetScript("OnClick", WithFieldSound(MyLand_OnClick))
-    myLandFrames[i] = f
+    f:SetScript("OnClick", onClick)
+    return f
 end
 
-for i = 1, LAYOUT.MAX_CREATURE_FRAMES do
-    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
-    f.isRemote = false
-    AttachSlot(f)
-    f:SetScript("OnClick", WithFieldSound(MyNonLand_OnClick))
-    myNonLandFrames[i] = f
+local OppLand_OnClick = function(self, btn)
+    if not TTS.Engine.inMatch then return end
+    if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
+    PlayUISound("card")
+    if btn == "RightButton" and TTS.Engine.targeting then
+        TTS.Engine:CancelTargeting()
+        return
+    end
+    if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "LAND") then
+        if self.fieldIndex then TTS.Engine:ResolveTarget("LAND", true, self.fieldIndex) end
+    end
 end
 
-for i = 1, 12 do
-    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
-    f.isRemote = true
-    AttachSlot(f)
-    f:SetScript("OnClick", function(self, btn)
-        if not TTS.Engine.inMatch then return end
-        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
-        PlayUISound("card")
-        if btn == "RightButton" and TTS.Engine.targeting then
-            TTS.Engine:CancelTargeting()
+local OppNonLand_OnClick = function(self, btn)
+    if not TTS.Engine.inMatch then return end
+    if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
+    PlayUISound("card")
+    if btn == "RightButton" and TTS.Engine.targeting then
+        TTS.Engine:CancelTargeting()
+        return
+    end
+    if TTS.Engine.targeting then
+        local t = TTS.Engine.targeting.targetType
+        if t == "CREATURE" or t == "ANY" or t == "ARTIFACT_ENCHANTMENT" then
+            if self.fieldIndex then TTS.Engine:ResolveTarget("CREATURE", true, self.fieldIndex) end
             return
         end
-        if TTS.Engine.targeting and (TTS.Engine.targeting.targetType == "LAND") then
-            if self.fieldIndex then TTS.Engine:ResolveTarget("LAND", true, self.fieldIndex) end
-        end
-    end)
-    oppLandFrames[i] = f
+    end
+    if self.fieldIndex then TTS.Engine:ClickOpponentCard(self.fieldIndex) end
 end
 
-for i = 1, LAYOUT.MAX_CREATURE_FRAMES do
-    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
-    f.isRemote = true
-    AttachSlot(f)
-    f:SetScript("OnClick", function(self, btn)
-        if not TTS.Engine.inMatch then return end
-        if TTS:TryLinkCard(self.cardId, self.isFoil) then return end
-        PlayUISound("card")
-        if btn == "RightButton" and TTS.Engine.targeting then
-            TTS.Engine:CancelTargeting()
-            return
-        end
-        if TTS.Engine.targeting then
-            local t = TTS.Engine.targeting.targetType
-            if t == "CREATURE" or t == "ANY" or t == "ARTIFACT_ENCHANTMENT" then
-                if self.fieldIndex then TTS.Engine:ResolveTarget("CREATURE", true, self.fieldIndex) end
-                return
-            end
-        end
-        if self.fieldIndex then TTS.Engine:ClickOpponentCard(self.fieldIndex) end
-    end)
-    oppNonLandFrames[i] = f
+-- How each battlefield row makes a card frame. A row starts with its usual number of frames
+-- and gains more as needed (FieldFrame), the cards shrinking to fit; B.fieldFrameHooks
+-- run on every frame made after loading (e.g. CardDrag.lua's drag scripts).
+local FIELD_FRAME_MAKERS = {
+    [myLandFrames]     = function() return NewFieldFrame(false, WithFieldSound(MyLand_OnClick)) end,
+    [myNonLandFrames]  = function() return NewFieldFrame(false, WithFieldSound(MyNonLand_OnClick)) end,
+    [oppLandFrames]    = function() return NewFieldFrame(true, OppLand_OnClick) end,
+    [oppNonLandFrames] = function() return NewFieldFrame(true, OppNonLand_OnClick) end,
+}
+B.fieldFrameHooks = {}
+
+FieldFrame = function(group, i)
+    if not group[i] then
+        local f = FIELD_FRAME_MAKERS[group]()
+        group[i] = f
+        for _, hook in ipairs(B.fieldFrameHooks) do hook(f, group) end
+    end
+    return group[i]
 end
+end
+
+for i = 1, 12 do FieldFrame(myLandFrames, i) end
+for i = 1, LAYOUT.MAX_CREATURE_FRAMES do FieldFrame(myNonLandFrames, i) end
+for i = 1, 12 do FieldFrame(oppLandFrames, i) end
+for i = 1, LAYOUT.MAX_CREATURE_FRAMES do FieldFrame(oppNonLandFrames, i) end
 
 local myDeckFrame = CreateFrame("Frame", nil, B)
 myDeckFrame:SetSize(LAYOUT.HAND_W, LAYOUT.HAND_H)
@@ -2344,6 +2369,20 @@ end
 -- The card's camera (zoom, distance, position, facing) on its model. The client loads a
 -- model a moment after SetDisplayInfo, and a camera set before that can be lost, so it is
 -- also re-applied shortly after a creature comes onto the battlefield (ReapplyModelCameras).
+LAYOUT.MODEL_SMALL_LIFT = 0.25  -- how far a model rises in its frame as its card gets smaller (x (1/size - 1))
+
+-- The model's height in its frame: the card's own, adjusted for the card's size on screen
+-- (the board's scale times the card's own, shrunk to fit a crowded row). Bigger cards sit a
+-- little higher; smaller ones rise more and more, as small models otherwise sink out of view.
+local function ModelCamZ(f, cam)
+    local z = cam.z or -0.10
+    local size = (B:GetScale() or 1.0) * (f.modelInFront and 1 or (f.baseScale or 1))
+    if size >= 1 then
+        return z + (size - 1.0) * 0.18
+    end
+    return z + (1 / math.max(size, 0.05) - 1) * LAYOUT.MODEL_SMALL_LIFT
+end
+
 local function ApplyModelCamera(f, card)
     local cam = card.modelCam or {}
     if f.model.SetPortraitZoom then f.model:SetPortraitZoom(cam.zoom or 0.75) end
@@ -2353,12 +2392,7 @@ local function ApplyModelCamera(f, card)
         f.model:SetCamDistanceScale(f.modelCamScale * (f.modelInFront and f.modelFullCam or 1))
     end
 
-    local baseZ = cam.z or -0.10
-    local currentScale = B:GetScale() or 1.0
-    local zComp = (currentScale - 1.0) * 0.18
-    local adjZ = baseZ + zComp
-
-    if f.model.SetPosition then f.model:SetPosition(cam.x or 0, cam.y or 0, adjZ) end
+    if f.model.SetPosition then f.model:SetPosition(cam.x or 0, cam.y or 0, ModelCamZ(f, cam)) end
     if f.model.SetRotation then f.model:SetRotation(cam.rotation or 0.15) end
 end
 
@@ -2435,12 +2469,8 @@ RefreshAllModelCameras = function()
         for _, f in ipairs(group) do
             if f:IsShown() and f.currentCard and f.currentCard.displayId and f.model and f.model:IsShown() then
                 local cam = f.currentCard.modelCam or {}
-                local baseZ = cam.z or -0.10
-                local currentScale = B:GetScale() or 1.0
-                local zComp = (currentScale - 1.0) * 0.18
-                local adjZ = baseZ + zComp
                 if f.model.SetPosition then
-                    f.model:SetPosition(cam.x or 0, cam.y or 0, adjZ)
+                    f.model:SetPosition(cam.x or 0, cam.y or 0, ModelCamZ(f, cam))
                 end
             end
         end
@@ -3284,10 +3314,10 @@ function B:UpdateDisplay()
             local f = nil
             if isLand then
                 myLandIdx = myLandIdx + 1
-                if myLandIdx <= #myLandFrames then f = myLandFrames[myLandIdx] end
+                f = FieldFrame(myLandFrames, myLandIdx)
             else
                 myNonLandIdx = myNonLandIdx + 1
-                if myNonLandIdx <= #myNonLandFrames then f = myNonLandFrames[myNonLandIdx] end
+                f = FieldFrame(myNonLandFrames, myNonLandIdx)
             end
 
             if f then
@@ -3341,7 +3371,7 @@ function B:UpdateDisplay()
     local boardResized = false
     local function LayoutRow(frames, count, centerY, maxScale)
         count = math.min(count, #frames)
-        local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, LAYOUT.BF_START_X, LAYOUT.BF_RIGHT, maxScale)
+        local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, LAYOUT.BF_START_X, LAYOUT.BF_RIGHT, maxScale, LAYOUT.BF_MIN_SCALE)
         -- Centre the row so it grows outwards from the middle of the battlefield
         local rowW = ((count - 1) * LAYOUT.BF_STEP_X + LAYOUT.BF_CARD_W) * s
         local left = math.max(LAYOUT.BF_START_X, (LAYOUT.BF_START_X + LAYOUT.BF_RIGHT - rowW) / 2)
@@ -3373,10 +3403,10 @@ function B:UpdateDisplay()
             local f = nil
             if isLand then
                 oppLandIdx = oppLandIdx + 1
-                if oppLandIdx <= #oppLandFrames then f = oppLandFrames[oppLandIdx] end
+                f = FieldFrame(oppLandFrames, oppLandIdx)
             else
                 oppNonLandIdx = oppNonLandIdx + 1
-                if oppNonLandIdx <= #oppNonLandFrames then f = oppNonLandFrames[oppNonLandIdx] end
+                f = FieldFrame(oppNonLandFrames, oppNonLandIdx)
             end
 
             if f then
