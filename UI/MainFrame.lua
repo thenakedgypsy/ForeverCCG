@@ -128,6 +128,13 @@ local function OpenFromMain(child)
     M:Hide()
 end
 
+-- Opens a window as if from the main window, so closing it comes back here (Board.lua: the
+-- solo map after a solo encounter)
+function M:OpenChild(child)
+    child:Show()
+    OpenFromMain(child)
+end
+
 -- =========================================================================
 -- OPTIONS (title bar, left of the close button)
 -- =========================================================================
