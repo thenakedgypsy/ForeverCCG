@@ -52,7 +52,7 @@ TTS:AddCards({
         id = "BOSS05", name = "Aku'mai", cost = "{4}{G}{U}", cmc = 6, color = "G", type = "Creature",
         power = 8, toughness = 9, trample = true, bulwark = 2, isMob = true, isBoss = true, displayId = 2837,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4829,
-        modelCam = { zoom = 0.20, camScale = 1.80, z = 0.00, rotation = -0.30 },
+        modelCam = { zoom = 0.50, camScale = 0.95, z = 0.00, rotation = 0 },
         text = "Brutish. Bulwark 2."
     },
 

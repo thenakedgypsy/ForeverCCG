@@ -685,9 +685,10 @@ function B:CloseAfterMatch()
         if TTS.MainFrame.UpdatePlayState then
             TTS.MainFrame:UpdatePlayState()
         end
-        -- A solo encounter (not the tutorial) goes back to the solo map, which closes to the main window
+        -- A solo zone or dungeon goes back to the solo map, which closes to the main window
+        -- (practice, the tutorial and PvP stay on the main window)
         local enc = TTS.Engine and TTS.Engine.isSolo and TTS.Engine.encounter
-        if enc and not enc.isTutorial and TTS.SoloSelectFrame and TTS.MainFrame.OpenChild then
+        if enc and enc.kind ~= "practice" and TTS.SoloSelectFrame and TTS.MainFrame.OpenChild then
             TTS.MainFrame:OpenChild(TTS.SoloSelectFrame)
         end
     end
