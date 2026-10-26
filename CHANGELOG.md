@@ -61,6 +61,12 @@
 *   new names: many keywords adjusted to be less... tragic
 *   cards for the new zones added: Riverglades (Twilight's Hammer cultists led by Overlord Kilgar, plus the zone's boars, bats, buzzards, tallstriders and crocolisks) and Zephras Isle (the Al'Aketh, the High Order under Elaadrin Evengale, and the isle's Cirrusflies, Ursera, Galestriders and wind elementals). Kill them out in the world to collect them
 *   new solo-mode zone: Riverglades, between Redridge Mountains, Burning Steppes, the Badlands and Swamp of Sorrows. Clear it to earn Demar Brant, Knight Commander of the Brotherhood of the Horse
+*   new: card effects - denizens on the battlefield come to life. They swing when they fight, flinch when wounded, fall when they die, and light up when healed, buffed or dispelled; spells hit with an impact in their colour, and Shielded, Soulstone, Frozen, damage and healing over time, and borrowed denizens show a visual for as long as they last. While an effect plays, the denizen steps out in front of its card, which opens up into full art. On by default (Options > Board > Card effects)
+*   a denizen's card now shows the keywords it has gained (in green, above its text) and lost (greyed out), on the card itself, the preview card and its tooltip
+*   class spells now play their own sound when cast
+*   Gear Cards' text is shorter: "Equip: +1/+0 and Support."
+*   a cast spell or Gear Card now shows in the middle of the board, moving aside so it doesn't cover any cards
+*   your graveyard button now sits to the left of your life plate
 
 ## 0.15.7
 
