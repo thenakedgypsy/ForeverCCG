@@ -36,8 +36,15 @@ local ARROW_HEAD_LEN  = 16
 local ARROW_HEAD_ANG  = 0.45   -- radians either side of the shaft
 local FLASH_TIME      = 0.7    -- seconds a resolved-target / hit arrow takes to fade
 local HIT_ARROW_HOLD  = 0.4    -- seconds an attack arrow stays fully visible before it fades
-local HIT_TIME        = 1.0    -- seconds the life-plate flash and damage number last
-local HIT_RISE        = 36     -- pixels the damage number floats up
+local HIT_TRAVEL      = 0.5    -- seconds a damage number takes to fly from its source to what it hits
+local HIT_TIME        = 0.9    -- seconds the merged number (and a life plate's flash) last once landed
+local HIT_JOIN        = 0.25   -- seconds after a hit starts that more damage still joins it
+local PLAYER_HIT_SIZES   = { 40, 96, 64 }   -- font size in flight, as it lands, settled
+local CREATURE_HIT_SIZES = { 24, 56, 36 }
+local HIT_TRAVEL_COLOR = { 1.0, 0.85, 0.3 }   -- in flight, when no card is known to be dealing it
+local HIT_FIRE_COLOR   = { 1.0, 0.55, 0.1 }   -- in flight from a red (Fire) card
+local HIT_AFTER_BLOCKS = 0.2   -- seconds after combat's blocks land that the damage getting through sets off
+local HIT_SOURCE_LINGER = 3    -- seconds a source still applies to damage arriving later (PvP, redraws)
 
 local layer = CreateFrame("Frame", nil, B)
 layer:SetAllPoints(B)
@@ -329,52 +336,203 @@ local function UpdateAim()
 end
 
 -- =========================================================================
--- HITS ON PLAYERS
+-- DAMAGE NUMBERS
+-- Damage flies from each card dealing it (its spell reveal, or the creature) to whatever it
+-- hits, as the amount in the card's colour. Numbers arriving together merge on landing into
+-- one red "-N" that pops up big with a white flash (on a player, with the life plate's red
+-- flash and the hit sound). A player's damage from no known source flies from the board's
+-- centre; a creature's pops up where it lands.
 -- =========================================================================
-local function NewHitFX(plate)
-    local h = { plate = plate }
-    h.glow = plate:CreateTexture(nil, "ARTWORK")
-    h.glow:SetPoint("TOPLEFT", plate, "TOPLEFT", 3, -3)
-    h.glow:SetPoint("BOTTOMRIGHT", plate, "BOTTOMRIGHT", -3, 3)
-    h.glow:SetColorTexture(1, 0.1, 0.1, 1)
-    h.glow:SetAlpha(0)
-
-    h.num = layer:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    h.num:SetTextColor(1, 0.2, 0.2)
-    h.num:SetShadowOffset(2, -2)
-    h.num:SetShadowColor(0, 0, 0, 1)
-    h.num:Hide()
-    return h
+local freeStrings = {}
+local function NewString()
+    local fs = table.remove(freeStrings) or layer:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    fs.fontPath = fs.fontPath or fs:GetFont()
+    fs:SetShadowOffset(2, -2)
+    fs:SetShadowColor(0, 0, 0, 1)
+    fs:SetTextColor(1, 1, 1)
+    fs:SetAlpha(0)
+    fs:Show()
+    return fs
 end
 
-local hits = {
-    [true]  = NewHitFX(B.oppLifeBtn),
-    [false] = NewHitFX(B.myLifeBtn),
+local function FreeString(fs)
+    fs:Hide()
+    table.insert(freeStrings, fs)
+end
+
+local function SetFontSize(fs, size)
+    size = math.floor(size + 0.5)
+    if fs.fontPath and fs.fontSize ~= size then
+        fs.fontSize = size
+        fs:SetFont(fs.fontPath, size, "THICKOUTLINE")
+    end
+end
+
+local function CardColor(card)
+    local c = card and TTS.CardColors and TTS.CardColors(card)[1]
+    -- Fire's red would read as the landed "-N": its numbers fly in orange
+    if c and TTS.SPHERE_RGB and c == TTS.SPHERE_RGB.R then return HIT_FIRE_COLOR end
+    return c
+end
+
+local function Centroid(points)
+    local x, y, n = 0, 0, 0
+    for _, p in ipairs(points) do x, y, n = x + p.x, y + p.y, n + 1 end
+    if n > 0 then return { x = x / n, y = y / n } end
+end
+
+-- Hits on their way or landed, by what they hit (true / false = a player, else the creature's perm):
+-- { posFn, sizes, glow, sound, shards = { { fs, src } }, amount, t, landed, num }
+local activeHits = {}
+
+local function FinishHit(key, hit)
+    for _, s in ipairs(hit.shards) do FreeString(s.fs) end
+    if hit.num then FreeString(hit.num) end
+    if hit.glow then hit.glow:SetAlpha(0) end
+    activeHits[key] = nil
+end
+
+-- Adds damage to the hit on key, starting a new one unless one has only just set off.
+-- src = where this part flies from (nil = none: the hit lands at once); label = the number
+-- it shows in flight (default amount); delay = seconds a new hit waits before it sets off.
+local function AddHitDamage(key, posFn, sizes, amount, src, color, label, delay)
+    local hit = activeHits[key]
+    if not (hit and not hit.landed and hit.t < HIT_JOIN) then
+        if hit then FinishHit(key, hit) end
+        hit = { posFn = posFn, sizes = sizes, shards = {}, amount = 0,
+            t = src and -(delay or 0) or HIT_TRAVEL }
+        hit.last = posFn()
+        activeHits[key] = hit
+    end
+    hit.amount = hit.amount + amount
+    if src then
+        local fs = NewString()
+        SetFontSize(fs, sizes[1])
+        color = color or HIT_TRAVEL_COLOR
+        fs:SetTextColor(color[1], color[2], color[3])
+        fs:SetText(label or amount)
+        table.insert(hit.shards, { fs = fs, src = src })
+    end
+    return hit
+end
+
+local function UpdateHitFX(key, hit, dt)
+    hit.t = hit.t + dt
+    local dest = hit.posFn()
+    if dest then hit.last = dest else dest = hit.last end
+    if not dest or hit.t >= HIT_TRAVEL + HIT_TIME then
+        FinishHit(key, hit)
+        return
+    end
+
+    -- In flight: each part from its own source (hidden at it while the hit waits)
+    if hit.t < HIT_TRAVEL then
+        local p = math.max(0, hit.t) / HIT_TRAVEL
+        local m = p * p * (3 - 2 * p)
+        for _, s in ipairs(hit.shards) do
+            s.fs:ClearAllPoints()
+            s.fs:SetPoint("CENTER", layer, "BOTTOMLEFT",
+                s.src.x + (dest.x - s.src.x) * m, s.src.y + (dest.y - s.src.y) * m)
+            s.fs:SetAlpha(math.min(1, p * 8))
+        end
+        return
+    end
+
+    -- Landed: the parts merge into one "-N"
+    if not hit.landed then
+        hit.landed = true
+        for _, s in ipairs(hit.shards) do FreeString(s.fs) end
+        wipe(hit.shards)
+        hit.num = NewString()
+        hit.num:SetText("-" .. hit.amount)
+        if hit.sound then PlayFX(SOUND_HIT) end
+    end
+    local q = (hit.t - HIT_TRAVEL) / HIT_TIME
+    local sizes, num = hit.sizes, hit.num
+    if q < 0.1 then
+        SetFontSize(num, sizes[1] + (sizes[2] - sizes[1]) * q / 0.1)
+    elseif q < 0.3 then
+        SetFontSize(num, sizes[2] + (sizes[3] - sizes[2]) * (q - 0.1) / 0.2)
+    else
+        SetFontSize(num, sizes[3])
+    end
+    local w = math.max(0, 1 - q / 0.25)
+    num:SetTextColor(1, 0.2 + 0.8 * w, 0.2 + 0.8 * w)
+    num:ClearAllPoints()
+    num:SetPoint("CENTER", layer, "BOTTOMLEFT", dest.x, dest.y)
+    num:SetAlpha(math.min(1, (1 - q) * 3))
+    if hit.glow then hit.glow:SetAlpha(0.8 * (1 - q)) end
+end
+
+-- ----- Players -----
+-- The red flash covers only the filled part of the life bar (Board.lua's MakeLifeBar)
+local function NewPlateGlow(plate)
+    local fill = plate.lifeBar and plate.lifeBar.fill
+    local glow = plate:CreateTexture(nil, "ARTWORK", nil, 3)
+    if fill then
+        glow:SetPoint("TOPLEFT", fill, "TOPLEFT")
+        glow:SetPoint("BOTTOMRIGHT", fill, "BOTTOMRIGHT")
+    else
+        glow:SetPoint("TOPLEFT", plate, "TOPLEFT", 3, -3)
+        glow:SetPoint("BOTTOMRIGHT", plate, "BOTTOMRIGHT", -3, 3)
+    end
+    glow:SetColorTexture(1, 0.1, 0.1, 1)
+    glow:SetAlpha(0)
+    return glow
+end
+
+local plates = { [true] = B.oppLifeBtn, [false] = B.myLifeBtn }
+local plateGlows = { [true] = NewPlateGlow(B.oppLifeBtn), [false] = NewPlateGlow(B.myLifeBtn) }
+local platePos = {
+    [true]  = function() return Pos(plates[true]) end,
+    [false] = function() return Pos(plates[false]) end,
 }
 local hitShown = false   -- set when a hit plays, so combat doesn't play a second one
 
-local function ShowHit(isRemote, amount)
-    local h = hits[isRemote and true or false]
-    hitShown = true
-    -- Several hits landing together (e.g. multiple attackers) add up into one number and one sound
-    if h.t and h.t < 0.25 then
-        h.amount = h.amount + amount
-    else
-        h.amount = amount
-        PlayFX(SOUND_HIT)
+-- Where damage is coming from, set by the engine hooks around the calls that deal it: one
+-- source (a spell or ability), or a queue with one per damage to a player in order (combat:
+-- each attacker's, set off once the blocks have landed). Each flies in its card's colour (a
+-- two-colour card's first).
+local hitSrc, hitSrcUntil, hitSrcColor
+local function SetHitSource(pos, linger, card)
+    hitSrc, hitSrcUntil = pos, linger and GetTime() + linger or math.huge
+    hitSrcColor = CardColor(card)
+end
+
+local hitQueue, hitQueueUntil = {}, 0
+local function SetHitQueue(list, linger)
+    hitQueue, hitQueueUntil = list, linger and GetTime() + linger or math.huge
+end
+
+local function NextHitSource()
+    local now = GetTime()
+    if now <= hitQueueUntil and hitQueue[1] then
+        local s = table.remove(hitQueue, 1)
+        return s.pos, s.color, s.at
     end
-    h.t = 0
-    h.num:SetText("-" .. h.amount)
-    h.num:Show()
+    if hitSrc and now <= hitSrcUntil then return hitSrc, hitSrcColor end
+end
+
+-- at = the time it sets off (nil = now)
+local function ShowHit(isRemote, amount, src, color, at)
+    local side = isRemote and true or false
+    hitShown = true
+    src = src or { x = layer:GetWidth() / 2, y = layer:GetHeight() / 2 }
+    local delay = at and math.max(0, at - GetTime()) or 0
+    local hit = AddHitDamage(side, platePos[side], PLAYER_HIT_SIZES, amount, src, color, nil, delay)
+    hit.glow, hit.sound = plateGlows[side], true
 end
 
 -- Damage a player's shield soaked up entirely: the hit sound, without the red flash
+local soakAt = {}
 local function ShowSoak(isRemote)
-    local h = hits[isRemote and true or false]
+    local side = isRemote and true or false
     hitShown = true
-    local now = GetTime()
-    if not (h.soakAt and now - h.soakAt < 0.25) and not (h.t and h.t < 0.25) then PlayFX(SOUND_HIT) end
-    h.soakAt = now
+    local now, hit = GetTime(), activeHits[side]
+    if not (soakAt[side] and now - soakAt[side] < HIT_JOIN) and not (hit and hit.t < HIT_JOIN) then
+        PlayFX(SOUND_HIT)
+    end
+    soakAt[side] = now
 end
 
 -- A player's damage shield as this client sees it (the PvP opponent's is our copy of theirs)
@@ -386,20 +544,34 @@ local function ShieldOf(E, isRemote)
     return (isRemote and E.remoteState or E.localState).damageShield or 0
 end
 
-local function UpdateHit(h, dt)
-    if not h.t then return end
-    h.t = h.t + dt
-    local p = h.t / HIT_TIME
-    if p >= 1 then
-        h.t = nil
-        h.glow:SetAlpha(0)
-        h.num:Hide()
+-- ----- Creatures -----
+-- The parts of a creature's damage noted as it's dealt (perm -> { at, list = { pos, color, n } });
+-- Board.lua's redraw sees the damage and calls TTS.FlyCreatureDamage, which sends them
+local creatureShards = setmetatable({}, { __mode = "k" })
+
+local function AddCreatureShard(perm, pos, color, n)
+    local now, c = GetTime(), creatureShards[perm]
+    if not c or now - c.at > HIT_SOURCE_LINGER then
+        c = { list = {} }
+        creatureShards[perm] = c
+    end
+    c.at = now
+    table.insert(c.list, { pos = pos, color = color, n = n })
+end
+
+-- total = the damage the creature took (Fatal shows no more than it could take)
+function TTS.FlyCreatureDamage(frame, total, perm)
+    local posFn = function() return Pos(frame) end
+    if not posFn() then return end
+    local c = creatureShards[perm]
+    creatureShards[perm] = nil
+    if not c or GetTime() - c.at > HIT_SOURCE_LINGER then
+        AddHitDamage(perm, posFn, CREATURE_HIT_SIZES, total)
         return
     end
-    h.glow:SetAlpha(0.6 * (1 - p))
-    h.num:ClearAllPoints()
-    h.num:SetPoint("CENTER", h.plate, "CENTER", 0, HIT_RISE * p)
-    h.num:SetAlpha(1 - p * p)
+    for i, s in ipairs(c.list) do
+        AddHitDamage(perm, posFn, CREATURE_HIT_SIZES, i == 1 and total or 0, s.pos, s.color, s.n)
+    end
 end
 
 -- =========================================================================
@@ -477,8 +649,7 @@ layer:SetScript("OnUpdate", function(_, dt)
             for _, line in ipairs(fl.arrow) do line:SetAlpha(alpha) end
         end
     end
-    UpdateHit(hits[true], dt)
-    UpdateHit(hits[false], dt)
+    for key, hit in pairs(activeHits) do UpdateHitFX(key, hit, dt) end
 end)
 
 -- =========================================================================
@@ -557,7 +728,20 @@ local function InstallHooks()
             local targets = EffectTargets(card and card.effect, tgt, casterIsRemote)
             RevealSpell(card, casterIsRemote, targets)
             if casterIsRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
-            return origSpell(self, card, tgt, casterIsRemote, ...)
+            SetHitSource(Pos(reveal), nil, card)
+            local results = { origSpell(self, card, tgt, casterIsRemote, ...) }
+            SetHitSource(nil)
+            return unpack(results)
+        end
+    end
+
+    -- The PvP opponent's spell: its damage arrives afterwards, from their client
+    if E.ShowRemoteSpell then
+        local origRemoteSpell = E.ShowRemoteSpell
+        E.ShowRemoteSpell = function(self, cardId, ...)
+            local results = { origRemoteSpell(self, cardId, ...) }
+            SetHitSource(Pos(reveal), HIT_SOURCE_LINGER, TTS.Cards[cardId])
+            return unpack(results)
         end
     end
 
@@ -576,7 +760,9 @@ local function InstallHooks()
             local srcRemote, srcIdx = self:FindPerm(perm)
             local src = srcIdx and Pos(FindFieldFrame(srcRemote and true or false, srcIdx))
             local targets = EffectTargets(ABILITY_EFFECTS[perm.id], tgt, isRemote)
+            SetHitSource(src, nil, perm and TTS.Cards[perm.id])
             local ok = origAbility(self, perm, isRemote, tgt, ...)
+            SetHitSource(nil)
             if ok then
                 for _, t in ipairs(targets) do FlashArrow(src, t.pos, t.color, REVEAL_HOLD) end
                 if isRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
@@ -590,13 +776,27 @@ local function InstallHooks()
         E.DamagePlayer = function(self, isRemote, amount, reason, ...)
             local state = isRemote and self.remoteState or self.localState
             local before, shield = state.life, ShieldOf(self, isRemote)
+            local src, color, at
+            if (tonumber(amount) or 0) > 0 then src, color, at = NextHitSource() end
             local results = { origDamage(self, isRemote, amount, reason, ...) }
             if state.life < before then
-                ShowHit(isRemote, before - state.life)
+                ShowHit(isRemote, before - state.life, src, color, at)
             elseif ShieldOf(self, isRemote) < shield then
                 ShowSoak(isRemote)
             end
             return unpack(results)
+        end
+    end
+
+    -- Damage to creatures from spells and abilities: noted with its source for the redraw
+    if E.DamageCreature then
+        local origDamageCreature = E.DamageCreature
+        E.DamageCreature = function(self, perm, ...)
+            local marked = origDamageCreature(self, perm, ...)
+            if perm and (marked or 0) > 0 and hitSrc and GetTime() <= hitSrcUntil then
+                AddCreatureShard(perm, hitSrc, hitSrcColor, marked)
+            end
+            return marked
         end
     end
 
@@ -605,6 +805,8 @@ local function InstallHooks()
         E.ResolveCombatDamage = function(self, ...)
             local bs = self.blockingState
             local arrows, state, before, shield, defRemote = {}, nil, nil, nil, nil
+            local queue = {}   -- each damage to the defending player in the order combat deals it
+            local combatSrc, firstColor, afterBlocks
             -- PvP, defending: the attacker's client sends the damage to us afterwards
             -- (ACTION:DAMAGE), so our life doesn't change here; arrow every unblocked
             -- attacker that will hit (the hit itself plays when that damage arrives), in
@@ -616,34 +818,58 @@ local function InstallHooks()
                 damageArrives = atkRemote and not self.isSolo and not self.preventCombatDamage
                 state = defRemote and self.remoteState or self.localState
                 before, shield = state.life, ShieldOf(self, defRemote)
+                local plan = self:PlanCombatDamage(bs)
+                -- Blocks resolve first: the damage getting through sets off once they've landed
+                if plan.hits and #plan.hits > 0 and not self.preventCombatDamage then
+                    afterBlocks = GetTime() + HIT_TRAVEL + HIT_AFTER_BLOCKS
+                end
 
                 local blocked = {}
                 for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
                 local atkField = (atkRemote and self.remoteState or self.localState).field
                 local dst = Pos(defRemote and B.oppLifeBtn or B.myLifeBtn)
+                local srcs = {}
                 for _, atkIdx in ipairs(bs.attackers or {}) do
                     local perm = atkField[atkIdx]
+                    local src = perm and Pos(FindFieldFrame(atkRemote, atkIdx))
+                    local color = perm and CardColor(TTS.Cards[perm.id])
                     local power = perm and (self:GetCreatureStats(perm, atkRemote) or 0) or 0
                     if perm and not blocked[atkIdx] and power > 0 then
                         incoming = incoming + power
-                        local src = Pos(FindFieldFrame(atkRemote, atkIdx))
+                        table.insert(queue, { pos = src, color = color, at = afterBlocks })
+                        if src then table.insert(srcs, src) end
+                        firstColor = firstColor or color
                         if src and dst then table.insert(arrows, { src, dst }) end
+                    elseif perm and blocked[atkIdx] and plan.trample[perm] then
+                        table.insert(queue, { pos = src, color = color, at = afterBlocks })
                     end
                 end
                 if damageArrives then
-                    for _, n in pairs(self:PlanCombatDamage(bs).trample) do incoming = incoming + n end
+                    for _, n in pairs(plan.trample) do incoming = incoming + n end
+                end
+                combatSrc = Centroid(srcs)
+
+                -- Each blow between attackers and blockers flies from the creature striking it
+                if not self.preventCombatDamage then
+                    for _, h in ipairs(plan.hits or {}) do
+                        local r, idx = self:FindPerm(h.src)
+                        local pos = idx and Pos(FindFieldFrame(r and true or false, idx))
+                        if pos then AddCreatureShard(h.dst, pos, CardColor(TTS.Cards[h.src.id]), h.n) end
+                    end
                 end
             end
 
             hitShown = false
+            SetHitQueue(queue)
             local results = { origCombat(self, ...) }
+            SetHitQueue(queue, damageArrives and HIT_SOURCE_LINGER or 0)
             if damageArrives then
                 local color = (incoming > 0 and shield >= incoming) and SOAK_COLOR or HIT_COLOR
                 for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], color, HIT_ARROW_HOLD) end
             elseif state and state.life < before then
                 for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
                 -- Combat that changes life without going through DamagePlayer still gets a hit
-                if not hitShown then ShowHit(defRemote, before - state.life) end
+                if not hitShown then ShowHit(defRemote, before - state.life, combatSrc, firstColor, afterBlocks) end
             elseif state and ShieldOf(self, defRemote) < shield then
                 -- The damage shield soaked up every point
                 for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], SOAK_COLOR, HIT_ARROW_HOLD) end

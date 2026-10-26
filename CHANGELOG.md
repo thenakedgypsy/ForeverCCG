@@ -67,6 +67,8 @@
 *   Gear Cards' text is shorter: "Equip: +1/+0 and Support."
 *   a cast spell or Gear Card now shows in the middle of the board, moving aside so it doesn't cover any cards
 *   your graveyard button now sits to the left of your life plate
+*   damage numbers now fly from whatever dealt the damage (the attacking denizen, or the cast spell's card) to the player or denizen it hits, in the card's colour. Damage from several cards at once flies in separately and merges into one big red number that pops up with a flash. Damage to players is shown much larger, and only the filled part of the life bar flashes red
+*   in combat, the blocks land first, then any damage that gets through flies on to the player
 
 ## 0.15.7
 

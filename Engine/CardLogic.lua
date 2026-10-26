@@ -2100,7 +2100,8 @@ function E:PlanCombatDamage(bs)
     end
 
     -- Shielded: the first hit a creature takes is negated (popped[perm] = it loses Shielded)
-    local taken, dealt, popped, trample = {}, {}, {}, {}
+    -- hits = every blow in order, { src, dst, n } (for the damage numbers)
+    local taken, dealt, popped, trample, hits = {}, {}, {}, {}, {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
     local function Strikes(perm, firstStep)
         local src = info[perm]
@@ -2112,6 +2113,7 @@ function E:PlanCombatDamage(bs)
         else
             taken[dst] = (taken[dst] or 0) + (info[src].fatal and 999 or n)
             dealt[src] = (dealt[src] or 0) + n
+            table.insert(hits, { src = src, dst = dst, n = n })
         end
     end
     -- Strikes-First damage lands first, then everyone still standing strikes
@@ -2140,7 +2142,7 @@ function E:PlanCombatDamage(bs)
         for _, f in ipairs(blockers) do Hit(f.blk, f.atk, info[f.blk].p) end
     end
 
-    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped }
+    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped, hits = hits }
 end
 
 -- Our attackers blocked by several creatures: the player picks the order each deals its

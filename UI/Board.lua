@@ -1164,6 +1164,8 @@ local function FoilColors(card)
     if not list[1] then list = { FOIL_GOLD } end
     return list
 end
+TTS.CardColors = FoilColors
+TTS.SPHERE_RGB = FOIL_RGB
 
 -- Sparkles: little stars that twinkle on round the card's edge and drift off it, in the
 -- glow's colour washed towards white. Made on the overlay (over the model and frame) the
@@ -2881,7 +2883,7 @@ local function TrackDamage(perm, isRemote, f)
         -- Deathtouch marks 999: show no more than the creature could take
         local _, t = TTS.Engine:GetCreatureStats(perm, isRemote)
         local shown = math.min(dmg - prev, math.max(1, t - prev))
-        table.insert(pendingFloats, { f, "-" .. shown, "FLOAT_DAMAGE" })
+        table.insert(pendingFloats, { f, "-" .. shown, "FLOAT_DAMAGE", perm, shown })
     else
         table.insert(pendingFloats, { f, "+" .. (prev - dmg), "FLOAT_HEAL" })
     end
@@ -2889,7 +2891,14 @@ end
 
 local function EmitFloats()
     if TTS.FloatText then
-        for _, p in ipairs(pendingFloats) do TTS.FloatText(p[2], TTS[p[3]], p[1]) end
+        for _, p in ipairs(pendingFloats) do
+            -- Damage flies in from whatever dealt it (TargetFX.lua)
+            if p[4] and TTS.FlyCreatureDamage then
+                TTS.FlyCreatureDamage(p[1], p[5], p[4])
+            else
+                TTS.FloatText(p[2], TTS[p[3]], p[1])
+            end
+        end
     end
     wipe(pendingFloats)
 end
