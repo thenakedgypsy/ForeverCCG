@@ -60,6 +60,7 @@ local ART_BOX = {
 -- whose bottom edge is FULL_ART_BOTTOM of the card's height up from the bottom
 local FULL_ART_BOTTOM = 0.045
 local FULL_ART_FADE   = 0.15
+local FX_MODEL_CAM_PULL = 0.8 -- and its camera, standing back for the grown window, comes this much closer
 
 -- Rules-text box printed on the card, as fractions of the card's size.
 -- top: down from the card's top edge. bottom: up from the bottom edge
@@ -1379,16 +1380,23 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.model = okModel and model or CreateFrame("PlayerModel", nil, f)
     f.model:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
     f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, artBottom)
-    -- While an effect plays (SetModelInFront) the art window grows down to the full-art frame's,
-    -- over the rules box, on a backing of the card's own background. The taller window would
-    -- draw the creature bigger, so its camera stands back by as much (f.modelFullCam).
+    -- While an effect plays (SetModelInFront) a backing of the card's own background fills the
+    -- full-art frame's window, over the rules box, and the model's window grows by as much
+    -- above as below so a swing isn't cut off at the art box. Its centre stays put and its
+    -- camera stands back by as much as it grew (f.modelFullCam), so the creature keeps its
+    -- place and size while the frame changes round it.
+    local fullBottom = math.floor(sizeY * FULL_ART_BOTTOM)
+    local grow = math.max(0, artBottom - fullBottom)
     f.model.fxBack = f.model:CreateTexture(nil, "BACKGROUND")
-    f.model.fxBack:SetAllPoints(f.model)
+    f.model.fxBack:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
+    f.model.fxBack:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, fullBottom)
     f.model.fxBack:SetColorTexture(0.08, 0.08, 0.08, 0.95)
     f.model.fxBack:Hide()
-    f.modelArtBottom, f.modelArtRight = artBottom, artRight
-    f.modelFullBottom = math.floor(sizeY * FULL_ART_BOTTOM)
-    f.modelFullCam = (sizeY - artTop - f.modelFullBottom) / boxH
+    f.modelWindow = {
+        [false] = { artLeft, -artTop, -artRight, artBottom },
+        [true]  = { artLeft, -artTop + grow, -artRight, fullBottom },
+    }
+    f.modelFullCam = (boxH + 2 * grow) / boxH * FX_MODEL_CAM_PULL
     f.model:EnableMouse(false)
     f.model:Hide()
 
@@ -1453,16 +1461,20 @@ local function CreateCardFrame(parent, sizeX, sizeY)
         if not f.model then return end
         -- In front it drops its tapped / summoning-sick shade (f.modelAlpha), and takes it back after
         if not f.spawning then f.model:SetAlpha(on and 1 or (f.modelAlpha or 1)) end
-        -- The art window grows down to the full-art frame's, which fades in over the usual one
-        f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -f.modelArtRight, on and f.modelFullBottom or f.modelArtBottom)
+        -- The backing fills the full-art frame's window, which fades in over the usual one; the
+        -- model's window grows round its centre with the camera standing back to match
+        local w = f.modelWindow[on]
+        f.model:ClearAllPoints()
+        f.model:SetPoint("TOPLEFT", f, "TOPLEFT", w[1], w[2])
+        f.model:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", w[3], w[4])
+        if f.model.SetCamDistanceScale and f.modelCamScale then
+            f.model:SetCamDistanceScale(f.modelCamScale * (on and f.modelFullCam or 1))
+        end
         f.model.fxBack:SetShown(on)
         local rim = f.foil.rim
         rim:SetParent(on and f.foil.rimFront or f.overlay)
         rim:SetDrawLayer("ARTWORK")
         rim:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", f.foil.rimRight, f.foil.rimBottom[on])
-        if f.model.SetCamDistanceScale and f.modelCamScale then
-            f.model:SetCamDistanceScale(f.modelCamScale * (on and f.modelFullCam or 1))
-        end
         if f.borderFull then
             f.borderFull:SetVertexColor(f.border:GetVertexColor())
             local fader = f.fullArtFader
@@ -2376,7 +2388,7 @@ LAYOUT.MODEL_SMALL_LIFT = 0.25  -- how far a model rises in its frame as its car
 -- little higher; smaller ones rise more and more, as small models otherwise sink out of view.
 local function ModelCamZ(f, cam)
     local z = cam.z or -0.10
-    local size = (B:GetScale() or 1.0) * (f.modelInFront and 1 or (f.baseScale or 1))
+    local size = (B:GetScale() or 1.0) * (f.baseScale or 1)
     if size >= 1 then
         return z + (size - 1.0) * 0.18
     end
@@ -2386,8 +2398,8 @@ end
 local function ApplyModelCamera(f, card)
     local cam = card.modelCam or {}
     if f.model.SetPortraitZoom then f.model:SetPortraitZoom(cam.zoom or 0.75) end
-    -- (a grown art window, SetModelInFront, stands its camera further back)
     f.modelCamScale = cam.camScale or 1.0
+    -- (a grown window, SetModelInFront, stands its camera further back)
     if f.model.SetCamDistanceScale then
         f.model:SetCamDistanceScale(f.modelCamScale * (f.modelInFront and f.modelFullCam or 1))
     end
@@ -2981,7 +2993,10 @@ local function TrackLife(E, isRemote, plate)
     local prev = lastLife[isRemote]
     lastLife[isRemote] = life
     if prev and life > prev and TTS.FloatText then
-        TTS.FloatText("+" .. (life - prev), TTS.FLOAT_HEAL, plate, true)
+        -- A drain flies from the other player's plate instead (TargetFX.lua)
+        if not (TTS.FlyLifeGain and TTS.FlyLifeGain(isRemote, life - prev)) then
+            TTS.FloatText("+" .. (life - prev), TTS.FLOAT_HEAL, plate, true)
+        end
     end
 end
 

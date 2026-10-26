@@ -243,6 +243,8 @@ function E:EndMatch(outcome, reason)
                 end
                 if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
                 if B and B.ShowMatchResult then B:ShowMatchResult(headline) end
+                -- A fanfare for a win, a quest-failed sting for a loss (conceding is one)
+                if TTS.Sound then TTS.Sound:PlayUI(outcome == "won" and "victory" or "defeat") end
             end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end

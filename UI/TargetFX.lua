@@ -24,7 +24,22 @@ if not B then return end
 
 -- Any SOUNDKIT id works here
 local SOUND_TARGET = 873    -- IG_CREATURE_AGGRO_SELECT (the "targeted an enemy" click)
-local SOUND_HIT    = 8959   -- RAID_WARNING
+-- A player's hit lands with a sound by the damage taken at once: { at least, SoundKit }
+local PLAYER_HIT_SOUNDS = {
+    { 9, 3090 },   -- Thunder Clap
+    { 5, 3218 },   -- Heroic Strike's impact
+    { 0, 3134 },   -- Garrote
+}
+local SOUND_SOAK      = 2562   -- Power Word: Shield: a player's damage shield soaking a hit
+local SOUND_DRAIN     = 1482   -- Healing Touch's impact: drained life landing on the player it heals
+-- Damage from a spell card lands (on a player or a denizen) with its colour's impact instead
+local SPELL_IMPACT_SOUNDS = {
+    R = 1507,   -- Fireball's impact
+    U = 7,      -- Frostbolt's impact
+    B = 743,    -- Shadow Bolt's impact
+    G = 1506,   -- Lightning Bolt's impact
+    W = 44,     -- Smite's impact
+}
 
 local AIM_COLOR    = { 1.0, 0.82, 0.0, 0.85 }
 local TARGET_COLOR = { 1.0, 0.82, 0.0, 1.0 }
@@ -375,6 +390,30 @@ local function CardColor(card)
     return c
 end
 
+-- A spell card's impact sound, by its colour (a two-colour card's first); nil for anything else
+local function SpellImpactSound(card)
+    if not (card and card.type ~= "Creature" and TTS.CardColors and TTS.SPHERE_RGB) then return end
+    local c = TTS.CardColors(card)[1]
+    for key, rgb in pairs(TTS.SPHERE_RGB) do
+        if rgb == c then return SPELL_IMPACT_SOUNDS[key] end
+    end
+end
+
+local function PlayerHitSound(amount)
+    for _, s in ipairs(PLAYER_HIT_SOUNDS) do
+        if amount >= s[1] then return s[2] end
+    end
+end
+
+-- One spell hitting several things at once plays its impact once
+local impactAt = {}
+local function PlayImpact(sound)
+    local now = GetTime()
+    if impactAt[sound] and now - impactAt[sound] < 0.1 then return end
+    impactAt[sound] = now
+    PlayFX(sound)
+end
+
 local function Centroid(points)
     local x, y, n = 0, 0, 0
     for _, p in ipairs(points) do x, y, n = x + p.x, y + p.y, n + 1 end
@@ -394,8 +433,9 @@ end
 
 -- Adds damage to the hit on key, starting a new one unless one has only just set off.
 -- src = where this part flies from (nil = none: the hit lands at once); label = the number
--- it shows in flight (default amount); delay = seconds a new hit waits before it sets off.
-local function AddHitDamage(key, posFn, sizes, amount, src, color, label, delay)
+-- it shows in flight (default amount); delay = seconds a new hit waits before it sets off;
+-- impact = a spell's impact sound to land with (SpellImpactSound).
+local function AddHitDamage(key, posFn, sizes, amount, src, color, label, delay, impact)
     local hit = activeHits[key]
     if not (hit and not hit.landed and hit.t < HIT_JOIN) then
         if hit then FinishHit(key, hit) end
@@ -405,6 +445,7 @@ local function AddHitDamage(key, posFn, sizes, amount, src, color, label, delay)
         activeHits[key] = hit
     end
     hit.amount = hit.amount + amount
+    hit.impact = hit.impact or impact
     if src then
         local fs = NewString()
         SetFontSize(fs, sizes[1])
@@ -438,14 +479,20 @@ local function UpdateHitFX(key, hit, dt)
         return
     end
 
-    -- Landed: the parts merge into one "-N"
+    -- Landed: the parts merge into one "-N" (a drain's life: a green "+N")
     if not hit.landed then
         hit.landed = true
         for _, s in ipairs(hit.shards) do FreeString(s.fs) end
         wipe(hit.shards)
         hit.num = NewString()
-        hit.num:SetText("-" .. hit.amount)
-        if hit.sound then PlayFX(SOUND_HIT) end
+        hit.num:SetText((hit.heal and "+" or "-") .. hit.amount)
+        if hit.heal then
+            PlayFX(SOUND_DRAIN)
+        elseif hit.impact then
+            PlayImpact(hit.impact)
+        elseif hit.sound then
+            PlayFX(PlayerHitSound(hit.amount))
+        end
     end
     local q = (hit.t - HIT_TRAVEL) / HIT_TIME
     local sizes, num = hit.sizes, hit.num
@@ -457,7 +504,11 @@ local function UpdateHitFX(key, hit, dt)
         SetFontSize(num, sizes[3])
     end
     local w = math.max(0, 1 - q / 0.25)
-    num:SetTextColor(1, 0.2 + 0.8 * w, 0.2 + 0.8 * w)
+    if hit.heal then
+        num:SetTextColor(0.2 + 0.8 * w, 1, 0.2 + 0.8 * w)
+    else
+        num:SetTextColor(1, 0.2 + 0.8 * w, 0.2 + 0.8 * w)
+    end
     num:ClearAllPoints()
     num:SetPoint("CENTER", layer, "BOTTOMLEFT", dest.x, dest.y)
     num:SetAlpha(math.min(1, (1 - q) * 3))
@@ -492,11 +543,11 @@ local hitShown = false   -- set when a hit plays, so combat doesn't play a secon
 -- Where damage is coming from, set by the engine hooks around the calls that deal it: one
 -- source (a spell or ability), or a queue with one per damage to a player in order (combat:
 -- each attacker's, set off once the blocks have landed). Each flies in its card's colour (a
--- two-colour card's first).
-local hitSrc, hitSrcUntil, hitSrcColor
+-- two-colour card's first), and a spell's lands with its impact sound.
+local hitSrc, hitSrcUntil, hitSrcColor, hitSrcImpact
 local function SetHitSource(pos, linger, card)
     hitSrc, hitSrcUntil = pos, linger and GetTime() + linger or math.huge
-    hitSrcColor = CardColor(card)
+    hitSrcColor, hitSrcImpact = CardColor(card), SpellImpactSound(card)
 end
 
 local hitQueue, hitQueueUntil = {}, 0
@@ -510,27 +561,50 @@ local function NextHitSource()
         local s = table.remove(hitQueue, 1)
         return s.pos, s.color, s.at
     end
-    if hitSrc and now <= hitSrcUntil then return hitSrc, hitSrcColor end
+    if hitSrc and now <= hitSrcUntil then return hitSrc, hitSrcColor, nil, hitSrcImpact end
 end
 
--- at = the time it sets off (nil = now)
-local function ShowHit(isRemote, amount, src, color, at)
+local lostLifeAt = {}   -- side -> when that player last lost life (for drains, TTS.FlyLifeGain)
+
+-- at = the time it sets off (nil = now); impact = a spell's impact sound
+local function ShowHit(isRemote, amount, src, color, at, impact)
     local side = isRemote and true or false
     hitShown = true
+    lostLifeAt[side] = GetTime()
     src = src or { x = layer:GetWidth() / 2, y = layer:GetHeight() / 2 }
     local delay = at and math.max(0, at - GetTime()) or 0
-    local hit = AddHitDamage(side, platePos[side], PLAYER_HIT_SIZES, amount, src, color, nil, delay)
+    local hit = AddHitDamage(side, platePos[side], PLAYER_HIT_SIZES, amount, src, color, nil, delay, impact)
     hit.glow, hit.sound = plateGlows[side], true
 end
 
--- Damage a player's shield soaked up entirely: the hit sound, without the red flash
+-- A player gaining life just as the other loses some is a drain (Drain in combat, a drain
+-- spell or ability): the life flies as a green "+N" from the other player's plate to theirs,
+-- setting off once the damage there has landed. Board.lua's redraw calls this for each gain;
+-- false = not a drain (it floats up as usual).
+local DRAIN_WINDOW = 1.0   -- seconds the loss may come before the gain
+local DRAIN_COLOR  = { 0.2, 1, 0.2 }
+function TTS.FlyLifeGain(isRemote, amount)
+    local side = isRemote and true or false
+    local other = not side
+    if not (lostLifeAt[other] and GetTime() - lostLifeAt[other] <= DRAIN_WINDOW) then return false end
+    local from = Pos(plates[other])
+    if not from then return false end
+    local hit = activeHits[other]
+    local delay = (hit and not hit.landed) and (HIT_TRAVEL - hit.t + 0.1) or 0
+    local gain = AddHitDamage("drain" .. tostring(side), platePos[side], PLAYER_HIT_SIZES, amount, from,
+        DRAIN_COLOR, "+" .. amount, delay)
+    gain.heal = true
+    return true
+end
+
+-- Damage a player's shield soaked up entirely: the shield's sound, without the red flash
 local soakAt = {}
 local function ShowSoak(isRemote)
     local side = isRemote and true or false
     hitShown = true
     local now, hit = GetTime(), activeHits[side]
     if not (soakAt[side] and now - soakAt[side] < HIT_JOIN) and not (hit and hit.t < HIT_JOIN) then
-        PlayFX(SOUND_HIT)
+        PlayFX(SOUND_SOAK)
     end
     soakAt[side] = now
 end
@@ -545,18 +619,18 @@ local function ShieldOf(E, isRemote)
 end
 
 -- ----- Creatures -----
--- The parts of a creature's damage noted as it's dealt (perm -> { at, list = { pos, color, n } });
--- Board.lua's redraw sees the damage and calls TTS.FlyCreatureDamage, which sends them
+-- The parts of a creature's damage noted as it's dealt (perm -> { at, list = { pos, color, n,
+-- impact } }); Board.lua's redraw sees the damage and calls TTS.FlyCreatureDamage, which sends them
 local creatureShards = setmetatable({}, { __mode = "k" })
 
-local function AddCreatureShard(perm, pos, color, n)
+local function AddCreatureShard(perm, pos, color, n, impact)
     local now, c = GetTime(), creatureShards[perm]
     if not c or now - c.at > HIT_SOURCE_LINGER then
         c = { list = {} }
         creatureShards[perm] = c
     end
     c.at = now
-    table.insert(c.list, { pos = pos, color = color, n = n })
+    table.insert(c.list, { pos = pos, color = color, n = n, impact = impact })
 end
 
 -- total = the damage the creature took (Fatal shows no more than it could take)
@@ -570,7 +644,7 @@ function TTS.FlyCreatureDamage(frame, total, perm)
         return
     end
     for i, s in ipairs(c.list) do
-        AddHitDamage(perm, posFn, CREATURE_HIT_SIZES, i == 1 and total or 0, s.pos, s.color, s.n)
+        AddHitDamage(perm, posFn, CREATURE_HIT_SIZES, i == 1 and total or 0, s.pos, s.color, s.n, nil, s.impact)
     end
 end
 
@@ -776,11 +850,11 @@ local function InstallHooks()
         E.DamagePlayer = function(self, isRemote, amount, reason, ...)
             local state = isRemote and self.remoteState or self.localState
             local before, shield = state.life, ShieldOf(self, isRemote)
-            local src, color, at
-            if (tonumber(amount) or 0) > 0 then src, color, at = NextHitSource() end
+            local src, color, at, impact
+            if (tonumber(amount) or 0) > 0 then src, color, at, impact = NextHitSource() end
             local results = { origDamage(self, isRemote, amount, reason, ...) }
             if state.life < before then
-                ShowHit(isRemote, before - state.life, src, color, at)
+                ShowHit(isRemote, before - state.life, src, color, at, impact)
             elseif ShieldOf(self, isRemote) < shield then
                 ShowSoak(isRemote)
             end
@@ -794,7 +868,7 @@ local function InstallHooks()
         E.DamageCreature = function(self, perm, ...)
             local marked = origDamageCreature(self, perm, ...)
             if perm and (marked or 0) > 0 and hitSrc and GetTime() <= hitSrcUntil then
-                AddCreatureShard(perm, hitSrc, hitSrcColor, marked)
+                AddCreatureShard(perm, hitSrc, hitSrcColor, marked, hitSrcImpact)
             end
             return marked
         end

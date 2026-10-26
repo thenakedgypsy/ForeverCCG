@@ -934,6 +934,9 @@ local UI_SOUNDS = {
     tap    = { kit = "U_CHAT_SCROLL_BUTTON",           id = 1115, legacy = "uChatScrollButton" },
     -- A card going into or coming out of a deck in the Deckbuilder: paper, like turning a page
     deckCard = { kit = "IG_SPELLBOOK_OPEN", id = 829, legacy = "igSpellBookOpen" },
+    -- A match's result as its popup shows: the level-up fanfare for a win, quest failed for a loss
+    victory  = { kit = "LEVELUP",         id = 888, legacy = "LevelUp" },
+    defeat   = { kit = "IG_QUEST_FAILED", id = 847, legacy = "igQuestFailed" },
 }
 
 local function PlayRaw(sound)
