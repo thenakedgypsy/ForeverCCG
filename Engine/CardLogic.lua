@@ -1283,15 +1283,21 @@ function E:PlayNonCreatureCardSound()
 end
 
 
--- card (optional): the spell being cast. A Gear card is hammered out (Blacksmithing) instead.
+-- card (optional): the spell being cast. It plays its own WoW spell's cast sound
+-- (card.castSound, else TTS.SpellSounds in Sound.lua), or the generic SPELL_SOUND without one
+-- or when the client can't play it. A Gear card is hammered out (Blacksmithing) instead.
 -- Craft sounds can loop until the game stops them (normally when the cast ends), so it is
 -- stopped after GEAR_SOUND_TIME seconds, fading out over GEAR_SOUND_FADE ms.
+local SPELL_SOUND = 1430
 local GEAR_SOUND = 4614   -- BlackSmithing: the blacksmithing craft sound
 local GEAR_SOUND_TIME, GEAR_SOUND_FADE = 1.2, 300
 function E:PlaySpellCastSound(card)
     if not (TTS.Sound and TTS.Sound.enabled) then return end
     if not (card and card.subType == "Gear") then
-        pcall(PlaySound, 1430, "SFX")
+        local own = card and (card.castSound or (TTS.SpellSounds and TTS.SpellSounds[card.id]))
+        local ok, willPlay = false, false
+        if own then ok, willPlay = pcall(PlaySound, own, "SFX") end
+        if not (ok and willPlay) then pcall(PlaySound, SPELL_SOUND, "SFX") end
         return
     end
     local ok, willPlay, handle = pcall(PlaySound, GEAR_SOUND, "SFX")

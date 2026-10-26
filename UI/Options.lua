@@ -33,6 +33,7 @@ local DEFAULTS = {
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
     animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
+    cardEffects = true,      -- animations and spell visuals on battlefield models (CardFX.lua)
     autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
     autoPassBlocks = true,   -- no blocks possible: pass on blocking after a second (the board's Auto-pass checkbox)
     gameLogFolded = false,   -- the board's game log folded up to its title (Board.lua)
@@ -372,7 +373,7 @@ end
 -- =========================================================================
 -- BOARD SECTION
 -- =========================================================================
-local boardSection = CreateSection("options.board", 132)
+local boardSection = CreateSection("options.board", 156)
 boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
 
 local backgroundCheck = CreateCheck(boardSection, 10, -30, "options.backgrounds")
@@ -386,8 +387,14 @@ animateCheck:SetScript("OnClick", function(self)
     O:Set("animateCards", self:GetChecked() and true or false)
 end)
 
+local effectsCheck = CreateCheck(boardSection, 10, -78, "options.cardEffects")
+effectsCheck:SetScript("OnClick", function(self)
+    O:Set("cardEffects", self:GetChecked() and true or false)
+    if TTS.CardFX then TTS.CardFX:OptionChanged() end
+end)
+
 local controlsText = boardSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -86)
+controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -110)
 Loc:Bind(controlsText, "options.controls")
 
 -- One choice of how cards are played; saved as cardControls (label / tooltip: options.controls.<mode>[.desc])
@@ -396,7 +403,7 @@ local controlRadios = {}
 for i, mode in ipairs(CONTROL_MODES) do
     local key = "options.controls." .. mode
     local rb = CreateFrame("CheckButton", nil, boardSection, "UIRadioButtonTemplate")
-    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -104)
+    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -128)
     rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
     Loc:Bind(rb.label, key)
@@ -546,6 +553,7 @@ function O:SyncControls()
     end
     backgroundCheck:SetChecked(db.boardBackgrounds ~= false)
     animateCheck:SetChecked(db.animateCards ~= false)
+    effectsCheck:SetChecked(db.cardEffects ~= false)
     local mode = TTS.CardControls and TTS.CardControls() or "both"
     for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
     langButton:SetText(ChoiceLabel(Loc:GetChoice()))
