@@ -824,7 +824,15 @@ local function LifeBar_OnUpdate(self, elapsed)
     Size(bar.fill, bar.cur)
     Size(bar.lostTex, bar.lost)
     bar.fill:SetVertexColor(LifeColor(math.max(0, math.min(1, bar.cur))))
-    if bar.cur == target and bar.lost <= bar.cur then self:Hide() end   -- settled: stop updating
+    local settled = bar.cur == target and bar.lost <= bar.cur
+    -- The life tracker's number follows the bar: it counts down as the lost chunk drains
+    -- (up as healing fills it) and shows the exact life once the bar has settled
+    if bar.row and bar.full then
+        local shown = settled and bar.life or math.floor(math.max(bar.lost, bar.cur) * bar.full + 0.5)
+        bar.row.life:SetText(shown)
+        bar.row.life:SetTextColor(LifeColor(math.max(0, math.min(1, shown / bar.full))))
+    end
+    if settled then self:Hide() end   -- settled: stop updating
 end
 
 local function MakeLifeBar(plate)
@@ -856,12 +864,47 @@ end
 function B.SetLifeBar(plate, life, full)
     local bar = plate.lifeBar
     if not bar then return end
-    local frac = math.max(0, math.min(1, life / math.max(1, full, life)))
+    bar.life, bar.full = life, math.max(1, full, life)
+    local frac = math.max(0, math.min(1, life / bar.full))
     if bar.target and frac < bar.target then bar.lostWait = LIFE_LOST_WAIT end
     if frac > (bar.target or 0) then bar.lost = bar.cur end   -- healing: nothing lost to show
     bar.target = frac
     bar.driver:Show()
 end
+
+-- =========================================================================
+-- LIFE TRACKER
+-- Both players' life at a glance, in the free space on the board's right edge (the
+-- battlefield stops at LAYOUT.BF_RIGHT), a little above the middle: the opponent's above,
+-- yours below, each number coloured like its life bar and changing with it (LifeBar_OnUpdate)
+-- =========================================================================
+local TRACKER_W, TRACKER_H = 70, 96
+local TRACKER_X, TRACKER_Y = -23, 46   -- from the middle of the board's right edge
+
+B.lifeTracker = CreateFrame("Frame", nil, B, backdropTemplate)
+B.lifeTracker:SetSize(TRACKER_W, TRACKER_H)
+B.lifeTracker:SetPoint("RIGHT", B, "RIGHT", TRACKER_X, TRACKER_Y)
+Skin(B.lifeTracker, "control", STYLE.controlBg, STYLE.controlBorder)
+
+local function TrackerRow(yOffset)
+    local row = {}
+    row.life = B.lifeTracker:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    row.life:SetPoint("CENTER", B.lifeTracker, "CENTER", 0, yOffset)
+    local font = row.life:GetFont()
+    if font then row.life:SetFont(font, 30, "THICKOUTLINE") end
+    return row
+end
+B.lifeTracker.opp = TrackerRow(TRACKER_H / 4)
+B.lifeTracker.me = TrackerRow(-TRACKER_H / 4)
+
+local trackerLine = B.lifeTracker:CreateTexture(nil, "ARTWORK")
+trackerLine:SetPoint("LEFT", B.lifeTracker, "LEFT", 10, 0)
+trackerLine:SetPoint("RIGHT", B.lifeTracker, "RIGHT", -10, 0)
+trackerLine:SetHeight(1)
+trackerLine:SetColorTexture(1, 0.82, 0, 0.5)
+
+B.oppLifeBtn.lifeBar.row = B.lifeTracker.opp
+B.myLifeBtn.lifeBar.row = B.lifeTracker.me
 
 -- =========================================================================
 -- MANA COUNTER
@@ -3044,9 +3087,9 @@ function B:UpdateDisplay()
     end
     B.myLifeText:SetText(L("board.life", E.localState.life))
     -- Health bars: full is 20, or a solo encounter's own starting life for the opponent
+    local oppFull = (E.isSolo and E.encounter and E.encounter.life) or 20
     B.SetLifeBar(B.myLifeBtn, E.localState.life, 20)
-    B.SetLifeBar(B.oppLifeBtn, E.remoteState.life, (E.isSolo and E.encounter and E.encounter.life) or 20)
-
+    B.SetLifeBar(B.oppLifeBtn, E.remoteState.life, oppFull)
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
     UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
 

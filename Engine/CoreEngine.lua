@@ -143,6 +143,7 @@ end
 -- addon message, and the chat emote is blocked when no click is behind it.
 -- Headline and opponent line per outcome: result.<outcome> / result.opponent.<outcome>
 local RESULT_HEADLINES = { won = true, lost = true, conceded = true }
+local RESULT_DELAY = 2.2   -- seconds a win or loss waits before its result shows (UI\TargetFX.lua's hits land)
 
 StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     text = "%s\n\n%s",
@@ -156,6 +157,21 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
         end
         -- Leave the final board (unless a new match has already started on it)
         if not E.inMatch then E:CloseMatchBoard() end
+    end,
+    -- A win's reward card shows in the board's preview while Accept is hovered (the button
+    -- is shared by every popup, so it's hooked once and checks which popup it's on)
+    OnShow = function(self)
+        local btn = self.button1 or (self.GetButton1 and self:GetButton1())
+        if not btn then return end
+        btn.ttsDialog = self
+        if btn.ttsRewardHooked then return end
+        btn.ttsRewardHooked = true
+        btn:HookScript("OnEnter", function(b)
+            local d = b.ttsDialog
+            local card = d and d.which == "TTS_MATCH_RESULT" and d.data and d.data.rewardCard
+            local B = TTS.BoardFrame
+            if card and B and B.ShowRewardCard then B:ShowRewardCard(card) end
+        end)
     end,
     timeout = 0,
     whileDead = true,
@@ -209,14 +225,25 @@ function E:EndMatch(outcome, reason)
     end
 
     local headline = outcome and RESULT_HEADLINES[outcome] and L("result." .. outcome)
+    local showResult
     if outcome and opponentName ~= "" then
         if headline then
             -- A won solo dungeon is announced with an emote when the popup is accepted
             local dungeon = outcome == "won" and self.isSolo and self.encounter and self.encounter.kind == "dungeon"
                 and TTS:EncounterName(self.encounter) or nil
-            StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
-                { outcome = outcome, opponent = opponentName, isSolo = self.isSolo, dungeon = dungeon })
-            if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
+            local isSolo = self.isSolo
+            showResult = function()
+                local dialog = StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
+                    { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, rewardCard = rewardCard })
+                -- In the middle of the board, not at the top of the screen with the other popups
+                if dialog and dialog.SetPoint then
+                    local anchor = (B and B:IsShown()) and B or UIParent
+                    dialog:ClearAllPoints()
+                    dialog:SetPoint("CENTER", anchor, "CENTER", 0, 0)
+                end
+                if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
+                if B and B.ShowMatchResult then B:ShowMatchResult(headline) end
+            end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
         end
@@ -224,10 +251,20 @@ function E:EndMatch(outcome, reason)
 
     self:Log(L("log.matchEnded", L("outcome." .. outcome), reason or ""), "SYSTEM")
 
-    if headline and opponentName ~= "" and B and B.ShowMatchResult then
-        B:ShowMatchResult(headline)
+    if showResult and B and B.ShowMatchResult then
+        -- A win or loss lets the final blow's animations (damage numbers, deaths) play out first;
+        -- dropped if another match has started by then
+        local delay = (outcome == "won" or outcome == "lost") and RESULT_DELAY or 0
+        if delay > 0 and C_Timer then
+            C_Timer.After(delay, function()
+                if not self.inMatch then showResult() end
+            end)
+        else
+            showResult()
+        end
     else
         -- No result popup to accept (e.g. a cancelled setup): leave the board straight away
+        if showResult then showResult() end
         self:CloseMatchBoard()
     end
 end

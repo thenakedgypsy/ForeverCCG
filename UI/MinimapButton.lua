@@ -123,6 +123,9 @@ btn:SetScript("OnClick", function()
                 end
             end
         end
+    elseif TTS.BoardRestoreFrame and TTS.BoardRestoreFrame:IsShown() and TTS.BoardFrame then
+        -- Regular Click with the match minimised: bring the board back
+        TTS.BoardFrame:Show()
     else
         -- Regular Click: Open / Toggle Main Window
         if TTS.MainFrame then
