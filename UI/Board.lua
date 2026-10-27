@@ -3063,6 +3063,7 @@ end
 -- =========================================================================
 TIMING.DRAW_TIME = 0.45
 TIMING.DRAW_STAGGER = 0.12
+TIMING.DRAW_SOUND_AT = 0.85   -- share of a draw's flight when its sound plays
 
 do   -- its own block: the file is at Lua's 200 locals
 
@@ -3229,22 +3230,26 @@ local drawTicker = CreateFrame("Frame", nil, B)
 drawTicker:SetScript("OnUpdate", function(_, dt)
     if not next(draws) and not next(oppDraws) then return end
     ApplyDraws()
-    -- Each card makes its sound as it lands in the hand (Sound.lua's "draw")
-    local function Landed()
-        if TTS.Sound then TTS.Sound:PlayUI("draw") end
+    -- Each card makes its sound as it lands in the hand (Sound.lua's "draw"): at
+    -- DRAW_SOUND_AT of its flight, as the eased-out card is all but there by then
+    local function Landed(d)
+        if not d.sounded and d.t >= TIMING.DRAW_TIME * TIMING.DRAW_SOUND_AT then
+            d.sounded = true
+            if TTS.Sound then TTS.Sound:PlayUI("draw") end
+        end
     end
     for f, d in pairs(draws) do
         d.t = d.t + dt
+        Landed(d)
         if d.t >= TIMING.DRAW_TIME then
-            Landed()
             EndDraw(f, d)
             draws[f] = nil
         end
     end
     for f, d in pairs(oppDraws) do
         d.t = d.t + dt
+        Landed(d)
         if d.t >= TIMING.DRAW_TIME then
-            Landed()
             EndOppDraw(f, d)
             oppDraws[f] = nil
         end
