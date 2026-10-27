@@ -160,14 +160,18 @@ end
 
 -- Taps one of the AI's prayers and adds its mana to the AI's pool
 -- (col: the colour a dual prayer makes, from E:AIPlanLandTaps; partner: the prayer a
--- double prayer is tapped with)
+-- double prayer is tapped with, or the colour of pool mana spent on it instead)
 function E:AITapLand(perm, col, partner)
     local card = Card(perm.id)
     if perm.tapped then return end
     perm.tapped = true
     if TTS.Sound then TTS.Sound:PlayUI("tap") end
     if card and card.makesBoth then
-        if partner then partner.tapped = true end
+        if type(partner) == "string" then
+            self.remoteState.mana[partner] = math.max(0, (self.remoteState.mana[partner] or 0) - 1)
+        elseif partner then
+            partner.tapped = true
+        end
         for _, c in ipairs(card.colors) do
             self.remoteState.mana[c] = (self.remoteState.mana[c] or 0) + 1
         end

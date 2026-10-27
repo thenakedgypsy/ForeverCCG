@@ -1447,6 +1447,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
         if f.model then f.model:SetFrameLevel(base + (f.modelInFront and 4 or 1)) end
         if f.overlay then f.overlay:SetFrameLevel(base + 2) end
         if f.tapLayer then f.tapLayer:SetFrameLevel(base + 3) end
+        if f.fxLayer then f.fxLayer:SetFrameLevel(base + 5) end   -- (CardFX.lua's FX layer: over everything)
     end
 
     -- f.fullArtPinned (the Deckbuilder's Show full art) keeps it in front whatever asks otherwise
@@ -2999,6 +3000,11 @@ flyTicker:SetScript("OnUpdate", function(_, dt)
     ApplyFlights()
 end)
 
+-- A card still flying in, sliding to a new slot or spawning (CardFX.lua waits for it to settle)
+function B.IsMoving(f)
+    return (f.perm and flights[f.perm] or slides[f] or f.spawning) and true or false
+end
+
 -- =========================================================================
 -- DRAW ANIMATIONS
 -- A card drawn from a library flies from the deck to its place in the hand. Yours turns
@@ -3176,9 +3182,14 @@ local drawTicker = CreateFrame("Frame", nil, B)
 drawTicker:SetScript("OnUpdate", function(_, dt)
     if not next(draws) and not next(oppDraws) then return end
     ApplyDraws()
+    -- Each card makes its sound as it lands in the hand (Sound.lua's "draw")
+    local function Landed()
+        if TTS.Sound then TTS.Sound:PlayUI("draw") end
+    end
     for f, d in pairs(draws) do
         d.t = d.t + dt
         if d.t >= TIMING.DRAW_TIME then
+            Landed()
             EndDraw(f, d)
             draws[f] = nil
         end
@@ -3186,6 +3197,7 @@ drawTicker:SetScript("OnUpdate", function(_, dt)
     for f, d in pairs(oppDraws) do
         d.t = d.t + dt
         if d.t >= TIMING.DRAW_TIME then
+            Landed()
             EndOppDraw(f, d)
             oppDraws[f] = nil
         end

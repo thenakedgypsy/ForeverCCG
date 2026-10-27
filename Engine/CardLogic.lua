@@ -1713,7 +1713,9 @@ end
 
 -- manaColor (optional): the colour a dual prayer makes (it makes its first colour otherwise).
 -- partnerIndex (optional): for a double prayer (card.makesBoth), the other untapped prayer
--- tapped with it; without one the player picks it (or the only one there is is used).
+-- tapped with it; without one its (1) is paid from the pool when there is mana there
+-- (manaColor: the colour to spend, see E:DoublePoolColor), else the player picks a partner
+-- (or the only one there is is used).
 function E:TapCard(fieldIndex, manaColor, partnerIndex)
     local perm = self.localState.field[fieldIndex]
     if not perm then return end
@@ -1805,7 +1807,19 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
     end
 
     if card.type == "Land" and not perm.tapped and card.makesBoth then
-        local field = self.localState.field
+        local field, mana = self.localState.field, self.localState.mana
+        local spend = not partnerIndex and self:DoublePoolColor(card, mana, manaColor)
+        if spend then
+            mana[spend] = mana[spend] - 1
+            perm.tapped = true
+            for _, col in ipairs(card.colors) do
+                mana[col] = (mana[col] or 0) + 1
+            end
+            self:Log(L("log.tappedDoublePool", TTS:CardName(card), spend, card.colors[1], card.colors[2]), "MANA")
+            if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex) end
+            self:RefreshUI()
+            return
+        end
         local partner = partnerIndex and field[partnerIndex]
         local pc = partner and TTS.Cards[partner.id]
         if not (partner and partner ~= perm and pc and pc.type == "Land" and not partner.tapped) then

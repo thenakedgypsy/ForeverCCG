@@ -491,14 +491,30 @@ function E:DoublePartners(perm, isRemote)
     return list
 end
 
+-- The colour of pool mana a double prayer's (1) is paid with instead of a partner: want if
+-- the pool has it, else one of the prayer's own colours (it comes straight back), else
+-- whichever the pool has most of. nil when the pool is empty.
+function E:DoublePoolColor(card, pool, want)
+    if want and (pool[want] or 0) > 0 then return want end
+    for _, col in ipairs(card.colors) do
+        if (pool[col] or 0) > 0 then return col end
+    end
+    local best
+    for _, col in ipairs(MANA_COLORS) do
+        if (pool[col] or 0) > 0 and (not best or pool[col] > pool[best]) then best = col end
+    end
+    return best
+end
+
 local BasePlan
 
 -- Which prayers to tap (and the colour each makes) to pay costString, using mana already
 -- in the pool first. Returns the prayers in tap order, the colour of each
 -- (colorOf[perm]; "BOTH" for a double prayer), whether that pays the whole cost, and for
--- each double prayer the other prayer tapped with it (partnerOf[perm]); nothing is tapped yet.
--- Double prayers are tried with each possible partner, keeping the plan that pays with
--- the fewest prayers tapped.
+-- each double prayer the other prayer tapped with it, or the colour of pool mana spent on
+-- it instead (partnerOf[perm]); nothing is tapped yet.
+-- Double prayers are tried with each possible partner and pool colour, keeping the plan
+-- that pays with the fewest prayers tapped.
 function E:PlanLandTaps(costString, isRemote)
     local req = self:ParseCost(costString)
     local lands, duals, doubles = self:UntappedLands(isRemote)
@@ -524,7 +540,9 @@ function E:PlanLandTaps(costString, isRemote)
     local best
     local function Consider(plan, colorOf, pays, partnerOf, used)
         local taps = #plan
-        for _ in pairs(partnerOf) do taps = taps + 1 end
+        for _, p in pairs(partnerOf) do
+            if type(p) == "table" then taps = taps + 1 end
+        end
         if not best or (pays and not best.pays) or (pays == best.pays and (taps < best.taps
             or (taps == best.taps and used < best.used))) then
             best = { plan = plan, colorOf = colorOf, pays = pays, partnerOf = partnerOf, taps = taps, used = used }
@@ -553,6 +571,22 @@ function E:PlanLandTaps(costString, isRemote)
             table.insert(f2, d)
             Try(i + 1, lands, duals, doubles, p2, f2, partnerOf, used + 1)
             return
+        end
+        -- Its (1) paid from the pool (its own colours first: they come straight back)
+        local poolCols = { c.colors[1], c.colors[2] }
+        for _, col in ipairs(MANA_COLORS) do
+            if col ~= c.colors[1] and col ~= c.colors[2] then table.insert(poolCols, col) end
+        end
+        for _, col in ipairs(poolCols) do
+            if pool[col] > 0 then
+                local p2, f2, po2 = Copy(pool), { unpack(front) }, Copy(partnerOf)
+                p2[col] = p2[col] - 1
+                p2[c.colors[1]] = p2[c.colors[1]] + 1
+                p2[c.colors[2]] = p2[c.colors[2]] + 1
+                table.insert(f2, d)
+                po2[d] = col
+                Try(i + 1, lands, duals, doubles, p2, f2, po2, used + 1)
+            end
         end
         local partners = {}
         for _, col in ipairs(MANA_COLORS) do
@@ -687,7 +721,11 @@ function E:AutoPayMana(costString)
         local i = IndexOf(perm)
         if i then
             local partner = partnerOf[perm]
-            self:TapCard(i, colorOf[perm], partner and IndexOf(partner))
+            if type(partner) == "string" then
+                self:TapCard(i, partner)   -- a double prayer paid from the pool: the colour to spend
+            else
+                self:TapCard(i, colorOf[perm], partner and IndexOf(partner))
+            end
         end
     end
 end

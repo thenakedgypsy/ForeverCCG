@@ -11,6 +11,7 @@ TTS = TTS or {}
 -- =========================================================================
 -- TARGETING & HIT EFFECTS
 --  * While a spell is choosing a target, an arrow runs from the card to the cursor.
+--  * Attackers swing with a sound as combat damage is dealt.
 --  * When the target is chosen, an arrow flashes from the card to it, with a sound.
 --  * When a player takes damage, their life plate flashes red, the amount
 --    floats up off it, and a hit sound plays. Unblocked attackers flash an
@@ -31,6 +32,7 @@ local PLAYER_HIT_SOUNDS = {
     { 0, 3134 },   -- Garrote
 }
 local SOUND_SOAK      = 2562   -- Power Word: Shield: a player's damage shield soaking a hit
+local SOUND_SWING     = 3091   -- Heroic Strike's cast: attackers swinging as combat damage is dealt (as CardFX.lua's FX.SWING_SOUND)
 local SOUND_DRAIN     = 1482   -- Healing Touch's impact: drained life landing on the player it heals
 -- Damage from a spell card lands (on a player or a denizen) with its colour's impact instead
 local SPELL_IMPACT_SOUNDS = {
@@ -390,13 +392,19 @@ local function CardColor(card)
     return c
 end
 
--- A spell card's impact sound, by its colour (a two-colour card's first); nil for anything else
-local function SpellImpactSound(card)
+-- A spell card's colour key ("R" ...; a two-colour card's first); nil for anything else
+local function SpellColorKey(card)
     if not (card and card.type ~= "Creature" and TTS.CardColors and TTS.SPHERE_RGB) then return end
     local c = TTS.CardColors(card)[1]
     for key, rgb in pairs(TTS.SPHERE_RGB) do
-        if rgb == c then return SPELL_IMPACT_SOUNDS[key] end
+        if rgb == c then return key end
     end
+end
+
+-- A spell card's impact sound, by its colour; nil for anything else
+local function SpellImpactSound(card)
+    local key = SpellColorKey(card)
+    return key and SPELL_IMPACT_SOUNDS[key]
 end
 
 local function PlayerHitSound(amount)
@@ -486,8 +494,14 @@ local function UpdateHitFX(key, hit, dt)
         wipe(hit.shards)
         hit.num = NewString()
         hit.num:SetText((hit.heal and "+" or "-") .. hit.amount)
+        -- A spell's hit on a player: its impact kit on their life plate (CardFX.lua)
+        if hit.impactKey ~= nil and TTS.CardFX and type(key) == "boolean" then
+            TTS.CardFX:PlayerHit(key, hit.impactKey)
+        end
         if hit.heal then
             PlayFX(SOUND_DRAIN)
+            -- with the heal effect on the plate it lands on (CardFX.lua)
+            if TTS.CardFX and hit.healSide ~= nil then TTS.CardFX:PlayerHeal(hit.healSide) end
         elseif hit.impact then
             PlayImpact(hit.impact)
         elseif hit.sound then
@@ -544,10 +558,10 @@ local hitShown = false   -- set when a hit plays, so combat doesn't play a secon
 -- source (a spell or ability), or a queue with one per damage to a player in order (combat:
 -- each attacker's, set off once the blocks have landed). Each flies in its card's colour (a
 -- two-colour card's first), and a spell's lands with its impact sound.
-local hitSrc, hitSrcUntil, hitSrcColor, hitSrcImpact
+local hitSrc, hitSrcUntil, hitSrcColor, hitSrcImpact, hitSrcKey
 local function SetHitSource(pos, linger, card)
     hitSrc, hitSrcUntil = pos, linger and GetTime() + linger or math.huge
-    hitSrcColor, hitSrcImpact = CardColor(card), SpellImpactSound(card)
+    hitSrcColor, hitSrcImpact, hitSrcKey = CardColor(card), SpellImpactSound(card), SpellColorKey(card)
 end
 
 local hitQueue, hitQueueUntil = {}, 0
@@ -561,13 +575,14 @@ local function NextHitSource()
         local s = table.remove(hitQueue, 1)
         return s.pos, s.color, s.at
     end
-    if hitSrc and now <= hitSrcUntil then return hitSrc, hitSrcColor, nil, hitSrcImpact end
+    if hitSrc and now <= hitSrcUntil then return hitSrc, hitSrcColor, nil, hitSrcImpact, hitSrcKey end
 end
 
 local lostLifeAt = {}   -- side -> when that player last lost life (for drains, TTS.FlyLifeGain)
 
--- at = the time it sets off (nil = now); impact = a spell's impact sound
-local function ShowHit(isRemote, amount, src, color, at, impact)
+-- at = the time it sets off (nil = now); impact = a spell's impact sound; impactKey = its
+-- colour key, for the impact kit on the plate
+local function ShowHit(isRemote, amount, src, color, at, impact, impactKey)
     local side = isRemote and true or false
     hitShown = true
     lostLifeAt[side] = GetTime()
@@ -575,6 +590,7 @@ local function ShowHit(isRemote, amount, src, color, at, impact)
     local delay = at and math.max(0, at - GetTime()) or 0
     local hit = AddHitDamage(side, platePos[side], PLAYER_HIT_SIZES, amount, src, color, nil, delay, impact)
     hit.glow, hit.sound = plateGlows[side], true
+    hit.impactKey = hit.impactKey or impactKey
 end
 
 -- A player gaining life just as the other loses some is a drain (Drain in combat, a drain
@@ -593,7 +609,8 @@ function TTS.FlyLifeGain(isRemote, amount)
     local delay = (hit and not hit.landed) and (HIT_TRAVEL - hit.t + 0.1) or 0
     local gain = AddHitDamage("drain" .. tostring(side), platePos[side], PLAYER_HIT_SIZES, amount, from,
         DRAIN_COLOR, "+" .. amount, delay)
-    gain.heal = true
+    gain.heal, gain.healSide = true, side
+    if TTS.CardFX then TTS.CardFX:DrainComing(side) end
     return true
 end
 
@@ -850,11 +867,11 @@ local function InstallHooks()
         E.DamagePlayer = function(self, isRemote, amount, reason, ...)
             local state = isRemote and self.remoteState or self.localState
             local before, shield = state.life, ShieldOf(self, isRemote)
-            local src, color, at, impact
-            if (tonumber(amount) or 0) > 0 then src, color, at, impact = NextHitSource() end
+            local src, color, at, impact, impactKey
+            if (tonumber(amount) or 0) > 0 then src, color, at, impact, impactKey = NextHitSource() end
             local results = { origDamage(self, isRemote, amount, reason, ...) }
             if state.life < before then
-                ShowHit(isRemote, before - state.life, src, color, at, impact)
+                ShowHit(isRemote, before - state.life, src, color, at, impact, impactKey)
             elseif ShieldOf(self, isRemote) < shield then
                 ShowSoak(isRemote)
             end
@@ -931,6 +948,13 @@ local function InstallHooks()
                         if pos then AddCreatureShard(h.dst, pos, CardColor(TTS.Cards[h.src.id]), h.n) end
                     end
                 end
+            end
+
+            -- The attackers swing (with card effects on, CardFX.lua plays it with their
+            -- attack animation instead)
+            if bs and bs.attackers and #bs.attackers > 0 and not self.preventCombatDamage
+                and not (TTS.CardFX and TTS.CardFX:Enabled()) then
+                PlayFX(SOUND_SWING)
             end
 
             hitShown = false
