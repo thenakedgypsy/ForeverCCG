@@ -234,12 +234,27 @@ waitingRoomBtn:SetScript("OnClick", function()
     end
 end)
 
+-- The PvP rating, wins and losses, and the latest games (PvPRecord.lua)
+local recordBtn = CreatePanelButton("TTS_PvPRecordBtn", pvpSection, 160, 24, "main.pvpRecord")
+recordBtn:SetPoint("TOP", waitingRoomBtn, "BOTTOM", 0, -4)
+recordBtn:SetScript("OnClick", function()
+    if TTS.PvP then OpenFromMain(TTS.PvP:Open()) end
+end)
+
+-- PvP rating, right side of the section header (as the collection score is on the deck section's)
+local ratingLabel = pvpSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+ratingLabel:SetPoint("TOPRIGHT", pvpSection, "TOPRIGHT", -10, -9)
+ratingLabel:SetJustifyH("RIGHT")
+
 -- =========================================================================
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)
 -- =========================================================================
 function M:UpdatePlayState()
     if TTS.GetCollectionScore then
         scoreLabel:SetText(L("main.score", TTS:ColoredScore((TTS:GetCollectionScore()))))
+    end
+    if TTS.PvP then
+        ratingLabel:SetText(L("pvp.rating", TTS.PvP.ColoredRating((TTS.PvP:Get()))))
     end
 
     local inMatch = TTS.Engine and TTS.Engine.inMatch

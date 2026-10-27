@@ -1,7 +1,7 @@
 ## Interface: 16001, 120100
 ## Title: ForeverCCG
 ## Notes: 2-Player card game engine inspired by MTG.
-## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards
+## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord
 ## SavedVariablesPerCharacter: TTS_Hero
 ## Version: 1.0.0
 ## Author: the_naked_gypsy
@@ -92,6 +92,7 @@ Cards\Gear.lua
 Hero.lua
 BossTracker.lua
 UI\MobTooltip.lua
+PvPRecord.lua
 Network.lua
 Community.lua
 UI\MinimapButton.lua

@@ -103,6 +103,18 @@ local function MyScore()
 end
 TTS.Net.MyScore = MyScore
 
+-- Our PvP rating and record, sent after the score: <rating>:<wins>:<losses> (PvPRecord.lua)
+local function MyPvP()
+    return TTS.PvP and TTS.PvP:Fields() or "1000:0:0"
+end
+TTS.Net.MyPvP = MyPvP
+
+-- The challenge/accepted popups' lines about the other player: collection score, then rating
+local function OpponentLines(score, pvp)
+    local scoreLine = score and (L("board.score", TTS:ColoredScore(score)) .. "\n") or ""
+    return scoreLine .. L("pvp.popupLine", TTS.PvP.Format(pvp))
+end
+
 local function NewMatchId()
     return string.format("%08x%04x%04x", time(), math.random(0, 0xFFFF), math.random(0, 0xFFFF))
 end
@@ -493,7 +505,7 @@ function TTS.Net:InvitePlayer(target)
     self.lastInviteAt = GetTime()
     if TTS.WaitingRoom and TTS.WaitingRoom.UpdateUI then TTS.WaitingRoom:UpdateUI() end
 
-    self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
+    self:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore() .. ":" .. MyPvP())
     Print(L("net.inviteSent", target))
     self:AwaitInviteAck(inviteKey, matchId)
 end
@@ -518,7 +530,7 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
             invite.sentAt = time()
             table.insert(invite.tried, ROUTE_LABELS[nextRoute])
             Print(L("net.retrying", target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
-            Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore())
+            Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore() .. ":" .. MyPvP())
             Net:AwaitInviteAck(inviteKey, matchId)
             return
         end
@@ -550,7 +562,7 @@ end
 -- everyone you play or see in the waiting room is saved as a contact, and while
 -- the waiting room is open each one gets an addon-whisper CONTACT_PING (invisible
 -- to both players). A contact who is queued shows up in your waiting room.
---   CONTACT_PING:<queued 0/1>:<score>   answered with   CONTACT_PONG:<queued 0/1>:<score>
+--   CONTACT_PING:<queued 0/1>:<score>:<rating>:<wins>:<losses>   answered with a CONTACT_PONG of the same
 -- When someone becomes a direct contact (seen, played, or answered a ping) the two of
 -- you swap contact lists, so one link across the realm split brings in everyone they
 -- know. Shared entries carry how long ago their owner last saw that player:
@@ -693,15 +705,17 @@ end
 -- Our waiting-room state, as sent in pings and pongs
 local function MyLFMFields()
     local queued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
-    return (queued and "1" or "0") .. ":" .. MyScore()
+    return (queued and "1" or "0") .. ":" .. MyScore() .. ":" .. MyPvP()
 end
 
--- A contact reported they are queued: show them like a channel announce would
-local function NoteContactWaiting(name, score)
+-- A contact reported they are queued: show them like a channel announce would.
+-- pvp: their { rating, wins, losses } (PvPRecord.lua), if sent
+local function NoteContactWaiting(name, score, pvp)
     local WR = TTS.WaitingRoom
     if not WR then return end
     WR.players[name] = time()
     if score then WR.scores[name:lower()] = score end
+    if pvp then WR.pvp[name:lower()] = pvp end
     if WR.frame and WR.frame:IsShown() then WR:UpdateUI() end
 end
 
@@ -746,7 +760,7 @@ function TTS.Net:PingContacts(background)
     end
 end
 
--- Contacts known to be online but not in the waiting room: { name, score }, sorted by name.
+-- Contacts known to be online but not in the waiting room: { name, score, pvp }, sorted by name.
 -- Online = answered (or sent) a ping within ONLINE_WINDOW, and not silent on a later ping.
 local ONLINE_WINDOW = BACKGROUND_PING_EVERY + 120
 function TTS.Net:GetOnlineIdleContacts()
@@ -759,7 +773,7 @@ function TTS.Net:GetOnlineIdleContacts()
             and not ((s.lastPing or 0) > s.lastReached and (now - s.lastPing) > CONTACT_REPLY_WAIT)
             and not (WR and WR.players and WR.players[c.name])
             and not SameName(c.name, MyName()) then
-            list[#list + 1] = { name = c.name, score = s.score }
+            list[#list + 1] = { name = c.name, score = s.score, pvp = s.pvp }
         end
     end
     table.sort(list, function(a, b) return a.name:lower() < b.name:lower() end)
@@ -770,8 +784,9 @@ end
 -- CENSUS
 -- Finds everyone with the addon on our FCCGTTSE channel, queued or not, so they show in the
 -- waiting room (and become contacts, which spreads them to other backend realms).
---   LFM_CENSUS:<score>:<name>             asked while our waiting room is open and we're not queued
---   LFM_HERE:<queued 0/1>:<score>:<name>  every client's answer, broadcast so all askers benefit
+--   LFM_CENSUS:<score>:<pvp>:<name>             asked while our waiting room is open and we're not queued
+--   LFM_HERE:<queued 0/1>:<score>:<pvp>:<name>  every client's answer, broadcast so all askers benefit
+-- (<pvp> = <rating>:<wins>:<losses>, PvPRecord.lua)
 -- One census per CENSUS_EVERY across the whole channel (anyone's counts), and each client
 -- answers at most once per CENSUS_REPLY_COOLDOWN after a random delay, so a full channel
 -- doesn't answer in one burst. Older builds ignore both.
@@ -784,7 +799,7 @@ local lastCensusSeen = 0
 local lastCensusReply = 0
 
 -- Someone on the channel is online: remember them like an answered ping
-local function NotePresence(name, queued, score)
+local function NotePresence(name, queued, score, pvp)
     name = NormalizeName(name or "")
     if name == "" or SameName(name, MyName()) then return end
     TTS.Net:AddContact(name)
@@ -793,8 +808,9 @@ local function NotePresence(name, queued, score)
     s.offlineUntil = nil
     s.queued = queued
     s.score = score or s.score
+    s.pvp = pvp or s.pvp
     if queued then
-        NoteContactWaiting(name, score)
+        NoteContactWaiting(name, score, pvp)
     elseif TTS.WaitingRoom and TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
         TTS.WaitingRoom:UpdateUI()
     end
@@ -812,14 +828,14 @@ function TTS.Net:RunCensus(background)
     -- Anyone's census counts: its answers are broadcast, so we heard them too
     if time() - lastCensusSeen < (background and BACKGROUND_CENSUS_EVERY or CENSUS_EVERY) then return end
     lastCensusSeen = time()
-    self:BroadcastLFM("LFM_CENSUS:" .. MyScore() .. ":" .. MyName())
+    self:BroadcastLFM("LFM_CENSUS:" .. MyScore() .. ":" .. MyPvP() .. ":" .. MyName())
 end
 
 local function OnCensus(msg, sender)
     lastCensusSeen = time()
-    local score, name = msg:match("^LFM_CENSUS:(%d+):(.+)$")
+    local score, r, w, l, name = msg:match("^LFM_CENSUS:(%d+):(%d+):(%d+):(%d+):(.+)$")
     -- The asker has their waiting room open and isn't queued
-    if name then NotePresence(name, false, tonumber(score)) end
+    if name then NotePresence(name, false, tonumber(score), TTS.PvP.Parse(r, w, l)) end
     local E = TTS.Engine
     if (E and E.inMatch) or time() - lastCensusReply < CENSUS_REPLY_COOLDOWN then return end
     lastCensusReply = time()
@@ -829,8 +845,8 @@ local function OnCensus(msg, sender)
 end
 
 local function OnHere(msg, sender)
-    local queued, score, name = msg:match("^LFM_HERE:(%d):(%d+):(.+)$")
-    if name then NotePresence(name, queued == "1", tonumber(score)) end
+    local queued, score, r, w, l, name = msg:match("^LFM_HERE:(%d):(%d+):(%d+):(%d+):(%d+):(.+)$")
+    if name then NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l)) end
 end
 
 -- Slow background rounds from login on. The waiting room pings faster while it is open,
@@ -1606,12 +1622,14 @@ function TTS.Net:OnReceive(msg, sender)
     -- WAITING ROOM / LFM HANDLERS
     -- =====================================================================
     if cmd == "LFM_QUEUED" or cmd == "LFM_ANNOUNCE" then
-        -- LFM_QUEUED:<score>:<name>. 0.14 and earlier send LFM_ANNOUNCE:<name> instead; they
-        -- can't play this build, but are still listed so a challenge reports the version
-        -- mismatch rather than the two players never seeing each other.
-        local score, pName
+        -- LFM_QUEUED:<score>:<rating>:<wins>:<losses>:<name>. 0.14 and earlier send
+        -- LFM_ANNOUNCE:<name> instead; they can't play this build, but are still listed so a
+        -- challenge reports the version mismatch rather than the two players never seeing each other.
+        local score, pName, pvp
         if cmd == "LFM_QUEUED" then
-            score, pName = msg:match("^LFM_QUEUED:(%d+):(.+)$")
+            local r, w, l
+            score, r, w, l, pName = msg:match("^LFM_QUEUED:(%d+):(%d+):(%d+):(%d+):(.+)$")
+            pvp = TTS.PvP.Parse(r, w, l)
         else
             pName = msg:match("^LFM_ANNOUNCE:(.+)$")
         end
@@ -1621,9 +1639,11 @@ function TTS.Net:OnReceive(msg, sender)
         local s = ContactState(pName:lower())
         s.lastReached = time()
         s.queued = true
+        s.pvp = pvp or s.pvp
         if TTS.WaitingRoom then
             TTS.WaitingRoom.players[pName] = time()
             if score then TTS.WaitingRoom.scores[pName:lower()] = tonumber(score) end
+            if pvp then TTS.WaitingRoom.pvp[pName:lower()] = pvp end
             if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
                 TTS.WaitingRoom:UpdateUI()
             end
@@ -1676,13 +1696,15 @@ function TTS.Net:OnReceive(msg, sender)
         s.offlineUntil = nil
         s.queued = (parts[2] == "1")
         s.score = tonumber(parts[3]) or s.score
+        local pvp = TTS.PvP.Parse(parts[4], parts[5], parts[6])
+        s.pvp = pvp or s.pvp
         if cmd == "CONTACT_PONG" then
             pendingPings[key] = nil
         else
             TTS.Net:Send(sender, "CONTACT_PONG:" .. MyLFMFields())
         end
         if parts[2] == "1" then
-            NoteContactWaiting(sender, tonumber(parts[3]))
+            NoteContactWaiting(sender, tonumber(parts[3]), pvp)
         elseif TTS.WaitingRoom and TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
             TTS.WaitingRoom:UpdateUI()
         end
@@ -1710,6 +1732,7 @@ function TTS.Net:OnReceive(msg, sender)
         local theirVersion = parts[2]
         local theirMatchId = parts[3]
         local theirScore = tonumber(parts[4])
+        local theirPvP = TTS.PvP.Parse(parts[5], parts[6], parts[7])
         if not VersionsCompatible(theirVersion, TTS.VERSION) then
             TTS.Net:Send(sender, "DECLINE:VERSION:" .. TTS.VERSION)
             ReportVersionMismatch(sender, theirVersion)
@@ -1746,7 +1769,7 @@ function TTS.Net:OnReceive(msg, sender)
         local receivedAt = time()
 
         StaticPopupDialogs["TTS_CHALLENGE"] = {
-            text = L("net.challenged", sender),
+            text = L("net.challenged", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
             button1 = ACCEPT or "Accept",
             button2 = DECLINE or "Decline",
             OnAccept = function()
@@ -1773,11 +1796,12 @@ function TTS.Net:OnReceive(msg, sender)
                             TTS.Net:Send(sender, "DECLINE:IN_MATCH")
                             return
                         end
-                        TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore())
+                        TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore() .. ":" .. MyPvP())
                         TTS.Net.matchId = theirMatchId
                         TTS.Net:AddContact(sender)
                         TTS.Engine:StartMatch(sender, false, false)
                         TTS.Engine.opponentScore = theirScore
+                        TTS.Engine.opponentPvP = theirPvP
                         TTS.Engine.remoteState.handCount = 7
                         -- They choose their deck only now: shown until their first message (ACTION below)
                         TTS.Engine.awaitingDeckPick = true
@@ -1847,6 +1871,7 @@ function TTS.Net:OnReceive(msg, sender)
         Print(L("net.accepted", sender))
         TTS.Net:AddContact(sender)
         local theirScore = tonumber(parts[4])
+        local theirPvP = TTS.PvP.Parse(parts[5], parts[6], parts[7])
         -- They have started already and wait for our first turn while we pick a deck.
         -- The match id lets their messages in meanwhile (a concede, see ACTION below).
         TTS.Net.matchId = invite.matchId
@@ -1867,6 +1892,7 @@ function TTS.Net:OnReceive(msg, sender)
                     if not TTS.Engine then return end
                     TTS.Engine:StartMatch(sender, true, false)
                     TTS.Engine.opponentScore = theirScore
+                    TTS.Engine.opponentPvP = theirPvP
                     TTS.Engine.remoteState.handCount = 7
                     -- Their hero arrived while we were choosing (StartMatch put a stand-in up)
                     local early = TTS.Net.earlyHero
@@ -1890,7 +1916,7 @@ function TTS.Net:OnReceive(msg, sender)
             })
         end
         StaticPopupDialogs["TTS_CHALLENGE_ACCEPTED"] = {
-            text = L("net.acceptedPopup", sender),
+            text = L("net.acceptedPopup", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
             button1 = L("net.chooseDeck"),
             OnAccept = function()
                 pcall(SendChatMessage, L("emote.started", sender), "EMOTE")
@@ -1965,6 +1991,8 @@ function TTS.Net:OnReceive(msg, sender)
 
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
+        -- Heard from them: a concede now isn't a disconnect (PvPRecord.lua, QUIET_SECONDS)
+        E.opponentHeardAt = GetTime()
 
         -- Their first message (HEROINFO) means they have chosen their deck
         if E.awaitingDeckPick then

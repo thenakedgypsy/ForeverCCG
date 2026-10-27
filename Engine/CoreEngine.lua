@@ -122,8 +122,10 @@ end
 -- =========================================================================
 -- MATCH COMPLETION & EMOTES
 -- =========================================================================
-function E:PlayMatchEmote(outcome, opponentName)
+function E:PlayMatchEmote(outcome, opponentName, rating)
     local emoteText = L("emote." .. outcome, opponentName)
+    -- A rated PvP result adds the new rating (PvPRecord.lua)
+    if rating then emoteText = emoteText .. L("emote.rating", rating) end
     SendChatMessage(emoteText, "EMOTE")
 
     -- Play the built-in emote a moment later so it does not collide with the emote text above
@@ -150,7 +152,7 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     button1 = ACCEPT or "Accept",
     OnAccept = function(self, data)
         -- No public emote for games against the AI, except for clearing a solo dungeon
-        if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent) end
+        if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent, data.rating) end
         if data and data.dungeon then
             SendChatMessage(L("emote.dungeon", data.dungeon), "EMOTE")
             TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
@@ -214,7 +216,7 @@ function E:EndMatch(outcome, reason)
     end
 
     -- A solo encounter win records progress and grants the encounter's reward card
-    local rewardText, rewardCard
+    local rewardText, rewardCard, newRating
     if outcome == "won" and self.isSolo and self.encounter then
         local rewardId, copies, wasComplete = TTS:RecordEncounterWin(self.encounter)
         rewardCard = rewardId and TTS.Cards[rewardId]
@@ -222,6 +224,16 @@ function E:EndMatch(outcome, reason)
             rewardText = "\n\n" .. L(wasComplete and "result.rewardComplete" or "result.reward", TTS:CardName(rewardCard), copies)
             self:Log(L("log.rewardEarned", TTS:CardName(rewardCard), copies), "SYSTEM")
         end
+    end
+
+    -- A finished PvP game moves the rating and record (PvPRecord.lua). Conceding to an
+    -- opponent who has gone quiet is a disconnect, which counts for nobody.
+    if not self.isSolo and self.opponent and TTS.PvP then
+        local quiet = (GetTime() - (self.opponentHeardAt or 0)) >= TTS.PvP.QUIET_SECONDS
+        local delta, why = TTS.PvP:RecordResult(self.opponent, self.opponentPvP, outcome, quiet)
+        local line = (delta or why) and TTS.PvP:ResultText(delta, why)
+        if line then rewardText = (rewardText or "") .. "\n\n" .. line end
+        if delta and delta ~= 0 then newRating = TTS.PvP:Get() end
     end
 
     local headline = outcome and RESULT_HEADLINES[outcome] and L("result." .. outcome)
@@ -234,7 +246,7 @@ function E:EndMatch(outcome, reason)
             local isSolo = self.isSolo
             showResult = function()
                 local dialog = StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
-                    { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, rewardCard = rewardCard })
+                    { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, rewardCard = rewardCard, rating = newRating })
                 -- In the middle of the board, not at the top of the screen with the other popups
                 if dialog and dialog.SetPoint then
                     local anchor = (B and B:IsShown()) and B or UIParent
@@ -247,7 +259,7 @@ function E:EndMatch(outcome, reason)
                 if TTS.Sound then TTS.Sound:PlayUI(outcome == "won" and "victory" or "defeat") end
             end
         else
-            if not self.isSolo then self:PlayMatchEmote(outcome, opponentName) end
+            if not self.isSolo then self:PlayMatchEmote(outcome, opponentName, newRating) end
         end
     end
 
@@ -1098,6 +1110,8 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.inMatch = true
     self.opponent = opponentName or L("side.opponentCap")
     self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT
+    self.opponentPvP = nil     -- PvP: their rating and record, the same way (PvPRecord.lua)
+    self.opponentHeardAt = GetTime()   -- PvP: their last message (Network.lua), for disconnects
     self.isSolo = isSolo or false
     self.isMyTurn = isHost
     self.awaitingDeckPick = nil   -- set by Network.lua after accepting a challenge
@@ -1476,6 +1490,7 @@ function E:Mulligan()
 
     self:Log(L("log.mulligan", MULLIGAN_HAND_SIZE), "ACTION")
     if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:MULLIGAN") end
+    self.handRedrawn = true   -- the board animates the whole new hand being drawn (UI\Board.lua)
     self:RefreshUI()
 end
 

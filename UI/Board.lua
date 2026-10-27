@@ -2108,7 +2108,7 @@ myDeckFrame.back = myDeckFrame:CreateTexture(nil, "ARTWORK")
 myDeckFrame.back:SetAllPoints(myDeckFrame)
 ApplyBackTexture(myDeckFrame.back)
 myDeckFrame.count = myDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-myDeckFrame.count:SetPoint("BOTTOM", myDeckFrame, "TOP", 0, 2)
+myDeckFrame.count:SetPoint("BOTTOM", myDeckFrame.back, "TOP", 0, 2)   -- on the pile, which grows up and left
 
 -- Opponent's deck: top-right, at the end of their hand row, with the cards left beside it
 local oppDeckFrame = CreateFrame("Frame", nil, B)
@@ -2118,7 +2118,7 @@ oppDeckFrame.back = oppDeckFrame:CreateTexture(nil, "ARTWORK")
 oppDeckFrame.back:SetAllPoints(oppDeckFrame)
 ApplyBackTexture(oppDeckFrame.back)
 oppDeckFrame.count = oppDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-oppDeckFrame.count:SetPoint("RIGHT", oppDeckFrame, "LEFT", -6, 0)
+oppDeckFrame.count:SetPoint("RIGHT", oppDeckFrame.back, "LEFT", -6, 0)
 
 -- A deck is drawn as a stack that gets lower as it runs down, then a lone card back.
 -- The stack images hold the top card (the size of card_back.png) with the stack's sides
@@ -2309,7 +2309,7 @@ do
     end
 
     B.oppGraveBtn = CreateGraveyardButton(true)
-    B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -34, 0)
+    B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -52, 0)   -- clear of the deck count beside the tall pile
 
     -- Yours sits left of your health
     B.myGraveBtn = CreateGraveyardButton(false)
@@ -3060,6 +3060,10 @@ function B.StartDraws(E)
     local oppHandNow = math.min(10, E.remoteState.handCount or 0)
     local fresh = lastDrawState ~= E.localState.deck   -- a new match: nothing to compare with yet
     local myDrawn = (not fresh and lastDeck[false]) and (lastDeck[false] - deckNow) or 0
+    -- The opening hand is drawn too (not a board reopened later in the game), and a mulligan's
+    local opening = (fresh and (E.turn or 1) <= 1) or E.handRedrawn
+    E.handRedrawn = nil
+    if opening then myDrawn = #E.localState.hand end
     local oppDrawn
     if fresh then
         oppDrawn = 0
@@ -3093,7 +3097,7 @@ function B.StartDraws(E)
         local f, id = myHandFrames[i], E.localState.hand[i]
         if f:IsShown() and id then
             local found
-            for k, h in ipairs(oldHand) do
+            for k, h in ipairs(opening and {} or oldHand) do
                 if not used[k] and h.id == id then
                     used[k], found = true, true
                     break

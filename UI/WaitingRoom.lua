@@ -16,6 +16,8 @@ TTS.WaitingRoom = TTS.WaitingRoom or {
 
 local WR = TTS.WaitingRoom
 WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_QUEUED, LFM_HERE and LFM_CENSUS)
+WR.pvp = WR.pvp or {}             -- [lowerName] = { rating, wins, losses } (PvPRecord.lua), from the same messages
+WR.pvp = WR.pvp or {}             -- [lowerName] = { rating, wins, losses } (PvPRecord.lua), from the same messages
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 
 -- =========================================================================
@@ -70,7 +72,7 @@ TTS.GetPlayerFullName = GetPlayerFullName
 -- =========================================================================
 local F = CreateFrame("Frame", "TTS_WaitingRoomFrame", UIParent, backdropTemplate)
 WR.frame = F
-F:SetSize(460, 580)
+F:SetSize(520, 580)
 F:SetPoint("CENTER", 50, 0)
 F:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -114,7 +116,7 @@ listContainer:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
 local playerRows = {}
 for i = 1, 8 do
     local row = CreateFrame("Frame", nil, listContainer)
-    row:SetSize(400, 26)
+    row:SetSize(460, 26)
     row:SetPoint("TOPLEFT", 10, -8 - ((i - 1) * 28))
 
     row.inviteBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
@@ -132,9 +134,14 @@ for i = 1, 8 do
     row.scoreText:SetWidth(70)
     row.scoreText:SetJustifyH("RIGHT")
 
+    row.ratingText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.ratingText:SetPoint("RIGHT", row.scoreText, "LEFT", -33, 0)   -- under its header (wr.colRating)
+    row.ratingText:SetWidth(50)
+    row.ratingText:SetJustifyH("RIGHT")
+
     row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     row.nameText:SetPoint("LEFT", 6, 0)
-    row.nameText:SetPoint("RIGHT", row.scoreText, "LEFT", -6, 0)
+    row.nameText:SetPoint("RIGHT", row.ratingText, "LEFT", -6, 0)
     row.nameText:SetJustifyH("LEFT")
     row.nameText:SetWordWrap(false)
     row.nameText:SetText("")
@@ -170,7 +177,7 @@ onlineContainer:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
 local onlineRows = {}
 for i = 1, ONLINE_ROWS do
     local row = CreateFrame("Frame", nil, onlineContainer)
-    row:SetSize(400, 20)
+    row:SetSize(460, 20)
     row:SetPoint("TOPLEFT", 10, -6 - ((i - 1) * 22))
 
     -- Lines up with the score column of the list above (its rows end with 158px of buttons)
@@ -179,9 +186,14 @@ for i = 1, ONLINE_ROWS do
     row.scoreText:SetWidth(70)
     row.scoreText:SetJustifyH("RIGHT")
 
+    row.ratingText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    row.ratingText:SetPoint("RIGHT", row.scoreText, "LEFT", -33, 0)   -- under its header (wr.colRating)
+    row.ratingText:SetWidth(50)
+    row.ratingText:SetJustifyH("RIGHT")
+
     row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontDisable")
     row.nameText:SetPoint("LEFT", 6, 0)
-    row.nameText:SetPoint("RIGHT", row.scoreText, "LEFT", -6, 0)
+    row.nameText:SetPoint("RIGHT", row.ratingText, "LEFT", -6, 0)
     row.nameText:SetJustifyH("LEFT")
     row.nameText:SetWordWrap(false)
 
@@ -203,10 +215,12 @@ local function UpdateOnlineList()
         if i == ONLINE_ROWS and #list > ONLINE_ROWS then
             row.nameText:SetText(L("wr.more", #list - ONLINE_ROWS + 1))
             row.scoreText:SetText("")
+            row.ratingText:SetText("")
             row:Show()
         elseif entry then
             row.nameText:SetText(entry.name)
             row.scoreText:SetText(entry.score and TTS:ColoredScore(entry.score) or "-")
+            row.ratingText:SetText(TTS.PvP.FormatRating(entry.pvp))
             row:Show()
         else
             row:Hide()
@@ -291,6 +305,7 @@ local function CreateColumnHeader(textKey, point, relPoint, x)
     return h
 end
 CreateColumnHeader("wr.colPlayer", "BOTTOMLEFT", "TOPLEFT", 16)
+CreateColumnHeader("wr.colRating", "BOTTOMRIGHT", "TOPRIGHT", -285)   -- clear of the wider score header
 CreateColumnHeader("wr.colScore", "BOTTOMRIGHT", "TOPRIGHT", -182)
 CreateColumnHeader("wr.colParty", "BOTTOM", "TOPRIGHT", -132)       -- centred over the Party Invite buttons
 CreateColumnHeader("wr.colChallenge", "BOTTOM", "TOPRIGHT", -51)    -- centred over the Invite buttons
@@ -357,6 +372,7 @@ function WR:UpdateUI()
             if entry.isSelf then
                 row.nameText:SetText("|cFF00FF00" .. L("wr.you", entry.name) .. "|r")
                 row.scoreText:SetText(TTS:ColoredScore(TTS.Net.MyScore()))
+                row.ratingText:SetText(TTS.PvP.FormatRating({ rating = (TTS.PvP:Get()) }))
                 row.inviteBtn:SetText(L("wr.queued"))
                 row.inviteBtn:Disable()
                 row.partyBtn:Hide()
@@ -364,6 +380,7 @@ function WR:UpdateUI()
                 row.nameText:SetText(entry.name)
                 local score = WR.scores[entry.name:lower()]
                 row.scoreText:SetText(score and TTS:ColoredScore(score) or "|cFF888888-|r")
+                row.ratingText:SetText(TTS.PvP.FormatRating(WR.pvp[entry.name:lower()]))
                 -- A challenge just went out: no spamming (Network.lua, INVITE_COOLDOWN)
                 local Net = TTS.Net
                 local wait = Net and Net.InviteCooldownLeft and Net:InviteCooldownLeft() or 0
@@ -406,7 +423,7 @@ end
 function WR:BroadcastPresence()
     if TTS.Net and TTS.Net.BroadcastLFM then
         local myName = GetPlayerFullName()
-        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. myName)
+        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. TTS.Net.MyPvP() .. ":" .. myName)
         -- 0.14 and earlier only list LFM_ANNOUNCE; without it they never see us, and a
         -- challenge (which reports the version mismatch) is never sent
         TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName)

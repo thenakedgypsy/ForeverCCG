@@ -791,6 +791,8 @@ local PAGES = {
         { "button", "rules.pvp.open", function() OpenOther(TTS.WaitingRoom and TTS.WaitingRoom.frame) end },
         { "h", "rules.pvp.h.find" },
         { "p", "rules.pvp.find" },
+        { "h", "rules.pvp.h.rating" },
+        { "p", "rules.pvp.rating" },
         { "h", "rules.pvp.h.versions" },
         { "p", "rules.pvp.versions" },
         { "h", "rules.pvp.h.connection" },
