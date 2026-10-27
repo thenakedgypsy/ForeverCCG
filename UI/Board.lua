@@ -790,6 +790,48 @@ B.myLifeBtn:SetScript("OnEnter", function(self)
 end)
 B.myLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- A player the targeting can choose lights up green; with the cursor (or a card being
+-- dragged) over it, gold, with a pulsing gold halo. Checked every frame, as a drag sends no
+-- OnEnter.
+local PLATE_HALO_PAD = 7
+local PLATE_PULSE = 4   -- radians per second
+local function PaintPlate(plate)
+    local lit = TTS.Engine.inMatch and IsTargetingPlayer(plate == B.oppLifeBtn)
+    local hot = lit and plate:IsMouseOver()
+    if hot then
+        plate:SetBackdropBorderColor(1.0, 0.9, 0.4, 1.0)
+        plate:SetBackdropColor(0.55, 0.42, 0.05, 0.9)
+    elseif lit then
+        plate:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
+        plate:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
+    else
+        local bg, bd = STYLE.controlBg, STYLE.controlBorder
+        plate:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
+        plate:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+    end
+    plate.halo:SetShown(hot and true or false)
+    if hot then plate.halo:SetAlpha(0.35 + 0.25 * math.sin(GetTime() * PLATE_PULSE)) end
+end
+B.PaintPlate = PaintPlate
+
+for _, plate in ipairs({ B.oppLifeBtn, B.myLifeBtn }) do
+    plate.halo = B:CreateTexture(nil, "ARTWORK")   -- (under the plate, so it shows round its edge)
+    plate.halo:SetPoint("TOPLEFT", plate, "TOPLEFT", -PLATE_HALO_PAD, PLATE_HALO_PAD)
+    plate.halo:SetPoint("BOTTOMRIGHT", plate, "BOTTOMRIGHT", PLATE_HALO_PAD, -PLATE_HALO_PAD)
+    plate.halo:SetColorTexture(1.0, 0.82, 0.0, 1)   -- the target arrow's gold
+    plate.halo:SetBlendMode("ADD")
+    plate.halo:Hide()
+end
+
+do
+    local plateWatcher = CreateFrame("Frame", nil, B)
+    plateWatcher:SetScript("OnUpdate", function()
+        if not TTS.Engine.inMatch then return end
+        PaintPlate(B.oppLifeBtn)
+        PaintPlate(B.myLifeBtn)
+    end)
+end
+
 -- =========================================================================
 -- HEALTH BARS
 -- Each life plate fills with a bar behind its text: green when full, through yellow to
@@ -3005,6 +3047,11 @@ function B.IsMoving(f)
     return (f.perm and flights[f.perm] or slides[f] or f.spawning) and true or false
 end
 
+-- Any card on the board still flying in, sliding or spawning
+function B.AnyMoving()
+    return (next(flights) or next(slides) or next(spawns)) and true or false
+end
+
 -- =========================================================================
 -- DRAW ANIMATIONS
 -- A card drawn from a library flies from the deck to its place in the hand. Yours turns
@@ -3407,18 +3454,9 @@ function B:UpdateDisplay()
         slot:SetWidth(math.max(1, slot.text:GetStringWidth()))
     end
 
-    -- Only the players the targeting can choose light up
-    local isTargetingPlayer = IsTargetingPlayer(true)
-    for plate, lit in pairs({ [B.oppLifeBtn] = isTargetingPlayer, [B.myLifeBtn] = IsTargetingPlayer(false) }) do
-        if lit then
-            plate:SetBackdropBorderColor(0.2, 1.0, 0.2, 1.0)
-            plate:SetBackdropColor(0.1, 0.35, 0.1, 0.8)
-        else
-            local bg, bd = STYLE.controlBg, STYLE.controlBorder
-            plate:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
-            plate:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
-        end
-    end
+    -- Only the players the targeting can choose light up (PaintPlate)
+    PaintPlate(B.oppLifeBtn)
+    PaintPlate(B.myLifeBtn)
 
     -- =====================================================================
     -- PHASE & COMBAT BUTTON STATE

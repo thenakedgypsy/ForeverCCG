@@ -41,11 +41,12 @@ local ANIM = {
 }
 FX.ANIM = ANIM
 
--- Looping kits shown while a state lasts (Snapshot's fields)
+-- Looping kits shown while a state lasts (Snapshot's fields); onModel: on the denizen's own
+-- model even with the FX layer on (dropping it loads the model again)
 FX.LASTING = {
     { state = "shielded", kit = 847 },    -- Power Word: Shield (or Divine Shield, 252)
     { state = "soul",     kit = 3769 },   -- Power Infusion: a stand-in for Soulstone (or Banish, 1286)
-    { state = "frozen",   kit = 285 },    -- Frost Nova's root
+    { state = "frozen",   kit = 3709, onModel = true },   -- Ice Block / Freezing Trap's ice, until it untaps
     { state = "borrowed", kit = 325 },    -- Mind Control
 }
 
@@ -87,6 +88,8 @@ FX.IMPACT = {
 -- to standing; hold: the animation it stays on after) and / or a one-shot kit. When several
 -- happen at once every kit plays, and the first of them in EVENT_ORDER gets the animation.
 -- onModel: the kit plays on the denizen's own model, not the FX layer (gear and aura buffs).
+-- settleBoard: the event waits for every card on the board to settle (FX:AfterBoardSettled),
+-- not just its own: an Aura's or Kinsmanship's bonus plays once the card giving it has landed.
 FX.EVENTS = {
     died      = { anim = ANIM.DEATH, hold = ANIM.DEAD },
     returned  = { kit = 3394 },                          -- Blink
@@ -96,8 +99,8 @@ FX.EVENTS = {
     shieldPop = { anim = ANIM.SHIELD_BLOCK },
     freeze    = { anim = ANIM.STUN, time = 0.3 },        -- then the model pauses
     weaken    = { kit = 719 },                           -- Curse of Weakness
-    buff      = { anim = ANIM.ROAR, kit = 456, onModel = true },   -- Blessing of Might
-    empower   = { anim = ANIM.ROAR, kit = 388, onModel = true },   -- Battle Shout (a keyword gained)
+    buff      = { anim = ANIM.ROAR, kit = 456, onModel = true, settleBoard = true },   -- Blessing of Might
+    empower   = { anim = ANIM.ROAR, kit = 388, onModel = true, settleBoard = true },   -- Battle Shout (a keyword gained)
     heal      = { kit = 232 },                           -- Heal
     dispel    = { kit = 226 },                           -- Dispel Magic
     cast      = { anim = ANIM.CAST },                    -- an activated ability
@@ -157,6 +160,18 @@ end
 -- =========================================================================
 local KW_SKIP = { shielded = true, kinsmanship = true, unique = true }   -- shown by their own effects, or not on a denizen
 
+-- Frozen lasts until the denizen untaps: the engine clears perm.freezeUntap at the untap it
+-- skips, leaving it tapped until the next one
+local iced = setmetatable({}, { __mode = "k" })
+local function Frozen(perm)
+    if perm.freezeUntap then
+        iced[perm] = true
+    elseif not perm.tapped then
+        iced[perm] = nil
+    end
+    return iced[perm] or false
+end
+
 function FX:Snapshot(eng, perm, isRemote)
     local p, t = eng:GetCreatureStats(perm, isRemote)
     local kw = {}
@@ -171,7 +186,7 @@ function FX:Snapshot(eng, perm, isRemote)
         damage = perm.damage or 0, p = p, t = t, kw = kw,
         shielded = perm.shielded and true or false,
         soul = perm.regenerateShield and true or false,
-        frozen = perm.freezeUntap and true or false,
+        frozen = Frozen(perm),
         dots = (perm.dots and #perm.dots > 0) and true or false,
         hots = (perm.hots and #perm.hots > 0) and true or false,
         borrowed = borrowed,
@@ -372,9 +387,10 @@ end
 -- card previews still do. The life plates have one too (see PLAYERS), sized like a card's
 -- (f.fxAsCard: { width, height }) so their kits look the same size.
 -- =========================================================================
-local function LayerCamera(m)
+-- size (optional): how big its kits look, as a share of the usual (the camera stands back)
+local function LayerCamera(m, size)
     FX:Call(m, "SetPortraitZoom", 0)
-    FX:Call(m, "SetCamDistanceScale", FX.LAYER.camScale)
+    FX:Call(m, "SetCamDistanceScale", FX.LAYER.camScale / (size or 1))
     FX:Call(m, "SetPosition", 0, 0, 0)
 end
 
@@ -438,14 +454,16 @@ function FX:HideLayer(f)
     if OnLayer(f) then f.fxKits = {} end
 end
 
--- Lasting kits that sit higher on a card than the FX layer's (FX.KIT_RAISE: a share of the
--- card's height) each have a carrier of their own (f.fxRaised[kit]), shown while wanted
-FX.KIT_RAISE = {
-    [847] = 0.5,   -- Power Word: Shield ("/tragic fx shield <share>")
+-- Lasting kits placed on a card apart from the FX layer's (FX.KIT_PLACE: raise, a share of
+-- the card's height to move it up; size, how big it looks as a share of the usual) each
+-- have a carrier of their own (f.fxRaised[kit]), shown while wanted.
+-- "/tragic fx place <kit> <raise> [size]" tries others.
+FX.KIT_PLACE = {
+    [847]  = { raise = 0.5 },                 -- Power Word: Shield
 }
 
 local function Raised(f, kit)
-    return OnLayer(f) and not f.fxAsCard and FX.KIT_RAISE[kit]
+    return OnLayer(f) and not f.fxAsCard and FX.KIT_PLACE[kit]
 end
 
 function FX:ShowRaised(f, kit, on)
@@ -463,17 +481,18 @@ function FX:ShowRaised(f, kit, on)
         m:SetFrameLevel(f:GetFrameLevel() + 5)
         f.fxRaised[kit] = m
     end
-    PlaceLayer(f, m, FX.KIT_RAISE[kit])
+    local place = FX.KIT_PLACE[kit]
+    PlaceLayer(f, m, place.raise)
     m:Show()
     m:ClearModel()
     m:SetDisplayInfo(FX.LAYER.displayId)
-    LayerCamera(m)
+    LayerCamera(m, place.size)
     -- (its kit goes on once the carrier has loaded)
     local token = {}
     m.fxToken = token
     TTS:SafeAfter(FX.LOAD_WAIT, function()
         if m.fxToken == token and m:IsShown() then
-            LayerCamera(m)
+            LayerCamera(m, place.size)
             FX:Call(m, "ApplySpellVisualKit", kit, false)
         end
     end)
@@ -496,6 +515,18 @@ function FX:AfterSettled(f, fn, waited)
     waited = waited or 0
     if not Moving(f) or waited >= FX.SETTLE_MAX then return fn() end
     TTS:SafeAfter(FX.SETTLE_POLL, function() FX:AfterSettled(f, fn, waited + FX.SETTLE_POLL) end)
+end
+
+-- The same for every card on the board (an event's settleBoard: a bonus another card's
+-- arrival gave, which plays once that card has landed even if this one never moved)
+local function BoardMoving()
+    return B.AnyMoving and B.AnyMoving()
+end
+
+function FX:AfterBoardSettled(fn, waited)
+    waited = waited or 0
+    if not BoardMoving() or waited >= FX.SETTLE_MAX then return fn() end
+    TTS:SafeAfter(FX.SETTLE_POLL, function() FX:AfterBoardSettled(fn, waited + FX.SETTLE_POLL) end)
 end
 
 -- A one-shot kit, once the card has settled; on an FX layer still loading it waits for the
@@ -552,13 +583,29 @@ function FX:ApplyLasting(f)
         end
         return
     end
+    -- Lasting kits on the denizen's own model (FX.LASTING's onModel, f.fxWantModel), once it
+    -- has loaded; one no longer wanted loads the model again (ModelReset puts the rest back)
+    if f.model and f.fxModelLoaded ~= false then
+        local wantM, haveM = f.fxWantModel or {}, f.fxModelKits or {}
+        for kit in pairs(haveM) do
+            if not wantM[kit] then
+                f.fxReloading = true
+                B.QueueModelReload(f)
+                return
+            end
+        end
+        for kit in pairs(wantM) do
+            if not haveM[kit] and self:Call(f.model, "ApplySpellVisualKit", kit, false) then haveM[kit] = true end
+        end
+        f.fxModelKits = haveM
+    end
     local km = self:KitModel(f)
     if not km then return end
     local want, have = {}, f.fxKits or {}
     for kit in pairs(f.fxWant or {}) do
         if not Raised(f, kit) then want[kit] = true end
     end
-    for kit in pairs(FX.KIT_RAISE) do
+    for kit in pairs(FX.KIT_PLACE) do
         if Raised(f, kit) then self:ShowRaised(f, kit, (f.fxWant or {})[kit] and true or false) end
     end
     for kit in pairs(have) do
@@ -597,7 +644,7 @@ function FX:ModelReset(f)
         m.fxHooked = true
         if m.HasScript and m:HasScript("OnModelLoaded") then
             m:HookScript("OnModelLoaded", function()
-                if not FX.ON_FRAME then FX:Loaded(f) end
+                if FX.ON_FRAME then FX:ModelLoaded(f) else FX:Loaded(f) end
             end)
         end
         if m.HasScript and m:HasScript("OnAnimFinished") then
@@ -610,19 +657,33 @@ function FX:ModelReset(f)
     -- (pausing belongs to the frame, not the model, so it may outlast a reload)
     if f.fxPaused then self:Call(m, "SetPaused", false) end
     f.fxKits, f.fxPaused, f.fxOneShot, f.fxHold, f.fxReloading = {}, nil, nil, nil, nil
+    f.fxModelKits = {}
     self:Behind(f)
     if f.fxBase ~= ANIM.DEAD then f.fxBase = nil end
     if not self:Enabled() then return end
     if not FX.ON_FRAME then
         self:WaitForLoad(f)
-    elseif f.fxLayer and f.fxLayer:IsShown() then
-        self:LoadLayer(f)
+        return
     end
+    -- The model's own lasting kits go back once it has loaded (or after FX.LOAD_WAIT)
+    f.fxModelLoaded = false
+    local token = {}
+    f.fxModelToken = token
+    TTS:SafeAfter(FX.LOAD_WAIT, function()
+        if f.fxModelToken == token then FX:ModelLoaded(f) end
+    end)
+    if f.fxLayer and f.fxLayer:IsShown() then self:LoadLayer(f) end
+end
+
+function FX:ModelLoaded(f)
+    if f.fxModelLoaded ~= false then return end
+    f.fxModelLoaded = true
+    if f.fxPerm and FX:Enabled() then FX:ApplyLasting(f) end
 end
 
 -- The frame no longer shows a denizen with effects
 function FX:Release(f)
-    f.fxPerm, f.fxWant, f.fxWantPause, f.fxDying = nil, nil, nil, nil
+    f.fxPerm, f.fxWant, f.fxWantModel, f.fxWantPause, f.fxDying = nil, nil, nil, nil, nil
     if f.fxPaused then self:Call(f.model, "SetPaused", false); f.fxPaused = false end
     if f.fxBase and f.fxBase ~= ANIM.STAND then self:Call(f.model, "SetAnimation", ANIM.STAND) end
     f.fxBase, f.fxOneShot = nil, nil
@@ -662,9 +723,12 @@ local function SyncFrame(f, isRemote, batch)
     local events = FX.Diff(snaps[perm], cur, cause)
     snaps[perm] = cur
 
-    f.fxWant = {}
+    f.fxWant, f.fxWantModel = {}, {}
     for _, l in ipairs(FX.LASTING) do
-        if cur[l.state] then f.fxWant[l.kit] = true end
+        -- (with the FX layer off, every kit is on the model anyway)
+        if cur[l.state] then
+            if l.onModel and FX.ON_FRAME then f.fxWantModel[l.kit] = true else f.fxWant[l.kit] = true end
+        end
     end
     OverTimeKits(f.fxWant, perm.dots, FX.DOT_KITS)
     OverTimeKits(f.fxWant, perm.hots, FX.HOT_KITS)
@@ -677,8 +741,17 @@ local function SyncFrame(f, isRemote, batch)
     end
 end
 
--- Plays one denizen's events on whichever frame shows it by then
-local function PlayEvents(perm, events, color)
+-- Plays one denizen's events on whichever frame shows it by then (settled: the board has
+-- been waited for already)
+local function PlayEvents(perm, events, color, settled)
+    if not settled then
+        for _, name in ipairs(events) do
+            if FX.EVENTS[name].settleBoard and BoardMoving() then
+                FX:AfterBoardSettled(function() PlayEvents(perm, events, color, true) end)
+                return
+            end
+        end
+    end
     local f = frameOf[perm]
     if not Valid(f, perm) then return end
     for _, name in ipairs(events) do
@@ -822,7 +895,7 @@ function FX:TurnOff()
     for _, group in ipairs({ B.myNonLandFrames, B.oppNonLandFrames }) do
         for _, f in ipairs(group) do
             local dirty = (not FX.ON_FRAME and f.fxKits and next(f.fxKits)) or f.fxPaused
-                or (f.fxBase and f.fxBase ~= ANIM.STAND)
+                or (f.fxModelKits and next(f.fxModelKits)) or (f.fxBase and f.fxBase ~= ANIM.STAND)
             self:Release(f)
             f.fxLoaded, f.fxReloading = nil, nil
             if dirty then B.QueueModelReload(f) end
@@ -847,7 +920,7 @@ function FX:OptionChanged()
 end
 
 -- =========================================================================
--- /tragic fx [kit <id> | anim <id> | me <kit> | opp <kit> | sound <SoundKit id> | shield <share> | layer | carrier <displayId> | cam <scale> | drop <share> | pad <share>]
+-- /tragic fx [kit <id> | anim <id> | me <kit> | opp <kit> | sound <SoundKit id> | place <kit> <raise> [size] | layer | carrier <displayId> | cam <scale> | drop <share> | pad <share>]
 -- (layer, carrier, cam, drop and pad last the session)
 -- =========================================================================
 local PROBE_METHODS = { "SetAnimation", "HasAnimation", "FreezeAnimation", "SetPaused",
@@ -884,12 +957,18 @@ function FX:Command(args)
         Say(L(FX.ON_FRAME and "fx.layerOn" or "fx.layerOff"))
         return
     end
-    local what, num = args:match("^(%a+)%s+([%d%.]+)")
-    if what == "shield" then
-        Redo(function() FX.KIT_RAISE[847] = tonumber(num) or FX.KIT_RAISE[847] end)
-        Say(L("fx.shieldRaise", FX.KIT_RAISE[847]))
+    local kit, raise, size = args:match("^place%s+(%d+)%s+(%-?[%d%.]+)%s*([%d%.]*)")
+    if kit then
+        kit = tonumber(kit)
+        Redo(function()
+            local place = FX.KIT_PLACE[kit] or {}
+            place.raise, place.size = tonumber(raise) or place.raise, tonumber(size) or place.size
+            FX.KIT_PLACE[kit] = place
+        end)
+        Say(L("fx.placeSet", kit, FX.KIT_PLACE[kit].raise or 0, FX.KIT_PLACE[kit].size or 1))
         return
     end
+    local what, num = args:match("^(%a+)%s+([%d%.]+)")
     if what == "platedrop" then what = "plateDrop" elseif what == "platescale" then what = "plateScale" end
     if what == "carrier" or what == "cam" or what == "drop" or what == "pad" or what == "plateDrop" or what == "plateScale" then
         Redo(function()
@@ -931,8 +1010,13 @@ function FX:Command(args)
             end)
             ok = true
         elseif what == "kit" then
-            if FX.ON_FRAME and not (f.fxLayer and f.fxLayer:IsShown()) then self:LoadLayer(f) end
-            ok = self:Call(self:KitModel(f), "ApplySpellVisualKit", id, true)
+            -- A lasting kit that goes on the model (FX.LASTING's onModel) is tried there
+            local onModel = false
+            for _, l in ipairs(FX.LASTING) do
+                if l.kit == id and l.onModel then onModel = true end
+            end
+            if FX.ON_FRAME and not onModel and not (f.fxLayer and f.fxLayer:IsShown()) then self:LoadLayer(f) end
+            ok = self:Call(onModel and f.model or self:KitModel(f), "ApplySpellVisualKit", id, true)
         else
             ok = self:Call(f.model, "SetAnimation", id)
             if ok then TTS:SafeAfter(3, function() FX:Call(f.model, "SetAnimation", f.fxBase or ANIM.STAND) end) end

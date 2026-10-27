@@ -12,9 +12,10 @@ local L = TTS.L
 -- =========================================================================
 -- DRAGGING CARDS
 -- With "Card controls" set to Drag or Both (Options):
---  * A card from your hand dropped on the battlefield is played. A spell that
---    needs a target is dropped on the target (an arrow follows the cursor);
---    dropped on empty board it waits for a target to be clicked as usual.
+--  * A card from your hand dropped on the battlefield is played. A spell (or gear) that
+--    needs a target is dropped on the target; dropped on empty board it moves off to the
+--    side and waits for a target to be clicked (UI\TargetFX.lua's STAGED SPELLS). A
+--    creature with a targeted Arrival is aimed with an arrow from the hand instead.
 --  * Your creature dragged at the opponent attacks (from Main 1 it moves to combat first).
 --  * Your creature dropped on an attacker blocks it; dragged off into empty board
 --    it stops blocking.
@@ -133,7 +134,9 @@ local function BeginHandDrag(f)
         drag.kind = "spell"
         B.dragTargeting = { targetMode = "SPELL", cardId = f.cardId, handIndex = f.handIndex,
             targetType = targetType, cardName = TTS:CardName(card) }
-        SetAim(f, AIM_TARGET)
+    end
+    if targetType and card.type == "Creature" then
+        SetAim(f, AIM_TARGET)   -- a creature's targeted Arrival: aimed from the hand
     else
         ShowGhost(card, f.baseScale or 1, f.isFoil)
         MoveGhost()
@@ -203,12 +206,23 @@ end
 local function DropHandCard(E, d, target, x, y)
     if E.localState.hand[d.handIndex] ~= d.cardId then return end
     local onBoard = y > B.HAND_TOP
-    if d.kind == "spell" then
+    local card = TTS.Cards[d.cardId]
+    if d.kind == "spell" and target and card and card.type == "Creature" then
+        TargetWith(E, function() E:PlayCard(d.handIndex) end, target,
+            function(t) return t.handIndex == d.handIndex end)
+    elseif d.kind == "spell" then
         if target then
-            TargetWith(E, function() E:PlayCard(d.handIndex) end, target,
-                function(t) return t.handIndex == d.handIndex end)
+            -- Cast at it; a target it can't take (the reason floats up) leaves it waiting at
+            -- the side for another, as if dropped on nothing
+            B.stageFrom = { x = x, y = y, at = GetTime() }
+            E:PlayCard(d.handIndex)
+            local t = E.targeting
+            if t and t.handIndex == d.handIndex then E:ResolveTarget(target.kind, target.isRemote, target.fieldIndex) end
         elseif onBoard then
-            E:PlayCard(d.handIndex)   -- no target under it: choose one by clicking
+            -- No target under it: it waits at the side for one to be clicked, setting off
+            -- from here (UI\TargetFX.lua's STAGED SPELLS)
+            B.stageFrom = { x = x, y = y, at = GetTime() }
+            E:PlayCard(d.handIndex)
         end
     elseif onBoard then
         B.launchFrom = { cardId = d.cardId, x = x, y = y }   -- flies to its slot from here

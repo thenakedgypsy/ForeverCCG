@@ -253,10 +253,8 @@ local function OverlappedRight(f)
     return right
 end
 
--- Shows a cast card (and arrows to its targets' positions) on the caster's side
-local function RevealSpell(card, casterIsRemote, targets)
-    local f = RevealFrame()
-    if not (f and card and TTS.PaintPreviewCard) then return end
+-- Places the reveal on the caster's side; returns its offset from the board's centre (in its scale)
+local function PlaceReveal(f, casterIsRemote)
     -- Scaled as a whole so the printed rules keep their layout; offsets are in the card's scale
     f:SetScale(REVEAL_SCALE)
     local y = REVEAL_Y[casterIsRemote and true or false] / REVEAL_SCALE
@@ -270,6 +268,102 @@ local function RevealSpell(card, casterIsRemote, targets)
         local left = ScreenRect(f)
         x = math.min(maxX, x + (right - left) / f:GetEffectiveScale() + REVEAL_GAP / REVEAL_SCALE)
     end
+    return x, y
+end
+
+-- =========================================================================
+-- STAGED SPELLS
+-- A spell of yours waiting for its target (clicked in the hand, or dragged out and dropped
+-- on nothing: UI\CardDrag.lua) moves off to where it will be revealed, and the target arrow
+-- runs from it. Cast, it is revealed there; called off, it flies back to the hand.
+-- B.stageFrom ({ x, y, at }, board coordinates): where a dropped card sets off from.
+-- =========================================================================
+local STAGE_TIME = 0.2      -- seconds to fly out, or back
+local STAGE_HAND_ALPHA = 0.3
+local stage   -- { targeting, handIndex, fromX, fromY, toX, toY, x, y, t, back }
+
+local function StagedHandFrame()
+    return stage and B.myHandFrames and B.myHandFrames[stage.handIndex]
+end
+
+-- A point on the board (layer coordinates) as an offset from its centre in the reveal's scale
+local function RevealOffset(p)
+    return (p.x - layer:GetWidth() / 2) / REVEAL_SCALE, (p.y - layer:GetHeight() / 2) / REVEAL_SCALE
+end
+
+local function EndStage()
+    local hf = StagedHandFrame()
+    if hf then hf:SetAlpha(1) end
+    stage = nil
+end
+
+local function StartStage(t)
+    local E = TTS.Engine
+    local card = TTS.Cards[t.cardId]
+    local f = RevealFrame()
+    if not (f and card and TTS.PaintPreviewCard) then return end
+    if stage then EndStage() end
+    f.t = nil   -- (no reveal timer: it stays while the target is chosen)
+    local toX, toY = PlaceReveal(f, false)
+    TTS.PaintPreviewCard(f, card, E:IsFoil(card.id, false))
+    local from = B.stageFrom
+    B.stageFrom = nil
+    if not (from and GetTime() - (from.at or 0) < 0.5) then
+        from = B.myHandFrames and Pos(B.myHandFrames[t.handIndex])
+    end
+    local fromX, fromY = toX, toY
+    if from then fromX, fromY = RevealOffset(from) end
+    stage = { targeting = t, handIndex = t.handIndex, fromX = fromX, fromY = fromY, toX = toX, toY = toY,
+        x = fromX, y = fromY, t = 0 }
+    f:SetAlpha(1)
+    f:Show()
+end
+
+local function UpdateStage(dt)
+    local E = TTS.Engine
+    local t = E and E.inMatch and E.targeting
+    local card = t and t.targetMode == "SPELL" and t.handIndex and TTS.Cards[t.cardId]
+    if card and card.type ~= "Creature" and not (stage and stage.targeting == t) then StartStage(t) end
+    if not stage then return end
+    local f = RevealFrame()
+    if stage.targeting ~= t and not stage.back then
+        -- Called off (a cast is revealed instead, RevealSpell): back to its place in the hand
+        local hf = StagedHandFrame()
+        local to = hf and hf:IsVisible() and Pos(hf)
+        if not (to and E.inMatch) then
+            f:Hide()
+            EndStage()
+            return
+        end
+        stage.back = true
+        stage.fromX, stage.fromY, stage.t = stage.x, stage.y, 0
+        stage.toX, stage.toY = RevealOffset(to)
+    end
+    stage.t = stage.t + dt
+    local p = math.min(1, stage.t / STAGE_TIME)
+    local e = 1 - (1 - p) ^ 3   -- ease out
+    stage.x = stage.fromX + (stage.toX - stage.fromX) * e
+    stage.y = stage.fromY + (stage.toY - stage.fromY) * e
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", B, "CENTER", stage.x, stage.y)
+    local hf = StagedHandFrame()
+    if stage.back then
+        f:SetAlpha(1 - 0.5 * e)
+        if p >= 1 then
+            f:Hide()
+            EndStage()
+        end
+    elseif hf then
+        hf:SetAlpha(STAGE_HAND_ALPHA)
+    end
+end
+
+-- Shows a cast card (and arrows to its targets' positions) on the caster's side
+local function RevealSpell(card, casterIsRemote, targets)
+    local f = RevealFrame()
+    if not (f and card and TTS.PaintPreviewCard) then return end
+    if stage then EndStage() end   -- (a staged spell is revealed where it waited)
+    PlaceReveal(f, casterIsRemote)
     TTS.PaintPreviewCard(f, card, TTS.Engine:IsFoil(card.id, casterIsRemote and true or false))
     f:SetAlpha(1)
     f.t = 0
@@ -300,8 +394,9 @@ function TTS.Engine:ShowRemoteSpell(cardId, tgt)
     if #targets > 0 then PlayFX(SOUND_TARGET) end
 end
 
--- The card a pending spell is being cast from
+-- The card a pending spell is being cast from: staged (STAGED SPELLS), or in the hand
 local function AimSourceFrame(targeting)
+    if stage and targeting and stage.targeting == targeting and not stage.back then return RevealFrame() end
     if targeting and targeting.handIndex and B.myHandFrames then
         return B.myHandFrames[targeting.handIndex]
     end
@@ -593,14 +688,72 @@ local function ShowHit(isRemote, amount, src, color, at, impact, impactKey)
     hit.impactKey = hit.impactKey or impactKey
 end
 
+-- ----- Over time -----
+-- A DoT or HoT ticking on a player: its number flies from the effect's icon on that player's
+-- effect bar (Board.lua), in its card's colour. E:TickOverTime (CardLogic.lua) and, in PvP,
+-- the ticks the opponent's client sends (Network.lua) note each one just before it applies.
+local OVERTIME_LINGER = 1.0   -- seconds a noted tick waits for the damage or redraw it goes with
+local overTime = { dot = { [true] = {}, [false] = {} }, hot = { [true] = {}, [false] = {} } }
+
+-- The icon on side's effect bar for an effect of kind from srcId (else any of that kind)
+local function OverTimeIcon(side, kind, srcId)
+    local bar = side and B.oppEffectBar or B.myEffectBar
+    local any
+    for _, icon in ipairs(bar and bar.icons or {}) do
+        local e = icon:IsVisible() and icon.effect
+        if e and e.kind == kind then
+            if srcId and e.srcId == srcId then return icon end
+            any = any or icon
+        end
+    end
+    return any
+end
+
+function TTS.NoteOverTimeTick(isRemote, kind, srcId)
+    local side = isRemote and true or false
+    if srcId == "" then srcId = nil end
+    local pos = Pos(OverTimeIcon(side, kind, srcId))
+    if not (pos and overTime[kind]) then return end
+    local card = srcId and TTS.Cards[srcId]
+    -- (impact: a DoT's damage lands with its element's sound, SpellImpactSound)
+    table.insert(overTime[kind][side], { pos = pos, color = CardColor(card), impact = SpellImpactSound(card), at = GetTime() })
+end
+
+-- The next tick noted for side, or nil
+local function NextOverTime(kind, side)
+    local q = overTime[kind][side and true or false]
+    while q[1] do
+        local s = table.remove(q, 1)
+        if GetTime() - s.at <= OVERTIME_LINGER then return s end
+    end
+end
+
+-- PvP: damage the opponent's client sent us. With no spell of theirs just revealed, damage
+-- from a card that has a DoT on us is a tick of it.
+function TTS.NoteIncomingDamage(reason)
+    if hitSrc and GetTime() <= hitSrcUntil then return end
+    local id = reason and reason:match("^([%w_]+)")
+    local icon = id and TTS.Cards[id] and OverTimeIcon(false, "dot", id)
+    if icon and icon.effect.srcId == id then TTS.NoteOverTimeTick(false, "dot", id) end
+end
+
 -- A player gaining life just as the other loses some is a drain (Drain in combat, a drain
 -- spell or ability): the life flies as a green "+N" from the other player's plate to theirs,
--- setting off once the damage there has landed. Board.lua's redraw calls this for each gain;
--- false = not a drain (it floats up as usual).
+-- setting off once the damage there has landed. A HoT's tick flies from its icon instead.
+-- Board.lua's redraw calls this for each gain; false = neither (it floats up as usual).
 local DRAIN_WINDOW = 1.0   -- seconds the loss may come before the gain
 local DRAIN_COLOR  = { 0.2, 1, 0.2 }
 function TTS.FlyLifeGain(isRemote, amount)
     local side = isRemote and true or false
+    local tick = NextOverTime("hot", side)
+    if tick then
+        wipe(overTime.hot[side])   -- (several ticks at once show as one gain, from the first)
+        local gain = AddHitDamage("hot" .. tostring(side), platePos[side], PLAYER_HIT_SIZES, amount, tick.pos,
+            tick.color or DRAIN_COLOR, "+" .. amount)
+        gain.heal, gain.healSide = true, side
+        if TTS.CardFX then TTS.CardFX:DrainComing(side) end   -- (its heal effect plays as it lands)
+        return true
+    end
     local other = not side
     if not (lostLifeAt[other] and GetTime() - lostLifeAt[other] <= DRAIN_WINDOW) then return false end
     local from = Pos(plates[other])
@@ -727,6 +880,7 @@ end
 layer:SetScript("OnUpdate", function(_, dt)
     UpdateAim()
     UpdateFloats(dt)
+    UpdateStage(dt)
     UpdateReveal(dt)
     for i = #flashes, 1, -1 do
         local fl = flashes[i]
@@ -868,7 +1022,15 @@ local function InstallHooks()
             local state = isRemote and self.remoteState or self.localState
             local before, shield = state.life, ShieldOf(self, isRemote)
             local src, color, at, impact, impactKey
-            if (tonumber(amount) or 0) > 0 then src, color, at, impact, impactKey = NextHitSource() end
+            if (tonumber(amount) or 0) > 0 then
+                -- A DoT's tick flies from its icon (TTS.NoteOverTimeTick), anything else from its source
+                local tick = NextOverTime("dot", isRemote)
+                if tick then
+                    src, color, impact = tick.pos, tick.color, tick.impact
+                else
+                    src, color, at, impact, impactKey = NextHitSource()
+                end
+            end
             local results = { origDamage(self, isRemote, amount, reason, ...) }
             if state.life < before then
                 ShowHit(isRemote, before - state.life, src, color, at, impact, impactKey)
