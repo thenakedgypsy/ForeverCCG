@@ -21,8 +21,7 @@ TTS = TTS or {}
 --  * A few engine hooks add what the comparison can't tell: the colour of the spell that
 --    dealt damage, a Dispel, who fought in combat, an activated ability.
 -- Written without the client to hand: every model call goes through FX:Call, which turns a
--- method off for the session the first time it is missing or errors, and "/tragic fx"
--- reports what worked ("/tragic fx kit <id>" / "anim <id>" try one on the hovered card).
+-- method off for the session the first time it is missing or errors.
 -- Kit ids are from the client's SpellVisualKit data (build 1.60.1.70532), each named after
 -- the spell it comes from. Load after UI\Board.lua.
 -- =========================================================================
@@ -116,12 +115,10 @@ FX.ONESHOT_TIME = 1.2      -- back to standing after a one-shot animation, if On
 FX.LOAD_WAIT = 0.5         -- lasting kits go on when the model has loaded, or after this long
 FX.FRONT_TIME = 1.2        -- a one-shot effect brings the model in front of the card frame and tap symbol this long
 
--- Kits on the FX layer rather than the denizen's model ("/tragic fx layer" switches it for
--- the session). displayId: the invisible carrier; pad: how far past the card's edges the
--- layer reaches, as a share of its size (kits are cut off at the layer's edges); drop: how
--- far the layer sits below the card's centre, as a share of its height; camScale: the
--- carrier's camera distance, which sets how big its kits look ("/tragic fx carrier <id>" /
--- "drop <share>" / "cam <scale>" try others).
+-- Kits on the FX layer rather than the denizen's model. displayId: the invisible carrier;
+-- pad: how far past the card's edges the layer reaches, as a share of its size (kits are
+-- cut off at the layer's edges); drop: how far the layer sits below the card's centre, as a
+-- share of its height; camScale: the carrier's camera distance, which sets how big its kits look.
 FX.ON_FRAME = true
 -- plateDrop / plateScale: the life plates' drop, and how much bigger their kits look than a card's
 FX.LAYER = { displayId = 11686, pad = 0.75, drop = 0.5, plateDrop = 0.2, plateScale = 1.3, camScale = 2.0 }
@@ -134,24 +131,18 @@ end
 -- GUARDED MODEL CALLS
 -- FX.trace (tests): called with (model, method, ...) before every call.
 -- =========================================================================
-local report, broken = {}, {}
+local broken = {}
 
 function FX:Call(model, method, ...)
     if FX.trace then FX.trace(model, method, ...) end
-    local r = report[method]
-    if not r then
-        r = { ok = 0, failed = 0, skipped = 0 }
-        report[method] = r
-    end
-    if broken[method] then r.skipped = r.skipped + 1; return false end
+    if broken[method] then return false end
     local fn = model and model[method]
     if type(fn) ~= "function" then
-        r.missing, broken[method] = true, true
+        broken[method] = true
         return false
     end
-    local ok, err = pcall(fn, model, ...)
-    if ok then r.ok = r.ok + 1; return true end
-    r.failed, r.err, broken[method] = r.failed + 1, tostring(err), true
+    if pcall(fn, model, ...) then return true end
+    broken[method] = true
     return false
 end
 
@@ -443,7 +434,6 @@ end
 -- Lasting kits placed on a card apart from the FX layer's (FX.KIT_PLACE: raise, a share of
 -- the card's height to move it up; size, how big it looks as a share of the usual) each
 -- have a carrier of their own (f.fxRaised[kit]), shown while wanted.
--- "/tragic fx place <kit> <raise> [size]" tries others.
 FX.KIT_PLACE = {
     [847]  = { raise = 0.5 },                 -- Power Word: Shield
 }
@@ -899,128 +889,4 @@ function FX:OptionChanged()
     else
         self:TurnOff()
     end
-end
-
--- =========================================================================
--- /tragic fx [kit <id> | anim <id> | me <kit> | opp <kit> | sound <SoundKit id> | place <kit> <raise> [size] | layer | carrier <displayId> | cam <scale> | drop <share> | pad <share>]
--- (layer, carrier, cam, drop and pad last the session)
--- =========================================================================
-local PROBE_METHODS = { "SetAnimation", "HasAnimation", "FreezeAnimation", "SetPaused",
-    "PlayAnimKit", "StopAnimKit", "ApplySpellVisualKit" }
-
--- Every effect cleared, change() made, then every effect put back (with the FX layer
--- switched, or a new carrier or camera for it)
-local function Redo(change)
-    FX:TurnOff()
-    change()
-    if FX:Enabled() and E.inMatch then E:RefreshUI() end
-end
-
-local function Say(msg) DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. msg) end
-
--- The hovered battlefield denizen with a model, else the first one showing
-local function TestFrame()
-    local first
-    for _, group in ipairs({ B.myNonLandFrames, B.oppNonLandFrames }) do
-        for _, f in ipairs(group) do
-            if f:IsShown() and f.model and f.model:IsShown() then
-                if f.hovered then return f end
-                first = first or f
-            end
-        end
-    end
-    return first
-end
-
-function FX:Command(args)
-    args = args or ""
-    if args:match("^layer") then
-        Redo(function() FX.ON_FRAME = not FX.ON_FRAME end)
-        Say(L(FX.ON_FRAME and "fx.layerOn" or "fx.layerOff"))
-        return
-    end
-    local kit, raise, size = args:match("^place%s+(%d+)%s+(%-?[%d%.]+)%s*([%d%.]*)")
-    if kit then
-        kit = tonumber(kit)
-        Redo(function()
-            local place = FX.KIT_PLACE[kit] or {}
-            place.raise, place.size = tonumber(raise) or place.raise, tonumber(size) or place.size
-            FX.KIT_PLACE[kit] = place
-        end)
-        Say(L("fx.placeSet", kit, FX.KIT_PLACE[kit].raise or 0, FX.KIT_PLACE[kit].size or 1))
-        return
-    end
-    local what, num = args:match("^(%a+)%s+([%d%.]+)")
-    if what == "platedrop" then what = "plateDrop" elseif what == "platescale" then what = "plateScale" end
-    if what == "carrier" or what == "cam" or what == "drop" or what == "pad" or what == "plateDrop" or what == "plateScale" then
-        Redo(function()
-            if what == "carrier" then
-                FX.LAYER.displayId = tonumber(num:match("%d+"))
-            elseif what == "cam" then
-                FX.LAYER.camScale = tonumber(num) or FX.LAYER.camScale
-            else
-                FX.LAYER[what] = tonumber(num) or FX.LAYER[what]
-            end
-        end)
-        Say(L("fx.layerSet", FX.LAYER.displayId, FX.LAYER.camScale, FX.LAYER.drop, FX.LAYER.pad, FX.LAYER.plateDrop, FX.LAYER.plateScale))
-        return
-    end
-    local id = num and num:match("^%d+$")
-    if id and (what == "me" or what == "opp") then
-        local plate = Plate(what == "opp")
-        plate.fxPerm = true
-        if not (plate.fxLayer and plate.fxLayer:IsShown()) then self:LoadLayer(plate) end
-        local ok = self:PlayKit(plate, tonumber(id))
-        Say(L(ok and "fx.tried" or "fx.failed", "kit", tonumber(id), what))
-        return
-    end
-    if id and what == "sound" then
-        local ok = pcall(PlaySound, tonumber(id), "SFX")
-        Say(L(ok and "fx.soundPlayed" or "fx.soundFailed", tonumber(id)))
-        return
-    end
-    if id and (what == "kit" or what == "anim") then
-        local f = TestFrame()
-        if not f then Say(L("fx.noModel")); return end
-        id = tonumber(id)
-        local ok
-        if what == "kit" and Raised(f, id) then
-            -- On its own raised carrier for a few seconds, unless the denizen has it anyway
-            self:ShowRaised(f, id, true)
-            TTS:SafeAfter(4, function()
-                if not (f.fxWant and f.fxWant[id]) then FX:ShowRaised(f, id, false) end
-            end)
-            ok = true
-        elseif what == "kit" then
-            -- A lasting kit that goes on the model (FX.LASTING's onModel) is tried there
-            local onModel = false
-            for _, l in ipairs(FX.LASTING) do
-                if l.kit == id and l.onModel then onModel = true end
-            end
-            if FX.ON_FRAME and not onModel and not (f.fxLayer and f.fxLayer:IsShown()) then self:LoadLayer(f) end
-            ok = self:Call(onModel and f.model or self:KitModel(f), "ApplySpellVisualKit", id, true)
-        else
-            ok = self:Call(f.model, "SetAnimation", id)
-            if ok then TTS:SafeAfter(3, function() FX:Call(f.model, "SetAnimation", f.fxBase or ANIM.STAND) end) end
-        end
-        Say(L(ok and "fx.tried" or "fx.failed", what, id, TTS:CardName(f.currentCard) or "?"))
-        return
-    end
-    Say(L(self:Enabled() and "fx.on" or "fx.off"))
-    local f = TestFrame()
-    local probe = f and f.model or CreateFrame("DressUpModel")
-    local have = {}
-    for _, m in ipairs(PROBE_METHODS) do
-        have[#have + 1] = m .. (type(probe[m]) == "function" and " |cFF40FF40yes|r" or " |cFFFF4040no|r")
-    end
-    Say(table.concat(have, ", "))
-    local names = {}
-    for m in pairs(report) do names[#names + 1] = m end
-    table.sort(names)
-    for _, m in ipairs(names) do
-        local r = report[m]
-        Say(L("fx.calls", m, r.ok, r.failed, r.skipped) .. (r.missing and (" " .. L("fx.missing")) or "")
-            .. (r.err and (" |cFFFF4040" .. r.err .. "|r") or ""))
-    end
-    if #names == 0 then Say(L("fx.noCalls")) end
 end

@@ -78,7 +78,7 @@ titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
 local title = S:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -11)
-Loc:Bind(title, "main.soloEncounters")
+Loc:Bind(title, "main.campaign")
 do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
     local tag = S:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     tag:SetPoint("LEFT", title, "RIGHT", 10, -1)

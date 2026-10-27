@@ -18,8 +18,11 @@ local Loc = TTS.Locale
 -- network, so builds without the picker play the same as before.
 --
 --   TTS.DeckPicker:Open({ opponent = name, timeout = seconds or nil,
---                         onPick = function(deckIndex) end, onCancel = function() end })
+--                         checks = { { key, label, value }, ... } or nil,
+--                         onPick = function(deckIndex, checked) end, onCancel = function() end })
 -- With a timeout the selected deck is played when it runs out, and there is no Cancel.
+-- checks: tick boxes shown under the decks (label: a string key; value: ticked to start);
+-- onPick gets checked = { [key] = true / false }.
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local GOLD, GREEN, RED = "|cFFFFD200", "|cFF00FF00", "|cFFFF4444"
@@ -28,9 +31,12 @@ local P = CreateFrame("Frame", "TTS_DeckPicker", UIParent, backdropTemplate)
 TTS.DeckPicker = P
 
 local ROW_H = 28
+local CHECK_H = 24          -- each tick box under the decks (Open's checks)
+local MAX_CHECKS = 4
 local slots = TTS.MAX_DECK_SLOTS or 3
+local BASE_H = 126 + slots * ROW_H
 
-P:SetSize(320, 126 + slots * ROW_H)
+P:SetSize(320, BASE_H)
 P:SetPoint("CENTER", 0, 60)
 P:SetFrameStrata("DIALOG")
 P:SetBackdrop({
@@ -114,6 +120,19 @@ for i = 1, slots do
     rows[i] = row
 end
 
+-- Tick boxes under the decks, for the options a game starts with (Open's checks)
+local checks = {}
+for i = 1, MAX_CHECKS do
+    local cb = CreateFrame("CheckButton", nil, P, "UICheckButtonTemplate")
+    cb:SetSize(24, 24)
+    cb:SetPoint("TOPLEFT", P, "TOPLEFT", 26, -56 - slots * ROW_H - 4 - (i - 1) * CHECK_H)
+    cb.label = P:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    cb.label:SetPoint("LEFT", cb, "RIGHT", 2, 1)
+    cb:Hide()
+    cb.label:Hide()
+    checks[i] = cb
+end
+
 local function CreateButton(textKey, x)
     local b = CreateFrame("Button", nil, P, "UIPanelButtonTemplate")
     b:SetSize(110, 24)
@@ -138,10 +157,14 @@ end
 
 function P:Confirm()
     if not (selected and TTS:IsDeckPlayable(TTS_SavedDecks and TTS_SavedDecks[selected])) then return end
+    local checked = {}
+    for i, spec in ipairs(request and request.checks or {}) do
+        if checks[i] then checked[spec.key] = checks[i]:GetChecked() and true or false end
+    end
     local req = Finish()
     if not req then return end
     TTS_ActiveDeckIndex = selected
-    if req.onPick then req.onPick(selected) end
+    if req.onPick then req.onPick(selected, checked) end
 end
 
 function P:Cancel()
@@ -192,6 +215,19 @@ function P:Open(opts)
     playBtn:SetPoint("BOTTOM", P, "BOTTOM", deadline and 0 or -60, 36)
     subtitle:SetText(request.opponent and L("picker.vs", request.opponent) or "")
     countdown:SetText("")
+    -- Its tick boxes, the window growing to fit them
+    local specs = request.checks or {}
+    for i, cb in ipairs(checks) do
+        local spec = specs[i]
+        cb:SetShown(spec ~= nil)
+        cb.label:SetShown(spec ~= nil)
+        if spec then
+            cb.label:SetText(L(spec.label))
+            cb:SetChecked(spec.value and true or false)
+            cb:SetHitRectInsets(0, -(cb.label:GetStringWidth() + 4), 0, 0)
+        end
+    end
+    self:SetHeight(BASE_H + math.min(#specs, MAX_CHECKS) * CHECK_H + (#specs > 0 and 4 or 0))
     Refresh()
     self:Show()
     self:Raise()

@@ -46,6 +46,14 @@ function E:AIProfile()
     return PROFILES[name] or PROFILES.dummy, name
 end
 
+-- Practice vs Dummy: whether the dummy may attack / block (what = "attacks" / "blocks"),
+-- as ticked in the deck picker (E.practice, MainFrame.lua). Anything else always may.
+function E:AIPracticeAllows(what)
+    local enc = self.encounter
+    if not (enc and enc.kind == "practice" and self.practice) then return true end
+    return self.practice[what] ~= false
+end
+
 local COLORS = { "W", "U", "B", "R", "G" }
 
 local function Card(id) return TTS.Cards[id] end
@@ -377,6 +385,7 @@ end
 
 -- Picks the AI's attackers: list of field indices
 function E:AIChooseAttackers(profile)
+    if not self:AIPracticeAllows("attacks") then return {} end
     local field = self.remoteState.field
     local candidates = {}
     for i, perm in ipairs(field) do
@@ -531,6 +540,7 @@ end
 function E:AIAssignBlocks()
     if not self.blockingState or self.blockingState.isRemoteAttacking then return end
     if self.cantBlockThisTurn then return end
+    if not self:AIPracticeAllows("blocks") then return end
     local profile = self:AIProfile()
     local bs = self.blockingState
 

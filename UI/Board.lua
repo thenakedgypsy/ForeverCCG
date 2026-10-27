@@ -20,7 +20,7 @@ local LAYOUT, RULES, EFFECT_BAR, BG, TIMING = {}, {}, {}, {}, {}
 -- TEXTURE PATH CONFIGURATION & MANA ICONS
 -- =========================================================================
 local TEXTURE_ROOT    = "Interface\\AddOns\\ForeverCCG\\Textures\\"
-local CARD_FRAME_DEF  = TEXTURE_ROOT .. "Cards\\card_frame.png"
+local CARD_FRAME_DEF  = TEXTURE_ROOT .. "Cards\\card_frame_neutral.png"   -- (a card without a colour of its own)
 local CARD_BACK_TEX   = TEXTURE_ROOT .. "Cards\\card_back.png"
 local SYMBOL_PATH     = TEXTURE_ROOT .. "Symbols\\"
 local TAP_TEX         = SYMBOL_PATH .. "T.png"

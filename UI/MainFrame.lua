@@ -21,7 +21,7 @@ local M = TTS.MainFrame
 local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
 local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
-M:SetSize(400, 288)
+M:SetSize(400, 335)
 M:SetPoint("CENTER")
 M:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -42,7 +42,7 @@ M:Hide()
 local titleBar = M:CreateTexture(nil, "ARTWORK")
 titleBar:SetPoint("TOPLEFT", 12, -12)
 titleBar:SetPoint("TOPRIGHT", -12, -12)
-titleBar:SetHeight(25)
+titleBar:SetHeight(72)   -- room for the logo
 titleBar:SetColorTexture(0, 0, 0, 0.35)
 
 local titleLine = M:CreateTexture(nil, "ARTWORK")
@@ -51,12 +51,15 @@ titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
 titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
-local title = M:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOPLEFT", 16, -11)
-title:SetText("Forever: CCG")
+-- The Forever: CCG logo (350 x 85) in the title strip, in its proportions
+local LOGO_H = 64
+local logo = M:CreateTexture(nil, "OVERLAY")
+logo:SetSize(LOGO_H * 350 / 85, LOGO_H)
+logo:SetPoint("LEFT", titleBar, "LEFT", 4, 0)
+logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
 
 local closeBtn = CreateFrame("Button", nil, M, "UIPanelCloseButton")
-closeBtn:SetPoint("TOPRIGHT", -2, -2)
+closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", 6, 27)
 
 local content = CreateFrame("Frame", nil, M)
 content:SetAllPoints(M)
@@ -144,7 +147,7 @@ end
 -- OPTIONS (title bar, left of the close button)
 -- =========================================================================
 local optionsBtn = CreatePanelButton("TTS_OptionsBtn", M, 64, 20, "options.title")
-optionsBtn:SetPoint("TOPRIGHT", M, "TOPRIGHT", -32, -15)
+optionsBtn:SetPoint("RIGHT", titleBar, "RIGHT", -20, 0)
 optionsBtn:SetScript("OnClick", function()
     if TTS.OptionsFrame then
         TTS.OptionsFrame:Show()
@@ -155,8 +158,8 @@ end)
 -- =========================================================================
 -- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
 -- =========================================================================
-local deckSection = CreateSection("main.yourDeck", 372, 104)
-deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -46)
+local deckSection = CreateSection("main.collection", 372, 104)
+deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
 
 local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "main.openDeckbuilder")
 deckBtn:SetPoint("TOPLEFT", deckSection, "TOPLEFT", 10, -32)
@@ -190,10 +193,10 @@ statusLabel:SetWordWrap(true)
 -- =========================================================================
 -- SECTION 2: SOLO (encounters and the practice dummy)
 -- =========================================================================
-local practiceSection = CreateSection("main.solo", 180, 96)
+local practiceSection = CreateSection("main.pve", 180, 96)
 practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
 
-local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "main.soloEncounters")
+local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "main.campaign")
 encountersBtn:SetPoint("TOP", practiceSection, "TOP", 0, -32)
 encountersBtn:SetScript("OnClick", function()
     if TTS.SoloSelectFrame then
@@ -210,13 +213,26 @@ soloBtn:SetScript("OnClick", function()
         return
     end
     local dummy = L("solo.dummy")
+    -- How the dummy plays, chosen as the deck is (E.practice, AI.lua), and remembered
+    local O = TTS.Options
     TTS.DeckPicker:Open({
         opponent = dummy,
-        onPick = function()
+        checks = {
+            { key = "attacks", label = "picker.dummyAttacks", value = not O or O:Get("practiceAttacks") ~= false },
+            { key = "blocks",  label = "picker.dummyBlocks",  value = not O or O:Get("practiceBlocks") ~= false },
+        },
+        onPick = function(_, checked)
             if TTS.Engine.inMatch then return end
+            if O then
+                O:Set("practiceAttacks", checked.attacks)
+                O:Set("practiceBlocks", checked.blocks)
+            end
+            TTS.Engine.practice = { attacks = checked.attacks, blocks = checked.blocks }
             TTS.Engine:StartMatch(dummy, true, true)
         end,
     })
+    -- (cancelling the deck picker brings the main window back; a game starting doesn't)
+    OpenFromMain(TTS.DeckPicker)
 end)
 
 -- =========================================================================
@@ -338,12 +354,12 @@ SlashCmdList["TRAGIC"] = function(msg)
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("options.language") .. ": " .. Loc:GetChoice() .. " (" .. Loc.code .. ")")
         end
-    elseif cmd:match("^fx") then
-        -- /tragic fx [kit <id> | anim <id>]: what card effects worked, or try one (CardFX.lua)
-        if TTS.CardFX and TTS.CardFX.Command then TTS.CardFX:Command(msg:trim():match("^%S+%s*(.*)$")) end
     elseif cmd == "tutorial" then
         if TTS.StartTutorial then TTS:StartTutorial() end
-    elseif cmd == "solo" or cmd == "encounters" then
+    elseif cmd == "welcome" or cmd == "intro" or cmd == "quickstart" then
+        -- The Quick Start walkthrough new players see first (QuickStart.lua)
+        if TTS.ShowQuickStart then TTS:ShowQuickStart(1) end
+    elseif cmd == "campaign" or cmd == "solo" or cmd == "encounters" then
         if TTS.SoloSelectFrame then
             if TTS.SoloSelectFrame:IsShown() then
                 TTS.SoloSelectFrame:Hide()
