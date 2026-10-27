@@ -471,9 +471,11 @@ local function BuildEntryDialog()
 
     D.enter:SetScript("OnClick", function()
         local enc = D.enc
-        D:Hide()
         -- Something may have changed while the dialog was open (a queue, the Deckbuilder...)
         local blocker = StartBlocker(enc)
+        D.entering = not blocker   -- on to the deck picker: the map stays closed
+        D:Hide()
+        D.entering = nil
         if blocker then
             hint:SetText(RED .. TTS:EncounterName(enc) .. ": " .. blocker .. "|r")
             return
@@ -483,6 +485,11 @@ local function BuildEntryDialog()
 
     -- The map's tooltip for the clicked button would sit on top of the dialog
     D:SetScript("OnShow", function() if TT then TT:Hide() end end)
+    -- The map hides behind the dialog (ConfirmDungeon) and comes back when it closes
+    D:SetScript("OnHide", function()
+        if D.hidMap and not D.entering and not (TTS.Engine and TTS.Engine.inMatch) then S:Show() end
+        D.hidMap = nil
+    end)
     if TTS.Sound and TTS.Sound.HookButtons then TTS.Sound:HookButtons(D) end
     return D
 end
@@ -543,6 +550,10 @@ local function ConfirmDungeon(enc)
     local contentH = math.max(cardH, entry.body:GetStringHeight() or 0)
     entry:SetHeight(52 + contentH + 16 + (entry.warning:GetStringHeight() or 14) + 60)
     entry:Show()
+    if S:IsShown() then
+        entry.hidMap = true
+        S:Hide()
+    end
 end
 
 -- =========================================================================
@@ -726,10 +737,20 @@ S:SetScript("OnShow", function(self)
     self:Refresh()
 end)
 
+-- Opened any way while the main window is up (slash command, the Rules), the map takes
+-- its place as if opened from it, and closing the map brings it back (MainFrame.lua)
+S:HookScript("OnShow", function(self)
+    local M = TTS.MainFrame
+    if self:IsShown() and M and M:IsShown() and M.OpenChild then M:OpenChild(self) end
+end)
+-- Hidden behind the dungeon dialog, the map isn't closed: the main window stays away
+S.ttsIsCovered = function() return entry and entry:IsShown() end
+
 S:SetScript("OnHide", function()
     if TT then TT:Hide() end
     HideRewardPreview()
-    if entry then entry:Hide() end
+    -- Hidden behind the dungeon dialog, the map leaves it open
+    if entry and not entry.hidMap then entry:Hide() end
 end)
 
 -- Dungeons whose hour runs out while the map is open light up again

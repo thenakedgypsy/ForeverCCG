@@ -2113,12 +2113,60 @@ myDeckFrame.count:SetPoint("BOTTOM", myDeckFrame, "TOP", 0, 2)
 -- Opponent's deck: top-right, at the end of their hand row, with the cards left beside it
 local oppDeckFrame = CreateFrame("Frame", nil, B)
 oppDeckFrame:SetSize(52, 68)
-oppDeckFrame:SetPoint("TOPRIGHT", B, "TOPRIGHT", -108, -46)
+oppDeckFrame:SetPoint("TOPRIGHT", B, "TOPRIGHT", -108, -54)
 oppDeckFrame.back = oppDeckFrame:CreateTexture(nil, "ARTWORK")
 oppDeckFrame.back:SetAllPoints(oppDeckFrame)
 ApplyBackTexture(oppDeckFrame.back)
 oppDeckFrame.count = oppDeckFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 oppDeckFrame.count:SetPoint("RIGHT", oppDeckFrame, "LEFT", -6, 0)
+
+-- A deck is drawn as a stack that gets lower as it runs down, then a lone card back.
+-- The stack images hold the top card (the size of card_back.png) with the stack's sides
+-- beyond it, so each is scaled as the card back is and anchored by its bottom-right corner.
+do   -- its own block: the file is at Lua's 200 locals
+local DECK_STACKS = {   -- from the most cards left: { at least this many, texture, width, height (px) }
+    { 35, TEXTURE_ROOT .. "Cards\\card_stack_tall.png",   675, 908 },
+    { 20, TEXTURE_ROOT .. "Cards\\card_stack_medium.png", 664, 890 },
+    { 4,  TEXTURE_ROOT .. "Cards\\card_stack_short.png",  643, 855 },
+}
+local CARD_BACK_PX_W, CARD_BACK_PX_H = 512, 717
+local STACK_TOP_PX_X, STACK_TOP_PX_Y = 62, 60   -- the top card's top-left corner in every stack image
+
+-- count: cards left (nil when unknown: drawn as a full deck)
+function B.SetDeckStack(deck, count)
+    local stack
+    for _, s in ipairs(DECK_STACKS) do
+        if not count or count >= s[1] then stack = s break end
+    end
+    if deck.stack == stack then return end
+    deck.stack = stack
+    local t = deck.back
+    t:ClearAllPoints()
+    t:SetPoint("BOTTOMRIGHT", deck, "BOTTOMRIGHT")
+    if stack then
+        t:SetTexture(stack[2])
+        t:SetVertexColor(1, 1, 1, 1)
+        if t:GetTexture() then
+            local w, h = deck:GetWidth() * stack[3] / CARD_BACK_PX_W, deck:GetHeight() * stack[4] / CARD_BACK_PX_H
+            t:SetSize(w, h)
+            -- The mouse finds the deck (its tooltip) anywhere on the stack, which reaches up and left
+            deck:SetHitRectInsets(deck:GetWidth() - w, 0, deck:GetHeight() - h, 0)
+            return
+        end
+    end
+    t:SetSize(deck:GetWidth(), deck:GetHeight())
+    deck:SetHitRectInsets(0, 0, 0, 0)
+    ApplyBackTexture(t)
+end
+
+-- Where the stack's top card is drawn, from the deck frame: x (left) and y (up) offsets
+function B.DeckTopCardOffset(deck)
+    local s = deck.stack
+    if not s then return 0, 0 end
+    return -deck:GetWidth() * (s[3] - STACK_TOP_PX_X - CARD_BACK_PX_W) / CARD_BACK_PX_W,
+        deck:GetHeight() * (s[4] - STACK_TOP_PX_Y - CARD_BACK_PX_H) / CARD_BACK_PX_H
+end
+end
 
 local function ShowDeckTip(self, title, count)
     TT:ShowText(self, "ANCHOR_LEFT", title, nil, { r = 1, g = 0.82, b = 0,
@@ -2308,6 +2356,9 @@ do
             layer.cards[i] = t
         end
         layer:Hide()
+        -- The deck itself hides while its cards are riffling
+        layer:SetScript("OnShow", function() deck.back:Hide() end)
+        layer:SetScript("OnHide", function() deck.back:Show() end)
 
         layer:SetScript("OnUpdate", function(self, dt)
             self.t = self.t + dt
@@ -2342,6 +2393,14 @@ do
         if TTS.Options and TTS.Options:Get("animateCards") == false then return end
         for side, layer in pairs(shuffleLayers) do
             if isRemote == nil or isRemote == side then
+                -- Over the stack's top card, not the deck's corner
+                local deck = side and oppDeckFrame or myDeckFrame
+                local E = TTS.Engine
+                if side then B.SetDeckStack(deck, E:RemoteDeckCount()) else B.SetDeckStack(deck, #E.localState.deck) end
+                local x, y = B.DeckTopCardOffset(deck)
+                layer:ClearAllPoints()
+                layer:SetPoint("TOPLEFT", deck, "TOPLEFT", x, y)
+                layer:SetPoint("BOTTOMRIGHT", deck, "BOTTOMRIGHT", x, y)
                 layer.t = 0
                 layer:Show()
             end
@@ -2941,6 +3000,197 @@ flyTicker:SetScript("OnUpdate", function(_, dt)
 end)
 
 -- =========================================================================
+-- DRAW ANIMATIONS
+-- A card drawn from a library flies from the deck to its place in the hand. Yours turns
+-- over on the way: a stand-in card shows its back while it turns away and its face as it
+-- turns back, then the hand card itself takes its place. The opponent's stays a card back.
+-- Draws are counted off the deck getting smaller, so a card returned to a hand (or put
+-- back by an undo) never flies. Cards drawn together leave the deck one after another.
+-- Turned off with "Animate played cards" too.
+-- =========================================================================
+TIMING.DRAW_TIME = 0.45
+TIMING.DRAW_STAGGER = 0.12
+
+do   -- its own block: the file is at Lua's 200 locals
+
+local draws = setmetatable({}, { __mode = "k" })      -- your hand frame -> { t, cardId, proxy } (t < 0 while it waits its turn)
+local oppDraws = setmetatable({}, { __mode = "k" })   -- opponent's hand frame -> { t, x } (x: its usual left offset)
+local lastDeck, lastOppHand, lastDrawState = {}, 0, nil   -- lastDrawState: the match's deck table (new each match)
+local proxyPool = {}
+
+local function GetProxy()
+    local p = table.remove(proxyPool)
+    if p then
+        p.faceShown = nil
+        return p
+    end
+    p = CreateFrame("Frame", nil, B)
+    p:SetFrameLevel((B:GetFrameLevel() or 10) + 30)   -- over the hand, under the card preview
+    p.bg = p:CreateTexture(nil, "BACKGROUND")
+    p.bg:SetAllPoints(p)
+    p.bg:SetColorTexture(0.08, 0.08, 0.08, 0.95)
+    p.art = p:CreateTexture(nil, "ARTWORK")
+    p.border = p:CreateTexture(nil, "OVERLAY")
+    p.border:SetAllPoints(p)
+    p.back = p:CreateTexture(nil, "OVERLAY", nil, 1)
+    p.back:SetAllPoints(p)
+    ApplyBackTexture(p.back)
+    return p
+end
+
+local function EndDraw(f, d)
+    if d.proxy then
+        d.proxy:Hide()
+        table.insert(proxyPool, d.proxy)
+    end
+    f:SetAlpha(1)
+    if f.model then f.model:SetAlpha(f.modelAlpha or 1) end
+end
+
+local function EndOppDraw(f, d)
+    f:SetAlpha(1)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", d.x, -46)
+end
+
+-- After a redraw: a draw for each card that came out of a deck since the last one
+function B.StartDraws(E)
+    local animate = not TTS.Options or TTS.Options:Get("animateCards") ~= false
+    local deckNow, oppDeckNow = #E.localState.deck, E:RemoteDeckCount()
+    local oppHandNow = math.min(10, E.remoteState.handCount or 0)
+    local fresh = lastDrawState ~= E.localState.deck   -- a new match: nothing to compare with yet
+    local myDrawn = (not fresh and lastDeck[false]) and (lastDeck[false] - deckNow) or 0
+    local oppDrawn
+    if fresh then
+        oppDrawn = 0
+    elseif type(oppDeckNow) == "number" and lastDeck[true] then
+        oppDrawn = lastDeck[true] - oppDeckNow
+    else
+        oppDrawn = oppHandNow - lastOppHand   -- deck size unknown: count the hand growing
+    end
+    lastDrawState, lastDeck[false], lastDeck[true], lastOppHand = E.localState.deck, deckNow, tonumber(oppDeckNow), oppHandNow
+
+    -- A draw still under way carries on while its frame holds the same card (in the same
+    -- match: one cut short by the board closing never finishes)
+    for f, d in pairs(draws) do
+        if fresh or not f:IsShown() or f.cardId ~= d.cardId then
+            EndDraw(f, d)
+            draws[f] = nil
+        end
+    end
+    for f, d in pairs(oppDraws) do
+        if fresh or not f:IsShown() then
+            EndOppDraw(f, d)
+            oppDraws[f] = nil
+        end
+    end
+    if not animate then return end
+
+    -- Your new cards: those not in the hand before the redraw (matched in order, as the
+    -- slides are), the last ones being the cards drawn
+    local used, new = {}, {}
+    for i = 1, 10 do
+        local f, id = myHandFrames[i], E.localState.hand[i]
+        if f:IsShown() and id then
+            local found
+            for k, h in ipairs(oldHand) do
+                if not used[k] and h.id == id then
+                    used[k], found = true, true
+                    break
+                end
+            end
+            if not found and not draws[f] then table.insert(new, f) end
+        end
+    end
+    local first = math.max(1, #new - myDrawn + 1)
+    for k = first, #new do
+        local f = new[k]
+        draws[f] = { t = -(k - first) * TIMING.DRAW_STAGGER, cardId = f.cardId, card = TTS.Cards[f.cardId], proxy = GetProxy() }
+    end
+
+    -- The opponent's: the last card backs in their row
+    oppDrawn = math.min(oppDrawn, oppHandNow)
+    for k = 1, oppDrawn do
+        local i = oppHandNow - oppDrawn + k
+        local f = oppHandFrames[i]
+        if not oppDraws[f] then oppDraws[f] = { t = -(k - 1) * TIMING.DRAW_STAGGER, x = 35 + (i - 1) * 64 } end
+    end
+end
+
+-- Moves each drawn card along its way from the deck
+local function ApplyDraws()
+    local left, bottom = B:GetLeft(), B:GetBottom()
+    if not left then return end
+    local dx0, dy0 = BoardXY(myDeckFrame)
+    for f, d in pairs(draws) do
+        f:SetAlpha(0)
+        if f.model then f.model:SetAlpha(0) end
+        local p, proxy = math.max(0, math.min(1, d.t / TIMING.DRAW_TIME)), d.proxy
+        local sx, sy = f.slot:GetCenter()
+        if d.t < 0 or not (sx and dx0) then
+            proxy:Hide()
+        else
+            local e = 1 - (1 - p) ^ 3   -- ease out
+            local s = f:GetScale()
+            local w = LAYOUT.HAND_W + (LAYOUT.HAND_W * s - LAYOUT.HAND_W) * e
+            local h = LAYOUT.HAND_H + (LAYOUT.HAND_H * s - LAYOUT.HAND_H) * e
+            local turn = math.abs(math.cos(math.pi * p))   -- edge-on half way, as it turns over
+            local face = p >= 0.5
+            if face and not proxy.faceShown then
+                ApplyFrameTexture(proxy.border, d.card)
+                proxy.art:SetTexture(d.card and d.card.art)
+                proxy.art:SetShown(d.card and d.card.art and true or false)
+            end
+            proxy.faceShown = face
+            proxy.back:SetShown(not face)
+            proxy.border:SetShown(face)
+            proxy.art:SetShown(face and d.card and d.card.art and true or false)
+            w = math.max(1, w * turn)
+            proxy:SetSize(w, h)
+            proxy.art:ClearAllPoints()
+            proxy.art:SetPoint("TOPLEFT", proxy, "TOPLEFT", w * ART_BOX.left, -h * ART_BOX.top)
+            proxy.art:SetPoint("BOTTOMRIGHT", proxy, "BOTTOMRIGHT", -w * ART_BOX.right, h * ART_BOX.bottom)
+            proxy:ClearAllPoints()
+            proxy:SetPoint("CENTER", B, "BOTTOMLEFT", dx0 + (sx - left - dx0) * e, dy0 + (sy - bottom - dy0) * e)
+            proxy:Show()
+        end
+    end
+    local ox, oy = BoardXY(oppDeckFrame)
+    for f, d in pairs(oppDraws) do
+        f:SetAlpha(d.t < 0 and 0 or 1)
+        if ox then
+            local rest = (1 - math.max(0, math.min(1, d.t / TIMING.DRAW_TIME))) ^ 3
+            -- The card back's centre, at its usual place
+            local cx, cy = d.x + 26, B:GetHeight() - 46 - 35
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT", d.x + (ox - cx) * rest, -46 + (oy - cy) * rest)
+        end
+    end
+end
+
+local drawTicker = CreateFrame("Frame", nil, B)
+drawTicker:SetScript("OnUpdate", function(_, dt)
+    if not next(draws) and not next(oppDraws) then return end
+    ApplyDraws()
+    for f, d in pairs(draws) do
+        d.t = d.t + dt
+        if d.t >= TIMING.DRAW_TIME then
+            EndDraw(f, d)
+            draws[f] = nil
+        end
+    end
+    for f, d in pairs(oppDraws) do
+        d.t = d.t + dt
+        if d.t >= TIMING.DRAW_TIME then
+            EndOppDraw(f, d)
+            oppDraws[f] = nil
+        end
+    end
+end)
+B.ApplyDraws = ApplyDraws
+end
+
+-- =========================================================================
 -- DAMAGE & HEALING NUMBERS
 -- Each redraw compares a creature's damage with the last one: more shows a red "-N",
 -- less a green "+N" (TTS.FloatText, UI\TargetFX.lua). The end-of-turn reset and
@@ -3262,6 +3512,8 @@ function B:UpdateDisplay()
 
     myDeckFrame.count:SetText(#E.localState.deck)
     oppDeckFrame.count:SetText(E:RemoteDeckCount() or "?")
+    B.SetDeckStack(myDeckFrame, #E.localState.deck)
+    B.SetDeckStack(oppDeckFrame, E:RemoteDeckCount())
     B:UpdateGraveyards()
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
@@ -3479,8 +3731,10 @@ function B:UpdateDisplay()
     end
 
     B.StartSlides(E)
+    B.StartDraws(E)
     StartFlights(E)
     ApplyFlights()
+    B.ApplyDraws()
     B.ApplySpawns()
     if TTS.CardFX then TTS.CardFX:SyncBoard() end
 end

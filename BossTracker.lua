@@ -326,6 +326,7 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
     TTS_KilledBosses = TTS_KilledBosses or {}
 
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
+    local killsBefore = currentKills
     if currentKills < 4 and math.random() * 100 < (DropChances(card)[currentKills + 1] or 0) then
         local newKills = currentKills + 1
         currentKills = newKills
@@ -335,8 +336,9 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
         local cardText = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
         DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.mobSlain", cardText .. zoneText, newKills))
 
-        -- Final copy: raid-warning style announcement in the middle of the screen
-        if newKills == 4 then
+        -- Final copy: raid-warning style announcement in the middle of the screen, outside
+        -- instances only (inside, the chat line above is the whole notification)
+        if newKills == 4 and not SafeCall(IsInInstance) then
             ShowCardCompletePopup(card)
         end
 
@@ -346,23 +348,37 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
     end
 
     -- The foil's own roll, whether or not this kill dropped a copy
-    if currentKills > 0 then self:RollFoil(card, msgKey == "boss.deathUnlock" and "boss.foilDeath" or nil) end
+    if currentKills > 0 then
+        local foilKey = msgKey == "boss.deathUnlock" and "boss.foilDeath"
+            or (killsBefore > 0 and "boss.foilUpgrade") or nil
+        self:RollFoil(card, foilKey)
+    end
 end
 
--- msgKey: the chat line for the foil (default boss.foilSlain, as boss.mobSlain is for a copy)
+-- msgKey: the chat line for the foil (default boss.foilSlain, as boss.mobSlain is for a copy;
+-- boss.foilUpgrade names the plain card it upgrades too)
 function TTS.BossTracker:RollFoil(card, msgKey)
     if card.alwaysFoil or TTS:HasFoil(card.id) or math.random() * 100 >= FoilChance(card) then return end
     TTS_FoilCards = TTS_FoilCards or {}
     TTS_FoilCards[card.id] = true
     TTS:MarkCardNew(card.id)   -- NEW in the Deckbuilder, as a new copy is
     local zoneText = card.zone and string.format(" (%s)", TTS.Locale:Term("zone", card.zone)) or ""
-    local cardText = TTS.CardLink and TTS:CardLink(card.id, true) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
-    DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.foilSlain", cardText .. zoneText))
-    local text = L("boss.foilPopup", TTS:CardName(card) or card.id)
-    if RaidNotice_AddMessage and RaidWarningFrame then
-        RaidNotice_AddMessage(RaidWarningFrame, text, { r = 0.6, g = 0.9, b = 1 })
-    elseif UIErrorsFrame then
-        UIErrorsFrame:AddMessage(text, 0.6, 0.9, 1)
+    local plainName = "|cFFFFD200" .. TTS:CardName(card) .. "|r"
+    local cardText = TTS.CardLink and TTS:CardLink(card.id, true) or plainName
+    if msgKey == "boss.foilUpgrade" then
+        local plainText = TTS.CardLink and TTS:CardLink(card.id) or plainName
+        DEFAULT_CHAT_FRAME:AddMessage(L(msgKey, plainText, cardText .. zoneText))
+    else
+        DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.foilSlain", cardText .. zoneText))
+    end
+    -- Center-screen announcement outside instances only, as for a card's final copy
+    if not SafeCall(IsInInstance) then
+        local text = L("boss.foilPopup", TTS:CardName(card) or card.id)
+        if RaidNotice_AddMessage and RaidWarningFrame then
+            RaidNotice_AddMessage(RaidWarningFrame, text, { r = 0.6, g = 0.9, b = 1 })
+        elseif UIErrorsFrame then
+            UIErrorsFrame:AddMessage(text, 0.6, 0.9, 1)
+        end
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()

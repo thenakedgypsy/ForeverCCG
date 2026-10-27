@@ -114,6 +114,11 @@ local function OnChildHidden(child)
             child.ttsOpenedFromMain = true
             return
         end
+        -- Hidden behind a dialog of its own (the solo map's dungeon entry), which brings it back
+        if child.ttsIsCovered and child.ttsIsCovered() then
+            child.ttsOpenedFromMain = true
+            return
+        end
         M:Show()
     end)
 end
