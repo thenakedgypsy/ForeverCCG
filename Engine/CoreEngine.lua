@@ -319,6 +319,40 @@ function E:ConfirmConcede()
 end
 
 -- =========================================================================
+-- DISPLAY HOOKS
+-- The UI wraps engine functions to show what they do. E:HookDisplay runs that code around
+-- the engine's own in pcall, so a display error is reported (the usual error popup) but
+-- can never stop, repeat or change the game itself, which would desync a PvP match.
+--   before(self, ...) runs first; what it returns is handed on as state
+--   after(state, self, results, ...) runs last; results = the engine function's returns
+-- after is skipped when before failed (its state would be missing).
+-- =========================================================================
+local function Pack(...) return { n = select("#", ...), ... } end
+
+local function DisplayError(err)
+    local handler = geterrorhandler and geterrorhandler()
+    if handler then pcall(handler, err) end
+end
+
+function E:HookDisplay(name, before, after)
+    local orig = self[name]
+    if type(orig) ~= "function" then return end
+    self[name] = function(eng, ...)
+        local ok, state = true, nil
+        if before then
+            ok, state = pcall(before, eng, ...)
+            if not ok then DisplayError(state) end
+        end
+        local results = Pack(orig(eng, ...))
+        if after and ok then
+            local okAfter, err = pcall(after, state, eng, results, ...)
+            if not okAfter then DisplayError(err) end
+        end
+        return unpack(results, 1, results.n)
+    end
+end
+
+-- =========================================================================
 -- DAMAGE & LIFE
 -- =========================================================================
 -- PvP: the opponent's damage shield lives on their client; ours keeps a copy
@@ -1575,6 +1609,9 @@ function E:RefreshUI()
     -- PvP: the opponent's board shows how many cards are left in our deck
     self:SyncDeckCount()
     if TTS.BoardFrame and TTS.BoardFrame:IsShown() then
-        TTS.BoardFrame:UpdateDisplay()
+        -- (in pcall: a drawing error must never cut short the game action that redrew,
+        -- which would desync a PvP match; see DISPLAY HOOKS)
+        local ok, err = pcall(TTS.BoardFrame.UpdateDisplay, TTS.BoardFrame)
+        if not ok then DisplayError(err) end
     end
 end

@@ -2450,25 +2450,16 @@ do
         end
     end
 
-    do
-        local E = TTS.Engine
-        local origStart = E and E.StartMatch
-        if origStart then
-            E.StartMatch = function(self, ...)
-                local results = { origStart(self, ...) }
-                if self.inMatch then B:PlayShuffle() end
-                return unpack(results)
-            end
-        end
-        local origMulligan = E and E.Mulligan
-        if origMulligan then
-            E.Mulligan = function(self, ...)
-                local open = self.mulliganOpen
-                local results = { origMulligan(self, ...) }
-                if open and not self.mulliganOpen then B:PlayShuffle(false) end
-                return unpack(results)
-            end
-        end
+    -- (E:HookDisplay, CoreEngine.lua: an error in these never stops the game itself)
+    local E = TTS.Engine
+    if E then
+        E:HookDisplay("StartMatch", nil, function(_, self)
+            if self.inMatch then B:PlayShuffle() end
+        end)
+        E:HookDisplay("Mulligan", function(self) return { open = self.mulliganOpen } end,
+            function(state, self)
+                if state.open and not self.mulliganOpen then B:PlayShuffle(false) end
+            end)
     end
 end
 
@@ -3316,39 +3307,30 @@ end
 
 -- Deaths go through HandleCreatureDeath; any other creature that disappears was returned.
 -- Damage wiped at the end of a turn or by regeneration is not shown as healing.
+-- (E:HookDisplay, CoreEngine.lua: an error in these never stops the game itself)
 do
     local E = TTS.Engine
-    local origDeath = E and E.HandleCreatureDeath
-    if origDeath then
-        E.HandleCreatureDeath = function(self, perm, ...)
+    if E then
+        E:HookDisplay("HandleCreatureDeath", function(self, perm)
             if perm then diedPerms[perm] = true end
-            return origDeath(self, perm, ...)
-        end
-    end
-    local origClear = E and E.ClearCreatureDamage
-    if origClear then
-        E.ClearCreatureDamage = function(self, ...)
-            local results = { origClear(self, ...) }
+        end)
+        E:HookDisplay("ClearCreatureDamage", nil, function(_, self)
             for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
                 for _, p in ipairs(field) do SilenceDamage(p) end
             end
-            return unpack(results)
-        end
-    end
-    local origSBA = E and E.CheckStateBasedActions
-    if origSBA then
-        E.CheckStateBasedActions = function(self, ...)
-            -- Note which creatures had a regeneration shield; one used up wiped its damage
+        end)
+        -- Note which creatures had a regeneration shield; one used up wiped its damage
+        E:HookDisplay("CheckStateBasedActions", function(self)
             local shielded = {}
             for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
                 for _, p in ipairs(field) do if p.regenerateShield then shielded[p] = true end end
             end
-            local results = { origSBA(self, ...) }
+            return shielded
+        end, function(shielded)
             for p in pairs(shielded) do
                 if not p.regenerateShield then SilenceDamage(p) end
             end
-            return unpack(results)
-        end
+        end)
     end
 end
 

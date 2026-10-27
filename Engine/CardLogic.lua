@@ -896,7 +896,7 @@ function E:TickOverTime(isRemoteTurn)
         local st = isRemote and self.remoteState or self.localState
         -- (UI\TargetFX.lua flies each tick's number from its icon on the player's effect bar)
         TickList(st.hots, isRemoteTurn, function(e)
-            if TTS.NoteOverTimeTick then TTS.NoteOverTimeTick(isRemote, "hot", e.srcId) end
+            if TTS.NoteOverTimeTick then pcall(TTS.NoteOverTimeTick, isRemote, "hot", e.srcId) end
             st.life = st.life + e.n
             self:Log(L("log.restoredLife", TTS:ReasonText(e.src), e.n, self:SideName(isRemote)), "ACTION")
             -- PvP: only the client that cast it ticks it, so tell the other one
@@ -905,7 +905,7 @@ function E:TickOverTime(isRemoteTurn)
             end
         end)
         TickList(st.dots, isRemoteTurn, function(e)
-            if TTS.NoteOverTimeTick and self.inMatch then TTS.NoteOverTimeTick(isRemote, "dot", e.srcId) end
+            if TTS.NoteOverTimeTick and self.inMatch then pcall(TTS.NoteOverTimeTick, isRemote, "dot", e.srcId) end
             if self.inMatch then self:DamagePlayer(isRemote, e.n, e.src) end
         end)
         for _, perm in ipairs(st.field) do

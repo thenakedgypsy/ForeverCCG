@@ -934,61 +934,46 @@ local function InstallHooks()
         return TTS.FormatSymbols and TTS:FormatSymbols(s, 16) or s
     end
 
-    if E.Log then
-        local origLog = E.Log
-        E.Log = function(self, msg, category, ...)
-            if category == "ERROR" and userDepth > 0 and quietDepth == 0 and self.inMatch then
-                TTS.FloatText(ShortMessage(msg), TTS.FLOAT_WARN, nil)
-            end
-            return origLog(self, msg, category, ...)
+    -- (the hooks below go through E:HookDisplay, CoreEngine.lua: an error in one is reported
+    -- but never stops the game itself)
+    E:HookDisplay("Log", function(self, msg, category)
+        if category == "ERROR" and userDepth > 0 and quietDepth == 0 and self.inMatch then
+            TTS.FloatText(ShortMessage(msg), TTS.FLOAT_WARN, nil)
         end
-    end
+    end)
 
-    -- A pointer for the player at the cursor, not written to the log (only during their own clicks)
+    -- A pointer for the player at the cursor, not written to the log (only during their own
+    -- clicks). The engine calls it mid-action, so a display error here is only reported.
     function E:Hint(msg)
         if userDepth > 0 and quietDepth == 0 and self.inMatch then
-            TTS.FloatText(ShortMessage(msg), TTS.FLOAT_WARN, nil)
+            local ok, err = pcall(TTS.FloatText, ShortMessage(msg), TTS.FLOAT_WARN, nil)
+            if not ok and geterrorhandler then pcall(geterrorhandler(), err) end
         end
     end
 
     if E.ResolveTarget then
         -- Refusals float their reason at the cursor (from the log line)
-        local origResolve = Counted(E.ResolveTarget)
-        E.ResolveTarget = function(self, targetType, isRemote, fieldIndex, ...)
-            local targeting = self.targeting
-            local results = { origResolve(self, targetType, isRemote, fieldIndex, ...) }
-            -- Targeting cleared or replaced: the target was accepted (the spell reveal or
-            -- the ability arrow below draws the arrow)
-            if targeting and self.targeting ~= targeting then
-                PlayFX(SOUND_TARGET)
-            end
-            return unpack(results)
-        end
+        E.ResolveTarget = Counted(E.ResolveTarget)
+        -- Targeting cleared or replaced: the target was accepted (the spell reveal or the
+        -- ability arrow below draws the arrow)
+        E:HookDisplay("ResolveTarget", function(self) return { targeting = self.targeting } end,
+            function(state, self)
+                if state.targeting and self.targeting ~= state.targeting then PlayFX(SOUND_TARGET) end
+            end)
     end
 
     -- Every spell, from either side: the card shows for a moment with arrows to its targets
-    if E.ResolveSpell then
-        local origSpell = E.ResolveSpell
-        E.ResolveSpell = function(self, card, tgt, casterIsRemote, ...)
-            local targets = EffectTargets(card and card.effect, tgt, casterIsRemote)
-            RevealSpell(card, casterIsRemote, targets)
-            if casterIsRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
-            SetHitSource(Pos(reveal), nil, card)
-            local results = { origSpell(self, card, tgt, casterIsRemote, ...) }
-            SetHitSource(nil)
-            return unpack(results)
-        end
-    end
+    E:HookDisplay("ResolveSpell", function(self, card, tgt, casterIsRemote)
+        local targets = EffectTargets(card and card.effect, tgt, casterIsRemote)
+        RevealSpell(card, casterIsRemote, targets)
+        if casterIsRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
+        SetHitSource(Pos(reveal), nil, card)
+    end, function() SetHitSource(nil) end)
 
     -- The PvP opponent's spell: its damage arrives afterwards, from their client
-    if E.ShowRemoteSpell then
-        local origRemoteSpell = E.ShowRemoteSpell
-        E.ShowRemoteSpell = function(self, cardId, ...)
-            local results = { origRemoteSpell(self, cardId, ...) }
-            SetHitSource(Pos(reveal), HIT_SOURCE_LINGER, TTS.Cards[cardId])
-            return unpack(results)
-        end
-    end
+    E:HookDisplay("ShowRemoteSpell", nil, function(_, self, results, cardId)
+        SetHitSource(Pos(reveal), HIT_SOURCE_LINGER, TTS.Cards[cardId])
+    end)
 
     -- Activated abilities: an arrow from the creature to what it hits
     if E.ActivateAbility then
@@ -1000,144 +985,133 @@ local function InstallHooks()
             BOSS08 = { ops = { { op = "freeze", to = "target" } } },
             BOSS10 = { ops = { { op = "damage", to = "enemy_creatures" } } },
         }
-        local origAbility = E.ActivateAbility
-        E.ActivateAbility = function(self, perm, isRemote, tgt, ...)
+        E:HookDisplay("ActivateAbility", function(self, perm, isRemote, tgt)
             local srcRemote, srcIdx = self:FindPerm(perm)
             local src = srcIdx and Pos(FindFieldFrame(srcRemote and true or false, srcIdx))
             local targets = EffectTargets(ABILITY_EFFECTS[perm.id], tgt, isRemote)
             SetHitSource(src, nil, perm and TTS.Cards[perm.id])
-            local ok = origAbility(self, perm, isRemote, tgt, ...)
+            return { src = src, targets = targets }
+        end, function(state, self, results, perm, isRemote)
             SetHitSource(nil)
-            if ok then
-                for _, t in ipairs(targets) do FlashArrow(src, t.pos, t.color, REVEAL_HOLD) end
-                if isRemote and #targets > 0 then PlayFX(SOUND_TARGET) end
+            if results[1] then
+                for _, t in ipairs(state.targets) do FlashArrow(state.src, t.pos, t.color, REVEAL_HOLD) end
+                if isRemote and #state.targets > 0 then PlayFX(SOUND_TARGET) end
             end
-            return ok
-        end
+        end)
     end
 
-    if E.DamagePlayer then
-        local origDamage = E.DamagePlayer
-        E.DamagePlayer = function(self, isRemote, amount, reason, ...)
-            local state = isRemote and self.remoteState or self.localState
-            local before, shield = state.life, ShieldOf(self, isRemote)
-            local src, color, at, impact, impactKey
-            if (tonumber(amount) or 0) > 0 then
-                -- A DoT's tick flies from its icon (TTS.NoteOverTimeTick), anything else from its source
-                local tick = NextOverTime("dot", isRemote)
-                if tick then
-                    src, color, impact = tick.pos, tick.color, tick.impact
-                else
-                    src, color, at, impact, impactKey = NextHitSource()
-                end
+    E:HookDisplay("DamagePlayer", function(self, isRemote, amount)
+        local life = isRemote and self.remoteState or self.localState
+        local state = { life = life, before = life.life, shield = ShieldOf(self, isRemote) }
+        if (tonumber(amount) or 0) > 0 then
+            -- A DoT's tick flies from its icon (TTS.NoteOverTimeTick), anything else from its source
+            local tick = NextOverTime("dot", isRemote)
+            if tick then
+                state.src, state.color, state.impact = tick.pos, tick.color, tick.impact
+            else
+                state.src, state.color, state.at, state.impact, state.impactKey = NextHitSource()
             end
-            local results = { origDamage(self, isRemote, amount, reason, ...) }
-            if state.life < before then
-                ShowHit(isRemote, before - state.life, src, color, at, impact, impactKey)
-            elseif ShieldOf(self, isRemote) < shield then
-                ShowSoak(isRemote)
-            end
-            return unpack(results)
         end
-    end
+        return state
+    end, function(s, self, results, isRemote)
+        if s.life.life < s.before then
+            ShowHit(isRemote, s.before - s.life.life, s.src, s.color, s.at, s.impact, s.impactKey)
+        elseif ShieldOf(self, isRemote) < s.shield then
+            ShowSoak(isRemote)
+        end
+    end)
 
     -- Damage to creatures from spells and abilities: noted with its source for the redraw
-    if E.DamageCreature then
-        local origDamageCreature = E.DamageCreature
-        E.DamageCreature = function(self, perm, ...)
-            local marked = origDamageCreature(self, perm, ...)
-            if perm and (marked or 0) > 0 and hitSrc and GetTime() <= hitSrcUntil then
-                AddCreatureShard(perm, hitSrc, hitSrcColor, marked, hitSrcImpact)
-            end
-            return marked
+    E:HookDisplay("DamageCreature", nil, function(_, self, results, perm)
+        local marked = results[1]
+        if perm and (marked or 0) > 0 and hitSrc and GetTime() <= hitSrcUntil then
+            AddCreatureShard(perm, hitSrc, hitSrcColor, marked, hitSrcImpact)
         end
-    end
+    end)
 
-    if E.ResolveCombatDamage then
-        local origCombat = E.ResolveCombatDamage
-        E.ResolveCombatDamage = function(self, ...)
-            local bs = self.blockingState
-            local arrows, state, before, shield, defRemote = {}, nil, nil, nil, nil
-            local queue = {}   -- each damage to the defending player in the order combat deals it
-            local combatSrc, firstColor, afterBlocks
-            -- PvP, defending: the attacker's client sends the damage to us afterwards
-            -- (ACTION:DAMAGE), so our life doesn't change here; arrow every unblocked
-            -- attacker that will hit (the hit itself plays when that damage arrives), in
-            -- blue if our damage shield will soak all of it
-            local damageArrives, incoming = false, 0
-            if bs then
-                local atkRemote = bs.isRemoteAttacking and true or false
-                defRemote = not atkRemote
-                damageArrives = atkRemote and not self.isSolo and not self.preventCombatDamage
-                state = defRemote and self.remoteState or self.localState
-                before, shield = state.life, ShieldOf(self, defRemote)
-                local plan = self:PlanCombatDamage(bs)
-                -- Blocks resolve first: the damage getting through sets off once they've landed
-                if plan.hits and #plan.hits > 0 and not self.preventCombatDamage then
-                    afterBlocks = GetTime() + HIT_TRAVEL + HIT_AFTER_BLOCKS
-                end
-
-                local blocked = {}
-                for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
-                local atkField = (atkRemote and self.remoteState or self.localState).field
-                local dst = Pos(defRemote and B.oppLifeBtn or B.myLifeBtn)
-                local srcs = {}
-                for _, atkIdx in ipairs(bs.attackers or {}) do
-                    local perm = atkField[atkIdx]
-                    local src = perm and Pos(FindFieldFrame(atkRemote, atkIdx))
-                    local color = perm and CardColor(TTS.Cards[perm.id])
-                    local power = perm and (self:GetCreatureStats(perm, atkRemote) or 0) or 0
-                    if perm and not blocked[atkIdx] and power > 0 then
-                        incoming = incoming + power
-                        table.insert(queue, { pos = src, color = color, at = afterBlocks })
-                        if src then table.insert(srcs, src) end
-                        firstColor = firstColor or color
-                        if src and dst then table.insert(arrows, { src, dst }) end
-                    elseif perm and blocked[atkIdx] and plan.trample[perm] then
-                        table.insert(queue, { pos = src, color = color, at = afterBlocks })
-                    end
-                end
-                if damageArrives then
-                    for _, n in pairs(plan.trample) do incoming = incoming + n end
-                end
-                combatSrc = Centroid(srcs)
-
-                -- Each blow between attackers and blockers flies from the creature striking it
-                if not self.preventCombatDamage then
-                    for _, h in ipairs(plan.hits or {}) do
-                        local r, idx = self:FindPerm(h.src)
-                        local pos = idx and Pos(FindFieldFrame(r and true or false, idx))
-                        if pos then AddCreatureShard(h.dst, pos, CardColor(TTS.Cards[h.src.id]), h.n) end
-                    end
-                end
+    E:HookDisplay("ResolveCombatDamage", function(self)
+        local bs = self.blockingState
+        -- s: arrows, state (the defender's), before / shield (its life and damage shield),
+        -- defRemote, queue (each damage to the defending player in the order combat deals
+        -- it), combatSrc, firstColor, afterBlocks, damageArrives, incoming
+        local s = { arrows = {}, queue = {}, damageArrives = false, incoming = 0 }
+        -- PvP, defending: the attacker's client sends the damage to us afterwards
+        -- (ACTION:DAMAGE), so our life doesn't change here; arrow every unblocked
+        -- attacker that will hit (the hit itself plays when that damage arrives), in
+        -- blue if our damage shield will soak all of it
+        if bs then
+            local atkRemote = bs.isRemoteAttacking and true or false
+            s.defRemote = not atkRemote
+            s.damageArrives = atkRemote and not self.isSolo and not self.preventCombatDamage
+            s.state = s.defRemote and self.remoteState or self.localState
+            s.before, s.shield = s.state.life, ShieldOf(self, s.defRemote)
+            local plan = self:PlanCombatDamage(bs)
+            -- Blocks resolve first: the damage getting through sets off once they've landed
+            if plan.hits and #plan.hits > 0 and not self.preventCombatDamage then
+                s.afterBlocks = GetTime() + HIT_TRAVEL + HIT_AFTER_BLOCKS
             end
 
-            -- The attackers swing (with card effects on, CardFX.lua plays it with their
-            -- attack animation instead)
-            if bs and bs.attackers and #bs.attackers > 0 and not self.preventCombatDamage
-                and not (TTS.CardFX and TTS.CardFX:Enabled()) then
-                PlayFX(SOUND_SWING)
+            local blocked = {}
+            for _, p in ipairs(self:BlockPairs(bs)) do blocked[p[2]] = true end
+            local atkField = (atkRemote and self.remoteState or self.localState).field
+            local dst = Pos(s.defRemote and B.oppLifeBtn or B.myLifeBtn)
+            local srcs = {}
+            for _, atkIdx in ipairs(bs.attackers or {}) do
+                local perm = atkField[atkIdx]
+                local src = perm and Pos(FindFieldFrame(atkRemote, atkIdx))
+                local color = perm and CardColor(TTS.Cards[perm.id])
+                local power = perm and (self:GetCreatureStats(perm, atkRemote) or 0) or 0
+                if perm and not blocked[atkIdx] and power > 0 then
+                    s.incoming = s.incoming + power
+                    table.insert(s.queue, { pos = src, color = color, at = s.afterBlocks })
+                    if src then table.insert(srcs, src) end
+                    s.firstColor = s.firstColor or color
+                    if src and dst then table.insert(s.arrows, { src, dst }) end
+                elseif perm and blocked[atkIdx] and plan.trample[perm] then
+                    table.insert(s.queue, { pos = src, color = color, at = s.afterBlocks })
+                end
             end
+            if s.damageArrives then
+                for _, n in pairs(plan.trample) do s.incoming = s.incoming + n end
+            end
+            s.combatSrc = Centroid(srcs)
 
-            hitShown = false
-            SetHitQueue(queue)
-            local results = { origCombat(self, ...) }
-            SetHitQueue(queue, damageArrives and HIT_SOURCE_LINGER or 0)
-            if damageArrives then
-                local color = (incoming > 0 and shield >= incoming) and SOAK_COLOR or HIT_COLOR
-                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], color, HIT_ARROW_HOLD) end
-            elseif state and state.life < before then
-                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
-                -- Combat that changes life without going through DamagePlayer still gets a hit
-                if not hitShown then ShowHit(defRemote, before - state.life, combatSrc, firstColor, afterBlocks) end
-            elseif state and ShieldOf(self, defRemote) < shield then
-                -- The damage shield soaked up every point
-                for _, pair in ipairs(arrows) do FlashArrow(pair[1], pair[2], SOAK_COLOR, HIT_ARROW_HOLD) end
-                if not hitShown then ShowSoak(defRemote) end
+            -- Each blow between attackers and blockers flies from the creature striking it
+            if not self.preventCombatDamage then
+                for _, h in ipairs(plan.hits or {}) do
+                    local r, idx = self:FindPerm(h.src)
+                    local pos = idx and Pos(FindFieldFrame(r and true or false, idx))
+                    if pos then AddCreatureShard(h.dst, pos, CardColor(TTS.Cards[h.src.id]), h.n) end
+                end
             end
-            return unpack(results)
         end
-    end
+
+        -- The attackers swing (with card effects on, CardFX.lua plays it with their
+        -- attack animation instead)
+        if bs and bs.attackers and #bs.attackers > 0 and not self.preventCombatDamage
+            and not (TTS.CardFX and TTS.CardFX:Enabled()) then
+            PlayFX(SOUND_SWING)
+        end
+
+        hitShown = false
+        SetHitQueue(s.queue)
+        return s
+    end, function(s, self)
+        SetHitQueue(s.queue, s.damageArrives and HIT_SOURCE_LINGER or 0)
+        local state = s.state
+        if s.damageArrives then
+            local color = (s.incoming > 0 and s.shield >= s.incoming) and SOAK_COLOR or HIT_COLOR
+            for _, pair in ipairs(s.arrows) do FlashArrow(pair[1], pair[2], color, HIT_ARROW_HOLD) end
+        elseif state and state.life < s.before then
+            for _, pair in ipairs(s.arrows) do FlashArrow(pair[1], pair[2], HIT_COLOR, HIT_ARROW_HOLD) end
+            -- Combat that changes life without going through DamagePlayer still gets a hit
+            if not hitShown then ShowHit(s.defRemote, s.before - state.life, s.combatSrc, s.firstColor, s.afterBlocks) end
+        elseif state and ShieldOf(self, s.defRemote) < s.shield then
+            -- The damage shield soaked up every point
+            for _, pair in ipairs(s.arrows) do FlashArrow(pair[1], pair[2], SOAK_COLOR, HIT_ARROW_HOLD) end
+            if not hitShown then ShowSoak(s.defRemote) end
+        end
+    end)
 end
 
 local loader = CreateFrame("Frame")

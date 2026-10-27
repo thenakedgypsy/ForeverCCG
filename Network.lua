@@ -2149,7 +2149,7 @@ function TTS.Net:OnReceive(msg, sender)
             if amt then
                 local st = (side == "THEIRS") and E.localState or E.remoteState
                 -- (UI\TargetFX.lua flies the number from the HoT's icon)
-                if TTS.NoteOverTimeTick then TTS.NoteOverTimeTick(st == E.remoteState, "hot", src) end
+                if TTS.NoteOverTimeTick then pcall(TTS.NoteOverTimeTick, st == E.remoteState, "hot", src) end
                 st.life = st.life + amt
                 E:Log(L("log.restoredLife", (src and src ~= "") and TTS:ReasonText(src) or L("reason.healing"), amt,
                     E:SideName(st == E.remoteState)), "ACTION")
@@ -2205,7 +2205,7 @@ function TTS.Net:OnReceive(msg, sender)
             local amt = tonumber(amtStr) or 0
             local shown = (reason and reason ~= "") and TTS:ReasonText(reason) or L("reason.damage")
             -- A tick of a DoT they put on us flies from its icon (UI\TargetFX.lua)
-            if TTS.NoteIncomingDamage then TTS.NoteIncomingDamage(reason) end
+            if TTS.NoteIncomingDamage then pcall(TTS.NoteIncomingDamage, reason) end
             -- DamagePlayer applies our own damage shield, logs, and handles defeat
             E:DamagePlayer(false, amt, L("reason.from", shown, sender))
 

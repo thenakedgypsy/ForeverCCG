@@ -259,65 +259,51 @@ local function Resnap(eng)
     end
 end
 
+-- (each through E:HookDisplay, CoreEngine.lua: an error here never stops the game itself)
 do
-    local origApply = E.ApplySpellOp
-    E.ApplySpellOp = function(self, op, tgt, card, casterIsRemote, ...)
-        if not FX:Enabled() then return origApply(self, op, tgt, card, casterIsRemote, ...) end
-        local was = castColor
+    E:HookDisplay("ApplySpellOp", function(self, op, tgt, card)
+        if not FX:Enabled() then return end
+        local state = { was = castColor, marks = op and op.op == "dispel" and DispelMarks(self) }
         castColor = card and type(card.color) == "string" and card.color:sub(1, 1) or nil
-        local before = op and op.op == "dispel" and DispelMarks(self)
-        local results = { origApply(self, op, tgt, card, casterIsRemote, ...) }
-        castColor = was
-        if before then
+        return state
+    end, function(state, self)
+        if not state then return end
+        castColor = state.was
+        if state.marks then
             for p, mark in pairs(DispelMarks(self)) do
-                if before[p] and before[p] ~= mark then Cause(p).dispelled = true end
+                if state.marks[p] and state.marks[p] ~= mark then Cause(p).dispelled = true end
             end
         end
-        return unpack(results)
-    end
+    end)
 
-    local origDamage = E.DamageCreature
-    E.DamageCreature = function(self, perm, n, ...)
-        local dealt = origDamage(self, perm, n, ...)
-        if castColor and perm and (dealt or 0) > 0 then Cause(perm).color = castColor end
-        return dealt
-    end
+    E:HookDisplay("DamageCreature", nil, function(_, self, results, perm)
+        if castColor and perm and (results[1] or 0) > 0 then Cause(perm).color = castColor end
+    end)
 
     -- Everyone in the fight swings
-    local origCombat = E.ResolveCombatDamage
-    E.ResolveCombatDamage = function(self, ...)
+    E:HookDisplay("ResolveCombatDamage", function(self)
         local bs = self.blockingState
-        if bs and FX:Enabled() then
-            local atkField = (bs.isRemoteAttacking and self.remoteState or self.localState).field
-            local blkField = (bs.isRemoteAttacking and self.localState or self.remoteState).field
-            for _, i in ipairs(bs.attackers or {}) do
-                if atkField[i] then
-                    local c = Cause(atkField[i])
-                    c.strike = true
-                    c.swing = not self.preventCombatDamage   -- (FX.SWING_SOUND)
-                end
-            end
-            for _, pair in ipairs(self:BlockPairs(bs)) do
-                if blkField[pair[1]] then Cause(blkField[pair[1]]).strike = true end
+        if not (bs and FX:Enabled()) then return end
+        local atkField = (bs.isRemoteAttacking and self.remoteState or self.localState).field
+        local blkField = (bs.isRemoteAttacking and self.localState or self.remoteState).field
+        for _, i in ipairs(bs.attackers or {}) do
+            if atkField[i] then
+                local c = Cause(atkField[i])
+                c.strike = true
+                c.swing = not self.preventCombatDamage   -- (FX.SWING_SOUND)
             end
         end
-        return origCombat(self, ...)
-    end
+        for _, pair in ipairs(self:BlockPairs(bs)) do
+            if blkField[pair[1]] then Cause(blkField[pair[1]]).strike = true end
+        end
+    end)
 
-    local origAbility = E.ActivateAbility
-    E.ActivateAbility = function(self, perm, ...)
-        local ok = origAbility(self, perm, ...)
-        if ok and perm and FX:Enabled() then Cause(perm).cast = true end
-        return ok
-    end
+    E:HookDisplay("ActivateAbility", nil, function(_, self, results, perm)
+        if results[1] and perm and FX:Enabled() then Cause(perm).cast = true end
+    end)
 
     -- "Until end of turn" wearing off, and damage wiped, are not weakening or healing
-    local origCleanup = E.EndTurnCleanup
-    E.EndTurnCleanup = function(self, ...)
-        local results = { origCleanup(self, ...) }
-        Resnap(self)
-        return unpack(results)
-    end
+    E:HookDisplay("EndTurnCleanup", nil, function(_, self) Resnap(self) end)
 end
 
 -- =========================================================================
@@ -846,13 +832,9 @@ function FX:PlayerHit(isRemote, color)
 end
 
 -- A new match: its starting life is no heal
-do
-    local origStart = E.StartMatch
-    E.StartMatch = function(self, ...)
-        playerSnaps[false], playerSnaps[true] = nil, nil
-        return origStart(self, ...)
-    end
-end
+E:HookDisplay("StartMatch", function()
+    playerSnaps[false], playerSnaps[true] = nil, nil
+end)
 
 function FX:SyncBoard()
     if not self:Enabled() then
