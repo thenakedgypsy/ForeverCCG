@@ -28,10 +28,10 @@ TTS:AddCards({
     },
     ["DUR03"] = {
         id = "DUR03", name = "Dire Mottled Boar", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 381,
+        power = 1, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 381,
         zone = "Durotar", creatureType = "Beast", npcId = 3099,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["DUR04"] = {
         id = "DUR04", name = "Armored Scorpid", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",

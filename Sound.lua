@@ -112,7 +112,7 @@ TTS.CreatureSounds = {
     ["BLA10"] = { death = 1322 }, -- Dreadscorn
     ["BLA11"] = { aggro = 596, death = 595 }, -- Kum'isha the Collector
     ["BOSS01"] = { aggro = 1010, death = 1009 }, -- Bazzalan
-    ["BOSS02"] = { aggro = 1263, death = 2944 }, -- Edwin VanCleef
+    ["BOSS02"] = { aggro = 5780, death = 2944 }, -- Edwin VanCleef
     ["BOSS03"] = { aggro = 416, death = 420 }, -- Mutanus the Devourer
     ["BOSS04"] = { aggro = 5793, death = 2944 }, -- Archmage Arugal
     ["BOSS05"] = { aggro = 5375, death = 449 }, -- Aku'mai
@@ -176,6 +176,7 @@ TTS.CreatureSounds = {
     ["BRN09"] = { aggro = 1236, death = 1972 }, -- Stormhide
     ["BRN10"] = { aggro = 590, death = 589 }, -- Azzere the Skyblade
     ["BRN11"] = { death = 1322 }, -- Mankrik
+    ["BRN12"] = { aggro = 2656, death = 2654 }, -- Barrens Giraffe
     ["BRS01"] = { death = 1322 }, -- Scarshield Legionnaire
     ["BRS02"] = { aggro = 396, death = 400 }, -- Spirestone Enforcer
     ["BRS03"] = { aggro = 344001, death = 3310 }, -- Smolderthorn Headhunter

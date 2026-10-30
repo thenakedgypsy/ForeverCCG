@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["LOC05"] = {
         id = "LOC05", name = "Mangy Mountain Boar", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 3027,
+        power = 2, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 3027,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1191,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["LOC06"] = {
         id = "LOC06", name = "Mountain Buzzard", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",

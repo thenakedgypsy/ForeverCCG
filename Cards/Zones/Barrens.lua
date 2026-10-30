@@ -82,6 +82,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
         text = "Airborne."
     },
+    ["BRN12"] = {
+        id = "BRN12", name = "Barrens Giraffe", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
+        power = 2, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 4473,
+        zone = "The Barrens", creatureType = "Beast", npcId = 3248,
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Anti-Air."
+    },
     -- Solo reward
     ["BRN11"] = {
         id = "BRN11", name = "Mankrik", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",

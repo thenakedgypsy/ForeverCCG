@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["DUN05"] = {
         id = "DUN05", name = "Crag Boar", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 607,
+        power = 2, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 607,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1125,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Quick."
     },
     ["DUN06"] = {
         id = "DUN06", name = "Wendigo", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
