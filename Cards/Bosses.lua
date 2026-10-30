@@ -117,7 +117,8 @@ TTS:AddCards({
         power = 4, toughness = 6, shielded = true, lifelink = true, isMob = true, isBoss = true, displayId = 2043,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3977,
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Drain. Shielded. Martyrdom: Return the last other denizen card put into your graveyard to the battlefield."
+        enterSound = 5840,   -- "Arise, my champion!" (Sound.lua)
+        text = "Drain. Shielded. Arrival: Return the last other denizen card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer

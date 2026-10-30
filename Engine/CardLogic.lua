@@ -270,20 +270,6 @@ function E:HandleCreatureDeath(perm, isRemote)
         self:Log(L("log.diedDrew", TTS:CardName(card)), "ACTION")
     end
 
-    if perm.id == "BOSS12" then
-        local gy = isRemote and self.remoteState.graveyard or self.localState.graveyard
-        for idx = #gy, 1, -1 do
-            local resCardId = gy[idx]
-            local resCard = TTS.Cards[resCardId]
-            if resCard and resCard.type == "Creature" and resCardId ~= "BOSS12" then
-                table.remove(gy, idx)
-                self:PutCreatureOntoBattlefield(resCardId, isRemote)
-                self:Log(L("log.resurrected", TTS:CardName("BOSS12"), TTS:CardName(resCard)), "ACTION")
-                break
-            end
-        end
-    end
-
     for _, other in ipairs(isRemote and self.localState.field or self.remoteState.field) do
         -- PvP: both clients see the death; the Baron's controller sends the damage to us
         if other.id == "BOSS25" and (isRemote or self.isSolo) then
@@ -600,6 +586,11 @@ SPELL_OPS.destroy = function(self, op, d, card, cr)
     if d.kind ~= "CREATURE" then return end
     local c = TTS.Cards[d.perm.id]
     if op.damaged and (d.perm.damage or 0) <= 0 then
+        -- orElse: the op an undamaged target gets instead (Execute's permanent -0/-1)
+        if op.orElse then
+            SPELL_OPS[op.orElse.op](self, op.orElse, d, card, cr)
+            return
+        end
         self:Log(L("log.fizzleUndamaged", TTS:CardName(card), CreatureName(d.perm)), "ERROR")
         return
     end
@@ -1033,6 +1024,19 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
         end
         self:Log(L("log.boss.wyrmthalak", TTS:CardName(perm.id)), "COMBAT")
         self:CheckStateBasedActions()
+    elseif perm.id == "BOSS12" then
+        -- Whitemane returns the last other denizen put into her controller's graveyard
+        local gy = isRemote and self.remoteState.graveyard or self.localState.graveyard
+        for idx = #gy, 1, -1 do
+            local resCardId = gy[idx]
+            local resCard = TTS.Cards[resCardId]
+            if resCard and resCard.type == "Creature" and resCardId ~= "BOSS12" then
+                table.remove(gy, idx)
+                self:PutCreatureOntoBattlefield(resCardId, isRemote)
+                self:Log(L("log.resurrected", TTS:CardName("BOSS12"), TTS:CardName(resCard)), "ACTION")
+                break
+            end
+        end
     elseif perm.id == "BOSS26" then
         local target = BestEnemyCreature(self, isRemote, function(p)
             return (self:GetCreatureStats(p, not isRemote)) <= 4

@@ -753,13 +753,14 @@ local function ScoreOpOn(self, op, d, card, profile)
     elseif op.op == "destroy" then
         local c = Card(perm.id)
         if op.damaged and (perm.damage or 0) <= 0 then
-            -- Execute deals its own damage first; a Shielded target soaks it and survives
-            local hitsFirst = false
-            for _, o in ipairs(card and card.effect and card.effect.ops or {}) do
-                if o == op then break end
-                if o.op == "damage" and o.to == "target" and (o.n or 0) > 0 then hitsFirst = true end
+            -- Execute only weakens an undamaged target, which kills one it drops to 0 toughness
+            local alt = op.orElse
+            if not alt then return 0 end
+            if alt.op == "buff" and alt.perm and enemy and (alt.t or 0) < 0
+                and -alt.t >= RemainingToughness(self, perm, d.isRemote) then
+                return v
             end
-            if not hitsFirst or perm.shielded then return 0 end
+            return ScoreOpOn(self, alt, d, card, profile)
         end
         if op.nonColor and c and c.color == op.nonColor then return 0 end
         return enemy and v or -v

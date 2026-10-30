@@ -983,7 +983,10 @@ local function OpPanel(op, eff)
     elseif id == "mana" then
         table.insert(extra, L("tt.adds", Sym(string.rep("{" .. (op.color or "C") .. "}", op.n or 0), 14)))
     elseif id == "destroy" then
-        if op.damaged then table.insert(extra, L("tt.onlyDamaged")) end
+        if op.damaged then
+            local alt = op.orElse
+            table.insert(extra, alt and L("tt.elseWeaken", Signed(alt.p) .. "/" .. Signed(alt.t)) or L("tt.onlyDamaged"))
+        end
         if op.nonColor then table.insert(extra, L("tt.nonColor", SphereName(op.nonColor))) end
     elseif id == "steal" then
         if op.maxPower then table.insert(extra, L("tt.maxPower", op.maxPower)) end

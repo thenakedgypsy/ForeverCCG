@@ -3725,7 +3725,8 @@ function B:UpdateDisplay()
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, true)
-                    TTS.SetCardStats(f, effP, effT, perm.damage, "|cFFFFD200")
+                    local colorCode = (effP > card.power or effT > card.toughness) and "|cFF00FF00" or "|cFFFFD200"
+                    TTS.SetCardStats(f, effP, effT, perm.damage, colorCode)
                 else
                     TTS.HideCardStats(f)
                 end

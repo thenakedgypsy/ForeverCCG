@@ -66,8 +66,8 @@ TTS:AddCards({
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 346,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Murloc", npcId = 1545,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        onDeath = { ops = { { op = "token", id = "TOK01", n = 2 } } },
-        text = "Martyrdom: Spawn: 2 Murloc Tadpole Adds (1/1)."
+        etb = { ops = { { op = "token", id = "TOK01", n = 2 } } },
+        text = "Arrival: Spawn: 2 Murloc Tadpole Adds (1/1)."
     },
     ["TIR09"] = {
         id = "TIR09", name = "Scarlet Vanguard", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

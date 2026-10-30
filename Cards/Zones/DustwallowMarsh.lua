@@ -31,8 +31,8 @@ TTS:AddCards({
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 652,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", faction = "Murloc", npcId = 4359,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        onDeath = { ops = { { op = "token", id = "TOK01", n = 1 } } },
-        text = "Martyrdom: Spawn: 1 Murloc Tadpole Add (1/1)."
+        etb = { ops = { { op = "token", id = "TOK01", n = 1 } } },
+        text = "Arrival: Spawn: 1 Murloc Tadpole Add (1/1)."
     },
     ["DUS04"] = {
         id = "DUS04", name = "Drywallow Snapper", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",

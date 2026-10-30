@@ -991,7 +991,9 @@ local function Flush()
         for _, cardId in ipairs(pending[kind]) do
             local snd = S:GetCreatureSound(cardId, kind)
             if snd then
-                local cmc = TTS.Cards[cardId].cmc or 0
+                local card = TTS.Cards[cardId]
+                -- A card's own line (Whitemane's "Arise, my champion!") beats what it brings in with it
+                local cmc = (card.cmc or 0) + (card[kind .. "Sound"] and 1000 or 0)
                 if cmc > bestCmc then
                     bestSound, bestCmc = snd, cmc
                 end

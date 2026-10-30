@@ -51,9 +51,10 @@ TTS:AddCards({
     },
     ["WAR07"] = {
         id = "WAR07", name = "Execute", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Deal 1 damage to target enemy denizen, then destroy it if it has been dealt damage.",
+        text = "Destroy target enemy denizen if it has been dealt damage this turn. Otherwise, it permanently gets -0/-1.",
         art = "Interface\\Icons\\INV_Sword_48",
-        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 1 }, { op = "destroy", to = "target", damaged = true } } }
+        effect = { target = "enemy_creature", ops = { { op = "destroy", to = "target", damaged = true,
+            orElse = { op = "buff", to = "target", p = 0, t = -1, perm = true } } } }
     },
     ["WAR08"] = {
         id = "WAR08", name = "Shield Wall", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Warrior",

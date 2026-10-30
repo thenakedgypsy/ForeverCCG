@@ -146,6 +146,7 @@ end
 -- Headline and opponent line per outcome: result.<outcome> / result.opponent.<outcome>
 local RESULT_HEADLINES = { won = true, lost = true, conceded = true }
 local RESULT_DELAY = 2.2   -- seconds a win or loss waits before its result shows (UI\TargetFX.lua's hits land)
+local RESULT_SCALE = 1.6   -- the result popup is drawn this much larger (frame and fonts)
 
 StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     text = "%s\n\n%s",
@@ -163,6 +164,8 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     -- A win's reward card shows in the board's preview while Accept is hovered (the button
     -- is shared by every popup, so it's hooked once and checks which popup it's on)
     OnShow = function(self)
+        -- Popup frames are shared, so the scale is put back in OnHide
+        self:SetScale(RESULT_SCALE)
         local btn = self.button1 or (self.GetButton1 and self:GetButton1())
         if not btn then return end
         btn.ttsDialog = self
@@ -174,6 +177,9 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
             local B = TTS.BoardFrame
             if card and B and B.ShowRewardCard then B:ShowRewardCard(card) end
         end)
+    end,
+    OnHide = function(self)
+        self:SetScale(1)
     end,
     timeout = 0,
     whileDead = true,
