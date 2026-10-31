@@ -987,6 +987,13 @@ function E:CommitAttacksAndEndTurn()
 end
 
 function E:EndTurn()
+    -- Defending: End Turn sends our blocks on, as Next Phase does (both read "Damage" next)
+    local defending = self.blockingState
+    if self.phase == "COMBAT_BLOCK" and defending and defending.isRemoteAttacking
+        and not defending.blocksDeclared then
+        self:NextPhase()
+        return
+    end
     if not self.isMyTurn then return end
     if self:UndoBlocksAction() then return end
     -- A choice still open (e.g. a discard) would be made after the turn has passed: the

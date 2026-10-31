@@ -2201,6 +2201,32 @@ function E:PlanCombatDamage(bs)
     return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped, hits = hits }
 end
 
+-- The combat damage the defending player takes if the current blocks stand: unblocked
+-- attackers' power plus Brutish carry-over, less the defender's damage shield (for the
+-- blocking preview, UI/Board.lua). The attacker's damage order isn't picked yet while blocks
+-- are assigned, so the default one (E:DamageOrder) stands in for it.
+function E:IncomingCombatDamage(bs)
+    if not bs or self.preventCombatDamage then return 0 end
+    local atkRemote = bs.isRemoteAttacking and true or false
+    local atkField = atkRemote and self.remoteState.field or self.localState.field
+    local plan = self:PlanCombatDamage(bs)
+    local blocked = {}
+    for _, f in ipairs(plan.fights) do blocked[f.atk] = true end
+    local total = 0
+    for _, atkIdx in ipairs(bs.attackers or {}) do
+        local atk = atkField[atkIdx]
+        if atk then
+            if blocked[atk] then
+                total = total + (plan.trample[atk] or 0)
+            else
+                total = total + math.max(0, (self:GetCreatureStats(atk, atkRemote)))
+            end
+        end
+    end
+    local defState = atkRemote and self.localState or self.remoteState
+    return math.max(0, total - (defState.damageShield or 0))
+end
+
 -- Our attackers blocked by several creatures: the player picks the order each deals its
 -- damage in, one blocker at a time (the last one left goes last). Returns true while a pick
 -- is open; onDone runs once an attacker's order is complete (and comes back here for the

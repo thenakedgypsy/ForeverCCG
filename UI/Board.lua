@@ -441,11 +441,13 @@ end
 
 -- =========================================================================
 -- MINIMIZE / RESTORE
--- Minimizing hides the board (and its game log) and shows a small restore bar.
+-- Minimizing hides the board (and its game log) and shows a small restore bar, with a phase
+-- tracker under its title: whose turn it is, then Main 1 > Combat > Main 2 with the current
+-- step lit.
 -- =========================================================================
 local restoreBar = CreateFrame("Frame", "TTS_BoardRestoreFrame", UIParent, backdropTemplate)
 TTS.BoardRestoreFrame = restoreBar
-restoreBar:SetSize(250, 40)
+restoreBar:SetSize(290, 56)
 restoreBar:SetPoint("TOP", UIParent, "TOP", 0, -120)
 Skin(restoreBar, "panel", { 0.04, 0.04, 0.04, 0.92 }, STYLE.panelBorder)
 restoreBar:EnableMouse(true)
@@ -456,15 +458,64 @@ restoreBar:SetScript("OnDragStop", restoreBar.StopMovingOrSizing)
 restoreBar:Hide()
 
 local restoreText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-restoreText:SetPoint("LEFT", 14, 0)
+restoreText:SetPoint("TOPLEFT", 14, -12)
 Loc:Bind(restoreText, "board.minimized")
 
 local restoreBtn = CreateFrame("Button", nil, restoreBar, "UIPanelButtonTemplate")
 restoreBtn:SetSize(70, 22)
-restoreBtn:SetPoint("RIGHT", -10, 0)
+restoreBtn:SetPoint("TOPRIGHT", -10, -8)
 StyleButton(restoreBtn)
 Loc:Bind(restoreBtn, "board.restore")
 restoreBtn:SetScript("OnClick", function() B:Show() end)
+
+-- The button flashes while the match waits on us: our turn, or the opponent's attack waiting
+-- on our blocks (an additive highlight pulsed over the button, like Mulligan's). The phase
+-- tracker is kept up to date from the same OnUpdate (the board doesn't redraw while hidden).
+do
+local RESTORE_FLASH = 4   -- pulse speed (radians per second)
+local TRACK_POLL = 0.25   -- seconds between phase tracker updates
+local TRACK_STEPS = { "board.mini.main1", "board.mini.combat", "board.mini.main2" }
+local TRACK_STEP_OF = { MAIN1 = 1, COMBAT_ATTACK = 2, COMBAT_BLOCK = 2, MAIN2 = 3 }
+
+local tracker = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+tracker:SetPoint("BOTTOMLEFT", 14, 12)
+tracker:SetJustifyH("LEFT")
+
+-- "Your turn  Main 1 > Combat > Main 2", whose turn coloured and the current step in gold.
+-- (The opponent's own steps aren't tracked outside combat: none is lit then.)
+local function TrackText(E)
+    if not E.inMatch then return "" end
+    local who = E.isMyTurn and ("|cFF33FF33" .. L("board.mini.you") .. "|r")
+        or ("|cFFFF6666" .. L("board.mini.opp", E.opponent or L("side.opponentCap")) .. "|r")
+    local current = TRACK_STEP_OF[E.phase]
+    local parts = {}
+    for i, key in ipairs(TRACK_STEPS) do
+        parts[i] = (i == current and "|cFFFFD200" or "|cFF808080") .. L(key) .. "|r"
+    end
+    return who .. "   " .. table.concat(parts, " |cFF808080>|r ")
+end
+
+restoreBtn.flash = restoreBtn:CreateTexture(nil, "OVERLAY")
+restoreBtn.flash:SetTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+restoreBtn.flash:SetTexCoord(0, 0.625, 0, 0.6875)
+restoreBtn.flash:SetBlendMode("ADD")
+restoreBtn.flash:SetAllPoints()
+restoreBtn.flash:SetAlpha(0)
+restoreBtn:SetScript("OnUpdate", function(self, elapsed)
+    local E = TTS.Engine
+    self.trackT = (self.trackT or TRACK_POLL) + elapsed
+    if self.trackT >= TRACK_POLL then
+        self.trackT = 0
+        tracker:SetText(TrackText(E))
+    end
+    local bs = E.blockingState
+    local ourMove = E.inMatch and (E.isMyTurn
+        or (E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking and not bs.blocksDeclared))
+    if not ourMove then self.flash:SetAlpha(0); return end
+    self.flashT = (self.flashT or 0) + elapsed
+    self.flash:SetAlpha(0.5 + 0.5 * math.sin(self.flashT * RESTORE_FLASH))
+end)
+end
 
 function B:Minimize()
     TT:Hide()
@@ -484,8 +535,10 @@ B:SetScript("OnShow", function(self)
 end)
 
 local minimizeBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
-minimizeBtn:SetSize(24, 24)
-minimizeBtn:SetPoint("TOPRIGHT", -16, -17)
+minimizeBtn:SetSize(30, 28)
+minimizeBtn:SetPoint("TOPRIGHT", -16, -15)
+minimizeBtn:SetNormalFontObject("GameFontNormalLarge")
+minimizeBtn:SetHighlightFontObject("GameFontHighlightLarge")
 minimizeBtn:SetText("-")
 minimizeBtn:SetScript("OnClick", function() B:Minimize() end)
 minimizeBtn:SetScript("OnEnter", function(self) TT:ShowText(self, "ANCHOR_TOP", L("board.minimize")) end)
@@ -501,6 +554,9 @@ Loc:Bind(concedeBtn, "board.concede")
 StyleButton(concedeBtn)
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConfirmConcede() end)
 
+-- The top bar's checkboxes, right to left from Concede (a block of their own: the file is at
+-- Lua's 200 locals; the rest of the file reaches them as B.soundCheck and so on)
+do
 local soundCheck = CreateFrame("CheckButton", nil, B, "UICheckButtonTemplate")
 soundCheck:SetSize(24, 24)
 soundCheck:SetPoint("RIGHT", concedeBtn, "LEFT", -6, 0)
@@ -571,25 +627,115 @@ lockCheck:SetScript("OnEnter", function(self)
     TT:ShowText(self, "ANCHOR_TOP", L("board.lockTitle"), L("board.lockDesc"))
 end)
 lockCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+end
 
-B.endTurnBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
-B.endTurnBtn:SetSize(90, 24)
-B.endTurnBtn:SetPoint("BOTTOMRIGHT", -30, 16)
+-- The step and End Turn buttons, stacked on the board's right edge: End Turn (big) just
+-- above your deck's count, the step button on it, under the life tracker (LIFE TRACKER).
+-- Their labels wrap to fit; the step button's is set in UpdateDisplay.
+-- Skinned like the board's plates rather than Blizzard's panel button, whose art only
+-- stretches sideways: the panel button's red, shaded light at the top to dark at the bottom
+-- like its art, a gold border and glow on hover, darker while pressed, grey (like the panel
+-- button's disabled art) when disabled.
+do
+local BIG_RED = { { 0.30, 0.02, 0.01 }, { 0.50, 0.04, 0.02 } }   -- bottom, top
+local BIG_OFF = { { 0.14, 0.13, 0.12 }, { 0.30, 0.29, 0.27 } }
+local BIG_HOVER_BORDER = { 1.0, 0.82, 0.0, 1 }
+local BIG_OFF_BORDER   = { 0.30, 0.28, 0.25, 1 }
+local BIG_GLOW_PAD     = 5
+
+-- A vertical gradient fill (SetGradient takes colour objects in newer clients, numbers in older)
+local function Shade(t, colors)
+    local lo, hi = colors[1], colors[2]
+    t:SetColorTexture(1, 1, 1, 1)
+    if CreateColor and pcall(t.SetGradient, t, "VERTICAL",
+        CreateColor(lo[1], lo[2], lo[3], 1), CreateColor(hi[1], hi[2], hi[3], 1)) then return end
+    if not pcall(t.SetGradient, t, "VERTICAL", lo[1], lo[2], lo[3], hi[1], hi[2], hi[3]) then
+        t:SetColorTexture(hi[1], hi[2], hi[3], 1)
+    end
+end
+
+local function PaintBig(b)
+    local on = b:IsEnabled()
+    if b.shadedOn ~= on then
+        Shade(b.fill, on and BIG_RED or BIG_OFF)
+        b.shadedOn = on
+    end
+    b.shadow:SetShown((on and b.pressed) and true or false)
+    local bd = not on and BIG_OFF_BORDER or (b.hover and BIG_HOVER_BORDER or STYLE.controlBorder)
+    b:SetBackdropBorderColor(bd[1], bd[2], bd[3], bd[4])
+    b.glow:SetShown((on and b.hover) and true or false)
+end
+
+local function BigButton(w, h, font)
+    local b = CreateFrame("Button", nil, B, backdropTemplate)
+    b:SetSize(w, h)
+    Skin(b, "control")
+    b:SetBackdropColor(0, 0, 0, 0)   -- the fill below draws the face
+
+    b.fill = b:CreateTexture(nil, "BACKGROUND", nil, 1)
+    b.fill:SetPoint("TOPLEFT", 3, -3)
+    b.fill:SetPoint("BOTTOMRIGHT", -3, 3)
+
+    b.shadow = b:CreateTexture(nil, "BORDER")   -- pressed: darker
+    b.shadow:SetAllPoints(b.fill)
+    b.shadow:SetColorTexture(0, 0, 0, 0.4)
+    b.shadow:Hide()
+
+    local text = b:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", 4, 0)
+    text:SetPoint("RIGHT", -4, 0)
+    text:SetWordWrap(true)
+    text:SetJustifyH("CENTER")
+    b:SetFontString(text)
+    b:SetNormalFontObject(font)
+    b:SetHighlightFontObject((font:gsub("Normal", "Highlight")))
+    b:SetDisabledFontObject((font:gsub("Normal", "Disable")))
+    b:SetPushedTextOffset(1, -1)
+
+    -- (on the board, under the button, so it shows round its edge like the plate halo)
+    b.glow = B:CreateTexture(nil, "ARTWORK")
+    b.glow:SetPoint("TOPLEFT", b, "TOPLEFT", -BIG_GLOW_PAD, BIG_GLOW_PAD)
+    b.glow:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", BIG_GLOW_PAD, -BIG_GLOW_PAD)
+    b.glow:SetColorTexture(1.0, 0.82, 0.0, 0.3)
+    b.glow:SetBlendMode("ADD")
+    b.glow:Hide()
+
+    local shine = b:CreateTexture(nil, "HIGHLIGHT")
+    shine:SetPoint("TOPLEFT", 3, -3)
+    shine:SetPoint("BOTTOMRIGHT", -3, 3)
+    shine:SetColorTexture(1.0, 0.82, 0.0, 0.08)
+    shine:SetBlendMode("ADD")
+
+    b:SetScript("OnEnter", function(self) self.hover = true; PaintBig(self) end)
+    b:SetScript("OnLeave", function(self) self.hover = nil; self.pressed = nil; PaintBig(self) end)
+    b:SetScript("OnMouseDown", function(self) self.pressed = true; PaintBig(self) end)
+    b:SetScript("OnMouseUp", function(self) self.pressed = nil; PaintBig(self) end)
+    b:SetScript("OnEnable", PaintBig)
+    b:SetScript("OnDisable", PaintBig)
+    PaintBig(b)
+    return b
+end
+
+-- End Turn's bottom: over your deck's count with the deck at its tallest (a full stack, from
+-- the deck's bottom at 52: 129 px of pile, the count's 2 px gap and line, a little room), so
+-- the buttons don't move as the deck runs down. Centred under the life tracker, with the
+-- step button on it.
+local TURN_BTN_X, TURN_BTN_BOTTOM = -60, 203   -- from the board's bottom-right corner
+
+B.endTurnBtn = BigButton(88, 128, "GameFontNormalLarge")
+B.endTurnBtn:SetPoint("BOTTOM", B, "BOTTOMRIGHT", TURN_BTN_X, TURN_BTN_BOTTOM)
 Loc:Bind(B.endTurnBtn, "board.endTurn")
-StyleButton(B.endTurnBtn)
 B.endTurnBtn:SetScript("OnClick", function() TTS.Engine:EndTurn() end)
 
-B.nextPhaseBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
-B.nextPhaseBtn:SetSize(160, 24)
-B.nextPhaseBtn:SetPoint("RIGHT", B.endTurnBtn, "LEFT", -8, 0)
-Loc:Bind(B.nextPhaseBtn, "board.toCombat")
-StyleButton(B.nextPhaseBtn)
+B.nextPhaseBtn = BigButton(88, 44, "GameFontNormal")
+B.nextPhaseBtn:SetPoint("BOTTOM", B.endTurnBtn, "TOP", 0, 6)
 B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
+end
 
 -- Takes back the last card played this phase (greyed out when it cannot be used)
 B.undoBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.undoBtn:SetSize(70, 24)
-B.undoBtn:SetPoint("RIGHT", B.nextPhaseBtn, "LEFT", -8, 0)
+B.undoBtn:SetPoint("BOTTOMRIGHT", -30, 16)
 Loc:Bind(B.undoBtn, "board.undo")
 StyleButton(B.undoBtn)
 if B.undoBtn.SetMotionScriptsWhileDisabled then B.undoBtn:SetMotionScriptsWhileDisabled(true) end
@@ -618,8 +764,8 @@ B.undoBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 -- Shuffles the opening hand back for a new one (shown until the hand is kept, CoreEngine.lua)
 B.mulliganBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
-B.mulliganBtn:SetSize(80, 24)
-B.mulliganBtn:SetPoint("BOTTOM", B.nextPhaseBtn, "TOP", 0, 6)
+B.mulliganBtn:SetSize(96, 24)
+-- (anchored over your graveyard button once that's made: GRAVEYARD LISTS)
 Loc:Bind(B.mulliganBtn, "board.mulligan")
 StyleButton(B.mulliganBtn)
 if B.mulliganBtn.SetMotionScriptsWhileDisabled then B.mulliganBtn:SetMotionScriptsWhileDisabled(true) end
@@ -924,16 +1070,17 @@ end
 -- =========================================================================
 -- LIFE TRACKER
 -- Both players' life at a glance, in the free space on the board's right edge (the
--- battlefield stops at LAYOUT.BF_RIGHT), a little above the middle: the opponent's above,
+-- battlefield stops at LAYOUT.BF_RIGHT), its bottom on the board's middle, over the step and
+-- End Turn buttons: the opponent's above,
 -- yours below, each number coloured like its life bar and changing with it (LifeBar_OnUpdate)
 -- =========================================================================
 do
 local TRACKER_W, TRACKER_H = 70, 96
-local TRACKER_X, TRACKER_Y = -23, 46   -- from the middle of the board's right edge
+local TRACKER_X = -29   -- from the board's right edge (lined up with the buttons under it)
 
 B.lifeTracker = CreateFrame("Frame", nil, B, backdropTemplate)
 B.lifeTracker:SetSize(TRACKER_W, TRACKER_H)
-B.lifeTracker:SetPoint("RIGHT", B, "RIGHT", TRACKER_X, TRACKER_Y)
+B.lifeTracker:SetPoint("BOTTOMRIGHT", B, "RIGHT", TRACKER_X, -2)
 Skin(B.lifeTracker, "control", STYLE.controlBg, STYLE.controlBorder)
 
 local function TrackerRow(yOffset)
@@ -955,6 +1102,85 @@ trackerLine:SetColorTexture(1, 0.82, 0, 0.5)
 
 B.oppLifeBtn.lifeBar.row = B.lifeTracker.opp
 B.myLifeBtn.lifeBar.row = B.lifeTracker.me
+end
+
+-- =========================================================================
+-- INCOMING DAMAGE
+-- While we assign blockers, the damage the attack would deal us as the blocks stand
+-- (E:IncomingCombatDamage): a pulsing "-X" left of our number on the life tracker (red, grey
+-- when every blow is stopped), "(-X)" on our life plate and a pulsing red chunk over the life it
+-- would take off our bar. B.SetIncomingDamage is called from UpdateDisplay, after the
+-- plate's text and bar are set, with nil when there is nothing to preview.
+-- =========================================================================
+do
+local plate = B.myLifeBtn
+local chunk = plate:CreateTexture(nil, "ARTWORK", nil, 3)   -- (over the bar's fill)
+chunk:SetTexture(LIFE_BAR_TEX)
+chunk:SetVertexColor(0.85, 0.05, 0.05, 1)
+chunk:Hide()
+local chunkPulse = chunk:CreateAnimationGroup()
+chunkPulse:SetLooping("BOUNCE")
+local chunkFade = chunkPulse:CreateAnimation("Alpha")
+chunkFade:SetFromAlpha(0.35)
+chunkFade:SetToAlpha(0.95)
+chunkFade:SetDuration(0.6)
+chunkFade:SetSmoothing("IN_OUT")
+
+-- The chunk covers our life now down to what it would be (out of the bar's full)
+local function ShowChunk(dmg)
+    local bar = plate.lifeBar
+    local life = bar and bar.full and math.max(0, bar.life) or 0
+    if not dmg or dmg <= 0 or life <= 0 then
+        chunk:Hide(); chunkPulse:Stop()
+        return
+    end
+    local from, to = math.max(0, life - dmg) / bar.full, life / bar.full
+    local inner = math.max(1, plate:GetWidth() - 2 * LIFE_INSET)
+    chunk:ClearAllPoints()
+    chunk:SetPoint("TOPLEFT", plate, "TOPLEFT", LIFE_INSET + inner * from, -LIFE_INSET)
+    chunk:SetPoint("BOTTOMLEFT", plate, "BOTTOMLEFT", LIFE_INSET + inner * from, LIFE_INSET)
+    chunk:SetWidth(inner * (to - from))
+    chunk:Show()
+    if not chunkPulse:IsPlaying() then chunkPulse:Play() end
+end
+
+local text = B.lifeTracker:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+text:SetPoint("RIGHT", B.lifeTracker, "LEFT", -4, -B.lifeTracker:GetHeight() / 4)
+local font = text:GetFont()
+if font then text:SetFont(font, 24, "THICKOUTLINE") end
+text:Hide()
+local pulse = text:CreateAnimationGroup()
+pulse:SetLooping("BOUNCE")
+local fade = pulse:CreateAnimation("Alpha")
+fade:SetFromAlpha(0.45)
+fade:SetToAlpha(1)
+fade:SetDuration(0.6)
+fade:SetSmoothing("IN_OUT")
+
+function B.SetIncomingDamage(dmg)
+    ShowChunk(dmg)
+    if not dmg then
+        text:Hide(); pulse:Stop()
+        return
+    end
+    if dmg > 0 then
+        B.myLifeText:SetText(L("board.lifeIncoming", TTS.Engine.localState.life, dmg))
+    end
+    text:SetText("-" .. dmg)
+    if dmg >= TTS.Engine.localState.life then
+        text:SetTextColor(1, 0.1, 0.1)      -- lethal
+    elseif dmg > 0 then
+        text:SetTextColor(1, 0.45, 0.3)
+    else
+        text:SetTextColor(0.6, 0.6, 0.6)
+    end
+    text:Show()
+    if dmg > 0 then
+        if not pulse:IsPlaying() then pulse:Play() end
+    else
+        pulse:Stop()
+    end
+end
 end
 
 -- =========================================================================
@@ -989,7 +1215,7 @@ end
 
 -- =========================================================================
 -- PLAYER EFFECT BARS (damage / healing over time, damage shields)
--- Opponent: top-right under Concede. You: right side above your deck.
+-- Opponent: top-right under Concede. You: right side, over the life tracker.
 -- =========================================================================
 EFFECT_BAR.EFFECT_ICON  = 24
 EFFECT_BAR.EFFECT_GAP   = 4
@@ -1083,7 +1309,7 @@ B.oppEffectBar = CreateEffectBar("board.oppEffects")
 B.oppEffectBar:SetPoint("TOPRIGHT", B, "TOPRIGHT", -20, -44)
 
 B.myEffectBar = CreateEffectBar("board.myEffects")
-B.myEffectBar:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -20, 174)
+B.myEffectBar:SetPoint("BOTTOMRIGHT", B.lifeTracker, "TOPRIGHT", 0, 8)
 
 local myHandFrames     = {}
 local oppHandFrames    = {}
@@ -1224,21 +1450,22 @@ end
 -- card fades between both. Purely a look; each client paints it for both players' cards
 -- (E:IsFoil / E:IsPermFoil).
 -- =========================================================================
-local FOIL_GLOW_TEX = TEXTURE_ROOT .. "FoilGlow.tga"   -- the card fills its middle 192 of 256 px
-local FOIL_GLOW_PAD = 32 / 192   -- halo width beyond the card, as a share of the card's size
-local FOIL_RIM_TEX  = TEXTURE_ROOT .. "FoilRim.tga"    -- glow fading in from the art window's edges
-local FOIL_RIM_ALPHA = 0.8   -- the rim's strength, at the top of the pulse
-local FOIL_PULSE = 1.2    -- pulse speed (radians per second)
-local FOIL_FADE  = 0.8    -- a two-colour card's fade between its colours (radians per second)
+local FOIL = {}   -- (one table, not a local each: the file is at Lua's 200 locals)
+FOIL.GLOW_TEX = TEXTURE_ROOT .. "FoilGlow.tga"   -- the card fills its middle 192 of 256 px
+FOIL.GLOW_PAD = 32 / 192   -- halo width beyond the card, as a share of the card's size
+FOIL.RIM_TEX  = TEXTURE_ROOT .. "FoilRim.tga"    -- glow fading in from the art window's edges
+FOIL.RIM_ALPHA = 0.8   -- the rim's strength, at the top of the pulse
+FOIL.PULSE = 1.2    -- pulse speed (radians per second)
+FOIL.FADE  = 0.8    -- a two-colour card's fade between its colours (radians per second)
 -- The spheres' colours, as the Deckbuilder shows them; colourless cards glow gold
-local FOIL_RGB = {
+FOIL.RGB = {
     W = { 1.00, 0.82, 0.00 },  -- Holy
     U = { 0.40, 0.73, 1.00 },  -- Arcane
     B = { 0.60, 0.40, 1.00 },  -- Shadow
     R = { 1.00, 0.27, 0.27 },  -- Fire
     G = { 0.27, 1.00, 0.27 },  -- Nature
 }
-local FOIL_GOLD = { 1.00, 0.82, 0.20 }
+FOIL.GOLD = { 1.00, 0.82, 0.20 }
 
 -- The card's colours as its frame picks them (DualFrameTexture / SingleFrameTexture): its
 -- two colours, or its colour, school or first colour in its cost
@@ -1247,30 +1474,30 @@ local function FoilColors(card)
     if card then
         for _, col in ipairs(card.colors or { "W", "U", "B", "R", "G" }) do
             if card.colors or (card.cost and card.cost:find("{" .. col .. "}", 1, true)) then
-                list[#list + 1] = FOIL_RGB[col]
+                list[#list + 1] = FOIL.RGB[col]
             end
         end
         if #list ~= 2 then
             local col = card.color or card.school or (card.cost and card.cost:match("{([WUBRGwubrg])}"))
-            list = { FOIL_RGB[col and string.upper(col)] }
+            list = { FOIL.RGB[col and string.upper(col)] }
         end
     end
-    if not list[1] then list = { FOIL_GOLD } end
+    if not list[1] then list = { FOIL.GOLD } end
     return list
 end
 TTS.CardColors = FoilColors
-TTS.SPHERE_RGB = FOIL_RGB
+TTS.SPHERE_RGB = FOIL.RGB
 
 -- Sparkles: little stars that twinkle on round the card's edge and drift off it, in the
 -- glow's colour washed towards white. Made on the overlay (over the model and frame) the
 -- first time a frame shows a foil.
-local FOIL_SPARKLE_TEX = TEXTURE_ROOT .. "FoilSparkle.tga"
-local FOIL_SPARKS      = 6       -- alive at once per card
-local FOIL_SPARK_SIZE  = 0.22    -- largest size, as a share of the card's width
-local FOIL_SPARK_LIFE  = { 0.7, 1.5 }   -- seconds, shortest and longest
-local FOIL_SPARK_DRIFT = 6       -- px per second off the card's edge (card's own scale)
-local FOIL_SPARK_RISE  = 5       -- px per second upwards
-local FOIL_SPARK_WHITE = 0.45    -- how far towards white the colour is washed
+FOIL.SPARKLE_TEX = TEXTURE_ROOT .. "FoilSparkle.tga"
+FOIL.SPARKS      = 6       -- alive at once per card
+FOIL.SPARK_SIZE  = 0.22    -- largest size, as a share of the card's width
+FOIL.SPARK_LIFE  = { 0.7, 1.5 }   -- seconds, shortest and longest
+FOIL.SPARK_DRIFT = 6       -- px per second off the card's edge (card's own scale)
+FOIL.SPARK_RISE  = 5       -- px per second upwards
+FOIL.SPARK_WHITE = 0.45    -- how far towards white the colour is washed
 
 -- A new sparkle somewhere on the card's edge (w x h), after a short random wait
 local function SpawnSpark(s, w, h)
@@ -1283,15 +1510,15 @@ local function SpawnSpark(s, w, h)
     local off = (math.random() - 0.3) * w * 0.08
     s.x, s.y = s.x + s.nx * off, s.y + s.ny * off
     s.t = -math.random() * 0.6
-    s.life = FOIL_SPARK_LIFE[1] + math.random() * (FOIL_SPARK_LIFE[2] - FOIL_SPARK_LIFE[1])
+    s.life = FOIL.SPARK_LIFE[1] + math.random() * (FOIL.SPARK_LIFE[2] - FOIL.SPARK_LIFE[1])
     s.spin = (math.random() - 0.5) * 2
-    s.size = w * FOIL_SPARK_SIZE * (0.6 + 0.4 * math.random())
+    s.size = w * FOIL.SPARK_SIZE * (0.6 + 0.4 * math.random())
 end
 
 local function UpdateSparks(self, elapsed, r, g, b)
     local w, h = self.w, self.h
     local shade = self.shade or 1
-    r, g, b = r + (1 - r) * FOIL_SPARK_WHITE, g + (1 - g) * FOIL_SPARK_WHITE, b + (1 - b) * FOIL_SPARK_WHITE
+    r, g, b = r + (1 - r) * FOIL.SPARK_WHITE, g + (1 - g) * FOIL.SPARK_WHITE, b + (1 - b) * FOIL.SPARK_WHITE
     for _, s in ipairs(self.sparks) do
         s.t = s.t + elapsed
         if s.t >= s.life then SpawnSpark(s, w, h) end
@@ -1304,7 +1531,7 @@ local function UpdateSparks(self, elapsed, r, g, b)
             tex:SetSize(size, size)
             tex:ClearAllPoints()
             tex:SetPoint("CENTER", self.anchor, "BOTTOMLEFT",
-                s.x + s.nx * FOIL_SPARK_DRIFT * s.t, s.y + s.ny * FOIL_SPARK_DRIFT * s.t + FOIL_SPARK_RISE * s.t)
+                s.x + s.nx * FOIL.SPARK_DRIFT * s.t, s.y + s.ny * FOIL.SPARK_DRIFT * s.t + FOIL.SPARK_RISE * s.t)
             tex:SetVertexColor(r, g, b, k * shade)
             if tex.SetRotation then tex:SetRotation(s.spin * s.t) end
             tex:Show()
@@ -1319,14 +1546,14 @@ end
 local function MakeSparks(foil)
     if foil.sparks then return end
     foil.sparks = {}
-    for k = 1, FOIL_SPARKS do
+    for k = 1, FOIL.SPARKS do
         local tex = foil.anchor:CreateTexture(nil, "OVERLAY", nil, 6)
-        tex:SetTexture(FOIL_SPARKLE_TEX)
+        tex:SetTexture(FOIL.SPARKLE_TEX)
         tex:SetBlendMode("ADD")
         tex:Hide()
         local s = { tex = tex }
         SpawnSpark(s, foil.w, foil.h)
-        s.t = -(k - 1) * FOIL_SPARK_LIFE[2] / FOIL_SPARKS   -- staggered from the start
+        s.t = -(k - 1) * FOIL.SPARK_LIFE[2] / FOIL.SPARKS   -- staggered from the start
         foil.sparks[k] = s
     end
 end
@@ -1334,11 +1561,11 @@ end
 local function Foil_OnUpdate(self, elapsed)
     self.t = (self.t or 0) + elapsed
     local a, b = self.colors[1], self.colors[2] or self.colors[1]
-    local mix = 0.5 + 0.5 * math.sin(self.t * FOIL_FADE)
+    local mix = 0.5 + 0.5 * math.sin(self.t * FOIL.FADE)
     local r, g, bl = a[1] + (b[1] - a[1]) * mix, a[2] + (b[2] - a[2]) * mix, a[3] + (b[3] - a[3]) * mix
-    local pulse = 0.5 + 0.5 * math.sin(self.t * FOIL_PULSE)
+    local pulse = 0.5 + 0.5 * math.sin(self.t * FOIL.PULSE)
     self.glow:SetVertexColor(r, g, bl, (0.4 + 0.6 * pulse) * (self.shade or 1))
-    self.rim:SetVertexColor(r, g, bl, FOIL_RIM_ALPHA * (0.4 + 0.6 * pulse) * (self.shade or 1))
+    self.rim:SetVertexColor(r, g, bl, FOIL.RIM_ALPHA * (0.4 + 0.6 * pulse) * (self.shade or 1))
     self.title:SetTextColor(r, g, bl)
     UpdateSparks(self, elapsed, r, g, bl)
 end
@@ -1450,7 +1677,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     -- Foil glow (SetCardFoil): a halo just outside the card, under the card's own background.
     -- f.foil only runs its pulse while shown.
-    local glowX, glowY = sizeX * FOIL_GLOW_PAD, sizeY * FOIL_GLOW_PAD
+    local glowX, glowY = sizeX * FOIL.GLOW_PAD, sizeY * FOIL.GLOW_PAD
     f.foil = CreateFrame("Frame", nil, f)
     f.foil:SetSize(1, 1)
     f.foil:SetPoint("CENTER", f, "CENTER")
@@ -1458,7 +1685,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.foil.glow = f:CreateTexture(nil, "BACKGROUND", nil, -8)
     f.foil.glow:SetPoint("TOPLEFT", f, "TOPLEFT", -glowX, glowY)
     f.foil.glow:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", glowX, -glowY)
-    f.foil.glow:SetTexture(FOIL_GLOW_TEX)
+    f.foil.glow:SetTexture(FOIL.GLOW_TEX)
     f.foil.glow:SetBlendMode("ADD")
     f.foil.glow:Hide()
     f.foil:SetScript("OnUpdate", Foil_OnUpdate)
@@ -1474,7 +1701,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.foil.rim = f.overlay:CreateTexture(nil, "ARTWORK")
     f.foil.rim:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft - iconPadX, -(artTop - iconPadY))
     f.foil.rim:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight + iconPadX, artBottom - iconPadY)
-    f.foil.rim:SetTexture(FOIL_RIM_TEX)
+    f.foil.rim:SetTexture(FOIL.RIM_TEX)
     f.foil.rim:SetBlendMode("ADD")
     f.foil.rim:Hide()
 
@@ -1635,7 +1862,7 @@ LAYOUT.BF_CARD_W  = 64
 LAYOUT.BF_CARD_H  = 84
 LAYOUT.BF_STEP_X  = 86
 LAYOUT.BF_START_X = 35
-LAYOUT.BF_RIGHT   = 1045   -- right edge stops short of your effects bar
+LAYOUT.BF_RIGHT   = 1045   -- right edge stops short of the right-hand column (life tracker, buttons)
 LAYOUT.LAND_MAX_SCALE     = 1.0
 LAYOUT.CREATURE_MAX_SCALE = 1.2
 LAYOUT.MAX_CREATURE_FRAMES = 16   -- frames each creature row starts with; more are made as needed (FieldFrame)
@@ -2354,9 +2581,10 @@ do
     B.oppGraveBtn = CreateGraveyardButton(true)
     B.oppGraveBtn:SetPoint("RIGHT", oppDeckFrame, "LEFT", -52, 0)   -- clear of the deck count beside the tall pile
 
-    -- Yours sits left of your health
+    -- Yours sits left of Undo, bottom right
     B.myGraveBtn = CreateGraveyardButton(false)
-    B.myGraveBtn:SetPoint("RIGHT", B.myLifeBtn, "LEFT", -8, 0)
+    B.myGraveBtn:SetPoint("RIGHT", B.undoBtn, "LEFT", -8, 0)
+    B.mulliganBtn:SetPoint("BOTTOM", B.myGraveBtn, "TOP", 0, 6)   -- Mulligan sits over it
 
     -- Button labels with the counts, and any open list refilled (UpdateDisplay)
     function B:UpdateGraveyards()
@@ -3431,6 +3659,11 @@ function B:UpdateDisplay()
     local oppFull = (E.isSolo and E.encounter and E.encounter.life) or 20
     B.SetLifeBar(B.myLifeBtn, E.localState.life, 20)
     B.SetLifeBar(B.oppLifeBtn, E.remoteState.life, oppFull)
+    -- While we block: the damage we'd take as the blocks stand (INCOMING DAMAGE)
+    local blocking = E.blockingState
+    B.SetIncomingDamage(E.phase == "COMBAT_BLOCK" and blocking and blocking.isRemoteAttacking
+        and not blocking.blocksDeclared and #(blocking.attackers or {}) > 0
+        and E:IncomingCombatDamage(blocking) or nil)
     UpdateEffectBar(B.oppEffectBar, E:GetPlayerEffects(true))
     UpdateEffectBar(B.myEffectBar, E:GetPlayerEffects(false))
 
@@ -3448,53 +3681,54 @@ function B:UpdateDisplay()
     -- =====================================================================
     -- PHASE & COMBAT BUTTON STATE
     -- =====================================================================
-    -- With attackers declared, End Turn becomes "Commit to Attacks & End Turn"
-    -- (E:CommitAttacksAndEndTurn); while our attack waits on blocks or on Resolve, "End Turn
-    -- After Combat" (a toggle, see E:ToggleEndAfterCombat); otherwise it's the normal button
-    local attackingCombat = E.phase == "COMBAT_BLOCK" and E.blockingState and not E.blockingState.isRemoteAttacking
-    local committing = E.isMyTurn and E.phase == "COMBAT_ATTACK" and E.blockingState and #E.blockingState.attackers > 0
-    if attackingCombat or committing then
-        B.endTurnBtn:SetText(L(committing and "board.btn.attackAndEnd"
-            or (E.endAfterCombat and "board.btn.endingAfterCombat" or "board.btn.endAfterCombat")))
-        B.endTurnBtn:SetWidth(math.max(90, B.endTurnBtn:GetTextWidth() + 24))
-    elseif B.endTurnBtn:GetWidth() ~= 90 then
-        B.endTurnBtn:SetText(L("board.endTurn"))
-        B.endTurnBtn:SetWidth(90)
+    -- The big button is always "I'm done, play it out" (E:EndTurn), labelled for what that
+    -- means now: with attackers declared, "Commit to Attacks & End Turn"
+    -- (E:CommitAttacksAndEndTurn); while our attack waits on blocks, "End Turn After Combat"
+    -- (a toggle, see E:ToggleEndAfterCombat); with the blocks in, "Resolve & End Turn";
+    -- defending, "Commit to Blocks" (or "No Blocks"); otherwise plain End Turn
+    local bsNow = E.blockingState
+    local attackingCombat = E.phase == "COMBAT_BLOCK" and bsNow and not bsNow.isRemoteAttacking
+    local committing = E.isMyTurn and E.phase == "COMBAT_ATTACK" and bsNow and #bsNow.attackers > 0
+    local endKey = "board.endTurn"
+    if committing then
+        endKey = "board.btn.attackAndEnd"
+    elseif attackingCombat then
+        endKey = bsNow.blocksDeclared and "board.btn.resolveAndEnd"
+            or (E.endAfterCombat and "board.btn.endingAfterCombat" or "board.btn.endAfterCombat")
+    elseif E.phase == "COMBAT_BLOCK" and bsNow and bsNow.isRemoteAttacking and not bsNow.blocksDeclared then
+        endKey = #E:BlockPairs(bsNow) > 0 and "board.btn.commitBlocks" or "board.btn.noBlocks"
     end
+    B.endTurnBtn:SetText(L(endKey))
 
+    -- The step button always reads "Next Phase:" and the phase it moves on to (board.next.*);
+    -- while it waits on the other player (the top phase text says so) it's greyed out
+    local nextStep
     if E.phase == "COMBAT_BLOCK" and E.blockingState then
         B.endTurnBtn:Disable()
         if attackingCombat then B.endTurnBtn:Enable() end
+        nextStep = "damage"
         if E.blockingState.isRemoteAttacking then
             if E.blockingState.blocksDeclared then
                 -- Local player is defending and has declared: the attacker resolves
-                B.nextPhaseBtn:SetText(L("board.btn.waitAttacker"))
                 B.nextPhaseBtn:Disable()
             elseif not E.isSolo and not E.blockingState.attacksDone then
                 -- More attackers may still be coming (Network.lua, ATTACKS_DONE)
-                B.nextPhaseBtn:SetText(L("board.btn.attackersIncoming"))
                 B.nextPhaseBtn:Disable()
             else
-                -- Local player is defending: enabled to confirm blocks
+                -- Local player is defending: enabled to confirm blocks (or pass with none),
+                -- with End Turn too (E:EndTurn)
                 B.nextPhaseBtn:Enable()
-                local numBlocks = #E:BlockPairs(E.blockingState)
-                if numBlocks > 0 then
-                    B.nextPhaseBtn:SetText(L("board.btn.confirmBlocks"))
-                else
-                    B.nextPhaseBtn:SetText(L("board.btn.noBlocks"))
-                end
+                B.endTurnBtn:Enable()
             end
         elseif E.blockingState.blocksDeclared then
             -- Local player is attacking and blocks are in: review them, then resolve
-            B.nextPhaseBtn:SetText(L("board.btn.resolveCombat"))
             B.nextPhaseBtn:Enable()
         else
             -- Local player is attacking: waiting for the defender to declare blocks
-            B.nextPhaseBtn:SetText(L("board.btn.waitDefender"))
             B.nextPhaseBtn:Disable()
         end
     elseif E.pendingDiscard then
-        B.nextPhaseBtn:SetText(L("board.btn.discard"))
+        nextStep = "endTurn"
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()
     elseif E.phase == "COMBAT_ATTACK" then
@@ -3502,24 +3736,18 @@ function B:UpdateDisplay()
         -- Until an attacker is declared the turn can still end (or skip on to Main 2); after
         -- that End Turn commits the attack and ends the turn once combat is over
         local hasAttackers = E.blockingState and #E.blockingState.attackers > 0
-        B.nextPhaseBtn:SetText(L(hasAttackers and "board.btn.declareBlocks" or "board.btn.toMain2"))
+        nextStep = hasAttackers and "blocks" or "main2"
         B.endTurnBtn:Enable()
     elseif not E.isMyTurn or E.phase == "WAITING" or E.phase == E.AI_TURN_PHASE or E.phase == "PREGAME" then
-        -- After accepting a challenge, until the challenger has chosen their deck (Network.lua)
-        B.nextPhaseBtn:SetText(L(E.awaitingDeckPick and "board.btn.oppPickingDeck" or "board.btn.opponentTurn"))
+        nextStep = "yourTurn"
         B.nextPhaseBtn:Disable()
         B.endTurnBtn:Disable()
     else
         B.nextPhaseBtn:Enable()
         B.endTurnBtn:Enable()
-        if E.phase == "MAIN1" then
-            B.nextPhaseBtn:SetText(L("board.toCombat"))
-        elseif E.phase == "MAIN2" then
-            B.nextPhaseBtn:SetText(L("board.endTurn"))
-        else
-            B.nextPhaseBtn:SetText(L("board.btn.nextPhase"))
-        end
+        nextStep = E.phase == "MAIN1" and "combat" or "endTurn"
     end
+    B.nextPhaseBtn:SetText(L("board.btn.nextPhaseTo", L("board.next." .. nextStep)))
 
     if E:CanUndo() then B.undoBtn:Enable() else B.undoBtn:Disable() end
     B.undoBtn:SetText((E.undo and E.undo.pending) and L("board.asking") or L("board.undo"))
@@ -3636,8 +3864,8 @@ function B:UpdateDisplay()
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, false)
-                    local colorCode = (effP > card.power or effT > card.toughness) and "|cFF00FF00" or "|cFFFFD200"
-                    TTS.SetCardStats(f, effP, effT, perm.damage, colorCode)
+                    -- each number red below its printed value, green above it (CardStats.lua)
+                    TTS.SetCardStats(f, effP, effT, perm.damage, nil, card.power, card.toughness)
                 else
                     TTS.HideCardStats(f)
                 end
@@ -3725,8 +3953,8 @@ function B:UpdateDisplay()
 
                 if card.type == "Creature" then
                     local effP, effT = E:GetCreatureStats(perm, true)
-                    local colorCode = (effP > card.power or effT > card.toughness) and "|cFF00FF00" or "|cFFFFD200"
-                    TTS.SetCardStats(f, effP, effT, perm.damage, colorCode)
+                    -- each number red below its printed value, green above it (CardStats.lua)
+                    TTS.SetCardStats(f, effP, effT, perm.damage, nil, card.power, card.toughness)
                 else
                     TTS.HideCardStats(f)
                 end
@@ -3817,6 +4045,94 @@ B.QueueModelReload      = QueueModelReload  -- CardFX.lua: a model loads again t
 B.HAND_W, B.HAND_H      = LAYOUT.HAND_W, LAYOUT.HAND_H
 B.HAND_TOP              = LAYOUT.HAND_BOTTOM + LAYOUT.HAND_H * LAYOUT.HAND_MAX_SCALE   -- top of the hand row, in board coordinates
 B.MIDLINE               = (ROW_Y.myNonLand + ROW_Y.oppNonLand) / 2 -- between the two creature rows
+
+-- =========================================================================
+-- "IT'S YOU TO ACT"
+-- When the match (PvP or solo) has waited on us for the actNudgeWait option's seconds (our turn
+-- and nothing played, attacked or chosen since; the opponent's attack waiting on our blocks;
+-- our attack's blocks waiting on our Resolve), a pulsing line across the battlefield's middle,
+-- from its left edge, says so: one of ACT_NUDGE_LINES (board.actNudge.<n>), picked at random
+-- each time. Anything we do starts the wait again. Switched off with the actNudge option.
+-- (In a function of its own: a do block's locals still count towards the file's 200 while
+-- it's open, and by here the file has nearly that many.)
+-- =========================================================================
+;(function()
+local ACT_NUDGE_LINES = 10
+local ACT_NUDGE_POLL = 0.25
+
+-- (on a frame of its own above the cards, which are frames on the board; it takes no clicks)
+local layer = CreateFrame("Frame", nil, B)
+layer:SetAllPoints()
+layer:SetFrameLevel(B:GetFrameLevel() + 100)
+local nudge = layer:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+nudge:SetPoint("LEFT", B, "BOTTOMLEFT", LAYOUT.BF_START_X, B.MIDLINE)
+nudge:SetJustifyH("LEFT")
+local font = nudge:GetFont()
+if font then nudge:SetFont(font, 32, "THICKOUTLINE") end
+nudge:SetTextColor(1, 0.82, 0)
+nudge:Hide()
+local lastLine
+
+-- A line other than the last one shown
+local function PickLine()
+    local n = math.random(ACT_NUDGE_LINES - 1)
+    if lastLine and n >= lastLine then n = n + 1 end
+    lastLine = n
+    return L("board.actNudge." .. n)
+end
+local pulse = nudge:CreateAnimationGroup()
+pulse:SetLooping("BOUNCE")
+local fade = pulse:CreateAnimation("Alpha")
+fade:SetFromAlpha(0.25)
+fade:SetToAlpha(1)
+fade:SetDuration(0.7)
+fade:SetSmoothing("IN_OUT")
+
+-- What the match waits on us for, or nil
+local function WaitingOnUs(E)
+    if not E.inMatch or E.awaitingDeckPick then return nil end
+    if E.targeting or E.pendingDiscard or E:HasPendingChoice() then return "choice" end
+    local bs = E.blockingState
+    if E.phase == "COMBAT_BLOCK" and bs then
+        if bs.isRemoteAttacking then
+            -- (PvP: once every attacker is in, Network.lua's ATTACKS_DONE; the AI's come at once)
+            return ((E.isSolo or bs.attacksDone) and not bs.blocksDeclared) and "blocks" or nil
+        end
+        return bs.blocksDeclared and "resolve" or nil
+    end
+    if E.isMyTurn and (E.phase == "MAIN1" or E.phase == "COMBAT_ATTACK" or E.phase == "MAIN2") then
+        return "turn"
+    end
+end
+
+-- Changes whenever we do something: play a card, pick attackers or blocks, move on a phase
+local function ActionMark(E, why)
+    local bs = E.blockingState
+    return table.concat({ why, E.phase, #E.localState.hand, #E.localState.field,
+        bs and #(bs.attackers or {}) or 0, bs and #E:BlockPairs(bs) or 0 }, ":")
+end
+
+local watcher = CreateFrame("Frame", nil, B)
+local mark, since, poll = nil, 0, 0
+watcher:SetScript("OnUpdate", function(_, elapsed)
+    poll = poll + elapsed
+    if poll < ACT_NUDGE_POLL then return end
+    since, poll = since + poll, 0
+    local E = TTS.Engine
+    local O = TTS.Options
+    local why = O and O:Get("actNudge") ~= false and WaitingOnUs(E)
+    local now = why and ActionMark(E, why)
+    if now ~= mark then mark, since = now, 0 end
+    if now and since >= (tonumber(O:Get("actNudgeWait")) or 10) then
+        if not nudge:IsShown() then
+            nudge:SetText(PickLine())
+            nudge:Show(); pulse:Play()
+        end
+    elseif nudge:IsShown() then
+        nudge:Hide(); pulse:Stop()
+    end
+end)
+end)()
 
 -- =========================================================================
 -- SAVED SIZE (applied once the saved settings have loaded)

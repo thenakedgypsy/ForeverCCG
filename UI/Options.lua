@@ -38,6 +38,8 @@ local DEFAULTS = {
     autoPassBlocks = true,   -- no blocks possible: pass on blocking after a second (the board's Auto-pass checkbox)
     gameLogFolded = false,   -- the board's game log folded up to its title (Board.lua)
     boardLocked = false,     -- the board can't be dragged (the board's Lock checkbox)
+    actNudge = true,         -- "It's you to act" flashes after a wait on us (Board.lua)
+    actNudgeWait = 10,       -- seconds of that wait
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -51,6 +53,7 @@ local DEFAULTS = {
 local DELAY_MIN, DELAY_MAX, DELAY_STEP = 0, 2, 0.1
 local EXTENDED_MAX = 3
 local SCALE_MIN, SCALE_MAX, SCALE_STEP = 0.5, 2, 0.05
+local NUDGE_MIN, NUDGE_MAX = 5, 60   -- "It's you to act" wait, in seconds
 
 -- Sound categories shown under the master switch, in order (label / tooltip: options.sound.<key>[.desc])
 O.SOUND_CATEGORIES = { "creatures", "cards", "ui", "combat", "turn" }
@@ -150,7 +153,7 @@ local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
 local F = CreateFrame("Frame", "TTS_OptionsFrame", UIParent, backdropTemplate)
 TTS.OptionsFrame = F
-F:SetSize(340, 856)
+F:SetSize(362, 640)
 F:SetPoint("CENTER")
 F:SetFrameStrata("DIALOG")
 F:SetToplevel(true)
@@ -195,9 +198,24 @@ local footer = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -20, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
+-- The sections scroll between the title and the footer (the mouse wheel scrolls them too);
+-- the content's height is set once they're all made (end of DEVELOPER SECTION)
+local WHEEL_STEP = 60   -- px per notch
+local scroll = CreateFrame("ScrollFrame", "TTS_OptionsScroll", F, "UIPanelScrollFrameTemplate")
+scroll:SetPoint("TOPLEFT", F, "TOPLEFT", 14, -42)
+scroll:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -34, 32)
+local content = CreateFrame("Frame", nil, scroll)
+content:SetSize(312, 1)
+scroll:SetScrollChild(content)
+scroll:EnableMouseWheel(true)
+scroll:SetScript("OnMouseWheel", function(self, delta)
+    local v = self:GetVerticalScroll() - delta * WHEEL_STEP
+    self:SetVerticalScroll(math.max(0, math.min(self:GetVerticalScrollRange(), v)))
+end)
+
 -- Tooltip-bordered panel with a gold section header (locale key) and divider
 local function CreateSection(labelKey, h)
-    local p = CreateFrame("Frame", nil, F, backdropTemplate)
+    local p = CreateFrame("Frame", nil, content, backdropTemplate)
     p:SetSize(312, h)
     p:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -254,7 +272,7 @@ end
 -- SOUND SECTION
 -- =========================================================================
 local soundSection = CreateSection("options.sound", 182)
-soundSection:SetPoint("TOPLEFT", F, "TOPLEFT", 14, -46)
+soundSection:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -4)
 
 local masterCheck = CreateCheck(soundSection, 10, -30, "options.sound.enable")
 masterCheck:SetScript("OnClick", function(self)
@@ -278,18 +296,20 @@ tipSection:SetPoint("TOPLEFT", soundSection, "BOTTOMLEFT", 0, -8)
 
 -- Slider labelled with locale labelKey (tooltip: labelKey .. ".desc"), snapped to step and saved
 -- under key. Its ends are labelled with edgeKey (value * edgeMul); ShowValue is set by the caller.
-local function CreateSlider(name, labelKey, y, minValue, maxValue, step, key, edgeKey, edgeMul)
-    local text = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    text:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 12, y)
+-- parent: the section it sits in (default the tooltip section).
+local function CreateSlider(name, labelKey, y, minValue, maxValue, step, key, edgeKey, edgeMul, parent)
+    parent = parent or tipSection
+    local text = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    text:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, y)
     Loc:Bind(text, labelKey)
 
-    local value = tipSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    value:SetPoint("TOPRIGHT", tipSection, "TOPRIGHT", -14, y)
+    local value = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    value:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -14, y)
 
-    local slider = CreateFrame("Slider", name, tipSection, backdropTemplate)
+    local slider = CreateFrame("Slider", name, parent, backdropTemplate)
     slider:SetOrientation("HORIZONTAL")
     slider:SetSize(284, 17)
-    slider:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, y - 18)
+    slider:SetPoint("TOPLEFT", parent, "TOPLEFT", 14, y - 18)
     slider:SetBackdrop({
         bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
         edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
@@ -301,11 +321,11 @@ local function CreateSlider(name, labelKey, y, minValue, maxValue, step, key, ed
     slider:SetValueStep(step)
     if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
 
-    local lowText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    local lowText = parent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     lowText:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 2, 0)
     Loc:Bind(lowText, edgeKey, minValue * (edgeMul or 1))
 
-    local highText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    local highText = parent:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     highText:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", -2, 0)
     Loc:Bind(highText, edgeKey, maxValue * (edgeMul or 1))
 
@@ -373,7 +393,7 @@ end
 -- =========================================================================
 -- BOARD SECTION
 -- =========================================================================
-local boardSection = CreateSection("options.board", 156)
+local boardSection = CreateSection("options.board", 236)
 boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
 
 local backgroundCheck = CreateCheck(boardSection, 10, -30, "options.backgrounds")
@@ -393,8 +413,21 @@ effectsCheck:SetScript("OnClick", function(self)
     if TTS.CardFX then TTS.CardFX:OptionChanged() end
 end)
 
+-- "It's you to act" and how long the game waits on you before it shows (greyed out while off)
+local nudgeSlider = CreateSlider("TTS_OptionsActNudgeSlider", "options.actNudgeWait",
+    -130, NUDGE_MIN, NUDGE_MAX, 1, "actNudgeWait", "options.secondsShort", nil, boardSection)
+function nudgeSlider:ShowValue(v)
+    self.valueText:SetText(L("options.secondsWhole", v))
+end
+
+local nudgeCheck = CreateCheck(boardSection, 10, -102, "options.actNudge")
+nudgeCheck:SetScript("OnClick", function(self)
+    O:Set("actNudge", self:GetChecked() and true or false)
+    nudgeSlider:SetAlpha(self:GetChecked() and 1 or 0.4)
+end)
+
 local controlsText = boardSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -110)
+controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -190)
 Loc:Bind(controlsText, "options.controls")
 
 -- One choice of how cards are played; saved as cardControls (label / tooltip: options.controls.<mode>[.desc])
@@ -403,7 +436,7 @@ local controlRadios = {}
 for i, mode in ipairs(CONTROL_MODES) do
     local key = "options.controls." .. mode
     local rb = CreateFrame("CheckButton", nil, boardSection, "UIRadioButtonTemplate")
-    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -128)
+    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -208)
     rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
     Loc:Bind(rb.label, key)
@@ -450,7 +483,9 @@ local function ChoiceLabel(choice)
     return Loc:NameOf(choice)
 end
 
-local langList = CreateFrame("Frame", nil, langButton, backdropTemplate)
+-- (on the window, not the button: inside the scrolled content it would be cut off at the
+-- scroll area's edge; it closes when the options scroll)
+local langList = CreateFrame("Frame", nil, F, backdropTemplate)
 langList:SetFrameStrata("FULLSCREEN_DIALOG")
 langList:SetPoint("TOPLEFT", langButton, "BOTTOMLEFT", 0, -2)
 langList:SetBackdrop({
@@ -461,6 +496,7 @@ langList:SetBackdrop({
 })
 langList:SetBackdropColor(0, 0, 0, 0.95)
 langList:Hide()
+scroll:HookScript("OnVerticalScroll", function() langList:Hide() end)
 local langRows = {}
 
 local function PickLanguage(choice)
@@ -528,6 +564,15 @@ copyLogButton:SetScript("OnLeave", function(self)
     if TTS.Tooltip then TTS.Tooltip:Hide(self) end
 end)
 
+-- The scrolled content: every section, the gaps between them, and a little room at each end
+do
+    local h = 8
+    for _, section in ipairs({ soundSection, tipSection, boardSection, langSection, devSection }) do
+        h = h + section:GetHeight() + 8
+    end
+    content:SetHeight(h)
+end
+
 -- =========================================================================
 -- SYNC
 -- =========================================================================
@@ -554,6 +599,10 @@ function O:SyncControls()
     backgroundCheck:SetChecked(db.boardBackgrounds ~= false)
     animateCheck:SetChecked(db.animateCards ~= false)
     effectsCheck:SetChecked(db.cardEffects ~= false)
+    nudgeCheck:SetChecked(db.actNudge ~= false)
+    nudgeSlider:SetValue(db.actNudgeWait or 10)
+    nudgeSlider:ShowValue(db.actNudgeWait or 10)
+    nudgeSlider:SetAlpha(db.actNudge ~= false and 1 or 0.4)
     local mode = TTS.CardControls and TTS.CardControls() or "both"
     for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
     langButton:SetText(ChoiceLabel(Loc:GetChoice()))

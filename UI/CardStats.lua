@@ -13,14 +13,18 @@ TTS = TTS or {}
 -- Shown along a card's bottom edge as "3 [sword | divider | shield] 5": one emblem
 -- (Textures\Symbols\Sword_Divider_Shield.png) centred on the edge, power just to its left
 -- and toughness just to its right. Tooltips and the log use the same emblem inline.
--- Sizes grow with the card. Damage taken this turn lowers the toughness shown (in red)
--- until it wears off. Card frames keep toughness in f.pt (as before) and gain f.power.
+-- Sizes grow with the card. Damage taken this turn lowers the toughness shown until it
+-- wears off. Given the card's printed stats, each number is coloured against its printed
+-- value: red when lower (Execute, damage...), green when higher, the usual colour when the
+-- same. Card frames keep toughness in f.pt (as before) and gain f.power.
 -- =========================================================================
 local SYMBOLS = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\"
 TTS.STATS_EMBLEM = SYMBOLS .. "Sword_Divider_Shield.png"
 local EMBLEM_ASPECT = 158 / 64       -- the emblem image's width / height
 
 local GOLD = "|cFFFFD200"
+local LOWER = "|cFFFF4444"           -- below the printed value
+local HIGHER = "|cFF00FF00"          -- above it
 local CORNER_Y = 0.05                -- stat line's height above the card's bottom edge, as a share of its height
 local EMBLEM_SCALE = 1.1             -- emblem height on cards, relative to the numbers
 local EMBLEM_SCALE_LARGE = 0.87      -- the same on large previews (cards whose stats grew past their frame's size)
@@ -33,23 +37,32 @@ local function EmblemIcon(h)
 end
 TTS.StatsEmblemIcon = EmblemIcon
 
--- "3"
-function TTS.PowerText(power, colorCode)
-    return (colorCode or GOLD) .. tostring(power) .. "|r"
+-- A stat's colour against its printed value (colorCode when there's none to compare with)
+local function StatColor(value, printed, colorCode)
+    if printed and value < printed then return LOWER end
+    if printed and value > printed then return HIGHER end
+    return colorCode or GOLD
 end
 
--- "5", red when damage has lowered it
-function TTS.ToughnessText(toughness, damage, colorCode)
-    damage = damage or 0
-    if damage > 0 then return "|cFFFF4444" .. (toughness - damage) .. "|r" end
-    return (colorCode or GOLD) .. tostring(toughness) .. "|r"
+-- "3"; printed (optional): the card's printed power, to colour it against
+function TTS.PowerText(power, colorCode, printed)
+    return StatColor(power, printed, colorCode) .. tostring(power) .. "|r"
+end
+
+-- "5", less any damage; printed (optional): the card's printed toughness, to colour it
+-- against. Without one, damage alone turns it red.
+function TTS.ToughnessText(toughness, damage, colorCode, printed)
+    local shown = toughness - (damage or 0)
+    if not printed and shown < toughness then return LOWER .. shown .. "|r" end
+    return StatColor(shown, printed, colorCode) .. tostring(shown) .. "|r"
 end
 
 -- One line for tooltips and the log: "3 [sword | divider | shield] 5"
-function TTS.FormatStats(power, toughness, damage, colorCode, size)
+-- printedP / printedT (optional): the card's printed stats, to colour each against
+function TTS.FormatStats(power, toughness, damage, colorCode, size, printedP, printedT)
     size = size or 14
-    return TTS.PowerText(power, colorCode) .. " " .. EmblemIcon(size * 1.25) .. " "
-        .. TTS.ToughnessText(toughness, damage, colorCode)
+    return TTS.PowerText(power, colorCode, printedP) .. " " .. EmblemIcon(size * 1.25) .. " "
+        .. TTS.ToughnessText(toughness, damage, colorCode, printedT)
 end
 
 -- The power string of a card frame, made to match its toughness string (f.pt)
@@ -112,16 +125,16 @@ function TTS.PlaceCardStats(f)
     f.pt:SetJustifyH("LEFT")
 end
 
--- Shows a creature's stats on a card frame
-function TTS.SetCardStats(f, power, toughness, damage, colorCode)
+-- Shows a creature's stats on a card frame (printedP / printedT as in TTS.FormatStats)
+function TTS.SetCardStats(f, power, toughness, damage, colorCode, printedP, printedT)
     if not f.pt then return end
     local size = StatSize(f)
     local font, _, flags = f.pt:GetFont()
     if font then f.pt:SetFont(font, size, flags or "OUTLINE") end
     local p = PowerString(f)
     if font then p:SetFont(font, size, flags or "OUTLINE") end
-    p:SetText(TTS.PowerText(power, colorCode))
-    f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode))
+    p:SetText(TTS.PowerText(power, colorCode, printedP))
+    f.pt:SetText(TTS.ToughnessText(toughness, damage, colorCode, printedT))
     TTS.PlaceCardStats(f)
     p:Show()
     f.pt:Show()

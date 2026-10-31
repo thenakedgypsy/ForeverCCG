@@ -752,8 +752,8 @@ local function DisplayType(card)
     return Loc:Term("type", card.type)
 end
 
-local function FormatPT(power, toughness, damage, colorCode)
-    return TTS.FormatStats(power, toughness, damage, colorCode)
+local function FormatPT(power, toughness, damage, colorCode, printedP, printedT)
+    return TTS.FormatStats(power, toughness, damage, colorCode, nil, printedP, printedT)
 end
 
 local function BuildCardMain(tip, card, ctx)
@@ -778,7 +778,8 @@ local function BuildCardMain(tip, card, ctx)
             p, t = TTS.Engine:GetCreatureStats(ctx.perm, ctx.isRemote)
             damage = ctx.perm.damage or 0
         end
-        tip:AddLine(FormatPT(p, t, damage, "|cFFFFCC00"), 1, 0.8, 0)
+        -- (each number red below the card's printed value, green above it)
+        tip:AddLine(FormatPT(p, t, damage, "|cFFFFCC00", card.power, card.toughness), 1, 0.8, 0)
     end
 
     -- On the battlefield (ctx.perm) with the keywords the denizen has gained and lost

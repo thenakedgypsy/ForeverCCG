@@ -42,6 +42,14 @@ local function Attacking()
     return false
 end
 
+-- Whether this card of ours is attacking
+local function AttackingWith(id)
+    for _, p in ipairs(E.localState.field) do
+        if p.id == id and p.isAttacking then return true end
+    end
+    return false
+end
+
 local function Defending() return E.phase == "COMBAT_BLOCK" and E.blockingState and E.blockingState.isRemoteAttacking end
 
 -- The steps in order: tut.<key>, done once the player has done what it asks. allow is
@@ -66,7 +74,7 @@ local STEPS = {
     { key = "block",        done = function() return Defending() and next(E.blockingState.blocks) ~= nil end,
       allow = { tap = { DES01 = true }, opp = { DUN01 = true } } },
     { key = "confirmBlock", done = function() return not E.blockingState end,
-      allow = { next = true, tap = { DES01 = true }, opp = { DUN01 = true } } },
+      allow = { next = true, endTurn = true, tap = { DES01 = true }, opp = { DUN01 = true } } },
     { key = "blocked",      done = function() return E.isMyTurn and E.phase == "MAIN1" end, allow = {} },
     { key = "playPrayer2",  done = function() return Prayers() >= 2 end,
       allow = { play = { W01 = true } } },
@@ -87,8 +95,13 @@ local STEPS = {
     { key = "fireBlast",    done = function() return not OnField(true, "FER03") end,
       allow = { play = { MAG02 = true }, tap = { R01 = true }, target = { FER03 = true } } },
     { key = "finish",       done = function() return false end,   -- the win ends the tutorial
-      -- attack by dragging: To Combat is refused, Declare Blocks isn't
-      allow = { next = function() return E.phase ~= "MAIN1" or E.dragAttack end,
+      -- attack by dragging: Next Phase: Combat is refused, and Next Phase: Blocks waits for
+      -- both denizens (one alone doesn't win)
+      allow = { next = function()
+                    if E.phase == "MAIN1" then return E.dragAttack end
+                    if E.phase == "COMBAT_ATTACK" then return AttackingWith("DES01") and AttackingWith("HIN04") end
+                    return true
+                end,
                 tap = { DES01 = true, HIN04 = true } } },
 }
 
