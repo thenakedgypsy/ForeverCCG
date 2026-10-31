@@ -50,11 +50,16 @@ function TTS.PowerText(power, colorCode, printed)
 end
 
 -- "5", less any damage; printed (optional): the card's printed toughness, to colour it
--- against. Without one, damage alone turns it red.
+-- against. Without one, damage alone turns it red. (toughness can be text such as "+1",
+-- for the tooltip's list of changes: shown as given while there's no damage.)
 function TTS.ToughnessText(toughness, damage, colorCode, printed)
-    local shown = toughness - (damage or 0)
-    if not printed and shown < toughness then return LOWER .. shown .. "|r" end
-    return StatColor(shown, printed, colorCode) .. tostring(shown) .. "|r"
+    damage = damage or 0
+    if damage > 0 then
+        local shown = toughness - damage
+        if not printed then return LOWER .. shown .. "|r" end
+        return StatColor(shown, printed, colorCode) .. shown .. "|r"
+    end
+    return StatColor(toughness, printed, colorCode) .. tostring(toughness) .. "|r"
 end
 
 -- One line for tooltips and the log: "3 [sword | divider | shield] 5"

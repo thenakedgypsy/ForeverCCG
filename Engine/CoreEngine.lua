@@ -1613,7 +1613,13 @@ StaticPopupDialogs["TTS_MULLIGAN"] = {
 
 function E:ConfirmMulligan()
     if not self:CanMulligan() then return end
-    StaticPopup_Show("TTS_MULLIGAN", L("mulligan.confirm", MULLIGAN_HAND_SIZE))
+    local dialog = StaticPopup_Show("TTS_MULLIGAN", L("mulligan.confirm", MULLIGAN_HAND_SIZE))
+    -- In the middle of the board, not at the top of the screen (as the match result)
+    if dialog and dialog.SetPoint then
+        local B = TTS.BoardFrame
+        dialog:ClearAllPoints()
+        dialog:SetPoint("CENTER", (B and B:IsShown()) and B or UIParent, "CENTER", 0, 0)
+    end
 end
 
 -- Phase as shown to the player (phase.<ID>; the ID itself when no translation exists)
