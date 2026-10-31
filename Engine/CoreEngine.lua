@@ -262,7 +262,7 @@ function E:EndMatch(outcome, reason)
                 if rewardCard and B and B.ShowRewardCard then B:ShowRewardCard(rewardCard) end
                 if B and B.ShowMatchResult then B:ShowMatchResult(headline) end
                 -- A fanfare for a win, a quest-failed sting for a loss (conceding is one)
-                if TTS.Sound then TTS.Sound:PlayUI(outcome == "won" and "victory" or "defeat") end
+                self:CallSound("PlayUI", outcome == "won" and "victory" or "defeat")
             end
         else
             if not self.isSolo then self:PlayMatchEmote(outcome, opponentName, newRating) end
@@ -356,6 +356,21 @@ function E:HookDisplay(name, before, after)
         end
         return unpack(results, 1, results.n)
     end
+end
+
+-- Sounds are display too, called the same way: E:CallSound("QueueCreature", "death", id)
+-- runs a TTS.Sound method, E:CallDisplay("PlaySpellCastSound", card) one of the engine's
+-- own sound functions. A sound error is reported but never stops the game.
+function E:CallSound(method, ...)
+    local S = TTS.Sound
+    if not (S and S[method]) then return end
+    local ok, err = pcall(S[method], S, ...)
+    if not ok then DisplayError(err) end
+end
+
+function E:CallDisplay(name, ...)
+    local ok, err = pcall(self[name], self, ...)
+    if not ok then DisplayError(err) end
 end
 
 -- =========================================================================
@@ -777,13 +792,18 @@ end
 -- "Your turn" alert. Uses the ready-check chime on the Master channel so it is
 -- heard even with effects turned down; respects the Sounds checkbox and the
 -- "Your-turn alert" option.
-local function PlayTurnSound()
+local function TurnSound()
     if not (TTS.Sound and TTS.Sound:IsOn("turn")) then return end
     if SOUNDKIT then
         pcall(PlaySound, 31584, "Master")
     else
         pcall(PlaySound, 31584)
     end
+end
+
+local function PlayTurnSound()
+    local ok, err = pcall(TurnSound)
+    if not ok then DisplayError(err) end
 end
 
 -- Phase shown while the solo opponent takes its turn
@@ -1186,6 +1206,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     end
 
     self.inMatch = true
+    self.soundHits = nil
     self.opponent = opponentName or L("side.opponentCap")
     self.opponentScore = nil   -- PvP: set by Network.lua from the INVITE/ACCEPT
     self.opponentPvP = nil     -- PvP: their rating and record, the same way (PvPRecord.lua)

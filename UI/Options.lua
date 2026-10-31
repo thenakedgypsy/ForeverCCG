@@ -120,9 +120,9 @@ function S:PlayUI(name)
 end
 
 local origQueueCreature = S.QueueCreature
-function S:QueueCreature(kind, cardId)
+function S:QueueCreature(kind, cardId, perm)
     if not self:IsOn("creatures") then return end
-    return origQueueCreature(self, kind, cardId)
+    return origQueueCreature(self, kind, cardId, perm)
 end
 
 if E and E.PlayNonCreatureCardSound then

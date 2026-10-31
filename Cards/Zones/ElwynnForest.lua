@@ -86,6 +86,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Other Elwynn Forest denizens you control get +1/+1."
     },
+    ["ELW12"] = {
+        id = "ELW12", name = "Hogger", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
+        power = 5, toughness = 5, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 384,
+        zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Gnoll", npcId = 448,
+        anthem = { tag = "faction", value = "Gnoll", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Brutish. Other Gnolls you control get +1/+0."
+    },
     -- Solo reward
     ["ELW11"] = {
         id = "ELW11", name = "Marshal Dughan", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",

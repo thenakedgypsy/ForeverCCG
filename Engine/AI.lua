@@ -173,7 +173,7 @@ function E:AITapLand(perm, col, partner)
     local card = Card(perm.id)
     if perm.tapped then return end
     perm.tapped = true
-    if TTS.Sound then TTS.Sound:PlayUI("tap") end
+    self:CallSound("PlayUI", "tap")
     if card and card.makesBoth then
         if type(partner) == "string" then
             self.remoteState.mana[partner] = math.max(0, (self.remoteState.mana[partner] or 0) - 1)
@@ -283,7 +283,7 @@ function E:AIPlayLand(handIdx)
     self.remoteLandPlayed = true
     self:Log(L("log.aiPlayedPrayer", self.opponent, TTS:CardName(card)), "ACTION")
     if bounced then self:Log(L("log.oppBouncedPrayer", self.opponent, TTS:CardName(bounced.id)), "ACTION") end
-    self:PlayNonCreatureCardSound()
+    self:CallDisplay("PlayNonCreatureCardSound")
 end
 
 -- =========================================================================
@@ -475,7 +475,7 @@ function E:AIDeclareAttack(indices)
             perm.hasAttackedThisTurn = true
             table.insert(attackerIndices, i)
             self:Log(L("log.aiAttacks", self.opponent, TTS:CardName(card)), "COMBAT")
-            if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
+            self:CallSound("QueueCreature", "aggro", perm.id, perm)
             self:OnCreatureAttack(perm, true)
             if not self.inMatch then return true end
         end
@@ -1121,7 +1121,7 @@ function E:AIExecute(a)
         self.remoteState.handCount = #self.remoteState.hand
         table.insert(self.remoteState.graveyard, cardId)
         self:Log(L("log.aiCast", self.opponent, TTS:CardName(a.card), TargetText(self, a.tgt)), "ACTION")
-        self:PlaySpellCastSound(a.card)
+        self:CallDisplay("PlaySpellCastSound", a.card)
         self:ResolveSpell(a.card, a.tgt, true)
         return true
     elseif a.kind == "ability" then

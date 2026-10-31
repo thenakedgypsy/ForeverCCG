@@ -83,6 +83,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Fatal. Other Durotar denizens you control get +1/+1."
     },
+    ["DUR12"] = {
+        id = "DUR12", name = "Gazz'uz", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 3, toughness = 3, isMob = true, isNamed = true, isBoss = true, displayId = 240,
+        zone = "Durotar", creatureType = "Humanoid", faction = "Burning Blade", npcId = 3204,
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        etb = { ops = { { op = "token", id = "TOK06", n = 1 } } },
+        text = "Arrival: Spawn: 1 Imp Add (1/1)."
+    },
     -- Solo reward
     ["DUR11"] = {
         id = "DUR11", name = "Vol'jin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

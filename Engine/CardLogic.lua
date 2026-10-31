@@ -261,7 +261,7 @@ function E:HandleCreatureDeath(perm, isRemote)
     local card = TTS.Cards[perm.id]
     if not card then return end
 
-    if TTS.Sound then TTS.Sound:QueueCreature("death", perm.id) end
+    self:CallSound("QueueCreature", "death", perm.id)
 
     self:DetachAttachments(perm, isRemote)
 
@@ -357,6 +357,7 @@ function E:CheckStateBasedActions()
         end
     end
     self.checkingSBA = false
+    self:CallDisplay("PlayHitSounds")
 
     self:RefreshUI()
 end
@@ -510,7 +511,8 @@ local SPELL_OPS = {}
 
 -- Marks n damage on a creature, unless it is Shielded: then this instance of damage is
 -- negated and the creature loses Shielded. Returns the damage actually marked.
-function E:DamageCreature(perm, n)
+-- srcId: the card dealing it (for its slay sound, E:PlayHitSounds).
+function E:DamageCreature(perm, n, srcId)
     if n <= 0 then return 0 end
     if perm.shielded then
         perm.shielded = nil
@@ -518,7 +520,39 @@ function E:DamageCreature(perm, n)
         return 0
     end
     perm.damage = (perm.damage or 0) + n
+    self:NoteSoundHit(srcId, perm)
     return n
+end
+
+-- Damage marked since deaths were last checked: { src = card id or nil, dst = perm }
+function E:NoteSoundHit(srcId, perm)
+    if not TTS.Sound then return end
+    self.soundHits = self.soundHits or {}
+    table.insert(self.soundHits, { src = srcId, dst = perm })
+end
+
+-- Once deaths are checked: a denizen that destroyed another says its slay line, and one
+-- that lived through damage with half its toughness or less left its hurt line
+function E:PlayHitSounds()
+    local hits = self.soundHits
+    self.soundHits = nil
+    if not hits or not self.inMatch then return end
+    local slew, hurt = {}, {}
+    for _, h in ipairs(hits) do
+        local dstRemote, idx = self:FindPerm(h.dst)
+        if not idx then
+            if h.src and h.src ~= h.dst.id and not slew[h.src] then
+                slew[h.src] = true
+                TTS.Sound:QueueCreature("slay", h.src)
+            end
+        elseif not hurt[h.dst] and (h.dst.damage or 0) > 0 then
+            local _, t = self:GetCreatureStats(h.dst, dstRemote)
+            if (t - h.dst.damage) * 2 <= t then
+                hurt[h.dst] = true
+                TTS.Sound:QueueCreature("hurt", h.dst.id)
+            end
+        end
+    end
 end
 
 SPELL_OPS.damage = function(self, op, d, card, cr)
@@ -527,7 +561,7 @@ SPELL_OPS.damage = function(self, op, d, card, cr)
         self:DamagePlayer(d.isRemote, n, card.id)
     else
         if op.bonusIfTapped and d.perm.tapped then n = n + op.bonusIfTapped end
-        if self:DamageCreature(d.perm, n) > 0 then
+        if self:DamageCreature(d.perm, n, card.id) > 0 then
             self:Log(L("log.dealtDamage", TTS:CardName(card), n, CreatureName(d.perm)), "COMBAT")
         end
     end
@@ -974,7 +1008,7 @@ function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     table.insert((isRemote and self.remoteState or self.localState).field, perm)
     -- A token (or spawned card) sounds when its card shows instead (UI\Board.lua token spawns)
     local card = TTS.Cards[cardId]
-    if TTS.Sound and not (card and card.isToken) and not perm.spawned then TTS.Sound:QueueCreature("enter", cardId) end
+    if not (card and card.isToken) and not perm.spawned then self:CallSound("QueueCreature", "enter", cardId) end
     self:OnCreatureEnter(perm, isRemote, opts and opts.tgt)
     return perm
 end
@@ -1019,7 +1053,7 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
     if perm.id == "BOSS19" then
         for _, oppPerm in ipairs(isRemote and self.localState.field or self.remoteState.field) do
             if IsCreaturePerm(oppPerm) then
-                self:DamageCreature(oppPerm, 3)
+                self:DamageCreature(oppPerm, 3, perm.id)
             end
         end
         self:Log(L("log.boss.wyrmthalak", TTS:CardName(perm.id)), "COMBAT")
@@ -1158,6 +1192,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
 
     local st = isRemote and self.remoteState or self.localState
     local id = perm.id
+    self:CallSound("QueueCreature", "ability", id)
     if id == "BOSS01" then
         self:DamagePlayer(tgt.isRemote, 2, "BOSS01")
         st.life = st.life + 2
@@ -1175,7 +1210,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
     elseif id == "BOSS07" or id == "BOSS10" then
         for _, p in ipairs(isRemote and self.localState.field or self.remoteState.field) do
             if IsCreaturePerm(p) then
-                self:DamageCreature(p, 1)
+                self:DamageCreature(p, 1, id)
             end
         end
         self:Log(L("log.boss.sweep", CreatureName(perm)), "COMBAT")
@@ -1398,7 +1433,7 @@ function E:PlayCard(handIndex, bounceIndex)
         self.landPlayedThisTurn = true
         self:Log(L("log.playedPrayer", TTS:CardName(card)), "ACTION")
         if bounced then self:Log(L("log.bouncedPrayer", TTS:CardName(bounced.id)), "ACTION") end
-        self:PlayNonCreatureCardSound()
+        self:CallDisplay("PlayNonCreatureCardSound")
 
         if not self.isSolo then
             TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId .. (bounced and (":" .. bounceIndex) or ""))
@@ -1473,7 +1508,7 @@ function E:PlayCard(handIndex, bounceIndex)
 
         table.remove(self.localState.hand, handIndex)
         table.insert(self.localState.graveyard, cardId)
-        self:PlaySpellCastSound(card)
+        self:CallDisplay("PlaySpellCastSound", card)
         -- Sent before resolving, so the opponent sees the card before the damage it causes
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:CAST_SPELL:" .. cardId) end
         self:ResolveSpell(card, nil)
@@ -1599,7 +1634,7 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
     end
 
     table.insert(self.localState.graveyard, cardId)
-    self:PlaySpellCastSound(card)
+    self:CallDisplay("PlaySpellCastSound", card)
     -- Sent before resolving, so the opponent sees the card and its target before the damage
     -- it causes. Target: PLAYER or CREATURE, MINE/THEIRS from our side, and its field index.
     if not self.isSolo then
@@ -1952,7 +1987,7 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         perm.hasAttackedThisTurn = true
         self.blockingState = self.blockingState or { attackers = {}, blocks = {}, isRemoteAttacking = false }
         table.insert(self.blockingState.attackers, fieldIndex)
-        if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
+        self:CallSound("QueueCreature", "aggro", perm.id, perm)
 
         -- Its Aggro, and telling the opponent, wait for Commit to Attacks (E:CommitAttackers)
         self:Log(L("log.declaredAttacker", TTS:CardName(card)), "COMBAT")
@@ -2252,6 +2287,7 @@ function E:ResolveCombatDamage()
             self:Log(L("log.shieldedAbsorbed", CreatureName(perm)), "COMBAT")
         end
         for perm, n in pairs(plan.taken) do perm.damage = (perm.damage or 0) + n end
+        for _, h in ipairs(plan.hits) do self:NoteSoundHit(h.src.id, h.dst) end
     end
 
     -- Drain: combat damage the attacker deals to the opponent (unblocked, or Brutish damage

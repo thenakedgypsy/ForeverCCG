@@ -1284,7 +1284,7 @@ local function ApplyRemoteAttacker(E, sender, bs, idx)
     end
     perm.isAttacking = true
     E:Log(L("log.oppDeclaredAttacker", sender, card and TTS:CardName(card) or L("type.Creature")), "COMBAT")
-    if TTS.Sound then TTS.Sound:QueueCreature("aggro", perm.id) end
+    E:CallSound("QueueCreature", "aggro", perm.id, perm)
     E:RunMirrored(function() E:OnCreatureAttack(perm, true) end)
 end
 
@@ -2071,7 +2071,7 @@ function TTS.Net:OnReceive(msg, sender)
             })
             E:Log(L("log.oppPlayedPrayer", sender, card and TTS:CardName(card) or cardId), "ACTION")
             if bounced then E:Log(L("log.oppBouncedPrayer", sender, TTS:CardName(bounced.id)), "ACTION") end
-            E:PlayNonCreatureCardSound()
+            E:CallDisplay("PlayNonCreatureCardSound")
             E:RefreshUI()
 
         elseif actionType == "PLAY_PERM" then
@@ -2103,7 +2103,7 @@ function TTS.Net:OnReceive(msg, sender)
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(L("log.oppCast", sender, card and TTS:CardTypeName(card) or L("type.Spell"), card and TTS:CardName(card) or cardId), "ACTION")
-            E:PlaySpellCastSound(card)
+            E:CallDisplay("PlaySpellCastSound", card)
             -- Optional target: PLAYER|CREATURE, MINE|THEIRS from the caster's side, field index
             local tgt
             local kind, side, idx = parts[4], parts[5], tonumber(parts[6])
@@ -2174,7 +2174,7 @@ function TTS.Net:OnReceive(msg, sender)
                 })
                 E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
                 E:Log(L("log.oppAttached", sender, card and TTS:CardName(card) or cardId, TTS.Cards[perm.id] and TTS:CardName(perm.id) or L("side.card")), "ACTION")
-                E:PlayNonCreatureCardSound()
+                E:CallDisplay("PlayNonCreatureCardSound")
                 E:RefreshUI()
             end
 
@@ -2195,7 +2195,7 @@ function TTS.Net:OnReceive(msg, sender)
                 E.remoteState.field[idx].tapped = true
                 local card = TTS.Cards[E.remoteState.field[idx].id]
                 E:Log(L("log.oppTapped", sender, card and TTS:CardName(card) or L("type.Permanent")), "MANA")
-                if TTS.Sound then TTS.Sound:PlayUI("tap") end
+                E:CallSound("PlayUI", "tap")
                 E:RefreshUI()
             end
 

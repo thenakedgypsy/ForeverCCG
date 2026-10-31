@@ -19,18 +19,28 @@ end
 
 -- =========================================================================
 -- CREATURE SOUND DATA
--- [cardId] = { aggro = <sound>, death = <sound> }
+-- [cardId] = { aggro = <sound>, death = <sound> }, and for some named mobs also
+--   enter   = arriving (without one, the aggro sound)
+--   slay    = it destroyed another denizen (combat, its ability or its Arrival)
+--   hurt    = it survived damage with half its toughness or less left
+--   ability = it used its activated ability
+--   aggroAgain = a mob whose aggro is a voiced line (LONG_LINES) says it on its first
+--             attack each time it comes onto the battlefield; its later attacks play
+--             this, its model's own aggro sound (or a player race's attack grunt when the
+--             model has none)
 --   <sound> = SoundKit ID (number)               -> PlaySound
 --           = game sound file path (string)      -> PlaySoundFile
--- A creature card in the Cards files may also carry its own aggroSound / deathSound
--- field, which takes priority over this table.
+--           = a list of either, one picked at random each time
+-- A creature card in the Cards files may also carry its own <kind>Sound field (aggroSound,
+-- enterSound, ...), which takes priority over this table.
 --
 -- Generated from the client tables (build 1.60.1.70338):
 --   card displayId -> CreatureDisplayInfo.SoundID (or CreatureModelData.SoundID when 0)
 --   -> CreatureSoundData.SoundAggroID / SoundDeathID
 -- Bosses and elites with a voiced aggro / death line (ClassicDB world database)
 -- use that line instead. Creatures whose sound data has no aggro sound play
--- only their death sound.
+-- only their death sound. The named mobs' other lines (enter / slay / hurt / ability)
+-- are the client's sound/creature/<name>/ files: SoundKitEntry -> listfile.
 -- =========================================================================
 TTS.CreatureSounds = {
     ["ALT01"] = { aggro = 1243, death = 1242 }, -- Mountain Yeti
@@ -93,12 +103,12 @@ TTS.CreatureSounds = {
     ["BFD03"] = { aggro = 1010, death = 1009 }, -- Fallenroot Shadowstalker
     ["BFD04"] = { death = 229 }, -- Twilight Reaver
     ["BFD05"] = { aggro = 4025, death = 4023 }, -- Blackfathom Sea Witch
-    ["BFD06"] = { aggro = 5799, death = 5801 }, -- Lady Sarevess
+    ["BFD06"] = { aggro = 5799, aggroAgain = 4025, death = 4023, slay = 5801 }, -- Lady Sarevess
     ["BFD07"] = { aggro = 1464, death = 1462 }, -- Ghamoo-ra
     ["BFD08"] = { aggro = 1263, death = 2944 }, -- Lorgus Jett
     ["BFD09"] = { aggro = 416, death = 420 }, -- Gelihast
     ["BFD10"] = { aggro = 1236, death = 1234 }, -- Old Serra'kis
-    ["BFD11"] = { aggro = 5802, death = 5803 }, -- Twilight Lord Kelris
+    ["BFD11"] = { enter = 5804, aggro = 5802, aggroAgain = 1319, death = 1322, slay = 5803 }, -- Twilight Lord Kelris
     ["BFD12"] = { aggro = 1408, death = 1406 }, -- Baron Aquanis
     ["BLA01"] = { aggro = 2511, death = 2509 }, -- Starving Snickerfang
     ["BLA02"] = { aggro = 2511, death = 2509 }, -- Snickerfang Hyena
@@ -112,20 +122,20 @@ TTS.CreatureSounds = {
     ["BLA10"] = { death = 1322 }, -- Dreadscorn
     ["BLA11"] = { aggro = 596, death = 595 }, -- Kum'isha the Collector
     ["BOSS01"] = { aggro = 1010, death = 1009 }, -- Bazzalan
-    ["BOSS02"] = { aggro = 5780, death = 2944 }, -- Edwin VanCleef
+    ["BOSS02"] = { aggro = 5780, aggroAgain = 1263, death = 2944, slay = 5781, hurt = { 5782, 5783, 5784 } }, -- Edwin VanCleef
     ["BOSS03"] = { aggro = 416, death = 420 }, -- Mutanus the Devourer
-    ["BOSS04"] = { aggro = 5793, death = 2944 }, -- Archmage Arugal
+    ["BOSS04"] = { aggro = 5793, aggroAgain = 1263, death = 2944, slay = 5795, ability = 5797 }, -- Archmage Arugal
     ["BOSS05"] = { aggro = 5375, death = 449 }, -- Aku'mai
     ["BOSS06"] = { aggro = 1263, death = 2944 }, -- Bazil Thredd
-    ["BOSS07"] = { aggro = 5807, death = 1980 }, -- Mekgineer Thermaplugg
-    ["BOSS08"] = { aggro = 1181, death = 1179 }, -- Charlga Razorflank
-    ["BOSS09"] = { aggro = 2517, death = 2515 }, -- Bloodmage Thalnos
-    ["BOSS10"] = { aggro = 5842, death = 2944 }, -- Arcanist Doan
-    ["BOSS11"] = { aggro = 5830, death = 2944 }, -- Herod
-    ["BOSS12"] = { aggro = 283054, death = 2940 }, -- High Inquisitor Whitemane
-    ["BOSS13"] = { aggro = 5800, death = 5796 }, -- Amnennar the Coldbringer
-    ["BOSS14"] = { aggro = 5855 }, -- Archaedas
-    ["BOSS15"] = { aggro = 344001, death = 3310 }, -- Chief Ukorz Sandscalp
+    ["BOSS07"] = { aggro = 5807, aggroAgain = 1982, death = 1980, slay = 5810, hurt = 5808, ability = 5809 }, -- Mekgineer Thermaplugg
+    ["BOSS08"] = { aggro = 5813, aggroAgain = 1181, death = 1179, slay = 5814, hurt = { 5815, 5816, 5818 } }, -- Charlga Razorflank
+    ["BOSS09"] = { aggro = 5844, aggroAgain = 2517, death = 2515, slay = 5845, hurt = 5846 }, -- Bloodmage Thalnos
+    ["BOSS10"] = { aggro = 5842, aggroAgain = 1263, death = 2944, ability = 5843 }, -- Arcanist Doan
+    ["BOSS11"] = { aggro = { 5830, 5832, 5833 }, aggroAgain = 1263, death = 2944, slay = 5831 }, -- Herod
+    ["BOSS12"] = { aggro = 5838, aggroAgain = 283054, death = 2940, slay = 5839 }, -- High Inquisitor Whitemane
+    ["BOSS13"] = { enter = { 5828, 5829 }, aggro = 5825, aggroAgain = 5800, death = 5796, slay = 5826, hurt = 5827 }, -- Amnennar the Coldbringer
+    ["BOSS14"] = { enter = { 5856, 5857 }, aggro = 5855, aggroAgain = 472, slay = 5858 }, -- Archaedas
+    ["BOSS15"] = { aggro = 5876, aggroAgain = 344001, death = 3310, slay = 5877, hurt = 5878 }, -- Chief Ukorz Sandscalp
     ["BOSS16"] = { aggro = 210, death = 213 }, -- Princess Theradras
     ["BOSS17"] = { aggro = 3525, death = 3523 }, -- Shade of Eranikus
     ["BOSS18"] = { death = 2932 }, -- Emperor Dagran Thaurissan
@@ -255,11 +265,11 @@ TTS.CreatureSounds = {
     ["DMS04"] = { aggro = 1263, death = 2944 }, -- Defias Blackguard
     ["DMS05"] = { aggro = 1263, death = 2944 }, -- Defias Evoker
     ["DMS06"] = { aggro = 283608, death = 18493 }, -- Gilnid
-    ["DMS07"] = { aggro = 5774, death = 400 }, -- Rhahk'Zor
+    ["DMS07"] = { aggro = 5774, aggroAgain = 396, death = 400 }, -- Rhahk'Zor
     ["DMS08"] = { aggro = 1982, death = 1980 }, -- Sneed's Shredder
     ["DMS09"] = { aggro = 416, death = 420 }, -- Cookie
     ["DMS10"] = { aggro = 283608, death = 18493 }, -- Captain Greenskin
-    ["DMS11"] = { aggro = 5777, death = 1356 }, -- Mr. Smite
+    ["DMS11"] = { enter = 5775, aggro = { 5777, 5778, 5779 }, aggroAgain = 1353, death = 1356 }, -- Mr. Smite
     ["DMS12"] = { aggro = 1415, death = 1413 }, -- Sneed
     ["DSK01"] = { aggro = 1016, death = 337 }, -- Skeletal Warrior
     ["DSK02"] = { aggro = 390, death = 394 }, -- Young Black Ravager
@@ -293,7 +303,8 @@ TTS.CreatureSounds = {
     ["DUR08"] = { aggro = 708, death = 707 }, -- Bloodtalon Scythemaw
     ["DUR09"] = { aggro = 570, death = 569 }, -- Dreadmaw Crocolisk
     ["DUR10"] = { aggro = 719, death = 718 }, -- Death Flayer
-    ["DUR11"] = { death = 3310 }, -- Vol'jin
+    ["DUR11"] = { enter = 7215, aggro = 5881, aggroAgain = 344001, death = 3310 }, -- Vol'jin
+    ["DUR12"] = { aggro = 1346, death = 1344 }, -- Gazz'uz
     ["DUS01"] = { aggro = 590, death = 589 }, -- Noxious Flayer
     ["DUS02"] = { aggro = 462, death = 458 }, -- Withervine Creeper
     ["DUS03"] = { aggro = 416, death = 420 }, -- Mirefin Murloc
@@ -304,7 +315,7 @@ TTS.CreatureSounds = {
     ["DUS08"] = { aggro = 1452, death = 1450 }, -- Muckshell Pincer
     ["DUS09"] = { aggro = 1452, death = 1450 }, -- Muckshell Scrabbler
     ["DUS10"] = { aggro = 1452, death = 1450 }, -- Lord Angler
-    ["DUS11"] = { death = 2940 }, -- Lady Jaina Proudmoore
+    ["DUS11"] = { enter = 7216, aggro = 5882, aggroAgain = 283054, death = 2940 }, -- Lady Jaina Proudmoore
     ["ELW01"] = { aggro = 694, death = 314 }, -- Kobold Vermin
     ["ELW02"] = { aggro = 694, death = 314 }, -- Kobold Worker
     ["ELW03"] = { aggro = 1263, death = 2944 }, -- Defias Thug
@@ -316,6 +327,7 @@ TTS.CreatureSounds = {
     ["ELW09"] = { aggro = 416, death = 420 }, -- Murloc Lurker
     ["ELW10"] = { aggro = 1015, death = 413 }, -- Gruff Swiftbite
     ["ELW11"] = { aggro = 1263, death = 2944 }, -- Marshal Dughan
+    ["ELW12"] = { aggro = 1015, death = 413 }, -- Hogger
     ["EPL01"] = { aggro = 579, death = 578 }, -- Plaguehound Runt
     ["EPL02"] = { aggro = 5043, death = 5041 }, -- Carrion Grub
     ["EPL03"] = { aggro = 409, death = 413 }, -- Cannibal Ghoul
@@ -355,7 +367,7 @@ TTS.CreatureSounds = {
     ["GNO04"] = { aggro = 4319, death = 4317 }, -- Mechano-Frostwalker
     ["GNO05"] = { aggro = 1408, death = 1406 }, -- Viscous Fallout
     ["GNO06"] = { death = 2932 }, -- Dark Iron Ambassador
-    ["GNO07"] = { aggro = 5811, death = 4317 }, -- Electrocutioner 6000
+    ["GNO07"] = { aggro = 5811, aggroAgain = 4319, death = 4317 }, -- Electrocutioner 6000
     ["GNO08"] = { aggro = 2092, death = 2518 }, -- Crowd Pummeler 9-60
     ["GNO09"] = { aggro = 659, death = 658 }, -- Grubbis
     ["HIL01"] = { aggro = 1015, death = 413 }, -- Rot Hide Brute
@@ -438,8 +450,8 @@ TTS.CreatureSounds = {
     ["RFD02"] = { aggro = 2517, death = 2515 }, -- Skeletal Frostweaver
     ["RFD03"] = { aggro = 409, death = 413 }, -- Boneflayer Ghoul
     ["RFD04"] = { aggro = 1181, death = 1179 }, -- Death's Head Necromancer
-    ["RFD05"] = { aggro = 5822, death = 2515 }, -- Mordresh Fire Eye
-    ["RFD06"] = { aggro = 1446, death = 1444 }, -- Glutton
+    ["RFD05"] = { aggro = { 5822, 5819, 5820, 5821 }, aggroAgain = 2517, death = 2515 }, -- Mordresh Fire Eye
+    ["RFD06"] = { aggro = 5823, aggroAgain = 1446, death = 1444, slay = 5824 }, -- Glutton
     ["RFD07"] = { aggro = 1181, death = 1179 }, -- Ragglesnout
     ["RFD08"] = { aggro = 3346, death = 3344 }, -- Tuten'kash
     ["RFK01"] = { aggro = 1181, death = 1179 }, -- Razorfen Warrior
@@ -452,7 +464,7 @@ TTS.CreatureSounds = {
     ["RFK08"] = { aggro = 1181, death = 1179 }, -- Aggem Thorncurse
     ["RFK09"] = { aggro = 1181, death = 1179 }, -- Death Speaker Jargba
     ["RFK10"] = { aggro = 1181, death = 1179 }, -- Earthcaller Halmgar
-    ["RFK11"] = { aggro = 5812, death = 1179 }, -- Overlord Ramtusk
+    ["RFK11"] = { aggro = 5812, aggroAgain = 1181, death = 1179 }, -- Overlord Ramtusk
     ["RFK12"] = { aggro = 379, death = 383 }, -- Agathelos the Raging
     ["RFK13"] = { aggro = 1181, death = 1179 }, -- Razorfen Totemic
     ["SCH01"] = { aggro = 1357, death = 2936 }, -- Scholomance Acolyte
@@ -526,12 +538,12 @@ TTS.CreatureSounds = {
     ["SMO05"] = { aggro = 3424, death = 3422 }, -- Haunting Phantasm
     ["SMO06"] = { aggro = 283054, death = 2940 }, -- Scarlet Myrmidon
     ["SMO07"] = { aggro = 283054, death = 2940 }, -- Scarlet Champion
-    ["SMO08"] = { aggro = 5847, death = 2944 }, -- Interrogator Vishas
-    ["SMO09"] = { aggro = 5841, death = 2944 }, -- Houndmaster Loksey
+    ["SMO08"] = { aggro = 5847, aggroAgain = 1263, death = 2944, slay = 5848, hurt = { 5849, 5850 } }, -- Interrogator Vishas
+    ["SMO09"] = { aggro = 5841, aggroAgain = 1263, death = 2944 }, -- Houndmaster Loksey
     ["SMO10"] = { death = 1318 }, -- Fallen Champion
     ["SMO11"] = { aggro = 1016, death = 337 }, -- Ironspine
     ["SMO12"] = { death = 1318 }, -- High Inquisitor Fairbanks
-    ["SMO13"] = { aggro = 5835, death = 2944 }, -- Scarlet Commander Mograine
+    ["SMO13"] = { aggro = 5835, aggroAgain = 1263, death = 2944, slay = 5836 }, -- Scarlet Commander Mograine
     ["SMO14"] = { aggro = 1263, death = 2944 }, -- Azshir the Sleepless
     ["STK01"] = { aggro = 1263, death = 2944 }, -- Defias Prisoner
     ["STK02"] = { aggro = 1263, death = 2944 }, -- Defias Insurgent
@@ -661,10 +673,10 @@ TTS.CreatureSounds = {
     ["SUN07"] = { aggro = 344001, death = 3310 }, -- Hukku
     ["SUN08"] = { aggro = 590, death = 589 }, -- Spawn of Hakkar
     ["SUN09"] = { aggro = 344001, death = 3310 }, -- Ogom the Wretched
-    ["SUN10"] = { aggro = 344001, death = 3310 }, -- Jammal'an the Prophet
+    ["SUN10"] = { aggro = { 5862, 5864 }, aggroAgain = 344001, death = 3310, slay = 5863, hurt = 5865 }, -- Jammal'an the Prophet
     ["SUN11"] = { aggro = 4065, death = 4063 }, -- Morphaz
     ["SUN12"] = { aggro = 4065, death = 4063 }, -- Hazzas
-    ["SUN13"] = { aggro = 7055, death = 7059 }, -- Avatar of Hakkar
+    ["SUN13"] = { aggro = 5871, aggroAgain = 7055, death = 7059 }, -- Avatar of Hakkar
     ["SWA01"] = { aggro = 570, death = 569 }, -- Young Sawtooth Crocolisk
     ["SWA02"] = { aggro = 422, death = 426 }, -- Sorrow Spinner
     ["SWA03"] = { aggro = 596, death = 595 }, -- Lost One Hunter
@@ -729,10 +741,10 @@ TTS.CreatureSounds = {
     ["ULD07"] = { death = 2932 }, -- Olaf
     ["ULD08"] = { aggro = 659, death = 658 }, -- Revelosh
     ["ULD09"] = { aggro = 472, death = 468 }, -- Obsidian Sentinel
-    ["ULD10"] = { aggro = 5852, death = 2932 }, -- Galgann Firehammer
+    ["ULD10"] = { aggro = 5852, aggroAgain = 2929, death = 2932 }, -- Galgann Firehammer
     ["ULD11"] = { aggro = 5853, death = 658 }, -- Grimlok
     ["ULD12"] = { aggro = 472, death = 468 }, -- Ancient Stone Keeper
-    ["ULD13"] = { aggro = 3032, death = 3035 }, -- Ironaya
+    ["ULD13"] = { aggro = 5851, aggroAgain = 3032, death = 3035 }, -- Ironaya
     ["UNG01"] = { aggro = 1243, death = 1242 }, -- Ferocious Rage Scar
     ["UNG02"] = { aggro = 708, death = 707 }, -- Ravasaur
     ["UNG03"] = { aggro = 5050, death = 5048 }, -- Bloodpetal Lasher
@@ -751,10 +763,10 @@ TTS.CreatureSounds = {
     ["WCV05"] = { aggro = 1649, death = 1647 }, -- Deviate Faerie Dragon
     ["WCV06"] = { aggro = 1236, death = 1972 }, -- Skum
     ["WCV07"] = { aggro = 1464, death = 1462 }, -- Kresh
-    ["WCV08"] = { aggro = 341952, death = 2936 }, -- Lady Anacondra
-    ["WCV09"] = { aggro = 5785, death = 2959 }, -- Lord Cobrahn
-    ["WCV10"] = { aggro = 5787, death = 2959 }, -- Lord Pythas
-    ["WCV11"] = { aggro = 5788, death = 2959 }, -- Lord Serpentis
+    ["WCV08"] = { aggro = 5786, aggroAgain = 341952, death = 2936 }, -- Lady Anacondra
+    ["WCV09"] = { aggro = 5785, aggroAgain = 341954, death = 2959 }, -- Lord Cobrahn
+    ["WCV10"] = { aggro = 5787, aggroAgain = 341954, death = 2959 }, -- Lord Pythas
+    ["WCV11"] = { aggro = 5788, aggroAgain = 341954, death = 2959 }, -- Lord Serpentis
     ["WCV12"] = { aggro = 462, death = 458 }, -- Verdan the Everliving
     ["WCV13"] = { death = 2959 }, -- Boahn
     ["WES01"] = { aggro = 390, death = 394 }, -- Coyote
@@ -803,11 +815,11 @@ TTS.CreatureSounds = {
     ["WPL11"] = { aggro = 1263, death = 2944 }, -- Tirion Fordring
     ["ZFK01"] = { aggro = 344001, death = 3310 }, -- Sandfury Blood Drinker
     ["ZFK02"] = { aggro = 344001, death = 3310 }, -- Sandfury Shadowhunter
-    ["ZFK03"] = { aggro = 5874, death = 3310 }, -- Sandfury Executioner
+    ["ZFK03"] = { aggro = 5874, aggroAgain = 344001, death = 3310, slay = 5875 }, -- Sandfury Executioner
     ["ZFK04"] = { aggro = 570, death = 569 }, -- Sul'lithuz Sandcrawler
     ["ZFK05"] = { aggro = 344001, death = 3310 }, -- Theka the Martyr
     ["ZFK06"] = { aggro = 344002, death = 3304 }, -- Hydromancer Velratha
-    ["ZFK07"] = { aggro = 5872, death = 3310 }, -- Witch Doctor Zum'rah
+    ["ZFK07"] = { aggro = 5872, aggroAgain = 344001, death = 3310, slay = 5873 }, -- Witch Doctor Zum'rah
     ["ZFK08"] = { aggro = 344001, death = 3310 }, -- Ruuzlu
     ["ZFK09"] = { aggro = 344001, death = 3310 }, -- Dustwraith
     ["ZFK10"] = { aggro = 344001, death = 3310 }, -- Sandarr Dunereaver
@@ -819,6 +831,7 @@ TTS.CreatureSounds = {
     ["TOK02"] = { aggro = 694, death = 314 }, -- Kobold Digger (as Kobold Worker)
     ["TOK03"] = { aggro = 1016, death = 337 }, -- Skeleton (as Skeletal Warrior)
     ["TOK05"] = { aggro = 428, death = 432 }, -- Rookery Whelp (as Scalding Whelp)
+    ["TOK06"] = { aggro = 770, death = 769 }, -- Imp
 }
 
 -- =========================================================================
@@ -944,12 +957,15 @@ local UI_SOUNDS = {
     defeat   = { kit = "IG_QUEST_FAILED", id = 847, legacy = "igQuestFailed" },
 }
 
+-- Returns whether it will play, and its handle when the client gives one
 local function PlayRaw(sound)
+    local ok, willPlay, handle
     if type(sound) == "number" then
-        pcall(PlaySound, sound, "SFX")
+        ok, willPlay, handle = pcall(PlaySound, sound, "SFX")
     elseif type(sound) == "string" then
-        pcall(PlaySoundFile, sound, "SFX")
+        ok, willPlay, handle = pcall(PlaySoundFile, sound, "SFX")
     end
+    return ok and willPlay and true or false, handle
 end
 
 function S:PlayUI(name)
@@ -964,44 +980,156 @@ function S:PlayUI(name)
 end
 
 -- =========================================================================
--- CREATURE SOUNDS (aggro / death)
--- Events queued in the same moment are batched: only one sound per kind plays,
--- taken from the highest-cost creature in the batch that has sound data.
+-- CREATURE SOUNDS (enter / aggro / death / slay / hurt / ability)
+-- Events queued in the same moment are batched. Voiced lines (a named mob speaking,
+-- LONG_LINES) never talk over each other: they wait their turn and play one after
+-- another, in the order they were queued (Whitemane's "Arise, my champion!" before the
+-- denizen she returns). Short sounds (grunts, roars) play at once, alongside a line
+-- already playing: each different one once per batch, the highest-cost creatures' first,
+-- up to MAX_SHORT.
 -- =========================================================================
--- kind "enter" (arriving on the battlefield) is the card's enterSound if it has one, and
--- otherwise its aggro sound, like attacking
+local LONG_LINES = {}
+for _, id in ipairs({
+    5774, 5775, 5777, 5778, 5779,                   -- Rhahk'Zor, Mr. Smite
+    5780, 5781, 5782, 5783, 5784,                   -- Edwin VanCleef
+    5785, 5786, 5787, 5788,                         -- the Fanglords
+    5793, 5795, 5797,                               -- Arugal
+    5799, 5801, 5802, 5803, 5804,                   -- Lady Sarevess, Kelris
+    5807, 5808, 5809, 5810, 5811, 5812,             -- Thermaplugg, Electrocutioner 6000, Ramtusk
+    5813, 5814, 5815, 5816, 5818,                   -- Charlga Razorflank
+    5819, 5820, 5821, 5822, 5823, 5824,             -- Mordresh Fire Eye, Glutton
+    5825, 5826, 5827, 5828, 5829,                   -- Amnennar
+    5830, 5831, 5832, 5833,                         -- Herod
+    5835, 5836, 5838, 5839, 5840, 5841,             -- Mograine, Whitemane, Loksey
+    5842, 5843, 5844, 5845, 5846,                   -- Doan, Thalnos
+    5847, 5848, 5849, 5850,                         -- Vishas
+    5851, 5852, 5855, 5856, 5857, 5858,             -- Ironaya, Galgann, Archaedas
+    5862, 5863, 5864, 5865, 5871,                   -- Jammal'an, Avatar of Hakkar
+    5872, 5873, 5874, 5875, 5876, 5877, 5878,       -- Zum'rah, Sandfury Executioner, Ukorz
+    5881, 5882, 7215, 7216,                         -- Vol'jin, Jaina
+}) do LONG_LINES[id] = true end
+
+-- A game sound file (Leeroy's) is a line too
+local function IsLong(sound)
+    return type(sound) == "string" or LONG_LINES[sound] == true
+end
+
+-- A list of sounds plays one of them
+local function Pick(sound)
+    if type(sound) == "table" then return sound[math.random(#sound)] end
+    return sound
+end
+
+-- The card's own <kind>Sound, else its CreatureSounds entry; arriving without an enter
+-- sound is its aggro sound, like attacking
 function S:GetCreatureSound(cardId, kind)
     local card = TTS.Cards and TTS.Cards[cardId]
     if not card or card.type ~= "Creature" then return nil end
     local own = card[kind .. "Sound"]
     if own then return own end
-    if kind == "enter" then return self:GetCreatureSound(cardId, "aggro") end
     local data = TTS.CreatureSounds[cardId]
-    return data and data[kind]
+    if data and data[kind] then return data[kind] end
+    if kind == "enter" then return self:GetCreatureSound(cardId, "aggro") end
+    return nil
 end
 
 local BATCH_WINDOW = 0.05
-local pending = { aggro = {}, death = {}, enter = {} }
+local MAX_SHORT = 4        -- different short sounds one batch plays
+local MAX_WAITING = 3      -- lines waiting at once; more are dropped
+local LINE_STALE = 10      -- seconds a line may wait before the moment has passed
+local LINE_GAP = 0.2       -- quiet between two lines
+local LINE_POLL = 0.25
+local LINE_MAX = 15        -- a line the client still calls playing after this is let go
+local LINE_GUESS = 4       -- how long a line lasts when the client can't say
+local KINDS = { enter = true, aggro = true, death = true, slay = true, hurt = true, ability = true }
+
+local pending = {}
 local flushScheduled = false
+local lines, linePlaying = {}, false
+-- [perm] = true once it has said its voiced attack line. A card that leaves the battlefield
+-- and comes back is a new permanent, so it says it again.
+local saidAggroLine = setmetatable({}, { __mode = "k" })
+
+-- Timer callbacks run guarded, like the engine's display code (E:HookDisplay): an error is
+-- reported, and never leaves the queue stuck on a line that broke
+local function Guarded(fn)
+    return function()
+        local ok, err = pcall(fn)
+        if not ok then
+            linePlaying = false
+            local handler = geterrorhandler and geterrorhandler()
+            if handler then pcall(handler, err) end
+        end
+    end
+end
+
+local function PlayNextLine()
+    if linePlaying then return end
+    if not S.enabled then lines = {} return end
+    local now, line = GetTime(), nil
+    while #lines > 0 and not line do
+        local l = table.remove(lines, 1)
+        if now - l.at <= LINE_STALE then line = l end
+    end
+    if not line then return end
+    local willPlay, handle = PlayRaw(line.sound)
+    -- Muted in the client's settings: on to the next one
+    if not willPlay then return PlayNextLine() end
+    linePlaying = true
+    local function Done()
+        TTS:SafeAfter(LINE_GAP, Guarded(function()
+            linePlaying = false
+            PlayNextLine()
+        end))
+    end
+    if handle and C_Sound and C_Sound.IsPlaying then
+        local Wait
+        Wait = Guarded(function()
+            if GetTime() - now < LINE_MAX and C_Sound.IsPlaying(handle) then
+                TTS:SafeAfter(LINE_POLL, Wait)
+            else
+                Done()
+            end
+        end)
+        TTS:SafeAfter(LINE_POLL, Wait)
+    else
+        TTS:SafeAfter(LINE_GUESS, Guarded(Done))
+    end
+end
+
+local function QueueLine(sound)
+    for _, l in ipairs(lines) do
+        if l.sound == sound then return end
+    end
+    if #lines >= MAX_WAITING then return end
+    table.insert(lines, { sound = sound, at = GetTime() })
+    PlayNextLine()
+end
 
 local function Flush()
     flushScheduled = false
-    for _, kind in ipairs({ "enter", "aggro", "death" }) do
-        local bestSound, bestCmc = nil, -1
-        for _, cardId in ipairs(pending[kind]) do
-            local snd = S:GetCreatureSound(cardId, kind)
-            if snd then
-                local card = TTS.Cards[cardId]
-                -- A card's own line (Whitemane's "Arise, my champion!") beats what it brings in with it
-                local cmc = (card.cmc or 0) + (card[kind .. "Sound"] and 1000 or 0)
-                if cmc > bestCmc then
-                    bestSound, bestCmc = snd, cmc
-                end
+    local batch = pending
+    pending = {}
+    local shorts, seen = {}, {}
+    for _, ev in ipairs(batch) do
+        local snd = Pick(S:GetCreatureSound(ev.cardId, ev.kind))
+        if ev.kind == "aggro" and ev.perm and snd and IsLong(snd) then
+            if saidAggroLine[ev.perm] then
+                snd = Pick(S:GetCreatureSound(ev.cardId, "aggroAgain"))
+            else
+                saidAggroLine[ev.perm] = true
             end
         end
-        pending[kind] = {}
-        if bestSound then PlayRaw(bestSound) end
+        if snd and IsLong(snd) then
+            QueueLine(snd)
+        elseif snd and not seen[snd] then
+            seen[snd] = true
+            local card = TTS.Cards[ev.cardId]
+            table.insert(shorts, { sound = snd, cmc = card and card.cmc or 0 })
+        end
     end
+    table.sort(shorts, function(a, b) return a.cmc > b.cmc end)
+    for i = 1, math.min(#shorts, MAX_SHORT) do PlayRaw(shorts[i].sound) end
 end
 
 -- A token's card appearing (UI\Board.lua token spawns): its mob sound, or without one a
@@ -1009,17 +1137,19 @@ end
 local PAPER_SOUND = 829
 function S:PlayTokenSound(cardId)
     if not self.enabled then return end
-    PlayRaw(self:GetCreatureSound(cardId, "enter") or PAPER_SOUND)
+    PlayRaw(Pick(self:GetCreatureSound(cardId, "enter")) or PAPER_SOUND)
 end
 
--- kind = "enter" (creature arrives; tokens use PlayTokenSound instead), "aggro" (attacking)
--- or "death"
-function S:QueueCreature(kind, cardId)
-    if not self.enabled or not pending[kind] or not cardId then return end
-    table.insert(pending[kind], cardId)
+-- kind = "enter" (creature arrives; tokens use PlayTokenSound instead), "aggro" (attacking),
+-- "death", "slay" (it destroyed another denizen: E:PlayHitSounds), "hurt" (it survived
+-- heavy damage: E:PlayHitSounds) or "ability" (E:ActivateAbility). perm: the attacker, for
+-- aggro (its voiced line plays once per time on the battlefield)
+function S:QueueCreature(kind, cardId, perm)
+    if not self.enabled or not KINDS[kind] or not cardId then return end
+    table.insert(pending, { kind = kind, cardId = cardId, perm = perm })
     if not flushScheduled then
         flushScheduled = true
-        TTS:SafeAfter(BATCH_WINDOW, Flush)
+        TTS:SafeAfter(BATCH_WINDOW, Guarded(Flush))
     end
 end
 

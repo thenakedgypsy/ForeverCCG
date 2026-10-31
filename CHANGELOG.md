@@ -1,6 +1,6 @@
 ## 1.0.0
-
-*   denizens can now have a targeted Arrival: choose its target as you cast it, like a spell (if there's nothing to target, it's cast as usual)
+* new sounds and sound hooks
+*   added barrens giraffe
 *   new: your Hero card - you, but as a card. Its keyword and stats come from your class; every 10 levels choose to upgrade it or take another copy (the Hero button in the deckbuilder). Choices are shared by your alts
 *   your opponent's Hero card shows their real character when you can see them (target, mouseover or group). Out of sight, it's a class trainer of their race and gender, wearing their gear
 *   new keyword `Shielded`: the next damage the denizen would take is negated, then it loses Shielded. Power Word: Shield, Blessing of Protection, Divine Shield and Evasion now grant it
