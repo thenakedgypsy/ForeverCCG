@@ -89,7 +89,7 @@ TTS:AddCards({
         zone = "Durotar", creatureType = "Humanoid", faction = "Burning Blade", npcId = 3204,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         etb = { ops = { { op = "token", id = "TOK06", n = 1 } } },
-        text = "Arrival: Spawn: 1 Imp Add (1/1)."
+        text = "Arrival: Spawn: 1 Voidwalker Add (1/5, Blocker)."
     },
     -- Solo reward
     ["DUR11"] = {

@@ -2287,6 +2287,7 @@ function E:ChooseDamageOrders(bs, onDone)
         })
     end
     Ask()
+    self:RefreshUI()   -- the step and End Turn buttons grey out while the pick is open
     return true
 end
 

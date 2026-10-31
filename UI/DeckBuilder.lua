@@ -267,9 +267,14 @@ end
 -- =========================================================================
 -- LAYOUT
 -- =========================================================================
-LAYOUT.WIN_W, LAYOUT.WIN_H = 1090, 692   -- the bottom strip holds the two-line collection tracker
+-- The header holds the Forever: CCG logo (LOGO_H tall); the panels under it move down by
+-- HEADER_EXTRA, how much taller it is than the other windows' 25 px strips
+LAYOUT.LOGO_H       = 38
+LAYOUT.HEADER_H     = LAYOUT.LOGO_H + 2
+LAYOUT.HEADER_EXTRA = LAYOUT.HEADER_H - 25
+LAYOUT.WIN_W, LAYOUT.WIN_H = 1090, 692 + LAYOUT.HEADER_EXTRA   -- the bottom strip holds the two-line collection tracker
 LAYOUT.PAD          = 14
-LAYOUT.PANEL_TOP    = -46
+LAYOUT.PANEL_TOP    = -46 - LAYOUT.HEADER_EXTRA
 LAYOUT.PANEL_H      = 598
 LAYOUT.POOL_W       = 684
 LAYOUT.DECK_W       = LAYOUT.WIN_W - LAYOUT.PAD * 3 - LAYOUT.POOL_W   -- 364
@@ -306,7 +311,7 @@ local titleBar = D:CreateTexture(nil, "ARTWORK")
 -- Darkened strip inside the dialog border; its bottom edge stays where it was
 titleBar:SetPoint("TOPLEFT", 12, -12)
 titleBar:SetPoint("TOPRIGHT", -12, -12)
-titleBar:SetHeight(25)
+titleBar:SetHeight(LAYOUT.HEADER_H)
 titleBar:SetColorTexture(0, 0, 0, 0.35)
 
 local titleLine = D:CreateTexture(nil, "ARTWORK")
@@ -315,13 +320,14 @@ titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
 titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
-local title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOPLEFT", 16, -11)
-Loc:Bind(title, "db.title")
-do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
-    local tag = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    tag:SetPoint("LEFT", title, "RIGHT", 10, -1)
-    tag:SetText("Forever: CCG")
+do  -- the Forever: CCG logo on the left of the strip, the title after it (as on Rules & Guide)
+    local logo = D:CreateTexture(nil, "OVERLAY")
+    logo:SetSize(LAYOUT.LOGO_H * 350 / 85, LAYOUT.LOGO_H)   -- the logo is 350 x 85
+    logo:SetPoint("LEFT", titleBar, "LEFT", 2, 0)
+    logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
+    local title = D:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
+    Loc:Bind(title, "db.title")
 end
 
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")

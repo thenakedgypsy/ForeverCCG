@@ -831,7 +831,7 @@ TTS.CreatureSounds = {
     ["TOK02"] = { aggro = 694, death = 314 }, -- Kobold Digger (as Kobold Worker)
     ["TOK03"] = { aggro = 1016, death = 337 }, -- Skeleton (as Skeletal Warrior)
     ["TOK05"] = { aggro = 428, death = 432 }, -- Rookery Whelp (as Scalding Whelp)
-    ["TOK06"] = { aggro = 770, death = 769 }, -- Imp
+    ["TOK06"] = { aggro = 1398, death = 1396 }, -- Voidwalker
 }
 
 -- =========================================================================

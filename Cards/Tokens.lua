@@ -52,10 +52,10 @@ TTS:AddCards({
     },
     -- Gazz'uz (Cards\Zones\Durotar.lua)
     ["TOK06"] = {
-        id = "TOK06", name = "Imp", cost = "", cmc = 0, color = "B", type = "Creature",
-        power = 1, toughness = 1, isToken = true, displayId = 4449,   -- warlock imp model
+        id = "TOK06", name = "Voidwalker", cost = "", cmc = 0, color = "B", type = "Creature",
+        power = 1, toughness = 5, defender = true, isToken = true, displayId = 1132,   -- warlock voidwalker model
         creatureType = "Demon",
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Blocker."
     },
 })

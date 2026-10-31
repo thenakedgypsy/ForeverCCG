@@ -82,7 +82,7 @@ end
 
 local function Text(key) return FormatTextWithSymbols(L(key), 16) end
 
--- Header: darkened strip with a gold line, title on the left
+-- Header: darkened strip with a gold line, the Forever: CCG logo on the left, the title after it
 local titleBar = R:CreateTexture(nil, "ARTWORK")
 titleBar:SetPoint("TOPLEFT", 12, -12)
 titleBar:SetPoint("TOPRIGHT", -12, -12)
@@ -95,13 +95,14 @@ titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
 titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
-local title = R:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOPLEFT", 16, -11)
-Loc:Bind(title, "rules.title")
+local logo = R:CreateTexture(nil, "OVERLAY")
+logo:SetSize(30 * 350 / 85, 30)   -- the logo is 350 x 85
+logo:SetPoint("LEFT", titleBar, "LEFT", 2, 0)
+logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
 
-local subtitle = R:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-subtitle:SetPoint("LEFT", title, "RIGHT", 10, -1)
-subtitle:SetText("Forever: CCG")
+local title = R:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
+Loc:Bind(title, "rules.title")
 
 local closeBtn = CreateFrame("Button", nil, R, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -2, -2)

@@ -33,7 +33,12 @@ local CONTINENTS = {
     { id = "EK",  name = "solo.continent.EK",  folder = "Azeroth" },
 }
 local MAP_W, MAP_H, MAP_TILE = 1002, 668, 256
-local WIN_W, WIN_H = MAP_W + 34, MAP_H + 128
+-- The header holds the Forever: CCG logo (LOGO_H tall); everything under it moves down by
+-- HEADER_EXTRA, how much taller it is than the other windows' 25 px strips
+local LOGO_H = 60
+local HEADER_H = LOGO_H + 2
+local HEADER_EXTRA = HEADER_H - 25
+local WIN_W, WIN_H = MAP_W + 34, MAP_H + 128 + HEADER_EXTRA
 
 local ZONE_SIZE, DUNGEON_SIZE = 26, 24
 local ZONE_ICON    = "Interface\\Icons\\INV_Misc_Map_01"
@@ -67,7 +72,7 @@ tinsert(UISpecialFrames, "TTS_SoloSelectFrame")
 local titleBar = S:CreateTexture(nil, "ARTWORK")
 titleBar:SetPoint("TOPLEFT", 12, -12)
 titleBar:SetPoint("TOPRIGHT", -12, -12)
-titleBar:SetHeight(25)
+titleBar:SetHeight(HEADER_H)
 titleBar:SetColorTexture(0, 0, 0, 0.35)
 
 local titleLine = S:CreateTexture(nil, "ARTWORK")
@@ -76,13 +81,14 @@ titleLine:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
 titleLine:SetHeight(1)
 titleLine:SetColorTexture(1, 0.82, 0, 0.55)
 
-local title = S:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOPLEFT", 16, -11)
-Loc:Bind(title, "main.campaign")
-do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
-    local tag = S:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    tag:SetPoint("LEFT", title, "RIGHT", 10, -1)
-    tag:SetText("Forever: CCG")
+do  -- the Forever: CCG logo on the left of the strip, the title after it (as on Rules & Guide)
+    local logo = S:CreateTexture(nil, "OVERLAY")
+    logo:SetSize(LOGO_H * 350 / 85, LOGO_H)   -- the logo is 350 x 85
+    logo:SetPoint("LEFT", titleBar, "LEFT", 2, 0)
+    logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
+    local title = S:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
+    Loc:Bind(title, "main.campaign")
 end
 
 local closeBtn = CreateFrame("Button", nil, S, "UIPanelCloseButton")
@@ -135,7 +141,7 @@ end
 local tabs = {}
 for i, cont in ipairs(CONTINENTS) do
     local b = CreatePanelButton(S, 140, 22, cont.name)
-    b:SetPoint("TOPLEFT", S, "TOPLEFT", 16 + (i - 1) * 144, -46)
+    b:SetPoint("TOPLEFT", S, "TOPLEFT", 16 + (i - 1) * 144, -46 - HEADER_EXTRA)
     tabs[cont.id] = b
 end
 
@@ -149,7 +155,7 @@ local HINT_TEXT = "solo.hint"
 -- =========================================================================
 local map = CreateFrame("Frame", nil, S, backdropTemplate)
 map:SetSize(MAP_W + 8, MAP_H + 8)
-map:SetPoint("TOPLEFT", S, "TOPLEFT", 13, -74)
+map:SetPoint("TOPLEFT", S, "TOPLEFT", 13, -74 - HEADER_EXTRA)
 map:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -311,7 +317,7 @@ local function ShowRewardPreview(enc)
         preview:SetScript("OnEnter", nil)
         preview:SetScript("OnLeave", nil)
         preview:ClearAllPoints()
-        preview:SetPoint("TOPRIGHT", S, "TOPLEFT", -12, -76)
+        preview:SetPoint("TOPRIGHT", S, "TOPLEFT", -12, -76 - HEADER_EXTRA)
     end
     TTS.PaintPreviewCard(preview, card)
     -- Not yet earned: shown dimmed

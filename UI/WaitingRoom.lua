@@ -91,6 +91,14 @@ local title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 title:SetPoint("TOP", 0, -18)
 Loc:Bind(title, "wr.title")
 
+-- The Forever: CCG logo in the top-left corner, beside the centred title
+do
+    local logo = F:CreateTexture(nil, "OVERLAY")
+    logo:SetSize(28 * 350 / 85, 28)   -- the logo is 350 x 85
+    logo:SetPoint("TOPLEFT", 16, -10)
+    logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
+end
+
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 closeBtn:SetPoint("TOPRIGHT", -5, -5)
 

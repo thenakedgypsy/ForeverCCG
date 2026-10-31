@@ -40,6 +40,7 @@ local DEFAULTS = {
     boardLocked = false,     -- the board can't be dragged (the board's Lock checkbox)
     actNudge = true,         -- "It's you to act" flashes after a wait on us (Board.lua)
     actNudgeWait = 10,       -- seconds of that wait
+    windowOpacity = 1,       -- factor on every window's background opacity (WINDOWS SECTION)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -457,13 +458,77 @@ for i, mode in ipairs(CONTROL_MODES) do
 end
 
 -- =========================================================================
+-- WINDOWS SECTION
+-- Window opacity: one factor on the background of every Forever: CCG window and panel in
+-- it, from each one's own (so a see-through panel stays lighter than a solid one); cards,
+-- text and borders are untouched. Each frame with a backdrop gets a SetBackdropColor that
+-- applies the factor, so colours painted later (hover, highlights) keep it. Windows are
+-- walked when they show and every OPACITY_WALK seconds while shown, for panels made since.
+-- =========================================================================
+local windowSection = CreateSection("options.windows", 66)
+windowSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
+
+local OPACITY_ROOTS = { "TTS_MainDialog", "TTS_BoardFrame", "TTS_BoardRestoreFrame", "TTS_OptionsFrame",
+    "TTS_DeckBuilderFrame", "TTS_DeckPicker", "TTS_RulesFrame", "TTS_SoloSelectFrame", "TTS_DungeonEntryFrame",
+    "TTS_WaitingRoomFrame", "TTS_ChoicePopup", "TTS_HeroChoice", "TTS_QuickStart", "TTS_TutorialCoach",
+    "TTS_NpcGossipPanel", "TTS_CardLinkPreview", "TTS_MatchLogCopyFrame", "TTS_PvPRecordFrame" }
+local OPACITY_WALK = 1   -- seconds
+local adopted = setmetatable({}, { __mode = "k" })   -- frame -> its own colour { r, g, b, a, set }
+
+local function OpacityFactor() return tonumber(O:Get("windowOpacity")) or 1 end
+
+local function PaintOpacity(f, c)
+    c.set(f, c[1], c[2], c[3], math.min(1, (c[4] or 1) * OpacityFactor()))
+end
+
+-- Takes over a frame's background colour (once it has a backdrop)
+local function Adopt(f)
+    if adopted[f] or not (f.GetBackdropColor and f.SetBackdropColor) then return end
+    local ok, r, g, b, a = pcall(f.GetBackdropColor, f)
+    if not ok or not r then return end
+    local c = { r, g, b, a or 1, set = f.SetBackdropColor }
+    adopted[f] = c
+    f.SetBackdropColor = function(self, r2, g2, b2, a2)
+        c[1], c[2], c[3], c[4] = r2, g2, b2, a2 or 1
+        PaintOpacity(self, c)
+    end
+    PaintOpacity(f, c)
+end
+
+local function Walk(f)
+    Adopt(f)
+    for _, child in ipairs({ f:GetChildren() }) do Walk(child) end
+end
+
+-- Walks every shown window (frames made since are taken over too)
+function O:WalkWindows()
+    for _, name in ipairs(OPACITY_ROOTS) do
+        local f = _G[name]
+        if f and f.IsShown and f:IsShown() then Walk(f) end
+    end
+end
+
+-- Repaints everything taken over with the current factor
+function O:ApplyOpacity()
+    self:WalkWindows()
+    for f, c in pairs(adopted) do PaintOpacity(f, c) end
+end
+
+local opacitySlider = CreateSlider("TTS_OptionsOpacitySlider", "options.windowOpacity",
+    -30, 0.2, 1.5, 0.05, "windowOpacity", "options.percent", 100, windowSection)
+function opacitySlider:ShowValue(v)
+    self.valueText:SetText(L("options.percent", math.floor(v * 100 + 0.5)))
+end
+opacitySlider:HookScript("OnValueChanged", function() O:ApplyOpacity() end)
+
+-- =========================================================================
 -- LANGUAGE SECTION
 -- A button showing the saved choice; clicking it lists the installed
 -- languages (English plus the ForeverCCG_Languages pack). A new choice is
 -- used after a /reload.
 -- =========================================================================
 local langSection = CreateSection("options.language", 66)
-langSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
+langSection:SetPoint("TOPLEFT", windowSection, "BOTTOMLEFT", 0, -8)
 
 local langButton = CreateFrame("Button", nil, langSection, "UIPanelButtonTemplate")
 langButton:SetSize(170, 22)
@@ -567,7 +632,7 @@ end)
 -- The scrolled content: every section, the gaps between them, and a little room at each end
 do
     local h = 8
-    for _, section in ipairs({ soundSection, tipSection, boardSection, langSection, devSection }) do
+    for _, section in ipairs({ soundSection, tipSection, boardSection, windowSection, langSection, devSection }) do
         h = h + section:GetHeight() + 8
     end
     content:SetHeight(h)
@@ -603,6 +668,8 @@ function O:SyncControls()
     nudgeSlider:SetValue(db.actNudgeWait or 10)
     nudgeSlider:ShowValue(db.actNudgeWait or 10)
     nudgeSlider:SetAlpha(db.actNudge ~= false and 1 or 0.4)
+    opacitySlider:SetValue(db.windowOpacity or 1)
+    opacitySlider:ShowValue(db.windowOpacity or 1)
     local mode = TTS.CardControls and TTS.CardControls() or "both"
     for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
     langButton:SetText(ChoiceLabel(Loc:GetChoice()))
@@ -631,5 +698,19 @@ loader:SetScript("OnEvent", function(self, event, arg1)
         O:SyncControls()
     elseif event == "PLAYER_LOGIN" then
         S:HookButtons(F)
+        -- Window opacity (WINDOWS SECTION): every window is made by now. Each is taken
+        -- over as it shows, and panels made later on are picked up while it's shown.
+        for _, name in ipairs(OPACITY_ROOTS) do
+            local f = _G[name]
+            if f and f.HookScript then f:HookScript("OnShow", function(self) Walk(self) end) end
+        end
+        O:ApplyOpacity()
+        local walker, since = CreateFrame("Frame"), 0
+        walker:SetScript("OnUpdate", function(_, elapsed)
+            since = since + elapsed
+            if since < OPACITY_WALK then return end
+            since = 0
+            O:WalkWindows()
+        end)
     end
 end)

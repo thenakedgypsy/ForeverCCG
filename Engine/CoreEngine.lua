@@ -845,7 +845,9 @@ function E:NextPhase()
         elseif bs.blocksDeclared then
             -- Attacking: blocks are in and reviewed. An attacker blocked by several creatures
             -- (Support) first picks the order its damage goes in; then combat resolves on
-            -- both clients.
+            -- both clients. Pressed again while that pick is open, it waits for it (rather
+            -- than starting the pick over).
+            if TTS.Choice and TTS.Choice.IsOpen and TTS.Choice:IsOpen() then return end
             if self:ChooseDamageOrders(bs, function()
                 if self.blockingState == bs and self.phase == "COMBAT_BLOCK" then self:NextPhase() end
             end) then return end
@@ -1478,6 +1480,13 @@ end
 
 function E:HasPendingChoice()
     return self.choiceQueue ~= nil and #self.choiceQueue > 0
+end
+
+-- A choice is waiting on us: one queued, or a popup open (such as our damage order, which
+-- isn't queued). The step and End Turn buttons grey out meanwhile (Board.lua).
+function E:ChoiceOpen()
+    if self:HasPendingChoice() then return true end
+    return (TTS.Choice and TTS.Choice.IsOpen and TTS.Choice:IsOpen()) and true or false
 end
 
 -- Drops every waiting choice (the match is over)

@@ -365,19 +365,24 @@ end)
 
 -- =========================================================================
 -- ATTACHED GAME CHAT / COMBAT LOG (Side Panel)
+-- The Forever: CCG logo (as the main window has) heads it, in a taller title strip.
 -- =========================================================================
 local sideLog = CreateFrame("Frame", "TTS_SideLogFrame", B, backdropTemplate)
 sideLog:SetSize(250, 820)
 sideLog:SetPoint("TOPLEFT", B, "TOPRIGHT", 6, 0)
 Skin(sideLog, "dialog")
-AddTitleStrip(sideLog)
+AddTitleStrip(sideLog, 50)
 
-local logTitle = sideLog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-logTitle:SetPoint("TOPLEFT", 16, -11)
-Loc:Bind(logTitle, "board.gameLog")
+do
+    local LOGO_H = 46   -- the logo is 350 x 85
+    local logo = sideLog:CreateTexture(nil, "OVERLAY")
+    logo:SetSize(LOGO_H * 350 / 85, LOGO_H)
+    logo:SetPoint("TOPLEFT", 14, -14)
+    logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
+end
 
 local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
-logPanel:SetPoint("TOPLEFT", 14, -46)
+logPanel:SetPoint("TOPLEFT", 14, -71)
 logPanel:SetPoint("BOTTOMRIGHT", -14, 38)
 Skin(logPanel, "panel", STYLE.panelBg, STYLE.panelBorder)
 
@@ -417,11 +422,11 @@ do
     local logParts = { logPanel, logMsg, clearLogBtn, bottomLogBtn }
     local foldBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
     foldBtn:SetSize(24, 24)
-    foldBtn:SetPoint("TOPRIGHT", -16, -9)
+    foldBtn:SetPoint("TOPRIGHT", -16, -25)   -- centred on the title strip
 
     function sideLog:SetFolded(folded)
         for _, part in ipairs(logParts) do part:SetShown(not folded) end
-        self:SetHeight(folded and 44 or 820)
+        self:SetHeight(folded and 74 or 820)   -- folded: the title strip and the frame's border
         foldBtn:SetText(folded and "+" or "-")
         if TTS.Options then TTS.Options:Set("gameLogFolded", folded) end
     end
@@ -441,13 +446,14 @@ end
 
 -- =========================================================================
 -- MINIMIZE / RESTORE
--- Minimizing hides the board (and its game log) and shows a small restore bar, with a phase
--- tracker under its title: whose turn it is, then Main 1 > Combat > Main 2 with the current
--- step lit.
+-- Minimizing hides the board (and its game log) and shows a small restore bar: the
+-- Forever: CCG logo (as the main window has) down its left; on the right the current phase
+-- beside Restore, and under them who the match is waiting on ("ACTING: You" or the
+-- opponent's name).
 -- =========================================================================
 local restoreBar = CreateFrame("Frame", "TTS_BoardRestoreFrame", UIParent, backdropTemplate)
 TTS.BoardRestoreFrame = restoreBar
-restoreBar:SetSize(290, 56)
+restoreBar:SetSize(380, 66)
 restoreBar:SetPoint("TOP", UIParent, "TOP", 0, -120)
 Skin(restoreBar, "panel", { 0.04, 0.04, 0.04, 0.92 }, STYLE.panelBorder)
 restoreBar:EnableMouse(true)
@@ -457,42 +463,45 @@ restoreBar:SetScript("OnDragStart", restoreBar.StartMoving)
 restoreBar:SetScript("OnDragStop", restoreBar.StopMovingOrSizing)
 restoreBar:Hide()
 
-local restoreText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-restoreText:SetPoint("TOPLEFT", 14, -12)
-Loc:Bind(restoreText, "board.minimized")
-
 local restoreBtn = CreateFrame("Button", nil, restoreBar, "UIPanelButtonTemplate")
 restoreBtn:SetSize(70, 22)
-restoreBtn:SetPoint("TOPRIGHT", -10, -8)
+restoreBtn:SetPoint("TOPRIGHT", -10, -9)
 StyleButton(restoreBtn)
 Loc:Bind(restoreBtn, "board.restore")
 restoreBtn:SetScript("OnClick", function() B:Show() end)
 
--- The button flashes while the match waits on us: our turn, or the opponent's attack waiting
--- on our blocks (an additive highlight pulsed over the button, like Mulligan's). The phase
--- tracker is kept up to date from the same OnUpdate (the board doesn't redraw while hidden).
+-- The logo, phase and who's acting; the button flashes while the match waits on us (an
+-- additive highlight pulsed over it, like Mulligan's). Kept up to date from the button's
+-- OnUpdate, as the board doesn't redraw while hidden.
 do
-local RESTORE_FLASH = 4   -- pulse speed (radians per second)
-local TRACK_POLL = 0.25   -- seconds between phase tracker updates
-local TRACK_STEPS = { "board.mini.main1", "board.mini.combat", "board.mini.main2" }
-local TRACK_STEP_OF = { MAIN1 = 1, COMBAT_ATTACK = 2, COMBAT_BLOCK = 2, MAIN2 = 3 }
+local LOGO_H = 50          -- the logo is 350 x 85
+local RESTORE_FLASH = 4    -- pulse speed (radians per second)
+local TRACK_POLL = 0.25    -- seconds between updates
+local PHASE_KEYS = { MAIN1 = "board.mini.main1", COMBAT_ATTACK = "board.mini.combat",
+    COMBAT_BLOCK = "board.mini.blocks", MAIN2 = "board.mini.main2" }
 
-local tracker = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-tracker:SetPoint("BOTTOMLEFT", 14, 12)
-tracker:SetJustifyH("LEFT")
+local logo = restoreBar:CreateTexture(nil, "OVERLAY")
+logo:SetSize(LOGO_H * 350 / 85, LOGO_H)
+logo:SetPoint("LEFT", 8, 0)
+logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
 
--- "Your turn  Main 1 > Combat > Main 2", whose turn coloured and the current step in gold.
--- (The opponent's own steps aren't tracked outside combat: none is lit then.)
-local function TrackText(E)
-    if not E.inMatch then return "" end
-    local who = E.isMyTurn and ("|cFF33FF33" .. L("board.mini.you") .. "|r")
-        or ("|cFFFF6666" .. L("board.mini.opp", E.opponent or L("side.opponentCap")) .. "|r")
-    local current = TRACK_STEP_OF[E.phase]
-    local parts = {}
-    for i, key in ipairs(TRACK_STEPS) do
-        parts[i] = (i == current and "|cFFFFD200" or "|cFF808080") .. L(key) .. "|r"
+local phaseText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+phaseText:SetPoint("RIGHT", restoreBtn, "LEFT", -8, 0)
+phaseText:SetJustifyH("RIGHT")
+local actingText = restoreBar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+actingText:SetPoint("BOTTOMRIGHT", -12, 12)
+actingText:SetJustifyH("RIGHT")
+
+-- Whether the match is waiting on us: our turn (unless our attack waits on the opponent's
+-- blocks), their attack waiting on our blocks, or a choice open
+local function WeAct(E)
+    local bs = E.blockingState
+    if E:ChoiceOpen() or E.pendingDiscard then return true end
+    if E.phase == "COMBAT_BLOCK" and bs then
+        if bs.isRemoteAttacking then return not bs.blocksDeclared end
+        return bs.blocksDeclared and true or false
     end
-    return who .. "   " .. table.concat(parts, " |cFF808080>|r ")
+    return E.isMyTurn and true or false
 end
 
 restoreBtn.flash = restoreBtn:CreateTexture(nil, "OVERLAY")
@@ -503,15 +512,22 @@ restoreBtn.flash:SetAllPoints()
 restoreBtn.flash:SetAlpha(0)
 restoreBtn:SetScript("OnUpdate", function(self, elapsed)
     local E = TTS.Engine
+    local weAct = E.inMatch and WeAct(E)
     self.trackT = (self.trackT or TRACK_POLL) + elapsed
     if self.trackT >= TRACK_POLL then
         self.trackT = 0
-        tracker:SetText(TrackText(E))
+        if E.inMatch then
+            -- The opponent's own steps aren't tracked outside combat: just their turn then
+            local key = PHASE_KEYS[E.phase] or (not E.isMyTurn and "board.mini.theirTurn")
+            phaseText:SetText(key and L(key) or "")
+            actingText:SetText(L("board.mini.acting", weAct and ("|cFF33FF33" .. L("board.mini.you") .. "|r")
+                or ("|cFFFF6666" .. (E.opponent or L("side.opponentCap")) .. "|r")))
+        else
+            phaseText:SetText("")
+            actingText:SetText("")
+        end
     end
-    local bs = E.blockingState
-    local ourMove = E.inMatch and (E.isMyTurn
-        or (E.phase == "COMBAT_BLOCK" and bs and bs.isRemoteAttacking and not bs.blocksDeclared))
-    if not ourMove then self.flash:SetAlpha(0); return end
+    if not weAct then self.flash:SetAlpha(0); return end
     self.flashT = (self.flashT or 0) + elapsed
     self.flash:SetAlpha(0.5 + 0.5 * math.sin(self.flashT * RESTORE_FLASH))
 end)
@@ -720,16 +736,31 @@ end
 -- the deck's bottom at 52: 129 px of pile, the count's 2 px gap and line, a little room), so
 -- the buttons don't move as the deck runs down. Centred under the life tracker, with the
 -- step button on it.
-local TURN_BTN_X, TURN_BTN_BOTTOM = -60, 203   -- from the board's bottom-right corner
+local TURN_BTN_X, TURN_BTN_BOTTOM = -60, 209   -- from the board's bottom-right corner
 
-B.endTurnBtn = BigButton(88, 128, "GameFontNormalLarge")
+-- A click on either: ignored when it comes within BIG_CLICK_GAP of the last one on the same
+-- button (a double-click on the step button would otherwise skip two phases), or while a
+-- choice or our undo request is open (the buttons are greyed then, see UpdateDisplay; this
+-- catches a click before the redraw)
+local BIG_CLICK_GAP = 0.35   -- seconds
+local function GuardedClick(action)
+    return function(self)
+        local E, now = TTS.Engine, GetTime()
+        if self.lastClick and now - self.lastClick < BIG_CLICK_GAP then return end
+        self.lastClick = now
+        if E:ChoiceOpen() or (E.undo and E.undo.pending) then return end
+        action(E)
+    end
+end
+
+B.endTurnBtn = BigButton(88, 122, "GameFontNormalLarge")
 B.endTurnBtn:SetPoint("BOTTOM", B, "BOTTOMRIGHT", TURN_BTN_X, TURN_BTN_BOTTOM)
 Loc:Bind(B.endTurnBtn, "board.endTurn")
-B.endTurnBtn:SetScript("OnClick", function() TTS.Engine:EndTurn() end)
+B.endTurnBtn:SetScript("OnClick", GuardedClick(function(E) E:EndTurn() end))
 
 B.nextPhaseBtn = BigButton(88, 44, "GameFontNormal")
 B.nextPhaseBtn:SetPoint("BOTTOM", B.endTurnBtn, "TOP", 0, 6)
-B.nextPhaseBtn:SetScript("OnClick", function() TTS.Engine:NextPhase() end)
+B.nextPhaseBtn:SetScript("OnClick", GuardedClick(function(E) E:NextPhase() end))
 end
 
 -- Takes back the last card played this phase (greyed out when it cannot be used)
@@ -3748,6 +3779,12 @@ function B:UpdateDisplay()
         nextStep = E.phase == "MAIN1" and "combat" or "endTurn"
     end
     B.nextPhaseBtn:SetText(L("board.btn.nextPhaseTo", L("board.next." .. nextStep)))
+    -- Neither does anything while a choice is open or our undo request waits on the
+    -- opponent (they'd only be refused), so both grey out meanwhile
+    if E:ChoiceOpen() or (E.undo and E.undo.pending) then
+        B.nextPhaseBtn:Disable()
+        B.endTurnBtn:Disable()
+    end
 
     if E:CanUndo() then B.undoBtn:Enable() else B.undoBtn:Disable() end
     B.undoBtn:SetText((E.undo and E.undo.pending) and L("board.asking") or L("board.undo"))
