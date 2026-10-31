@@ -27,8 +27,10 @@ local CLEARED = {
 -- AdminGrants.lua clears the same data when told to wipe a player
 TTS.COLLECTION_VARS = CLEARED
 
--- Given to every player whose beta collection was cleared (Cards\Special.lua)
+-- Given to every player whose beta collection was cleared (Cards\Special.lua). AdminGrants.lua
+-- gives it out too (BETA).
 local BETA_CARD = "BUGREPORTER"
+TTS.BETA_CARD = BETA_CARD
 
 -- A beta player who starts in a new game folder has nothing to clear, so is recognised by
 -- being in the Forever CCG Battle.net community (Community.lua): it belongs to the Battle.net

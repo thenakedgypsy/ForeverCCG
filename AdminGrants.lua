@@ -13,9 +13,11 @@ local L = TTS.L
 -- prefix of their own, and they are obeyed only from the characters in ADMINS. The server
 -- sets the sender of an addon whisper, so it can't be faked (unlike the <from> inside a
 -- TTS_NET envelope).
---   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL
--- answered with  HAS:<cardId>:<copies>:<max>,  WIPED,  GRANTEDALL:<cards that gained copies>
--- or  ERR:<reason>[:<cardId>].
+--   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL    BETA
+-- answered with  HAS:<cardId>:<copies>:<max>,  WIPED,  GRANTEDALL:<cards that gained copies>,
+-- BETAED:<1 = the beta card is new, 0 = they had it>  or  ERR:<reason>[:<cardId>].
+-- BETA is the beta welcome a beta player gets at launch (DataStamp.lua): the beta card, then
+-- its popup.
 -- Copies are written where the card's own way of being earned keeps them (kills, solo
 -- rewards, NPC gifts, the beta flag), so the rest of the addon sees an ordinary collection.
 -- =========================================================================
@@ -121,8 +123,32 @@ local function GrantAll()
     return changed
 end
 
+-- The beta card (shown again even when they already have it), then the welcome popup.
+-- Returns whether the card is new, or nil if this build has no beta card.
+local function BetaWelcome()
+    local card = TTS.BETA_CARD and TTS.Cards and TTS.Cards[TTS.BETA_CARD]
+    if not (card and TTS.ShowBetaWelcome) then return nil end
+    local isNew = (TTS:GetOwnedCopies(card) or 0) < 1
+    if isNew then
+        SetCopies(card, 1)
+        TTS:MarkCardNew(card.id)
+        RefreshCollection()
+    end
+    TTS:ShowBetaWelcome()
+    return isNew
+end
+
 local function OnAdminMessage(msg, sender)
     local cmd, cardId, count = strsplit(":", msg)
+    if cmd == "BETA" then
+        local isNew = BetaWelcome()
+        if isNew == nil then
+            Reply(sender, "ERR:UNKNOWN:" .. tostring(TTS.BETA_CARD))
+        else
+            Reply(sender, "BETAED:" .. (isNew and 1 or 0))
+        end
+        return
+    end
     if cmd == "WIPE" then
         Wipe()
         Reply(sender, "WIPED")
@@ -170,7 +196,8 @@ frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
     if prefix ~= PREFIX or channel ~= "WHISPER" or type(msg) ~= "string" then return end
     -- Replies are never answered, or two clients (or one whispering itself) would bounce
     -- errors back and forth forever
-    if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" or msg:match("^GRANTEDALL:") then return end
+    if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" or msg:match("^GRANTEDALL:")
+        or msg:match("^BETAED:") then return end
     local from = NormalizeName(sender)
     if ADMINS[from:lower()] then
         OnAdminMessage(msg, from)
