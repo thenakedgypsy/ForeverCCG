@@ -83,6 +83,7 @@ local ZONES = {
     { "UNG", "Un'Goro Crater",       "Un'Goro Usurpers",                "UngoroCrater",        "expert" },
     { "SLI", "Silithus",             "Silithus Swarm",                  "Silithus",            "expert" },
     { "WIN", "Winterspring",         "Winterspring Wendigos",           "Winterspring",        "expert" },
+    { "HYJ", "Mount Hyjal",          "Hyjal Harrowers",                 "Hyjal",               "expert" },
 }
 
 -- Zones that border each other (and the Deeprun Tram between Elwynn and Dun Morogh).
@@ -102,6 +103,7 @@ TTS.SoloConnections = {
     -- Kalimdor
     { "TEL", "DAR" }, { "DAR", "ASH" },
     { "ASH", "AZS" }, { "ASH", "FEL" }, { "ASH", "STO" }, { "ASH", "BRN" }, { "FEL", "WIN" },
+    { "HYJ", "FEL" }, { "HYJ", "WIN" },
     { "DUR", "BRN" }, { "MUL", "BRN" }, { "MUL", "STO" },
     { "BRN", "STO" }, { "BRN", "DUS" }, { "BRN", "THO" },
     { "STO", "DES" }, { "DES", "FER" }, { "FER", "THO" },

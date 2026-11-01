@@ -473,6 +473,7 @@ end
 local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
+    if card.isCritter and D.hideCritters then return false end   -- the Hide critters checkbox
     if not typeOn[GetTypeGroup(card)] then return false end
     if CardColor(card) and colorOn[CardColor(card)] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
@@ -1683,6 +1684,34 @@ fullArtCheck:SetScript("OnEnter", function(self)
 end)
 fullArtCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- Hide critters (beside Show full art, saved): leaves the critter cards (Cards\Critters.lua)
+-- out of the card pool
+local critterCheck = CreateFrame("CheckButton", nil, poolPanel, "UICheckButtonTemplate")
+critterCheck:SetSize(22, 22)
+critterCheck:SetPoint("LEFT", fullArtLabel, "RIGHT", 12, -1)
+
+local critterLabel = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+critterLabel:SetPoint("LEFT", critterCheck, "RIGHT", 0, 1)
+Loc:Bind(critterLabel, "db.hideCritters")
+critterCheck:SetHitRectInsets(0, -(critterLabel:GetStringWidth() + 4), 0, 0)
+
+function D:SetHideCritters(on)
+    self.hideCritters = on and true or false
+    critterCheck:SetChecked(self.hideCritters)
+end
+
+critterCheck:SetScript("OnClick", function(self)
+    local on = self:GetChecked() and true or false
+    if TTS.Options then TTS.Options:Set("deckBuilderHideCritters", on) end
+    D:SetHideCritters(on)
+    poolPage = 1
+    D:RefreshPool()
+end)
+critterCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("db.hideCritters"), L("db.hideCrittersDesc"))
+end)
+critterCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
 nextBtn.label:SetJustifyH("CENTER")
@@ -2536,6 +2565,7 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
         D:SetScale(math.max(LAYOUT.MIN_SCALE, math.min(LAYOUT.MAX_SCALE, saved)))
     end
     D:SetFullArt(TTS.Options and TTS.Options:Get("deckBuilderFullArt"))
+    D:SetHideCritters(TTS.Options and TTS.Options:Get("deckBuilderHideCritters"))
 end)
 
 D:SetScript("OnHide", function()

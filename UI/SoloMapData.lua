@@ -49,6 +49,7 @@ TTS.SoloMapPositions = {
     RIV = { "EK", 0.5600, 0.6800 },   -- Riverglades, between Redridge, Burning Steppes, Badlands and Swamp of Sorrows
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
+    HYJ = { "KAL", 0.5450, 0.3250 },  -- Mount Hyjal (Forever), between Felwood and Winterspring: foreverdb's Kalimdor flight-path pins
     LOC = { "EK", 0.5504, 0.5486 },
     MAR = { "KAL", 0.3893, 0.5761 },
     MUL = { "KAL", 0.4779, 0.6027 },

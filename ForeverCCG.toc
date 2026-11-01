@@ -1,4 +1,4 @@
-## Interface: 16001, 120100
+## Interface: 16001
 ## Title: ForeverCCG
 ## Notes: 2-Player card game engine inspired by MTG.
 ## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord
@@ -62,6 +62,7 @@ Cards\Zones\Silithus.lua
 Cards\Zones\Winterspring.lua
 Cards\Zones\Riverglades.lua
 Cards\Zones\ZephrasIsle.lua
+Cards\Zones\MountHyjal.lua
 Cards\Dungeons\RagefireChasm.lua
 Cards\Dungeons\Deadmines.lua
 Cards\Dungeons\WailingCaverns.lua
@@ -88,6 +89,7 @@ Cards\Dungeons\CityOfDalaran.lua
 Cards\Bosses.lua
 Cards\Special.lua
 Cards\Tokens.lua
+Cards\Critters.lua
 Cards\Gear.lua
 Hero.lua
 BossTracker.lua
