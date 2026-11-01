@@ -836,13 +836,14 @@ SPELL_GLOBAL_OPS.raise = function(self, op, card, cr)
     end
 end
 
--- Creates op.n (default 1) copies of the token card op.id on the caster's battlefield
+-- Creates op.n (default 1) copies of the token card op.id on the caster's battlefield. Each
+-- remembers the card that made it (perm.tokenSource: its zone art, UI\Board.lua).
 SPELL_GLOBAL_OPS.token = function(self, op, card, cr)
     local tok = TTS.Cards[op.id]
     if not tok then return end
     for _ = 1, op.n or 1 do
         if not self.inMatch then break end
-        self:PutCreatureOntoBattlefield(op.id, cr)
+        self:PutCreatureOntoBattlefield(op.id, cr, { source = card and card.id })
     end
     self:Log(L(cr and "log.tokensOpp" or "log.tokensYou", TTS:CardName(card), op.n or 1, TTS:CardName(tok), self.opponent or L("side.opponent")), "ACTION")
 end
@@ -1000,11 +1001,13 @@ end
 -- Puts a creature card onto a side's battlefield (not cast: no mana, no network message)
 -- and fires its enter trigger. Returns the new permanent. opts.tgt: its Arrival's target.
 -- opts.spawned: made by an encounter rule, so it shows up as a token does (UI\Board.lua)
+-- opts.source: the card id of what made it (a token's creator)
 function E:PutCreatureOntoBattlefield(cardId, isRemote, opts)
     self:EnforceUnique(cardId, isRemote)
     local perm = self:NewCreaturePerm(cardId, isRemote)
     if opts and opts.ready then perm.sick = false end
     if opts and opts.spawned then perm.spawned = true end
+    if opts and opts.source then perm.tokenSource = opts.source end
     table.insert((isRemote and self.remoteState or self.localState).field, perm)
     -- A token (or spawned card) sounds when its card shows instead (UI\Board.lua token spawns)
     local card = TTS.Cards[cardId]

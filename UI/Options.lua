@@ -32,6 +32,7 @@ local DEFAULTS = {
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
+    cardZoneArt = true,      -- a piece of its zone's map behind each creature's model (Board.lua)
     animateCards = true,     -- played cards fly from the hand to the battlefield (Board.lua)
     cardEffects = true,      -- animations and spell visuals on battlefield models (CardFX.lua)
     autoPayMana = true,      -- casting taps the prayers it needs (the board's Auto-pay checkbox)
@@ -394,7 +395,7 @@ end
 -- =========================================================================
 -- BOARD SECTION
 -- =========================================================================
-local boardSection = CreateSection("options.board", 236)
+local boardSection = CreateSection("options.board", 260)
 boardSection:SetPoint("TOPLEFT", tipSection, "BOTTOMLEFT", 0, -8)
 
 local backgroundCheck = CreateCheck(boardSection, 10, -30, "options.backgrounds")
@@ -403,12 +404,22 @@ backgroundCheck:SetScript("OnClick", function(self)
     if TTS.BoardFrame and TTS.BoardFrame.RefreshBackground then TTS.BoardFrame:RefreshBackground() end
 end)
 
-local animateCheck = CreateCheck(boardSection, 10, -54, "options.animate")
+-- Zone art behind each creature's model (Board.lua, CARD ZONE ART): the cards on show
+-- repaint at once, the rest when next drawn
+local zoneArtCheck = CreateCheck(boardSection, 10, -54, "options.cardZoneArt")
+zoneArtCheck:SetScript("OnClick", function(self)
+    O:Set("cardZoneArt", self:GetChecked() and true or false)
+    if TTS.Engine and TTS.Engine.inMatch then TTS.Engine:RefreshUI() end
+    local D = TTS.DeckBuilderFrame
+    if D and D:IsShown() and D.RefreshAll then D:RefreshAll() end
+end)
+
+local animateCheck = CreateCheck(boardSection, 10, -78, "options.animate")
 animateCheck:SetScript("OnClick", function(self)
     O:Set("animateCards", self:GetChecked() and true or false)
 end)
 
-local effectsCheck = CreateCheck(boardSection, 10, -78, "options.cardEffects")
+local effectsCheck = CreateCheck(boardSection, 10, -102, "options.cardEffects")
 effectsCheck:SetScript("OnClick", function(self)
     O:Set("cardEffects", self:GetChecked() and true or false)
     if TTS.CardFX then TTS.CardFX:OptionChanged() end
@@ -416,19 +427,19 @@ end)
 
 -- "It's you to act" and how long the game waits on you before it shows (greyed out while off)
 local nudgeSlider = CreateSlider("TTS_OptionsActNudgeSlider", "options.actNudgeWait",
-    -130, NUDGE_MIN, NUDGE_MAX, 1, "actNudgeWait", "options.secondsShort", nil, boardSection)
+    -154, NUDGE_MIN, NUDGE_MAX, 1, "actNudgeWait", "options.secondsShort", nil, boardSection)
 function nudgeSlider:ShowValue(v)
     self.valueText:SetText(L("options.secondsWhole", v))
 end
 
-local nudgeCheck = CreateCheck(boardSection, 10, -102, "options.actNudge")
+local nudgeCheck = CreateCheck(boardSection, 10, -126, "options.actNudge")
 nudgeCheck:SetScript("OnClick", function(self)
     O:Set("actNudge", self:GetChecked() and true or false)
     nudgeSlider:SetAlpha(self:GetChecked() and 1 or 0.4)
 end)
 
 local controlsText = boardSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -190)
+controlsText:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14, -214)
 Loc:Bind(controlsText, "options.controls")
 
 -- One choice of how cards are played; saved as cardControls (label / tooltip: options.controls.<mode>[.desc])
@@ -437,7 +448,7 @@ local controlRadios = {}
 for i, mode in ipairs(CONTROL_MODES) do
     local key = "options.controls." .. mode
     local rb = CreateFrame("CheckButton", nil, boardSection, "UIRadioButtonTemplate")
-    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -208)
+    rb:SetPoint("TOPLEFT", boardSection, "TOPLEFT", 14 + (i - 1) * 90, -232)
     rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
     Loc:Bind(rb.label, key)
@@ -664,6 +675,7 @@ function O:SyncControls()
     backgroundCheck:SetChecked(db.boardBackgrounds ~= false)
     animateCheck:SetChecked(db.animateCards ~= false)
     effectsCheck:SetChecked(db.cardEffects ~= false)
+    zoneArtCheck:SetChecked(db.cardZoneArt ~= false)
     nudgeCheck:SetChecked(db.actNudge ~= false)
     nudgeSlider:SetValue(db.actNudgeWait or 10)
     nudgeSlider:ShowValue(db.actNudgeWait or 10)

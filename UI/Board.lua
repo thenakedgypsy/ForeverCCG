@@ -1672,6 +1672,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     local boxW = sizeX - artLeft - artRight
     local boxH = sizeY - artTop - artBottom
+    f.artBox = { left = artLeft, top = artTop, w = boxW, h = boxH }   -- (zone art behind the model)
     local iconPadX = boxW * 0.025
     local iconPadY = boxH * 0.025
 
@@ -1693,6 +1694,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     -- place and size while the frame changes round it.
     local fullBottom = math.floor(sizeY * FULL_ART_BOTTOM)
     local grow = math.max(0, artBottom - fullBottom)
+    f.artBoxFull = { left = artLeft, top = artTop, w = boxW, h = sizeY - artTop - fullBottom }   -- (zone art, full art)
     f.model.fxBack = f.model:CreateTexture(nil, "BACKGROUND")
     f.model.fxBack:SetPoint("TOPLEFT", f, "TOPLEFT", artLeft, -artTop)
     f.model.fxBack:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -artRight, fullBottom)
@@ -1769,6 +1771,8 @@ local function CreateCardFrame(parent, sizeX, sizeY)
             f.model:SetCamDistanceScale(f.modelCamScale * (on and f.modelFullCam or 1))
         end
         f.model.fxBack:SetShown(on)
+        -- The zone art fills the window the model now has (CARD ZONE ART)
+        if TTS.PaintZoneArt then TTS.PaintZoneArt(f, f.currentCard) end
         -- A foil's rim glows round the usual art window only, not the full-art one
         f.foil.rim:SetShown(f.isFoil and not on or false)
         if f.borderFull then
@@ -2207,6 +2211,154 @@ end
 -- Re-applies the current background (the option was toggled)
 function B:RefreshBackground()
     self:SetBackground(self.backgroundSpec)
+end
+
+-- =========================================================================
+-- CARD ZONE ART
+-- Behind a creature's model, a piece of its zone's world map (a dungeon's: the zone it
+-- sits in, as its encounter background has), in greyscale and dimmed so the model stands out. The same
+-- map pieces as the board backgrounds (tiles, then explored-area overlays on top), cut to
+-- the art window. Each card shows its own spot near the map's middle (from its id), so
+-- cards from one zone differ. A token (an Add) shows its maker's zone. Switched off with
+-- the cardZoneArt option; cards with no zone map (spells, heroes, Zephras Isle, tokens made
+-- by such cards) keep the plain background.
+-- =========================================================================
+local PaintZoneArt
+do
+local ZONE_ART_W = 260                 -- map pixels across the art window
+local ZONE_ART_SHADE = 0.18            -- the art's brightness, so the model stands out
+local ZONE_ART_SPREAD_X, ZONE_ART_SPREAD_Y = 120, 80   -- how far from the map's middle a card's spot can be
+local ZONE_ART_RAISE = 2               -- px the art reaches above the art window, under the frame (no dark line)
+local zoneMaps                         -- zone name -> world map folder (from the encounters)
+
+local function ZoneMap(zone)
+    if not zoneMaps then
+        zoneMaps = {}
+        for _, enc in pairs(TTS.SoloEncounters or {}) do
+            if type(enc) == "table" and enc.zone and enc.background and enc.background.map then
+                zoneMaps[enc.zone] = zoneMaps[enc.zone] or enc.background.map
+            end
+        end
+    end
+    return zone and zoneMaps[zone]
+end
+
+-- A token's maker, for tokens shown without one (perm.tokenSource): the first card, by id,
+-- that spawns it
+local tokenMakers
+local function TokenMaker(id)
+    if not tokenMakers then
+        tokenMakers = {}
+        local function Find(maker, t, depth)
+            if type(t) ~= "table" or depth > 8 then return end
+            if t.op == "token" and type(t.id) == "string" and not tokenMakers[t.id] then tokenMakers[t.id] = maker end
+            for _, v in pairs(t) do Find(maker, v, depth + 1) end
+        end
+        local ids = {}
+        for cid, c in pairs(TTS.Cards or {}) do if type(c) == "table" then ids[#ids + 1] = cid end end
+        table.sort(ids)
+        for _, cid in ipairs(ids) do Find(cid, TTS.Cards[cid], 0) end
+    end
+    return tokenMakers[id]
+end
+
+-- The zone whose art a card shows: its own, or a token's maker's (the card that made this
+-- one when it's on the battlefield, f.perm.tokenSource; a token made by a token: that one's)
+local function ArtZone(f, card)
+    local src = card.isToken and ((f.perm and f.perm.id == card.id and f.perm.tokenSource) or TokenMaker(card.id))
+    for _ = 1, 3 do
+        local maker = src and TTS.Cards[src]
+        if not (maker and maker.isToken) then break end
+        src = TokenMaker(maker.id)
+    end
+    if card.isToken then
+        local maker = src and TTS.Cards[src]
+        return maker and maker.zone, src
+    end
+    return card.zone
+end
+
+-- The f.zoneArt texture n (made as needed): on the model's frame, just over its full-art
+-- backing (fxBack) and under the model itself, so it shows in either window and fades with
+-- a tapped or summoning-sick model
+local function Piece(f, n)
+    f.zoneArt = f.zoneArt or {}
+    local t = f.zoneArt[n]
+    if not t then
+        t = f.model:CreateTexture(nil, "BACKGROUND", nil, 1)
+        f.zoneArt[n] = t
+    end
+    return t
+end
+
+-- One map piece (px0, py0, pw x ph map pixels of a file fw x fh) cut to the crop
+-- (cx0, cy0, cw x ch map pixels), drawn s screen pixels per map pixel from the window box
+-- (its top raised by ZONE_ART_RAISE)
+local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s)
+    local ix0, ix1 = math.max(px0, cx0), math.min(px0 + pw, cx0 + cw, BG.MAP_W)
+    local iy0, iy1 = math.max(py0, cy0), math.min(py0 + ph, cy0 + ch, BG.MAP_H)
+    if ix1 <= ix0 or iy1 <= iy0 then return n end
+    local t = Piece(f, n + 1)
+    local loaded = t:SetTexture(file)
+    if loaded == false or not t:GetTexture() then t:Hide(); return n end
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", f, "TOPLEFT", box.left + (ix0 - cx0) * s, -(box.top - ZONE_ART_RAISE + (iy0 - cy0) * s))
+    t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
+    t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
+    if t.SetDesaturated then t:SetDesaturated(true) end   -- in grey, so the model's colours lead
+    t:SetVertexColor(ZONE_ART_SHADE, ZONE_ART_SHADE, ZONE_ART_SHADE)
+    t:Show()
+    return n + 1
+end
+
+-- card: what f shows (nil, or a card without a model or zone map: none). Fills the art
+-- window, or the full-art one while the model is in front (SetModelInFront calls again).
+function PaintZoneArt(f, card)
+    local on = TTS.Options and TTS.Options:Get("cardZoneArt") ~= false
+    local zone, maker
+    if on and f.artBox and f.model and card and card.displayId and not card.isHero then zone, maker = ArtZone(f, card) end
+    local map = ZoneMap(zone)
+    local box = f.modelInFront and f.artBoxFull or f.artBox
+    local key = map and (card.id .. "@" .. (maker or "") .. "@" .. map .. (f.modelInFront and "@full" or "")) or nil
+    if f.zoneArtKey == key then return end
+    f.zoneArtKey = key
+    local used = 0
+    if map then
+        -- This card's spot: near the map's middle, moved by its id
+        local h = 0
+        for i = 1, #card.id do h = (h * 31 + card.id:byte(i)) % 100003 end
+        local cw = ZONE_ART_W
+        local ch = cw * (box.h + ZONE_ART_RAISE) / box.w
+        local cx0 = BG.MAP_W / 2 - cw / 2 + ((h % 201) / 100 - 1) * ZONE_ART_SPREAD_X
+        local cy0 = BG.MAP_H / 2 - ch / 2 + ((math.floor(h / 201) % 201) / 100 - 1) * ZONE_ART_SPREAD_Y
+        local s = box.w / cw
+        local tile = BG.MAP_TILE
+        for row = 0, 2 do
+            for col = 0, 3 do
+                local i = row * 4 + col + 1
+                used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i),
+                    col * tile, row * tile, tile, tile, tile, tile, cx0, cy0, cw, ch, s)
+            end
+        end
+        for _, o in ipairs((TTS.MapOverlays and TTS.MapOverlays[map]) or {}) do
+            local ox, oy, w, h2, files = o[1], o[2], o[3], o[4], o[5]
+            local across, down = math.ceil(w / tile), math.ceil(h2 / tile)
+            for r = 0, down - 1 do
+                for c = 0, across - 1 do
+                    local name = files[r * across + c + 1]
+                    if name then
+                        local pw = (c < across - 1) and tile or (w - c * tile)
+                        local ph = (r < down - 1) and tile or (h2 - r * tile)
+                        used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s", map, name),
+                            ox + c * tile, oy + r * tile, pw, ph, TextureFileSize(pw), TextureFileSize(ph), cx0, cy0, cw, ch, s)
+                    end
+                end
+            end
+        end
+    end
+    for i = used + 1, #(f.zoneArt or {}) do f.zoneArt[i]:Hide() end
+end
+TTS.PaintZoneArt = PaintZoneArt   -- (SetModelInFront, made before this, repaints through it)
 end
 
 -- =========================================================================
@@ -2772,6 +2924,7 @@ function TTS.RedrawCardModels() modelGeneration = modelGeneration + 1 end
 -- foil (optional): the card shows as a foil (SetCardFoil); left out, it doesn't
 local function SetupCardVisual(f, card, foil)
     SetCardFoil(f, foil, card)
+    PaintZoneArt(f, card)   -- (cheap when unchanged: before the same-card shortcut, so the option applies)
     -- The same card still showing on this frame keeps its model: reloading it on every
     -- refresh made models flicker (worst on dressed ones like hero cards and Leeroy)
     if card and f.visualCard == card and f.visualGen == modelGeneration and f:IsShown() then
