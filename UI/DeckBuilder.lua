@@ -391,6 +391,17 @@ local footer = D:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", D, "BOTTOMRIGHT", -26, 13)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
+do  -- Export / Import Collection (CollectionCode.lua), just above the footer's right end
+    local importBtn = CreatePanelButton(D, 64, 20, "cc.import")
+    importBtn:SetPoint("BOTTOMRIGHT", footer, "TOPRIGHT", 0, 2)
+    importBtn.tooltipTitle, importBtn.tooltipText = "cc.importTip", "cc.importTip.desc"
+    importBtn:SetScript("OnClick", function() TTS.CollectionCode:ShowImport() end)
+    local exportBtn = CreatePanelButton(D, 64, 20, "cc.export")
+    exportBtn:SetPoint("RIGHT", importBtn, "LEFT", -4, 0)
+    exportBtn.tooltipTitle, exportBtn.tooltipText = "cc.exportTip", "cc.exportTip.desc"
+    exportBtn:SetScript("OnClick", function() TTS.CollectionCode:ShowExport() end)
+end
+
 local poolPanel = CreateFrame("Frame", nil, D)
 poolPanel:SetSize(LAYOUT.POOL_W, LAYOUT.PANEL_H)
 poolPanel:SetPoint("TOPLEFT", D, "TOPLEFT", LAYOUT.PAD, LAYOUT.PANEL_TOP)

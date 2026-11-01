@@ -128,3 +128,4 @@ AdminGrants.lua
 UI\QuickStart.lua
 UI\Tutorial.lua
 MatchRecorder.lua
+CollectionCode.lua

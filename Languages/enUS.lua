@@ -112,6 +112,21 @@ S["matchLog.hint"] = "The log is selected: press Ctrl+C to copy it."
 S["matchLog.selectAll"] = "Select All"
 S["matchLog.none"] = "No game has been recorded yet. Play a game, then open this again."
 
+-- COLLECTION CODE (CollectionCode.lua, the Deckbuilder's Export / Import buttons)
+S["cc.export"] = "Export"
+S["cc.import"] = "Import"
+S["cc.exportTip"] = "Export Collection"
+S["cc.exportTip.desc"] = "A code holding your whole collection, decks and progress, to keep somewhere safe. It can only be imported by this character."
+S["cc.importTip"] = "Import Collection"
+S["cc.importTip.desc"] = "Puts back a collection from a code this character exported. It replaces your current collection."
+S["cc.exportTitle"] = "Export Collection"
+S["cc.importTitle"] = "Import Collection"
+S["cc.exportHint"] = "Press Ctrl+C to copy. Only %s can import this code."
+S["cc.importHint"] = "Paste a code %s exported (Ctrl+V), then click Import."
+S["cc.invalid"] = "|cFFFF4040That code can't be read: it's damaged, or another character made it.|r"
+S["cc.confirm"] = "Replace your whole collection, decks and progress with this code's (exported %s)?\n\nAnything you've earned since then will be lost."
+S["cc.imported"] = "|cFF00FF00[TTSE]|r Your collection was imported."
+
 -- MAIN WINDOW
 S["main.collection"] = "Collection"
 S["main.openDeckbuilder"] = "Open Deckbuilder"
