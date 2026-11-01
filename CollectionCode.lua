@@ -14,7 +14,7 @@ local Loc = TTS.Locale
 -- COLLECTION CODE
 -- The Deckbuilder's Export / Import buttons: the whole collection (TTS.COLLECTION_VARS,
 -- DataStamp.lua, plus the beta flag) as one line of text to keep somewhere safe, and put
--- back later. Importing replaces the collection with the code's.
+-- back later. Importing merges the code's collection into the current one (CC:Apply).
 -- A code is bound to the character that made it ("name-realm"): the data is scrambled with
 -- a keystream seeded from that name, a salt and a random nonce, and signed with a checksum
 -- of the same, so on another character (or after any edit) it fails to read.
@@ -244,13 +244,52 @@ function CC:Decode(text)
     return payload
 end
 
--- Replaces the collection with a decoded payload's
+-- Best of both, key by key: the higher number (copies, wins, and the later of two times, so
+-- a gift or dungeon wait is never shortened), either true, tables merged the same way.
+-- Anything else keeps the current value.
+local function Merge(cur, inc)
+    if type(cur) == "table" and type(inc) == "table" then
+        for k, v in pairs(inc) do cur[k] = Merge(cur[k], v) end
+        return cur
+    end
+    if cur == nil then return inc end
+    if type(cur) == "number" and type(inc) == "number" then return math.max(cur, inc) end
+    if type(cur) == "boolean" and type(inc) == "boolean" then return cur or inc end
+    return cur
+end
+
+local function DeckIsEmpty(deck)
+    return not (type(deck) == "table" and type(deck.cards) == "table" and next(deck.cards))
+end
+
+-- Lists that don't merge key by key
+local MERGE = {
+    -- Hero choices are in milestone order: the longer list has made more of them
+    TTS_HeroChoices = function(cur, inc)
+        if type(inc) == "table" and (type(cur) ~= "table" or #inc > #cur) then return inc end
+        return cur
+    end,
+    -- Current decks stay; the code's fill only the slots that are empty
+    TTS_SavedDecks = function(cur, inc)
+        if type(cur) ~= "table" then return inc end
+        for i, deck in pairs(type(inc) == "table" and inc or {}) do
+            if DeckIsEmpty(cur[i]) and not DeckIsEmpty(deck) then cur[i] = deck end
+        end
+        return cur
+    end,
+    TTS_ActiveDeckIndex = function(cur, inc) return cur or inc end,
+}
+
+-- Merges a decoded payload into the collection (nothing owned is ever lost)
 function CC:Apply(payload)
     for _, name in ipairs(TTS.COLLECTION_VARS or {}) do
-        if not SKIP[name] then _G[name] = payload.vars[name] end
+        local inc = payload.vars[name]
+        if not SKIP[name] and inc ~= nil then
+            _G[name] = (MERGE[name] or Merge)(_G[name], inc)
+        end
     end
     TTS_DataStamp = TTS_DataStamp or { launch = true }
-    TTS_DataStamp.beta = payload.beta and true or nil
+    TTS_DataStamp.beta = (TTS_DataStamp.beta or payload.beta) and true or nil
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
     local DB = TTS.DeckBuilderFrame
     if DB and DB:IsShown() and DB.RefreshAll then DB:RefreshAll() end
@@ -336,9 +375,31 @@ local function BuildWindow()
     W.hint:SetPoint("RIGHT", W.button, "LEFT", -10, 0)
     W.hint:SetJustifyH("LEFT")
 
-    local scroll = CreateFrame("ScrollFrame", "TTS_CollectionCodeScroll", W, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 20, -44)
-    scroll:SetPoint("BOTTOMRIGHT", -38, 46)
+    -- A dark, bordered box for the code: a click anywhere in it puts the cursor in the text
+    local box = CreateFrame("Button", nil, W, backdropTemplate)
+    box:SetPoint("TOPLEFT", 16, -40)
+    box:SetPoint("BOTTOMRIGHT", -16, 44)
+    box:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 14,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    box:SetBackdropColor(0, 0, 0, 0.8)
+    box:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
+    box:SetScript("OnClick", function() W.edit:SetFocus() end)
+
+    -- Shown while the import box is empty
+    W.placeholder = box:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+    W.placeholder:SetPoint("CENTER")
+    W.placeholder:SetWidth(380)
+    Loc:Bind(W.placeholder, "cc.pasteHere")
+
+    local scroll = CreateFrame("ScrollFrame", "TTS_CollectionCodeScroll", box, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", 8, -8)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 8)
+    scroll:EnableMouse(true)
+    scroll:SetScript("OnMouseDown", function() W.edit:SetFocus() end)
 
     local edit = CreateFrame("EditBox", nil, scroll)
     edit:SetMultiLine(true)
@@ -356,6 +417,9 @@ local function BuildWindow()
         else
             SetHint("cc.importHint", UnitName("player") or "?")
         end
+    end)
+    edit:HookScript("OnTextChanged", function(self)
+        W.placeholder:SetShown(W.mode == "import" and self:GetText() == "")
     end)
     scroll:SetScrollChild(edit)
     scroll:SetScript("OnSizeChanged", function(_, w) edit:SetWidth(w) end)
@@ -379,6 +443,7 @@ local function Open(mode)
         SetHint("cc.importHint", name)
     end
     W.edit:SetText(W.text)
+    W.placeholder:SetShown(mode == "import")
     W:Show()
     W.edit:SetCursorPosition(0)
     W.scroll:SetVerticalScroll(0)

@@ -1,4 +1,5 @@
 ## 1.0.0
+*   new: back up your collection - the Export button in the deckbuilder gives you a code holding your whole collection, decks and progress to keep somewhere safe; Import adds it back, keeping the best of both (most copies, every foil, furthest progress; your decks stay, the code's fill empty slots). A code only works on the character that exported it
 *   new: armour Gear Cards - 18 helms and shoulderpads, mostly toughness and defensive keywords (Vigilant, Warded, Shielded, Support, Bulwark). Armorers around Azeroth hand them out to travellers who ask, just like the weapon merchants
 *   humanoid denizens now wear their Gear: the latest weapon, helm and shoulders equipped show on the model
 *   cards tucked under a denizen (Gear, buffs) stack tighter as they pile up, up to 5, so they no longer spill over the row below
