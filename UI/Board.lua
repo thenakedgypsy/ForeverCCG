@@ -763,6 +763,31 @@ B.nextPhaseBtn:SetPoint("BOTTOM", B.endTurnBtn, "TOP", 0, 6)
 B.nextPhaseBtn:SetScript("OnClick", GuardedClick(function(E) E:NextPhase() end))
 end
 
+-- A small cog in the bottom-right corner opens (or closes) Options: during a game the
+-- minimap button only minimises and restores the board (UI\MinimapButton.lua)
+do
+    local cog = CreateFrame("Button", nil, B)
+    cog:SetSize(14, 14)
+    cog:SetPoint("BOTTOMRIGHT", B, "BOTTOMRIGHT", -13, 21)
+    local icon = cog:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints()
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local hl = cog:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetColorTexture(1, 0.82, 0, 0.25)
+    hl:SetBlendMode("ADD")
+    cog:SetScript("OnMouseDown", function() icon:SetPoint("TOPLEFT", 1, -1); icon:SetPoint("BOTTOMRIGHT", 1, -1) end)
+    cog:SetScript("OnMouseUp", function() icon:SetAllPoints() end)
+    cog:SetScript("OnClick", function(self)
+        TT:Hide(self)
+        local O = TTS.OptionsFrame
+        if O then O:SetShown(not O:IsShown()) end
+    end)
+    cog:SetScript("OnEnter", function(self) TT:ShowText(self, "ANCHOR_TOP", L("options.title")) end)
+    cog:SetScript("OnLeave", function(self) TT:Hide(self) end)
+end
+
 -- Takes back the last card played this phase (greyed out when it cannot be used)
 B.undoBtn = CreateFrame("Button", nil, B, "UIPanelButtonTemplate")
 B.undoBtn:SetSize(70, 24)

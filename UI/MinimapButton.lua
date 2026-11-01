@@ -105,6 +105,18 @@ btn:RegisterForClicks("LeftButtonUp")
 btn:SetScript("OnClick", function()
     if isDragging then return end
 
+    -- During a game the button only minimises or restores the board, whatever key is held
+    -- (Options is on the board's cog); everything else waits until the game is over
+    local B = TTS.BoardFrame
+    if TTS.Engine and TTS.Engine.inMatch and B then
+        if B:IsShown() then
+            if B.Minimize then B:Minimize() end
+        else
+            B:Show()
+        end
+        return
+    end
+
     if IsAltKeyDown() then
         -- Alt-Click: Open / Toggle Rules
         ToggleRules()
@@ -155,7 +167,10 @@ local function BuildMinimapTooltip(tip)
     end
 
     tip:AddLine(" ")
-    for _, key in ipairs({ "minimap.hintMain", "minimap.hintDeck", "minimap.hintRules", "minimap.hintWaiting", "minimap.hintMove" }) do
+    -- During a game a click only minimises or restores the board (OnClick above)
+    local hints = (TTS.Engine and TTS.Engine.inMatch) and { "minimap.hintBoard", "minimap.hintMove" }
+        or { "minimap.hintMain", "minimap.hintDeck", "minimap.hintRules", "minimap.hintWaiting", "minimap.hintMove" }
+    for _, key in ipairs(hints) do
         tip:AddLine("|cFF808080" .. L(key) .. "|r")
     end
 end
