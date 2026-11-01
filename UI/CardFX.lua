@@ -37,6 +37,7 @@ local FX = TTS.CardFX
 local ANIM = {
     STAND = 0, DEATH = 1, DEAD = 6, WOUND = 9, CRIT = 10, STUN = 14,
     ATTACK = 17, SHIELD_BLOCK = 24, CAST = 54, ROAR = 55,
+    ATTACK_BOW = 46, ATTACK_RIFLE = 49,   -- (these fall back to Stand, not a swing: FX:StrikeAnim checks)
 }
 FX.ANIM = ANIM
 
@@ -107,6 +108,24 @@ FX.EVENTS = {
 FX.EVENT_ORDER = { "died", "returned", "soulSave", "crit", "hit", "shieldPop", "freeze",
     "weaken", "buff", "empower", "heal", "dispel", "cast" }
 FX.STRIKE_ANIM = ANIM.ATTACK   -- combat: plays first, the rest of that redraw's effects after STRIKE_LEAD
+
+-- A denizen wearing a bow, crossbow or gun (f.gearWeapon, Board.lua DressGear) shoots instead
+-- of swinging, if its model has the animation; by item subclass
+local RANGED_STRIKE = { [2] = ANIM.ATTACK_BOW, [3] = ANIM.ATTACK_RIFLE, [18] = ANIM.ATTACK_RIFLE }   -- (crossbows are held like guns)
+function FX:StrikeAnim(f)
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    if not (f.gearWeapon and getInfo) then return FX.STRIKE_ANIM end
+    local ok, _, _, _, _, _, classID, subclassID = pcall(getInfo, f.gearWeapon)
+    local anim = ok and classID == 2 and RANGED_STRIKE[subclassID]
+    if not anim then return FX.STRIKE_ANIM end
+    -- (a client without HasAnimation can't tell: character models all have these)
+    local m = f.model
+    if m and type(m.HasAnimation) == "function" then
+        local okHas, has = pcall(m.HasAnimation, m, anim)
+        if okHas and not has then return FX.STRIKE_ANIM end
+    end
+    return anim
+end
 FX.SWING_SOUND = 3091          -- Heroic Strike's cast: the attackers swinging (with "Targeting & hit sounds")
 
 FX.STAGGER = 0.08          -- seconds between denizens whose effects start in the same redraw
@@ -852,7 +871,7 @@ function FX:SyncBoard()
                     if TTS.Sound and TTS.Sound:IsOn("combat") then pcall(PlaySound, FX.SWING_SOUND, "SFX") end
                 end
                 local f = frameOf[b.perm]
-                if Valid(f, b.perm) then FX:OneShot(f, FX.STRIKE_ANIM) end
+                if Valid(f, b.perm) then FX:OneShot(f, FX:StrikeAnim(f)) end
             end)
         end
         if #b.events > 0 then

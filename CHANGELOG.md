@@ -1,4 +1,7 @@
 ## 1.0.0
+*   new: armour Gear Cards - 18 helms and shoulderpads, mostly toughness and defensive keywords (Vigilant, Warded, Shielded, Support, Bulwark). Armorers around Azeroth hand them out to travellers who ask, just like the weapon merchants
+*   humanoid denizens now wear their Gear: the latest weapon, helm and shoulders equipped show on the model
+*   cards tucked under a denizen (Gear, buffs) stack tighter as they pile up, up to 5, so they no longer spill over the row below
 * new sounds and sound hooks
 *   added barrens giraffe
 * added critter starter denizens

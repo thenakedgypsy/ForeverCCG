@@ -16,6 +16,8 @@
 -- (isGift, giftNpcs; UI\NpcGossip.lua): Alliance / Horde / Neutral npcIds. Zones without a
 -- weapon merchant use the nearest smith, armourer or quartermaster. Their lines are
 -- npc.<npcId>.* in Languages\enUS.lua. Never dealt to solo opponents (SoloEncounters.lua).
+-- wear = itemId, wearSlot = "weapon" / "head" / "shoulder": what a humanoid denizen's model
+-- puts on while equipped (UI\Board.lua DressGear); the latest weapon, helm and shoulders show.
 -- =========================================================================
 local function Gear(id, name, cost, cmc, color, zone, npcs, p, t, kw, art, text, extraOps)
     local ops = { { op = "buff", to = "target", p = p, t = t, kw = kw, perm = true } }
@@ -160,12 +162,135 @@ TTS:AddCards({
         3, 3, { "trample", "reach" }, "INV_Weapon_Halberd_10", "Equip: +3/+3, Brutish and Anti-Air."),
 })
 
--- The weapon merchants' trail (see TTS.GIFT_TRAILS in Cards\Core.lua): every merchant a
--- faction can ask, by level, Neutral ones on both trails
+-- The weapon each one puts in a humanoid's hand: a classic item that looks the part
+local WEAPONS = {
+    GEAR01 = 1161,     -- Militia Shortsword
+    GEAR02 = 2047,     -- Anvilmar Hand Axe
+    GEAR03 = 15810,    -- Short Spear
+    GEAR04 = 2029,     -- Cleaver
+    GEAR05 = 4924,     -- Primitive Club
+    GEAR06 = 2139,     -- Dirk
+    GEAR07 = 11304,    -- Fine Longbow
+    GEAR08 = 2509,     -- Ornate Blunderbuss
+    GEAR09 = 6967,     -- Elunite Sword
+    GEAR10 = 4763,     -- Blackwood Recurve Bow
+    GEAR11 = 4560,     -- Fine Scimitar
+    GEAR12 = 8181,     -- Hunting Rifle
+    GEAR13 = 11303,    -- Fine Shortbow
+    GEAR14 = 250605,   -- Steel Spear
+    GEAR15 = 935,      -- Night Watch Shortsword
+    GEAR16 = 3489,     -- Thick War Axe
+    GEAR17 = 15811,    -- Heavy Spear
+    GEAR18 = 4372,     -- Lovingly Crafted Boomstick
+    GEAR19 = 7944,     -- Dazzling Mithril Rapier
+    GEAR20 = 2525,     -- War Hammer
+    GEAR21 = 3440,     -- Bonecracker
+    GEAR22 = 16890,    -- Slatemetal Cutlass
+    GEAR23 = 274963,   -- Rot-Covered Harpoon
+    GEAR24 = 10744,    -- Axe of the Ebon Drake
+    GEAR25 = 2236,     -- Blackfang
+    GEAR26 = 11307,    -- Massive Longbow
+    GEAR27 = 10510,    -- Mithril Heavy-bore Rifle
+    GEAR28 = 9651,     -- Gryphon Rider's Stormhammer
+    GEAR29 = 12775,    -- Huge Thorium Battleaxe
+    GEAR30 = 10696,    -- Enchanted Azsharite Felbane Sword
+    GEAR31 = 10697,    -- Enchanted Azsharite Felbane Dagger
+    GEAR32 = 281314,   -- Subdued Dragon's Fang
+    GEAR33 = 9683,     -- Strength of the Treant
+    GEAR34 = 12764,    -- Thorium Greatsword
+    GEAR35 = 7946,     -- Runed Mithril Hammer
+    GEAR36 = 15809,    -- Heavy Crossbow
+    GEAR37 = 9718,     -- Reforged Blade of Heroes
+    GEAR38 = 12802,    -- Darkspear
+}
+for id, item in pairs(WEAPONS) do
+    TTS.Cards[id].wear, TTS.Cards[id].wearSlot = item, "weapon"
+end
+
+-- =========================================================================
+-- ARMOUR (Gear too, handed out by the zones' armourers)
+-- Mostly toughness and defensive keywords. Each puts a helm or shoulders on a humanoid.
+-- =========================================================================
+local function Armor(id, name, cost, cmc, zone, npcs, slot, item, p, t, kw, art, text, extraOps)
+    local card = Gear(id, name, cost, cmc, "C", zone, npcs, p, t, kw, art, text, extraOps)
+    card.wear, card.wearSlot = item, slot
+    return card
+end
+local SHIELDED = { { op = "shielded", to = "target" } }
+
+TTS:AddCards({
+    -- Levels 1-10
+    ["ARMR01"] = Armor("ARMR01", "Goldshire Footman's Helm", "{1}", 1, "Elwynn Forest",
+        { Alliance = 2046 },   -- Andrew Krighton, Goldshire
+        "head", 8092, 0, 2, nil, "INV_Helmet_03", "Equip: +0/+2."),   -- Platemail Helm
+    ["ARMR02"] = Armor("ARMR02", "Kharanos Iron Pauldrons", "{1}", 1, "Dun Morogh",
+        { Alliance = 1240 },   -- Boran Ironclink, Kharanos
+        "shoulder", 4694, 0, 1, { "vigilance" }, "INV_Shoulder_28", "Equip: +0/+1 and Vigilant."),   -- Burnished Pauldrons
+    ["ARMR03"] = Armor("ARMR03", "Dolanaar Leafweave Mantle", "{1}", 1, "Teldrassil",
+        { Alliance = 3613 },   -- Meri Ironweave, Dolanaar
+        "shoulder", 10745, 0, 1, { "hexproof" }, "INV_Shoulder_18", "Equip: +0/+1 and Warded."),   -- Kaylari Shoulders
+    ["ARMR04"] = Armor("ARMR04", "Razor Hill War Paint Pads", "{1}", 1, "Durotar",
+        { Horde = 3167 },   -- Wuark, Razor Hill
+        "shoulder", 14728, 0, 2, nil, "INV_Shoulder_07", "Equip: +0/+2."),   -- War Paint Shoulder Pads
+    ["ARMR05"] = Armor("ARMR05", "Bloodhoof Spirit Headdress", "{1}", 1, "Mulgore",
+        { Horde = 3080 },   -- Harant Ironbrace, Bloodhoof Village
+        "head", 6720, 0, 1, { "vigilance" }, "INV_Helmet_17", "Equip: +0/+1 and Vigilant."),   -- Spirit Hunter Headdress
+    ["ARMR06"] = Armor("ARMR06", "Brill Reservist's Cap", "{1}", 1, "Tirisfal Glades",
+        { Horde = 2135 },   -- Abe Winters, Brill
+        "head", 20643, 0, 1, { "hexproof" }, "INV_Helmet_15", "Equip: +0/+1 and Warded."),   -- Undercity Reservist's Cap
+
+    -- Levels 10-20
+    ["ARMR07"] = Armor("ARMR07", "Algaz Mining Helmet", "{2}", 2, "Loch Modan",
+        { Alliance = 1362 },   -- Gothor Brumn, Algaz Station
+        "head", 10542, 0, 3, nil, "INV_Helmet_25", "Equip: +0/+3."),   -- Goblin Mining Helmet
+    ["ARMR08"] = Armor("ARMR08", "Auberdine Sentinel's Guard", "{2}", 2, "Darkshore",
+        { Alliance = 4187 },   -- Harlon Thornguard, Auberdine
+        "head", 9664, 0, 2, { "support" }, "INV_Helmet_19", "Equip: +0/+2 and Support."),   -- Sentinel's Guard
+    ["ARMR09"] = Armor("ARMR09", "Sepulcher Grim Pauldrons", "{2}", 2, "Silverpine Forest",
+        { Horde = 3553 },   -- Sebastian Meloche, the Sepulcher
+        "shoulder", 4443, 0, 2, { "vigilance" }, "INV_Shoulder_07", "Equip: +0/+2 and Vigilant."),   -- Grim Pauldrons
+    ["ARMR10"] = Armor("ARMR10", "Ratchet Raider's Shoulderpads", "{2}", 2, "The Barrens",
+        { Neutral = 3493 },   -- Grazlix, Ratchet
+        "shoulder", 10407, 0, 2, { "support" }, "INV_Shoulder_23", "Equip: +0/+2 and Support."),   -- Raider's Shoulderpads
+    ["ARMR11"] = Armor("ARMR11", "Lakeshire Guard's Coif", "{2}", 2, "Redridge Mountains",
+        { Alliance = 956 },   -- Dorin Songblade, Lakeshire
+        "head", 1282, 0, 2, nil, "INV_Helmet_02", "Equip: +0/+2 and Shielded.", SHIELDED),   -- Sparkmetal Coif
+
+    -- Levels 20-30
+    ["ARMR12"] = Armor("ARMR12", "Darkshire Watch Spaulders", "{3}", 3, "Duskwood",
+        { Alliance = 226 },   -- Morg Gnarltree, Darkshire
+        "shoulder", 6579, 0, 3, { "vigilance" }, "INV_Shoulder_27", "Equip: +0/+3 and Vigilant."),   -- Defender Spaulders
+    ["ARMR13"] = Armor("ARMR13", "Astranaar Feathered Mantle", "{3}", 3, "Ashenvale",
+        { Alliance = 3953 },   -- Tandaan Lightmane, Astranaar
+        "shoulder", 4196, 0, 3, { "reach" }, "INV_Shoulder_05", "Equip: +0/+3 and Anti-Air."),   -- Feathered Mantle
+    ["ARMR14"] = Armor("ARMR14", "Menethil Marine's Helm", "{3}", 3, "Wetlands",
+        { Alliance = 1450 },   -- Brahnmar, Menethil Harbor
+        "head", 3894, 1, 2, nil, "INV_Helmet_03", "Equip: +1/+2 and Shielded.", SHIELDED),   -- Brigandine Helm
+
+    -- Levels 30-50
+    ["ARMR15"] = Armor("ARMR15", "Dustwallow Mithril Pauldrons", "{4}", 4, "Dustwallow Marsh",
+        { Alliance = 4886, Horde = 4883 },   -- Hans Weston, Theramore / Krak, Brackenwall Village
+        "shoulder", 7918, 0, 4, { "support" }, "INV_Shoulder_22", "Equip: +0/+4 and Support."),   -- Heavy Mithril Shoulder
+    ["ARMR16"] = Armor("ARMR16", "Stranglethorn Brutal Helm", "{4}", 4, "Stranglethorn Vale",
+        { Horde = 1381, Neutral = 2845 },   -- Krakk, Grom'gol / Fargon Mortalak, Booty Bay
+        "head", 7130, 0, 3, { "bulwark" }, "INV_Helmet_02", "Equip: +0/+3 and Bulwark 2."),   -- Brutal Helm
+    ["ARMR17"] = Armor("ARMR17", "Mojache Wolfshead Helm", "{4}", 4, "Feralas",
+        { Horde = 8159 },   -- Worb Strongstitch, Camp Mojache
+        "head", 8345, 1, 3, { "vigilance" }, "INV_Helmet_04", "Equip: +1/+3 and Vigilant."),   -- Wolfshead Helm
+
+    -- Levels 55-60
+    ["ARMR18"] = Armor("ARMR18", "Everlook Imperial Pauldrons", "{6}", 6, "Winterspring",
+        { Neutral = 11182 },   -- Nixxrak, Everlook
+        "shoulder", 12428, 1, 5, { "bulwark" }, "INV_Shoulder_02", "Equip: +1/+5, Bulwark 2 and Shielded.", SHIELDED),   -- Imperial Plate Shoulders
+})
+
+-- The gear trail (see TTS.GIFT_TRAILS in Cards\Core.lua): every weapon merchant and armourer
+-- a faction can ask, by level, Neutral ones on both trails
 TTS.GIFT_TRAILS.gear = {
-    Alliance = { 54, 1273, 3609, 1668, 1469, 4183, 3491, 3088, 11137, 225, 1441, 3543, 3053, 275623,
-        1471, 1322, 2482, 4888, 9179, 1695, 8131, 8161, 11703, 14301, 5508, 3000, 15315, 1296, 10857,
-        11184, 11536, 15176 },
-    Horde = { 3163, 3077, 2136, 9553, 3479, 9549, 6028, 3539, 9551, 32334, 9555, 12045, 1146, 4884,
-        1407, 981, 9548, 8131, 14737, 10361, 3000, 10379, 10856, 11184, 11536, 15176 },
+    Alliance = { 54, 2046, 1273, 1240, 3609, 3613, 1668, 1469, 1362, 4183, 4187, 3491, 3493, 3088, 956,
+        11137, 3953, 225, 226, 1441, 1450, 3543, 3053, 275623, 1471, 1322, 2482, 2845, 4888, 4886, 9179,
+        1695, 8131, 8161, 11703, 14301, 5508, 3000, 15315, 1296, 10857, 11184, 11182, 11536, 15176 },
+    Horde = { 3163, 3167, 3077, 3080, 2136, 2135, 9553, 3553, 3479, 3493, 9549, 6028, 3539, 9551, 32334,
+        9555, 12045, 1146, 1381, 2845, 4884, 4883, 1407, 981, 9548, 8159, 8131, 14737, 10361, 3000,
+        10379, 10856, 11184, 11182, 11536, 15176 },
 }

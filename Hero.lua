@@ -360,8 +360,9 @@ end
 -- again shortly after; the token stops a delayed dressing landing on a frame that has moved
 -- on to another card (UI\Board.lua clears it). Also used for cards with dressItems.
 -- onDressed (optional) runs after each dressing, e.g. to set the card's camera again (dressing
--- can reset it)
-function H:DressModel(model, items, onDressed)
+-- can reset it). keepOutfit (optional): the items go on over the display's own outfit instead
+-- (a denizen's Gear, UI\Board.lua)
+function H:DressModel(model, items, onDressed, keepOutfit)
     if not (model and model.TryOn and items and #items > 0) then return end
     -- TryOn needs the item's data on the client: ask for any not loaded yet, so the later
     -- retries find it
@@ -378,8 +379,8 @@ function H:DressModel(model, items, onDressed)
         if model.heroDressToken ~= token then return end
         -- Clear everything first: Undress, then each slot on its own (an NPC display's
         -- outfit can cover what TryOn adds to that slot)
-        if model.Undress then pcall(model.Undress, model) end
-        if model.UndressSlot then
+        if model.Undress and not keepOutfit then pcall(model.Undress, model) end
+        if model.UndressSlot and not keepOutfit then
             for slot = 1, 19 do pcall(model.UndressSlot, model, slot) end
         end
         for _, itemId in ipairs(items) do pcall(model.TryOn, model, "item:" .. itemId) end

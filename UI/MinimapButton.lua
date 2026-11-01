@@ -18,11 +18,10 @@ btn:SetSize(31, 31)
 btn:SetFrameStrata("MEDIUM")
 btn:SetFrameLevel(8)
 
--- Icon (Tarot Card)
+-- Icon: the game's card back, upright at its own shape (512 x 717)
 local icon = btn:CreateTexture(nil, "BACKGROUND")
-icon:SetTexture("Interface\\Icons\\INV_Misc_Ticket_Tarot_TwistingNether_01")
-icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-icon:SetSize(20, 20)
+icon:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png")
+icon:SetSize(14, 20)
 icon:SetPoint("CENTER", btn, "CENTER", 0, 0)
 
 -- Classic WoW Minimap Border

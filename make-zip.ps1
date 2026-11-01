@@ -1,5 +1,5 @@
 # Zips the addon for release as ..\ForeverCCG.zip (next to this folder), every file under a
-# top-level ForeverCCG/ folder. Leaves out .git, .gitignore, .gitattributes and this script.
+# top-level ForeverCCG/ folder. Leaves out .git, .gitignore, .gitattributes, .claude and this script.
 # Run from anywhere:  powershell -ExecutionPolicy Bypass -File .\make-zip.ps1
 
 $ErrorActionPreference = "Stop"
@@ -9,7 +9,7 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $root    = $PSScriptRoot
 $name    = Split-Path $root -Leaf
 $zipPath = Join-Path (Split-Path $root -Parent) "$name.zip"
-$skip    = @(".git", ".gitignore", ".gitattributes", (Split-Path $PSCommandPath -Leaf))
+$skip    = @(".git", ".gitignore", ".gitattributes", ".claude", (Split-Path $PSCommandPath -Leaf))
 
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 

@@ -1661,11 +1661,9 @@ local function CreateCardFrame(parent, sizeX, sizeY)
     f.ttsSilent = true
 
     f.tuckedFrames = {}
-    for k = 1, 3 do
+    for k = 1, 5 do   -- (UpdateTuckedFrames places them; more cards than this aren't shown)
         local tf = CreateFrame("Frame", nil, f)
         tf:SetSize(sizeX, sizeY)
-        tf:SetPoint("TOPLEFT", f, "TOPLEFT", 6 * k, -9 * k)
-        tf:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 6 * k, -9 * k)
 
         tf.bg = tf:CreateTexture(nil, "BACKGROUND")
         tf.bg:SetAllPoints(tf)
@@ -2958,6 +2956,7 @@ local function SetupCardVisual(f, card, foil)
     end
     f.visualCard, f.visualGen = card, modelGeneration
     f.currentCard = card
+    f.gearKey, f.gearWeapon = nil, nil   -- (a fresh model wears none of its Gear yet: DressGear)
     -- Cancels a hero model's pending dressing (Hero.lua) now the frame shows something new
     if f.model then f.model.heroDressToken = nil end
     local hero = card and card.isHero and f.model and TTS.Hero
@@ -2993,6 +2992,8 @@ local function SetupCardVisual(f, card, foil)
             TTS.Hero:DressModel(f.model, card.dressItems, function() ApplyModelCamera(f, card) end)
         end
         ApplyModelCamera(f, card)
+        -- A denizen on the battlefield puts its Gear back on (the model also reloads on a resize)
+        if f.perm and f.perm.id == card.id and B.DressGear then B.DressGear(f, f.perm) end
     else
         if f.model then f.model:Hide() end
         f.art:Show()
@@ -3115,8 +3116,55 @@ end
 
 -- =========================================================================
 -- TUCKED CARDS
--- Attachments first, then the cards whose effects are on the permanent.
+-- Attachments first, then the cards whose effects are on the permanent. Each peeks out
+-- straight up behind the one in front; the steps shrink as the stack grows so it never
+-- reaches more than 12 px up.
+-- A humanoid denizen's model also wears its Gear (card.wear, Cards\Gear.lua): the latest
+-- weapon, helm and shoulders equipped. Gear only ever added goes on over what it wears;
+-- any that came off (Dispel, or a newer weapon replacing it) has the display loaded again
+-- first. Leeroy-style cards (dressItems) wear their own items, then the Gear.
 -- =========================================================================
+local function DressGear(f, perm)
+    local card = f.currentCard
+    if not (card and card.creatureType == "Humanoid" and card.displayId and not card.isHero
+        and f.model and f.model:IsShown() and TTS.Hero) then return end
+    local bySlot = {}
+    for _, e in ipairs(perm.spellEffects or {}) do   -- (oldest first: the latest in a slot wins)
+        local g = TTS.Cards[e.id]
+        if g and g.wear then bySlot[g.wearSlot or "weapon"] = g.wear end
+    end
+    f.gearWeapon = bySlot.weapon   -- (its attack: a bow or gun shoots, UI\CardFX.lua StrikeAnim)
+    local items = {}
+    for _, slot in ipairs({ "head", "shoulder", "weapon" }) do
+        if bySlot[slot] then table.insert(items, bySlot[slot]) end
+    end
+    local key = table.concat(items, ",")
+    local prev = f.gearKey or ""
+    if key == prev then return end
+    f.gearKey = key
+
+    local function Refit() ApplyModelCamera(f, card) end
+    if card.dressItems then
+        local all = {}
+        for _, id in ipairs(card.dressItems) do table.insert(all, id) end
+        for _, id in ipairs(items) do table.insert(all, id) end
+        TTS.Hero:DressModel(f.model, all, Refit)
+        return
+    end
+    local worn = {}
+    for _, id in ipairs(items) do worn[tostring(id)] = true end
+    for id in prev:gmatch("[^,]+") do
+        if not worn[id] then
+            f.model:SetDisplayInfo(card.displayId)
+            if TTS.CardFX then TTS.CardFX:ModelReset(f) end
+            Refit()
+            break
+        end
+    end
+    if #items > 0 then TTS.Hero:DressModel(f.model, items, Refit, true) end
+end
+B.DressGear = DressGear   -- (SetupCardVisual, above, dresses a reloaded model again)
+
 local function UpdateTuckedFrames(f, perm)
     if not f.tuckedFrames then return end
 
@@ -3137,9 +3185,14 @@ local function UpdateTuckedFrames(f, perm)
         table.insert(stack, { card = TTS.Cards[effId], r = 1.0, g = 1.0, b = 1.0 })
     end
 
+    local shown = math.min(#stack, #f.tuckedFrames)
+    local stepY = math.min(9, 12 / math.max(shown, 1))
     for k, tf in ipairs(f.tuckedFrames) do
         local s = stack[k]
         if s then
+            tf:ClearAllPoints()
+            tf:SetPoint("TOPLEFT", f, "TOPLEFT", 0, stepY * k)
+            tf:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, stepY * k)
             ApplyFrameTexture(tf.border, s.card)
             tf.art:SetTexture(s.card.art or "Interface\\Icons\\INV_Misc_QuestionMark")
             tf.border:SetVertexColor(s.r, s.g, s.b)
@@ -3148,6 +3201,7 @@ local function UpdateTuckedFrames(f, perm)
             tf:Hide()
         end
     end
+    DressGear(f, perm)   -- (after GetPermEffectCards has dropped spent effects)
 end
 
 -- =========================================================================

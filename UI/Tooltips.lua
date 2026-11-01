@@ -155,7 +155,7 @@ TT.EFFECTS = {
     token      = { name = "Add",               tag = "Effect", text = "A denizen made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent denizen card in a graveyard to the battlefield under your control." },
     targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy denizens can't be chosen." },
-    gear       = { name = "Gear Card",         tag = "Effect", text = "Equips a denizen you control. Its bonus and keywords last for as long as the denizen stays on the battlefield. An enemy Dispel strips them. Weapon merchants hand out Gear Cards to travellers who ask." },
+    gear       = { name = "Gear Card",         tag = "Effect", text = "Equips a denizen you control. Its bonus and keywords last for as long as the denizen stays on the battlefield. An enemy Dispel strips them. A humanoid wears its latest weapon, helm and shoulders. Weapon merchants and armorers hand out Gear Cards to travellers who ask." },
 
     -- Creature and Prayer abilities
     prayer     = { name = "Prayer",            tag = "Ability", text = "Click a ready Prayer to Exhaust it for one mana of its colour. You can play one Prayer per turn, during a main phase." },
