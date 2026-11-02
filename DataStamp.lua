@@ -69,6 +69,12 @@ end
 -- to send in, so a wrongful reset can be looked into and made good.
 -- Signing ships with launch, so stamped data always has a signature: a missing one counts as
 -- a change (or deleting it would get around the check), unless there's no data to sign yet.
+--
+-- The signature is bound to the Battle.net account (its BattleTag, CC:Account), so data
+-- copied in from another account doesn't match either. If the client can't say which account
+-- it is (Battle.net being down, say), nothing is cleared: the data is taken as it is, and at
+-- logout it's signed with a default instead, which matches on any account and is bound at the
+-- next logout that knows the account.
 -- =========================================================================
 -- Signed: the collection (TTS_NewCards is only which cards glow as new) and the PvP record
 local SIGNED = { "TTS_PvPRecord" }
@@ -77,8 +83,16 @@ for _, name in ipairs(CLEARED) do
 end
 
 -- The beta flag gives a card, so it's signed too
-local function Signature()
-    return TTS.CollectionCode:Signature(SIGNED, { beta = TTS_DataStamp.beta == true })
+local function Canonical()
+    return TTS.CollectionCode:Canonical(SIGNED, { beta = TTS_DataStamp.beta == true })
+end
+
+-- The last BattleTag the client gave, in case it can't at logout
+local account
+
+local function KnownAccount()
+    account = TTS.CollectionCode:Account() or account
+    return account
 end
 
 local function HasData()
@@ -91,15 +105,16 @@ end
 
 -- Clears the signed data (and TTS_NewCards) if it was changed outside the game
 local function CheckSignature()
+    if not KnownAccount() then return end
     local sig = TTS_DataStamp.sig
     local reason
     if sig == nil then
         if not HasData() then return end
         reason = "unsigned"
-    elseif sig ~= Signature() then
-        reason = "changed"
     else
-        return
+        local CC, canonical = TTS.CollectionCode, Canonical()
+        if sig == CC:Signature(canonical, account) or sig == CC:Signature(canonical, nil) then return end
+        reason = "changed"
     end
 
     local vars = {}
@@ -114,9 +129,12 @@ local function CheckSignature()
 end
 
 local signer = CreateFrame("Frame")
+signer:RegisterEvent("PLAYER_LOGIN")
 signer:RegisterEvent("PLAYER_LOGOUT")
-signer:SetScript("OnEvent", function()
-    if type(TTS_DataStamp) == "table" then TTS_DataStamp.sig = Signature() end
+signer:SetScript("OnEvent", function(_, event)
+    local acct = KnownAccount()
+    if event ~= "PLAYER_LOGOUT" or type(TTS_DataStamp) ~= "table" then return end
+    TTS_DataStamp.sig = TTS.CollectionCode:Signature(Canonical(), acct)
 end)
 
 -- Told at every login until dismissed: Show Code keeps the report, so it can be copied again

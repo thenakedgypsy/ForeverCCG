@@ -15,9 +15,11 @@ local Loc = TTS.Locale
 -- The Deckbuilder's Export / Import buttons: the whole collection (TTS.COLLECTION_VARS,
 -- DataStamp.lua, plus the beta flag) as one line of text to keep somewhere safe, and put
 -- back later. Importing merges the code's collection into the current one (CC:Apply).
--- A code is bound to the character that made it ("name-realm"): the data is scrambled with
--- a keystream seeded from that name, a salt and a random nonce, and signed with a checksum
--- of the same, so on another character (or after any edit) it fails to read.
+-- A code is bound to the Battle.net account that made it (its BattleTag, like the collection
+-- itself): the data is scrambled with a keystream seeded from that, a salt and a random nonce,
+-- and signed with a checksum of the same, so on another account (or after any edit) it fails
+-- to read. If the client can't say which account it is, a code is bound to a default instead,
+-- which any account can read.
 --   code = Encode( nonce(4) .. scrambled payload .. checksum(4) )
 --   payload = { t = export time, beta = true|nil, vars = { [saved variable] = value } }
 -- =========================================================================
@@ -41,6 +43,19 @@ local function CharacterKey()
     local name = UnitName("player") or "?"
     local realm = (GetRealmName and GetRealmName() or ""):gsub("%s", "")
     return (name .. "-" .. realm):lower()
+end
+
+-- The Battle.net account's BattleTag, or nil if the client doesn't know it (yet)
+function CC:Account()
+    if not BNGetInfo then return nil end
+    local _, tag = BNGetInfo()
+    return type(tag) == "string" and tag ~= "" and tag or nil
+end
+
+-- Codes are bound to this ("bnet:" keeps it apart from the report's "name-realm", CharacterKey).
+-- nil: the default, which no BattleTag can be (they have a name before the #).
+local function AccountKey(tag)
+    return "bnet:" .. (tag and tag:lower() or "#default")
 end
 
 -- =========================================================================
@@ -244,20 +259,23 @@ function CC:Export()
         t = time(),
         beta = (TTS_DataStamp and TTS_DataStamp.beta) and true or nil,
         vars = vars,
-    }, CharacterKey())
+    }, AccountKey(CC:Account()))
 end
 
--- The code's payload, or nil if it can't be read on this character
+-- The code's payload, or nil if it can't be read on this account (codes made under the
+-- default can be read anywhere)
 function CC:Decode(text)
-    return DecodeAs(text, CharacterKey())
+    local tag = CC:Account()
+    return (tag and DecodeAs(text, AccountKey(tag))) or DecodeAs(text, AccountKey(nil))
 end
 
 -- =========================================================================
 -- SAVED DATA SIGNATURE AND RESET REPORT (DataStamp.lua)
 -- The signature is a checksum of the saved data in a fixed form: keys sorted and fractions
--- rounded, so the same data always gives the same text however the client stored it.
--- A report code holds the data a reset cleared. It's bound to REPORT_KEY rather than a
--- character (character keys are "name-realm"), so no character can import it; it's read
+-- rounded, so the same data always gives the same text however the client stored it. Keyed
+-- with the BattleTag when there is one, so the data only matches on its own account.
+-- A report code holds the data a reset cleared. It's bound to REPORT_KEY rather than an
+-- account (account keys are "bnet:<battletag>"), so no one can import it; it's read
 -- outside the game (ForeverCCG_Tests\decode_report.lua).
 -- =========================================================================
 local SIGN_KEY = "#signature"
@@ -296,9 +314,9 @@ local function Canon(v, out)
     end
 end
 
--- Checksum of the named saved variables, in order, plus "extra". Ones never set are left out,
--- so adding a name in an update doesn't change the signature of data saved before it.
-function CC:Signature(names, extra)
+-- The named saved variables, in order, plus "extra", in the fixed form. Ones never set are left
+-- out, so adding a name in an update doesn't change the signature of data saved before it.
+function CC:Canonical(names, extra)
     local out = {}
     for _, name in ipairs(names) do
         if _G[name] ~= nil then
@@ -307,7 +325,12 @@ function CC:Signature(names, extra)
         end
     end
     Canon(extra, out)
-    return Checksum(table.concat(out), SIGN_KEY)
+    return table.concat(out)
+end
+
+-- Checksum of CC:Canonical's text, bound to the BattleTag "account" (nil: the default)
+function CC:Signature(canonical, account)
+    return Checksum(canonical, account and (SIGN_KEY .. "@" .. account:lower()) or SIGN_KEY)
 end
 
 -- payload = { t, who, reason, beta, vars = { [saved variable] = value } }
@@ -385,6 +408,11 @@ end
 
 local function SetHint(key, ...)
     Loc:Bind(W.hint, key, ...)
+end
+
+local function SetImportHint()
+    local tag = CC:Account()
+    if tag then SetHint("cc.importHint", tag) else SetHint("cc.importHint.any") end
 end
 
 StaticPopupDialogs["TTS_IMPORT_COLLECTION"] = {
@@ -491,7 +519,7 @@ local function BuildWindow()
             self:SetText(W.text)
             self:HighlightText()
         else
-            SetHint("cc.importHint", UnitName("player") or "?")
+            SetImportHint()
         end
     end)
     edit:HookScript("OnTextChanged", function(self)
@@ -506,12 +534,12 @@ end
 local function Open(mode, code)
     if not W then BuildWindow() end
     W.mode = mode
-    local name = UnitName("player") or "?"
+    local tag = CC:Account()
     if mode == "export" then
         W.text = CC:Export()
         Loc:Bind(W.title, "cc.exportTitle")
         Loc:Bind(W.button, "matchLog.selectAll")
-        SetHint("cc.exportHint", name)
+        if tag then SetHint("cc.exportHint", tag) else SetHint("cc.exportHint.any") end
     elseif mode == "report" then
         W.text = code or ""
         Loc:Bind(W.title, "cc.reportTitle")
@@ -521,7 +549,7 @@ local function Open(mode, code)
         W.text = ""
         Loc:Bind(W.title, "cc.importTitle")
         Loc:Bind(W.button, "cc.import")
-        SetHint("cc.importHint", name)
+        SetImportHint()
     end
     W.edit:SetText(W.text)
     W.placeholder:SetShown(mode == "import")
