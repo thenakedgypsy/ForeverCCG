@@ -59,12 +59,108 @@ local function JoinedInBeta()
     return (TTS:BetaCommunityCheck())
 end
 
+-- =========================================================================
+-- SIGNATURE
+-- The saved data is signed (TTS_DataStamp.sig) when the game saves it: PLAYER_LOGOUT comes
+-- with logging out, /reload and quitting, and the client writes the file then and only then
+-- (after a crash it writes nothing, so the last file and its signature still match). It's
+-- checked when it loads: data changed outside the game doesn't match, so it's cleared, and
+-- the player is told why and given a report code holding what was cleared (CollectionCode.lua)
+-- to send in, so a wrongful reset can be looked into and made good.
+-- Signing ships with launch, so stamped data always has a signature: a missing one counts as
+-- a change (or deleting it would get around the check), unless there's no data to sign yet.
+-- =========================================================================
+-- Signed: the collection (TTS_NewCards is only which cards glow as new) and the PvP record
+local SIGNED = { "TTS_PvPRecord" }
+for _, name in ipairs(CLEARED) do
+    if name ~= "TTS_NewCards" then SIGNED[#SIGNED + 1] = name end
+end
+
+-- The beta flag gives a card, so it's signed too
+local function Signature()
+    return TTS.CollectionCode:Signature(SIGNED, { beta = TTS_DataStamp.beta == true })
+end
+
+local function HasData()
+    for _, name in ipairs(SIGNED) do
+        local v = _G[name]
+        if v ~= nil and not (type(v) == "table" and next(v) == nil) then return true end
+    end
+    return false
+end
+
+-- Clears the signed data (and TTS_NewCards) if it was changed outside the game
+local function CheckSignature()
+    local sig = TTS_DataStamp.sig
+    local reason
+    if sig == nil then
+        if not HasData() then return end
+        reason = "unsigned"
+    elseif sig ~= Signature() then
+        reason = "changed"
+    else
+        return
+    end
+
+    local vars = {}
+    for _, name in ipairs(SIGNED) do vars[name] = _G[name] end
+    TTS_DataStamp.resetReport = TTS.CollectionCode:ReportCode({
+        t = time(), reason = reason, beta = TTS_DataStamp.beta, vars = vars,
+    })
+    for _, name in ipairs(SIGNED) do _G[name] = nil end
+    TTS_NewCards = nil
+    TTS_DataStamp.beta = nil
+    TTS_DataStamp.sig = nil
+end
+
+local signer = CreateFrame("Frame")
+signer:RegisterEvent("PLAYER_LOGOUT")
+signer:SetScript("OnEvent", function()
+    if type(TTS_DataStamp) == "table" then TTS_DataStamp.sig = Signature() end
+end)
+
+-- Told at every login until dismissed: Show Code keeps the report, so it can be copied again
+StaticPopupDialogs["TTS_DATA_RESET"] = {
+    text = "%s",
+    button1 = "",
+    button2 = "",
+    OnAccept = function()
+        local code = TTS_DataStamp and TTS_DataStamp.resetReport
+        if code then TTS.CollectionCode:ShowReport(code) end
+    end,
+    OnCancel = function(_, _, reason)
+        if reason == "clicked" and TTS_DataStamp then TTS_DataStamp.resetReport = nil end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = false,
+    showAlert = true,
+    preferredIndex = 3,
+}
+
+local resetNotice = CreateFrame("Frame")
+resetNotice:RegisterEvent("PLAYER_ENTERING_WORLD")
+resetNotice:SetScript("OnEvent", function(self)
+    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    if not (type(TTS_DataStamp) == "table" and TTS_DataStamp.resetReport) then return end
+    C_Timer.After(2, function()
+        local L = TTS.L or tostring
+        local dialog = StaticPopupDialogs["TTS_DATA_RESET"]
+        dialog.button1 = L("stamp.showCode")
+        dialog.button2 = L("stamp.dismiss")
+        StaticPopup_Show("TTS_DATA_RESET", L("stamp.resetPopup"))
+    end)
+end)
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
     if addon ~= "ForeverCCG" then return end
     self:UnregisterEvent("ADDON_LOADED")
-    if type(TTS_DataStamp) == "table" and TTS_DataStamp.launch == true then return end
+    if type(TTS_DataStamp) == "table" and TTS_DataStamp.launch == true then
+        CheckSignature()
+        return
+    end
 
     -- A new player has nothing to lose; anyone else is told why their collection is empty
     local had = false

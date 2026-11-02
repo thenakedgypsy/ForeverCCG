@@ -208,32 +208,20 @@ local function FromText(text)
 end
 
 -- =========================================================================
--- EXPORT / IMPORT
+-- ENCODE / DECODE (a payload as a code bound to "who")
 -- =========================================================================
-function CC:Export()
-    local vars = {}
-    for _, name in ipairs(TTS.COLLECTION_VARS or {}) do
-        if not SKIP[name] and _G[name] ~= nil then vars[name] = _G[name] end
-    end
-    local payload = {
-        t = time(),
-        beta = (TTS_DataStamp and TTS_DataStamp.beta) and true or nil,
-        vars = vars,
-    }
+local function Encode(payload, who)
     local out = {}
     Ser(payload, out)
     local plain = table.concat(out)
-    local who = CharacterKey()
     local nonce = Uint32(math.random(0, 65535) * 65536 + math.random(0, 65535))
     return ToText(nonce .. Scramble(plain, Seed(nonce, who)) .. Uint32(Checksum(plain, who)))
 end
 
--- The code's payload, or nil if it can't be read on this character
-function CC:Decode(text)
+local function DecodeAs(text, who)
     text = tostring(text or ""):gsub("%s", "")
     local raw = FromText(text)
     if not raw or #raw < 9 then return nil end
-    local who = CharacterKey()
     local nonce = raw:sub(1, 4)
     local plain = Scramble(raw:sub(5, -5), Seed(nonce, who), true)
     if Checksum(plain, who) ~= ReadUint32(raw, #raw - 3) then return nil end
@@ -242,6 +230,94 @@ function CC:Decode(text)
         return nil
     end
     return payload
+end
+
+-- =========================================================================
+-- EXPORT / IMPORT
+-- =========================================================================
+function CC:Export()
+    local vars = {}
+    for _, name in ipairs(TTS.COLLECTION_VARS or {}) do
+        if not SKIP[name] and _G[name] ~= nil then vars[name] = _G[name] end
+    end
+    return Encode({
+        t = time(),
+        beta = (TTS_DataStamp and TTS_DataStamp.beta) and true or nil,
+        vars = vars,
+    }, CharacterKey())
+end
+
+-- The code's payload, or nil if it can't be read on this character
+function CC:Decode(text)
+    return DecodeAs(text, CharacterKey())
+end
+
+-- =========================================================================
+-- SAVED DATA SIGNATURE AND RESET REPORT (DataStamp.lua)
+-- The signature is a checksum of the saved data in a fixed form: keys sorted and fractions
+-- rounded, so the same data always gives the same text however the client stored it.
+-- A report code holds the data a reset cleared. It's bound to REPORT_KEY rather than a
+-- character (character keys are "name-realm"), so no character can import it; it's read
+-- outside the game (ForeverCCG_Tests\decode_report.lua).
+-- =========================================================================
+local SIGN_KEY = "#signature"
+local REPORT_KEY = "#report"
+local KEY_ORDER = { boolean = 1, number = 2, string = 3 }
+
+local function KeyLess(a, b)
+    local ta, tb = type(a), type(b)
+    if ta ~= tb then return KEY_ORDER[ta] < KEY_ORDER[tb] end
+    if ta == "boolean" then return b and not a end
+    return a < b
+end
+
+local function Canon(v, out)
+    local t = type(v)
+    if t == "table" then
+        local keys = {}
+        for k, x in pairs(v) do
+            if KEY_ORDER[type(k)] and Writable(x) then keys[#keys + 1] = k end
+        end
+        table.sort(keys, KeyLess)
+        out[#out + 1] = "{"
+        for _, k in ipairs(keys) do
+            Canon(k, out)
+            Canon(v[k], out)
+        end
+        out[#out + 1] = "}"
+    elseif t == "number" then
+        -- Every number alike, so 3 and a 3.0000000001 the client saved as 3 still match
+        -- (and -0, which it may save as 0)
+        out[#out + 1] = string.format("n%.4f;", v == 0 and 0 or v)
+    elseif Writable(v) then
+        Ser(v, out)
+    else
+        out[#out + 1] = "-"
+    end
+end
+
+-- Checksum of the named saved variables, in order, plus "extra". Ones never set are left out,
+-- so adding a name in an update doesn't change the signature of data saved before it.
+function CC:Signature(names, extra)
+    local out = {}
+    for _, name in ipairs(names) do
+        if _G[name] ~= nil then
+            out[#out + 1] = "s" .. #name .. ":" .. name
+            Canon(_G[name], out)
+        end
+    end
+    Canon(extra, out)
+    return Checksum(table.concat(out), SIGN_KEY)
+end
+
+-- payload = { t, who, reason, beta, vars = { [saved variable] = value } }
+function CC:ReportCode(payload)
+    payload.who = payload.who or CharacterKey()
+    return Encode(payload, REPORT_KEY)
+end
+
+function CC:DecodeReport(text)
+    return DecodeAs(text, REPORT_KEY)
 end
 
 -- Best of both, key by key: the higher number (copies, wins, and the later of two times, so
@@ -297,7 +373,7 @@ function CC:Apply(payload)
 end
 
 -- =========================================================================
--- WINDOW (one window, two modes: "export" shows the code, "import" takes one)
+-- WINDOW (one window, three modes: "export" and "report" show a code, "import" takes one)
 -- =========================================================================
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
 local W
@@ -367,7 +443,7 @@ local function BuildWindow()
     W.button:SetSize(110, 22)
     W.button:SetPoint("BOTTOMRIGHT", -18, 16)
     W.button:SetScript("OnClick", function()
-        if W.mode == "export" then SelectAll() else TryImport() end
+        if W.mode == "import" then TryImport() else SelectAll() end
     end)
 
     W.hint = W:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -410,7 +486,7 @@ local function BuildWindow()
     edit:SetScript("OnEscapePressed", function() W:Hide() end)
     edit:SetScript("OnTextChanged", function(self, userInput)
         if not userInput then return end
-        if W.mode == "export" then
+        if W.mode ~= "import" then
             -- Read-only: typing puts the code back
             self:SetText(W.text)
             self:HighlightText()
@@ -427,7 +503,7 @@ local function BuildWindow()
     W.scroll = scroll
 end
 
-local function Open(mode)
+local function Open(mode, code)
     if not W then BuildWindow() end
     W.mode = mode
     local name = UnitName("player") or "?"
@@ -436,6 +512,11 @@ local function Open(mode)
         Loc:Bind(W.title, "cc.exportTitle")
         Loc:Bind(W.button, "matchLog.selectAll")
         SetHint("cc.exportHint", name)
+    elseif mode == "report" then
+        W.text = code or ""
+        Loc:Bind(W.title, "cc.reportTitle")
+        Loc:Bind(W.button, "matchLog.selectAll")
+        SetHint("cc.reportHint")
     else
         W.text = ""
         Loc:Bind(W.title, "cc.importTitle")
@@ -447,8 +528,9 @@ local function Open(mode)
     W:Show()
     W.edit:SetCursorPosition(0)
     W.scroll:SetVerticalScroll(0)
-    if mode == "export" then SelectAll() else W.edit:SetFocus() end
+    if mode == "import" then W.edit:SetFocus() else SelectAll() end
 end
 
 function CC:ShowExport() Open("export") end
 function CC:ShowImport() Open("import") end
+function CC:ShowReport(code) Open("report", code) end

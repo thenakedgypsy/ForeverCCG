@@ -26,6 +26,9 @@ S["locale.reload"] = "Language changes take effect after a /reload."
 S["locale.auto"] = "Automatic (%s)"
 
 -- LAUNCH (DataStamp.lua)
+S["stamp.resetPopup"] = "Your Forever: CCG save file was changed outside the game, so your collection, decks, progress and PvP record have been reset.\n\nIf you didn't change it, click Show Code, copy the code and send it to Gypsy so it can be looked into."
+S["stamp.showCode"] = "Show Code"
+S["stamp.dismiss"] = "Dismiss"
 S["stamp.betaPopup"] = "Welcome to the launch of Forever: CCG!\n\nBeta collections don't carry over, so yours starts afresh. As thanks for testing, here's a card only beta players have: |cFFFFD200%s|r.\n\nGood luck out there! - Gypsy!"
 
 -- ADMIN (AdminGrants.lua)
@@ -126,6 +129,8 @@ S["cc.importHint"] = "Paste a code %s exported, then click Import."
 S["cc.pasteHere"] = "Click here, then press Ctrl+V to paste your code"
 S["cc.invalid"] = "|cFFFF4040That code can't be read: it's damaged, or another character made it.|r"
 S["cc.confirm"] = "Add the collection from this code (exported %s)?\n\nYou keep the best of both: the most copies of every card, every foil and the furthest progress. Your decks stay; the code's fill any empty deck slots."
+S["cc.reportTitle"] = "Reset Report"
+S["cc.reportHint"] = "Press Ctrl+C to copy, then send it to Gypsy."
 S["cc.imported"] = "|cFF00FF00[TTSE]|r Your collection was imported."
 
 -- MAIN WINDOW
