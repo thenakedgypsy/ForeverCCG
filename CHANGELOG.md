@@ -1,3 +1,8 @@
+## 1.0.2
+*   options: the Creature card preview can now be sized manually - tick "Custom preview size" for a Preview size slider, with a sample card beside the Options window while you adjust it
+*   options: new "Show the preview in its own window" - the creature card preview shows in a window you can place anywhere. Drag it to move it, drag its corner to resize it, and minimise it to its title bar with its - button (all remembered between sessions). It fades a few seconds after the tooltip does, or stays up while your cursor is on it
+*   new: Quicksave button in the deckbuilder - reloads your interface to save your collection and decks straight away. The game only saves addon data when you log out, reload or quit, so after a crash you'd lose any cards won and deck changes since your last save
+
 ## 1.0.1
 *   fix for the shield bubble on a Shielded denizen (and a player's damage shield) popping in again and again: it now appears once and stays up for as long as the shield lasts
 *   Hero cards now use the colourless frame, whatever your class's colour

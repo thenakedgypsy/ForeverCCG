@@ -20,6 +20,10 @@ local DEFAULTS = {
     extendedTooltipDelay = 0.8,  -- seconds between each further layer of detail after that
     tooltipScale = 1,       -- size of tooltips and their detail panels (Tooltips.lua)
     mobCardPreview = true,  -- card shown beside creature tooltips (MobTooltip.lua)
+    mobCardDetached = false,    -- that card in a window of its own instead (MobTooltip.lua)
+    mobCardManualScale = false, -- that card at mobCardScale instead of the tooltip's height
+    mobCardScale = 1,           -- (1 = 150 x 212 at the UI's scale)
+    mobCardWindow = {},         -- the detached window's x, y, scale and minimised state
     tooltipPanels = {       -- kinds of detail panel stacked beside tooltips (Tooltips.lua)
         keyword  = true,
         ability  = true,
@@ -332,6 +336,7 @@ local function CreateSlider(name, labelKey, y, minValue, maxValue, step, key, ed
     Loc:Bind(highText, edgeKey, maxValue * (edgeMul or 1))
 
     slider.valueText = value
+    slider.parts = { text, value, lowText, highText }   -- (font strings on the section; shown with it)
     slider:SetScript("OnValueChanged", function(self, v)
         v = math.floor(v / step + 0.5) * step
         O:Set(key, v)
@@ -372,24 +377,68 @@ local delaySlider = CreateDelaySlider("TTS_OptionsDelaySlider", "options.tooltip
 local extendedSlider = CreateDelaySlider("TTS_OptionsExtendedDelaySlider", "options.extendedDelay",
     -150, EXTENDED_MAX, "extendedTooltipDelay")
 
+-- The creature tooltip's card (MobTooltip.lua): on or off, detached into its own window,
+-- and a manual size (its slider, and the size preview, only while that's ticked)
+local LayoutTipSection   -- (below, once the panel switches are made)
+
+local function MobCardChanged()
+    if TTS.MobTooltip and TTS.MobTooltip.OptionsChanged then TTS.MobTooltip:OptionsChanged() end
+    if LayoutTipSection then LayoutTipSection() end
+end
+
 local mobCardCheck = CreateCheck(tipSection, 10, -202, "options.mobCardPreview")
 mobCardCheck:SetScript("OnClick", function(self)
     O:Set("mobCardPreview", self:GetChecked() and true or false)
+    MobCardChanged()
+end)
+
+local detachCheck = CreateCheck(tipSection, 30, -226, "options.mobCardDetached")
+detachCheck:SetScript("OnClick", function(self)
+    O:Set("mobCardDetached", self:GetChecked() and true or false)
+    MobCardChanged()
+end)
+
+local function ShowCardSizePreview()
+    if TTS.MobTooltip and TTS.MobTooltip.ShowScalePreview then TTS.MobTooltip:ShowScalePreview(F) end
+end
+
+local manualScaleCheck = CreateCheck(tipSection, 30, -250, "options.mobCardManualScale")
+manualScaleCheck:SetScript("OnClick", function(self)
+    O:Set("mobCardManualScale", self:GetChecked() and true or false)
+    MobCardChanged()
+    if self:GetChecked() then ShowCardSizePreview() end
+end)
+
+local CARD_SCALE_MIN, CARD_SCALE_MAX = 0.4, 2
+local cardScaleSlider = CreateSlider("TTS_OptionsMobCardScaleSlider", "options.mobCardScale",
+    -278, CARD_SCALE_MIN, CARD_SCALE_MAX, SCALE_STEP, "mobCardScale", "options.percent", 100)
+function cardScaleSlider:ShowValue(v)
+    self.valueText:SetText(L("options.percent", math.floor(v * 100 + 0.5)))
+end
+-- The preview shows while the slider is hovered or moved, and a moment after
+local syncingCardScale = false   -- (set by SyncControls)
+cardScaleSlider:HookScript("OnValueChanged", function(self)
+    if self:IsVisible() and not syncingCardScale then
+        ShowCardSizePreview()
+        if TTS.MobTooltip and TTS.MobTooltip.OptionsChanged then TTS.MobTooltip:OptionsChanged() end
+    end
+end)
+cardScaleSlider:HookScript("OnUpdate", function(self)
+    if self:IsMouseOver() then ShowCardSizePreview() end
 end)
 
 -- Which kinds of detail panel stack beside tooltips: three columns of switches
 local panelsText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-panelsText:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, -234)
 Loc:Bind(panelsText, "options.tipPanels")
 
 local panelChecks = {}
 for i, kind in ipairs(O.TOOLTIP_PANELS) do
-    local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
-    local cb = CreateCheck(tipSection, 10 + col * 100, -250 - row * 24, "options.tipPanel." .. kind)
+    local cb = CreateCheck(tipSection, 0, 0, "options.tipPanel." .. kind)
     cb:SetScript("OnClick", function(self)
         O:GetDB().tooltipPanels[kind] = self:GetChecked() and true or false
     end)
     panelChecks[kind] = cb
+    cb.index = i
 end
 
 -- =========================================================================
@@ -482,7 +531,7 @@ windowSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
 local OPACITY_ROOTS = { "TTS_MainDialog", "TTS_BoardFrame", "TTS_BoardRestoreFrame", "TTS_OptionsFrame",
     "TTS_DeckBuilderFrame", "TTS_DeckPicker", "TTS_RulesFrame", "TTS_SoloSelectFrame", "TTS_DungeonEntryFrame",
     "TTS_WaitingRoomFrame", "TTS_ChoicePopup", "TTS_HeroChoice", "TTS_QuickStart", "TTS_TutorialCoach",
-    "TTS_NpcGossipPanel", "TTS_CardLinkPreview", "TTS_MatchLogCopyFrame", "TTS_PvPRecordFrame" }
+    "TTS_NpcGossipPanel", "TTS_CardLinkPreview", "TTS_MatchLogCopyFrame", "TTS_PvPRecordFrame", "TTS_MobCardWindow" }
 local OPACITY_WALK = 1   -- seconds
 local adopted = setmetatable({}, { __mode = "k" })   -- frame -> its own colour { r, g, b, a, set }
 
@@ -641,13 +690,44 @@ copyLogButton:SetScript("OnLeave", function(self)
 end)
 
 -- The scrolled content: every section, the gaps between them, and a little room at each end
-do
+local function UpdateContentHeight()
     local h = 8
     for _, section in ipairs({ soundSection, tipSection, boardSection, windowSection, langSection, devSection }) do
         h = h + section:GetHeight() + 8
     end
     content:SetHeight(h)
 end
+
+-- The tooltip section below the creature card switches: the card size slider shows only
+-- while manual scaling is ticked (and can apply), and the detail panel switches follow it.
+-- Switches that can't apply are greyed out (no card, or a detached one sized by its window).
+LayoutTipSection = function()
+    local db = O:GetDB()
+    local cardOn = db.mobCardPreview ~= false
+    local detached = db.mobCardDetached == true
+    SetCheckEnabled(detachCheck, cardOn)
+    SetCheckEnabled(manualScaleCheck, cardOn and not detached)
+
+    local showSlider = cardOn and not detached and db.mobCardManualScale == true
+    cardScaleSlider:SetShown(showSlider)
+    for _, part in ipairs(cardScaleSlider.parts) do part:SetShown(showSlider) end
+    if not showSlider and TTS.MobTooltip and TTS.MobTooltip.HideScalePreview then
+        TTS.MobTooltip:HideScalePreview()
+    end
+
+    local panelsY = showSlider and -342 or -282
+    panelsText:ClearAllPoints()
+    panelsText:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, panelsY)
+    for _, cb in pairs(panelChecks) do
+        local col, row = (cb.index - 1) % 3, math.floor((cb.index - 1) / 3)
+        cb:ClearAllPoints()
+        cb:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 10 + col * 100, panelsY - 16 - row * 24)
+    end
+    tipSection:SetHeight(-panelsY + 74)
+    UpdateContentHeight()
+end
+-- (laid out by SyncControls once the saved settings have loaded)
+UpdateContentHeight()
 
 -- =========================================================================
 -- SYNC
@@ -668,6 +748,13 @@ function O:SyncControls()
     scaleSlider:SetValue(db.tooltipScale or 1)
     scaleSlider:ShowValue(db.tooltipScale or 1)
     mobCardCheck:SetChecked(db.mobCardPreview ~= false)
+    detachCheck:SetChecked(db.mobCardDetached == true)
+    manualScaleCheck:SetChecked(db.mobCardManualScale == true)
+    syncingCardScale = true   -- (setting the slider here doesn't call up the size preview)
+    cardScaleSlider:SetValue(db.mobCardScale or 1)
+    syncingCardScale = false
+    cardScaleSlider:ShowValue(db.mobCardScale or 1)
+    LayoutTipSection()
     for kind, cb in pairs(panelChecks) do cb:SetChecked(db.tooltipPanels[kind] ~= false) end
     if TTS.BoardFrame and TTS.BoardFrame.soundCheck then
         TTS.BoardFrame.soundCheck:SetChecked(master)
@@ -693,6 +780,7 @@ end)
 
 F:SetScript("OnHide", function()
     langList:Hide()
+    if TTS.MobTooltip and TTS.MobTooltip.HideScalePreview then TTS.MobTooltip:HideScalePreview() end
     if TTS.Tooltip then TTS.Tooltip:Hide() end
 end)
 

@@ -400,6 +400,16 @@ do  -- Export / Import Collection (CollectionCode.lua), just above the footer's 
     exportBtn:SetPoint("RIGHT", importBtn, "LEFT", -4, 0)
     exportBtn.tooltipTitle, exportBtn.tooltipText = "cc.exportTip", "cc.exportTip.desc"
     exportBtn:SetScript("OnClick", function() TTS.CollectionCode:ShowExport() end)
+
+    -- Quicksave: the client writes saved data only at logout, /reload or quitting, so a crash
+    -- loses everything since. A reload writes it. Not mid-match (the reload would end it).
+    local saveBtn = CreatePanelButton(D, 76, 20, "db.quicksave")
+    saveBtn:SetPoint("RIGHT", exportBtn, "LEFT", -4, 0)
+    saveBtn.tooltipTitle, saveBtn.tooltipText = "db.quicksaveTip", "db.quicksaveTip.desc"
+    saveBtn:SetScript("OnClick", function()
+        if TTS.Engine and TTS.Engine.inMatch then return end
+        ReloadUI()
+    end)
 end
 
 local poolPanel = CreateFrame("Frame", nil, D)

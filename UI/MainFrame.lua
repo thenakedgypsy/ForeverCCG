@@ -147,7 +147,7 @@ end
 -- OPTIONS (title bar, left of the close button)
 -- =========================================================================
 local optionsBtn = CreatePanelButton("TTS_OptionsBtn", M, 64, 20, "options.title")
-optionsBtn:SetPoint("RIGHT", titleBar, "RIGHT", -20, 0)
+optionsBtn:SetPoint("RIGHT", closeBtn, "LEFT", 2, 0)   -- level with the close button
 optionsBtn:SetScript("OnClick", function()
     if TTS.OptionsFrame then
         TTS.OptionsFrame:Show()
