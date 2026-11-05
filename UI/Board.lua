@@ -1464,7 +1464,9 @@ local function SingleFrameTexture(card)
 end
 
 -- Two colours in the cost: the dual frame for that pair; otherwise the single-colour frame
+-- (a hero card always has the colourless frame, whatever its class's colour)
 local function GetCardFrameTexture(card)
+    if card and card.isHero then return CARD_FRAMES.C end
     return (card and DualFrameTexture(card)) or SingleFrameTexture(card)
 end
 

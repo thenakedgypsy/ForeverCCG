@@ -1,3 +1,8 @@
+## 1.0.1
+*   fix for the shield bubble on a Shielded denizen (and a player's damage shield) popping in again and again: it now appears once and stays up for as long as the shield lasts
+*   Hero cards now use the colourless frame, whatever your class's colour
+*   the Community button has been removed from the Waiting Room as it no longer served a purpose.
+
 ## 1.0.0
 *   new: back up your collection - the Export button in the deckbuilder gives you a code holding your whole collection, decks and progress to keep somewhere safe; Import adds it back, keeping the best of both (most copies, every foil, furthest progress; your decks stay, the code's fill empty slots). A code only works on the character that exported it
 *   new: armour Gear Cards - 18 helms and shoulderpads, mostly toughness and defensive keywords (Vigilant, Warded, Shielded, Support, Bulwark). Armorers around Azeroth hand them out to travellers who ask, just like the weapon merchants

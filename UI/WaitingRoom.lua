@@ -249,34 +249,6 @@ refreshBtn:SetSize(100, 22)
 refreshBtn:SetPoint("BOTTOM", 0, 14)
 Loc:Bind(refreshBtn, "wr.refresh")
 
--- Invite link to the Forever CCG community, for players who haven't joined (Community.lua)
-local communityBtn = CreateFrame("Button", nil, F, "UIPanelButtonTemplate")
-communityBtn:SetSize(100, 22)
-communityBtn:SetPoint("BOTTOMLEFT", 16, 14)
-Loc:Bind(communityBtn, "wr.community")
-communityBtn:SetScript("OnClick", function()
-    if TTS.Community then TTS.Community:ShowInvite() end
-    -- Until the window is reopened (OnShow) or the community joined (UpdateCommunityButton)
-    Loc:Bind(communityBtn, "wr.communityLinked")
-end)
-communityBtn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText(L("wr.communityTip"), 1, 1, 1, 1, true)
-    GameTooltip:Show()
-end)
-communityBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
--- Above the button, always shown
-local communityNote = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-communityNote:SetPoint("BOTTOM", communityBtn, "TOP", 0, 4)
-communityNote:SetWidth(120)
-communityNote:SetJustifyH("CENTER")
-do
-    local font, size, flags = communityNote:GetFont()
-    communityNote:SetFont(font, size - 1, flags)
-end
-Loc:Bind(communityNote, "wr.communityOptional")
-
 -- Leave in red, Join in green
 local function UpdateToggleButton()
     if WR.isQueued then
@@ -285,16 +257,6 @@ local function UpdateToggleButton()
         toggleBtn:SetText("|cFF00FF00" .. L("wr.join") .. "|r")
     end
 end
-
--- Greyed out once joined
-local function UpdateCommunityButton()
-    UpdateToggleButton()
-    local joined = not TTS.Community or TTS.Community:IsMember()
-    communityBtn:SetEnabled(not joined)
-    Loc:Bind(communityBtn, joined and "wr.communityJoined" or "wr.community")
-end
--- Grey the button out as soon as an in-game join goes through
-if TTS.Community then TTS.Community.onMembershipChanged = UpdateCommunityButton end
 
 -- Addon version (from the .toc), bottom-right corner
 local versionText = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -487,7 +449,7 @@ F:SetScript("OnShow", function(self)
         return
     end
     UpdateVersionText()
-    UpdateCommunityButton()
+    UpdateToggleButton()
     -- In case a shard move left us in an old copy of FCCGTTSE (Network.lua); it asks again once rejoined
     if TTS.Net and TTS.Net.RejoinLFMChannel then TTS.Net.RejoinLFMChannel() end
     if TTS.Net and TTS.Net.BroadcastLFM then

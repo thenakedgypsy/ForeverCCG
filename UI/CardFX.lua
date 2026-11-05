@@ -44,7 +44,7 @@ FX.ANIM = ANIM
 -- Looping kits shown while a state lasts (Snapshot's fields); onModel: on the denizen's own
 -- model even with the FX layer on (dropping it loads the model again)
 FX.LASTING = {
-    { state = "shielded", kit = 847 },    -- Power Word: Shield (or Divine Shield, 252)
+    { state = "shielded", kit = 252 },    -- Divine Shield (Power Word: Shield's 847 replays its pop-in on a loop)
     { state = "soul",     kit = 3769 },   -- Power Infusion: a stand-in for Soulstone (or Banish, 1286)
     { state = "frozen",   kit = 3709, onModel = true },   -- Ice Block / Freezing Trap's ice, until it untaps
     { state = "borrowed", kit = 325 },    -- Mind Control
@@ -437,7 +437,9 @@ function FX:LoadLayer(f)
     m:SetDisplayInfo(FX.LAYER.displayId)
     LayerCamera(m)
     f.fxKits, f.fxReloading = {}, nil
-    self:HideRaised(f)   -- (shown again with the lasting kits)
+    -- (raised carriers keep their kits, just placed again: hiding them here put the kit back
+    -- on with every reload, restarting or stacking it)
+    self:PlaceRaised(f)
     self:WaitForLoad(f)
 end
 
@@ -451,50 +453,80 @@ function FX:HideLayer(f)
 end
 
 -- Lasting kits placed on a card apart from the FX layer's (FX.KIT_PLACE: raise, a share of
--- the card's height to move it up; size, how big it looks as a share of the usual) each
--- have a carrier of their own (f.fxRaised[kit]), shown while wanted.
+-- the card's height to move it up, plateRaise the same on a life plate; size, how big it
+-- looks as a share of the usual) each have a carrier of their own (f.fxRaised[kit]), there
+-- only while wanted. A carrier is never reused: ClearModel doesn't reliably drop a kit, so
+-- one shown again would stack another.
+-- model: the kit's own model file, shown on the carrier looping one animation (anim, else
+-- Stand) instead of the kit. A kit applied to loop replays from the start, and so does this
+-- model's Stand, so a bubble kept popping in again; its 158 is the steady loop.
 FX.KIT_PLACE = {
-    [847]  = { raise = 0.5 },                 -- Power Word: Shield
+    [252]  = { raise = 0.5, plateRaise = 0, model = 165961, anim = 158, size = 0.65 },   -- Divine Shield (divineshield_low_base.m2)
 }
 
 local function Raised(f, kit)
-    return OnLayer(f) and not f.fxAsCard and FX.KIT_PLACE[kit]
+    local place = OnLayer(f) and FX.KIT_PLACE[kit]
+    if not place then return nil end
+    if f.fxAsCard and not place.plateRaise then return nil end   -- (a life plate keeps it on its layer)
+    return place
+end
+
+local function RaiseOf(f, place)
+    if f.fxAsCard then return place.plateRaise or 0 end
+    return place.raise
 end
 
 function FX:ShowRaised(f, kit, on)
     f.fxRaised = f.fxRaised or {}
     local m = f.fxRaised[kit]
     if not on then
-        if m and m:IsShown() then m:ClearModel(); m:Hide() end
+        if m then
+            m.fxToken = nil
+            m:ClearModel()
+            m:Hide()
+            f.fxRaised[kit] = nil
+        end
         return
     end
-    if m and m:IsShown() then return end
-    if not m then
-        m = CreateFrame("PlayerModel", nil, f)
-        m:EnableMouse(false)
-        m:SetFrameStrata("HIGH")
-        m:SetFrameLevel(f:GetFrameLevel() + 5)
-        f.fxRaised[kit] = m
-    end
+    if m then return end
+    m = CreateFrame("PlayerModel", nil, f)
+    m:EnableMouse(false)
+    m:SetFrameStrata("HIGH")
+    m:SetFrameLevel(f:GetFrameLevel() + 5)
+    f.fxRaised[kit] = m
     local place = FX.KIT_PLACE[kit]
-    PlaceLayer(f, m, place.raise)
+    PlaceLayer(f, m, RaiseOf(f, place))
     m:Show()
     m:ClearModel()
-    m:SetDisplayInfo(FX.LAYER.displayId)
+    local asModel = place.model and self:Call(m, "SetModel", place.model)
+    if not asModel then m:SetDisplayInfo(FX.LAYER.displayId) end
     LayerCamera(m, place.size)
-    -- (its kit goes on once the carrier has loaded)
+    -- (the kit goes on, or the model is set looping, once the carrier has loaded)
     local token = {}
     m.fxToken = token
     TTS:SafeAfter(FX.LOAD_WAIT, function()
         if m.fxToken == token and m:IsShown() then
             LayerCamera(m, place.size)
-            FX:Call(m, "ApplySpellVisualKit", kit, false)
+            if asModel then
+                FX:Call(m, "SetAnimation", place.anim or ANIM.STAND)
+            else
+                FX:Call(m, "ApplySpellVisualKit", kit, false)
+            end
         end
     end)
 end
 
 function FX:HideRaised(f)
     for kit in pairs(f.fxRaised or {}) do self:ShowRaised(f, kit, false) end
+end
+
+-- Fits the raised carriers to the card again (its size may have changed)
+function FX:PlaceRaised(f)
+    for kit, m in pairs(f.fxRaised or {}) do
+        local place = FX.KIT_PLACE[kit] or {}
+        PlaceLayer(f, m, RaiseOf(f, place))
+        LayerCamera(m, place.size)
+    end
 end
 
 -- Kits wait for their card to settle (Board.lua's B.IsMoving: flying in, sliding to a new
@@ -775,7 +807,7 @@ end
 -- a spell's damage plays its colour's impact as its number lands (UI\TargetFX.lua calls
 -- FX:PlayerHit).
 -- =========================================================================
-FX.PLAYER_SHIELD = 847                  -- Power Word: Shield
+FX.PLAYER_SHIELD = 252                  -- Divine Shield (Power Word: Shield's 847 replays its pop-in on a loop)
 FX.PLAYER_HEAL = 232                    -- Heal
 FX.PLATE_AS_CARD = { 64, 84 }           -- a battlefield card's size (Board.lua's LAYOUT.BF_CARD_W / H)
 
