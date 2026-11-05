@@ -1,5 +1,6 @@
 ## 1.0.4
 *   fix for the Waiting Room's "Recent players online" list missing most players on the addon's channel (it often only showed people you'd partied with): a busy channel no longer makes them look offline
+*   fix for queued players dropping out of others' Waiting Rooms when the addon's channel is busy: the addon now sends far less background traffic, and your place in the queue is announced ahead of the rest
 *   damage over time effects now show on the denizen's body rather than at its feet
 
 ## 1.0.3

@@ -390,13 +390,20 @@ function WR:UpdateUI()
     UpdateOnlineList()
 end
 
+-- 0.14 and earlier only list LFM_ANNOUNCE; without it they never see us, and a challenge
+-- (which reports the version mismatch) is never sent. They can't play this build, so it only
+-- goes out this often (they show us for 25 seconds of each), halving the heartbeat's traffic.
+local LEGACY_ANNOUNCE_EVERY = 60
+local lastLegacyAnnounce = -LEGACY_ANNOUNCE_EVERY
+
 function WR:BroadcastPresence()
     if TTS.Net and TTS.Net.BroadcastLFM then
         local myName = GetPlayerFullName()
-        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. TTS.Net.MyPvP() .. ":" .. myName)
-        -- 0.14 and earlier only list LFM_ANNOUNCE; without it they never see us, and a
-        -- challenge (which reports the version mismatch) is never sent
-        TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName)
+        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. TTS.Net.MyPvP() .. ":" .. myName, true)
+        if GetTime() - lastLegacyAnnounce >= LEGACY_ANNOUNCE_EVERY then
+            lastLegacyAnnounce = GetTime()
+            TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName, true)
+        end
     end
 end
 

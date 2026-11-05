@@ -193,13 +193,14 @@ end
 -- The server allows each addon prefix a burst of about 10 messages, then about 1 a second,
 -- and silently drops the rest. Waiting-room heartbeats and contact pings alone can use all
 -- of that, so every message goes through this queue: game traffic (challenges, matches)
--- first, background traffic (announces, pings, contact lists) only with what is left.
+-- first, then the waiting-room announce ("mid": others drop anyone unheard for 25 seconds),
+-- then the rest of the background traffic (pings, contact lists, census replies).
 -- =========================================================================
 local SEND_BURST = 8        -- kept under the server's burst so a reply never finds it empty
 local SEND_RATE = 1         -- messages per second once the burst is used
 local LOW_QUEUE_MAX = 15    -- background messages waiting beyond this drop the oldest
 
-local sendQueues = { high = {}, low = {} }
+local sendQueues = { high = {}, mid = {}, low = {} }
 local sendTokens = SEND_BURST
 local lastRefill = GetTime and GetTime() or 0
 local pumpScheduled = false
@@ -257,7 +258,8 @@ local function PumpSendQueue()
     lastRefill = now
     local delay = 1 / SEND_RATE
     while sendTokens >= 1 do
-        local q = (#sendQueues.high > 0) and sendQueues.high or sendQueues.low
+        local q = (#sendQueues.high > 0) and sendQueues.high
+            or (#sendQueues.mid > 0) and sendQueues.mid or sendQueues.low
         local m = q[1]
         if not m then break end
         local status, code = RawSend(m)
@@ -295,18 +297,29 @@ local function PumpSendQueue()
         if status == "failed" then ReportSendFailure(m, code) end
         if status == "ok" and m.onSent then m.onSent() end
     end
-    if #sendQueues.high + #sendQueues.low > 0 then
+    if #sendQueues.high + #sendQueues.mid + #sendQueues.low > 0 then
         pumpScheduled = true
         TTS:SafeAfter(delay, PumpSendQueue)
     end
 end
 
--- low = background traffic, sent only when no game message is waiting
--- onSent (optional): called once the message has actually gone out (not if it is dropped)
-local function QueueSend(msg, chatType, target, low, onSent)
-    local q = low and sendQueues.low or sendQueues.high
+-- low = background traffic, sent only when no game message is waiting; "mid" = background
+-- sent ahead of the rest. onSent (optional): called once the message has actually gone out
+-- (not if it is dropped). key (optional): a waiting message with the same key and route is
+-- replaced rather than queued again (a newer announce makes the old one pointless)
+local function QueueSend(msg, chatType, target, low, onSent, key)
+    local q = (low == "mid") and sendQueues.mid or low and sendQueues.low or sendQueues.high
+    if key then
+        for _, m in ipairs(q) do
+            if m.key == key and m.chatType == chatType and m.target == target then
+                m.msg, m.onSent = msg, onSent
+                return
+            end
+        end
+    end
     if low and #q >= LOW_QUEUE_MAX then table.remove(q, 1) end
-    table.insert(q, { msg = msg, chatType = chatType, target = target, low = low or nil, onSent = onSent })
+    table.insert(q, { msg = msg, chatType = chatType, target = target, low = low and true or nil,
+        onSent = onSent, key = key })
     if not pumpScheduled then PumpSendQueue() end
 end
 
@@ -316,14 +329,14 @@ loadingWatcher:RegisterEvent("PLAYER_LEAVING_WORLD")
 loadingWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 loadingWatcher:SetScript("OnEvent", function(_, event)
     inLoadingScreen = (event == "PLAYER_LEAVING_WORLD")
-    if not inLoadingScreen and not pumpScheduled and #sendQueues.high + #sendQueues.low > 0 then
+    if not inLoadingScreen and not pumpScheduled and #sendQueues.high + #sendQueues.mid + #sendQueues.low > 0 then
         pumpScheduled = true
         TTS:SafeAfter(1, PumpSendQueue)
     end
 end)
 
-local function RawChannelSend(channelId, msg, low)
-    QueueSend(msg, "CHANNEL", channelId, low)
+local function RawChannelSend(channelId, msg, low, key)
+    QueueSend(msg, "CHANNEL", channelId, low, nil, key)
 end
 
 -- Messages sent before the channel is joined are queued so they go out in order
@@ -349,18 +362,18 @@ local function FlushChannelQueue()
     end
     joinAttempts = 0
     for i = 1, #channelQueue do
-        RawChannelSend(id, channelQueue[i].msg, channelQueue[i].low)
+        RawChannelSend(id, channelQueue[i].msg, channelQueue[i].low, channelQueue[i].key)
     end
     wipe(channelQueue)
 end
 
-local function SendChannel(msg, low)
+local function SendChannel(msg, low, key)
     local id = GetLFMChannelId()
     if id and #channelQueue == 0 then
-        RawChannelSend(id, msg, low)
+        RawChannelSend(id, msg, low, key)
         return
     end
-    table.insert(channelQueue, { msg = msg, low = low })
+    table.insert(channelQueue, { msg = msg, low = low, key = key })
     if not flushScheduled then
         flushScheduled = true
         JoinLFMChannel()
@@ -444,17 +457,21 @@ TTS.Net.matchId = nil         -- id of the current (or most recent) match
 -- [lowerName] = one of FALLBACK_ROUTES : fallback route to a player. nil means FCCGTTSE (always tried first)
 TTS.Net.routes = {}
 
-function TTS.Net:BroadcastLFM(msg)
-    SendChannel(msg, true)
+-- announce = true: the waiting-room announce, sent ahead of other background traffic, and
+-- replacing one of the same kind still waiting to go out
+function TTS.Net:BroadcastLFM(msg, announce)
+    local low = announce and "mid" or true
+    local key = announce and (msg:match("^(LFM_[%u_]+)") or msg) or nil
+    SendChannel(msg, low, key)
     -- Party (or raid) and guild also reach players the channel misses, e.g. someone in
     -- another copy of it. Every build reads LFM_ messages whatever route they arrive by.
     if IsInRaid and IsInRaid(LE_PARTY_CATEGORY_HOME) then
-        QueueSend(msg, "RAID", nil, true)
+        QueueSend(msg, "RAID", nil, low, nil, key)
     elseif IsInGroup and IsInGroup(LE_PARTY_CATEGORY_HOME) then
-        QueueSend(msg, "PARTY", nil, true)
+        QueueSend(msg, "PARTY", nil, low, nil, key)
     end
     if IsInGuild and IsInGuild() then
-        QueueSend(msg, "GUILD", nil, true)
+        QueueSend(msg, "GUILD", nil, low, nil, key)
     end
 end
 
@@ -588,6 +605,10 @@ local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left al
 local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
 local CONTACT_SWAP_COOLDOWN = 600       -- seconds before swapping lists with the same player again
 local CONTACT_LIST_CHUNK = 170          -- characters of entries per message (addon messages cap at 255)
+-- Heard on the channel this recently (census, LFM_HERE, LFM_QUEUED): online without a ping,
+-- so they aren't pinged, and one unanswered ping doesn't hide them (the census runs every
+-- 60 seconds with a waiting room open, 180 without)
+local PRESENCE_GRACE = 240
 
 -- Runtime state per lower-case name: { lastPing (queued), pingSent (went out), lastReached,
 -- lastPresence (heard on the channel: census, LFM_HERE, community), offlineUntil, lastSwap }
@@ -606,20 +627,21 @@ local function ContactState(key)
 end
 
 -- Keeps the lists small: drops anything long unseen, then the oldest past CONTACT_MAX.
--- Direct and shared contacts are capped separately, so a big shared list never
--- pushes out players you reached yourself.
+-- Direct, channel (c.channel: only heard on FCCGTTSE) and shared contacts are capped
+-- separately, so a busy channel or a big shared list never pushes out players you reached
+-- yourself.
 local function PruneContacts()
     local db = ContactDB()
-    local direct, shared, cutoff = {}, {}, time() - CONTACT_TTL
+    local direct, channel, shared, cutoff = {}, {}, {}, time() - CONTACT_TTL
     for key, c in pairs(db) do
         if type(c) ~= "table" or not c.name or (c.seen or 0) < cutoff then
             db[key] = nil
         else
-            local group = c.shared and shared or direct
+            local group = c.shared and shared or c.channel and channel or direct
             group[#group + 1] = key
         end
     end
-    for _, keys in ipairs({ direct, shared }) do
+    for _, keys in ipairs({ direct, channel, shared }) do
         if #keys > CONTACT_MAX then
             table.sort(keys, function(a, b) return db[a].seen > db[b].seen end)
             for i = CONTACT_MAX + 1, #keys do db[keys[i]] = nil end
@@ -636,6 +658,8 @@ local function SendContactList(name, wantTheirs)
         if type(c) == "table" and c.name and not SameName(c.name, name) then list[#list + 1] = c end
     end
     table.sort(list, function(a, b) return (a.seen or 0) > (b.seen or 0) end)
+    -- They keep at most CONTACT_MAX shared contacts (the most recently seen), so more is wasted
+    for i = #list, CONTACT_MAX + 1, -1 do list[i] = nil end
 
     local chunks, current = {}, {}
     local length = 0
@@ -684,14 +708,23 @@ end
 
 -- Saves (or refreshes) a contact we reached ourselves, by their waiting-room name
 -- ("Firstname Surname"). The first time they become a direct contact, we swap lists.
-function TTS.Net:AddContact(name)
+-- fromChannel: only heard on FCCGTTSE (census, LFM_HERE, LFM_QUEUED). Swaps exist to reach
+-- players on other backend realms, and everyone on our channel hears each other already, so
+-- these start no swap (with a busy channel, one census would start one with every player);
+-- they become direct once reached another way (a ping, a list swap they start, a match).
+function TTS.Net:AddContact(name, fromChannel)
     name = NormalizeName(name)
     if name == "" or TTS:IsDummyName(name) or SameName(name, MyName()) then return end
     local db = ContactDB()
     local key = name:lower()
     local before = db[key]
-    local becameDirect = type(before) ~= "table" or before.shared
-    db[key] = { name = name, seen = time() }
+    local wasDirect = type(before) == "table" and not before.shared and not before.channel
+    if fromChannel and wasDirect then
+        before.seen = time()
+        return
+    end
+    local becameDirect = not fromChannel and not wasDirect
+    db[key] = { name = name, seen = time(), channel = fromChannel and true or nil }
     PruneContacts()
 
     local s = ContactState(key)
@@ -734,7 +767,8 @@ function TTS.Net:PingContacts(background)
     for key, c in pairs(db) do
         local s = ContactState(key)
         if type(c) == "table" and c.name and not SameName(c.name, MyName())
-            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= every then
+            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= every
+            and not (s.lastPresence and (now - s.lastPresence) <= PRESENCE_GRACE) then
             due[#due + 1] = c
         end
     end
@@ -773,7 +807,6 @@ end
 -- (unless the channel heard from them within PRESENCE_GRACE: one lost whisper on a busy
 -- channel doesn't hide someone the census just found).
 local ONLINE_WINDOW = BACKGROUND_PING_EVERY + 120
-local PRESENCE_GRACE = 240
 local function SilentOnPing(s, now)
     local sent = s.pingSent or 0
     if sent <= s.lastReached or (now - sent) <= CONTACT_REPLY_WAIT then return false end
@@ -814,14 +847,17 @@ local CENSUS_REPLY_JITTER = 5
 local lastCensusSeen = 0
 local lastCensusReply = 0
 
--- Someone on the channel is online: remember them like an answered ping
-local function NotePresence(name, queued, score, pvp)
+-- Someone is online: remember them like an answered ping. onChannel: heard in an LFM_
+-- broadcast (FCCGTTSE, or its party / guild copies), which keeps hearing them without pings
+-- or list swaps (AddContact's fromChannel). Community.lua's players, maybe on another
+-- backend realm, are added like any other contact.
+local function NotePresence(name, queued, score, pvp, onChannel)
     name = NormalizeName(name or "")
     if name == "" or SameName(name, MyName()) then return end
-    TTS.Net:AddContact(name)
+    TTS.Net:AddContact(name, onChannel)
     local s = ContactState(name:lower())
     s.lastReached = time()
-    s.lastPresence = s.lastReached
+    if onChannel then s.lastPresence = s.lastReached end
     s.offlineUntil = nil
     s.queued = queued
     s.score = score or s.score
@@ -852,7 +888,7 @@ local function OnCensus(msg, sender)
     lastCensusSeen = time()
     local score, r, w, l, name = msg:match("^LFM_CENSUS:(%d+):(%d+):(%d+):(%d+):(.+)$")
     -- The asker has their waiting room open and isn't queued
-    if name then NotePresence(name, false, tonumber(score), TTS.PvP.Parse(r, w, l)) end
+    if name then NotePresence(name, false, tonumber(score), TTS.PvP.Parse(r, w, l), true) end
     local E = TTS.Engine
     if (E and E.inMatch) or time() - lastCensusReply < CENSUS_REPLY_COOLDOWN then return end
     lastCensusReply = time()
@@ -863,7 +899,7 @@ end
 
 local function OnHere(msg, sender)
     local queued, score, r, w, l, name = msg:match("^LFM_HERE:(%d):(%d+):(%d+):(%d+):(%d+):(.+)$")
-    if name then NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l)) end
+    if name then NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true) end
 end
 
 -- Slow background rounds from login on. The waiting room pings faster while it is open,
@@ -1652,9 +1688,10 @@ function TTS.Net:OnReceive(msg, sender)
         end
         if not pName then return end
         pName = NormalizeName(pName)
-        TTS.Net:AddContact(pName)
+        TTS.Net:AddContact(pName, true)
         local s = ContactState(pName:lower())
         s.lastReached = time()
+        s.lastPresence = s.lastReached
         s.queued = true
         s.pvp = pvp or s.pvp
         if TTS.WaitingRoom then
