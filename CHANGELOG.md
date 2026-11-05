@@ -1,6 +1,13 @@
-## 1.0.2
+## 1.0.4
+*   fix for the Waiting Room's "Recent players online" list missing most players on the addon's channel (it often only showed people you'd partied with): a busy channel no longer makes them look offline
+*   damage over time effects now show on the denizen's body rather than at its feet
+
+## 1.0.3
 *   options: the Creature card preview can now be sized manually - tick "Custom preview size" for a Preview size slider, with a sample card beside the Options window while you adjust it
 *   options: new "Show the preview in its own window" - the creature card preview shows in a window you can place anywhere. Drag it to move it, drag its corner to resize it, and minimise it to its title bar with its - button (all remembered between sessions). It fades a few seconds after the tooltip does, or stays up while your cursor is on it
+*   the Options button in the main window now sits level with the close button
+
+## 1.0.2
 *   new: Quicksave button in the deckbuilder - reloads your interface to save your collection and decks straight away. The game only saves addon data when you log out, reload or quit, so after a crash you'd lose any cards won and deck changes since your last save
 
 ## 1.0.1

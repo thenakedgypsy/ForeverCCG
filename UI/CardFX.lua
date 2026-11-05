@@ -460,8 +460,15 @@ end
 -- model: the kit's own model file, shown on the carrier looping one animation (anim, else
 -- Stand) instead of the kit. A kit applied to loop replays from the start, and so does this
 -- model's Stand, so a bubble kept popping in again; its 158 is the steady loop.
+FX.DOT_RAISE = 0.5  -- how far DoT kits sit up a card, as a share of its height
 FX.KIT_PLACE = {
     [252]  = { raise = 0.5, plateRaise = 0, model = 165961, anim = 158, size = 0.65 },   -- Divine Shield (divineshield_low_base.m2)
+    -- DoTs (FX.DOT_KITS): up on the denizen's body rather than at its feet (life plates keep
+    -- them on their layer)
+    [535]  = { raise = FX.DOT_RAISE },   -- Corruption
+    [76]   = { raise = FX.DOT_RAISE },   -- Immolate's burn
+    [360]  = { raise = FX.DOT_RAISE },   -- Slow's arcane
+    [6556] = { raise = FX.DOT_RAISE },   -- Insect Swarm
 }
 
 local function Raised(f, kit)

@@ -293,6 +293,7 @@ local function PumpSendQueue()
         table.remove(q, 1)
         sendTokens = sendTokens - 1
         if status == "failed" then ReportSendFailure(m, code) end
+        if status == "ok" and m.onSent then m.onSent() end
     end
     if #sendQueues.high + #sendQueues.low > 0 then
         pumpScheduled = true
@@ -301,10 +302,11 @@ local function PumpSendQueue()
 end
 
 -- low = background traffic, sent only when no game message is waiting
-local function QueueSend(msg, chatType, target, low)
+-- onSent (optional): called once the message has actually gone out (not if it is dropped)
+local function QueueSend(msg, chatType, target, low, onSent)
     local q = low and sendQueues.low or sendQueues.high
     if low and #q >= LOW_QUEUE_MAX then table.remove(q, 1) end
-    table.insert(q, { msg = msg, chatType = chatType, target = target, low = low or nil })
+    table.insert(q, { msg = msg, chatType = chatType, target = target, low = low or nil, onSent = onSent })
     if not pumpScheduled then PumpSendQueue() end
 end
 
@@ -367,8 +369,8 @@ local function SendChannel(msg, low)
 end
 
 -- chatType is one of the fallback routes; target (a waiting-room name) is only used for "WHISPER"
-local function SendDirect(msg, chatType, target, low)
-    QueueSend(msg, chatType, target and CharName(target), low)
+local function SendDirect(msg, chatType, target, low, onSent)
+    QueueSend(msg, chatType, target and CharName(target), low, onSent)
 end
 
 local function WrapMessage(target, msg)
@@ -587,7 +589,8 @@ local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges b
 local CONTACT_SWAP_COOLDOWN = 600       -- seconds before swapping lists with the same player again
 local CONTACT_LIST_CHUNK = 170          -- characters of entries per message (addon messages cap at 255)
 
--- Runtime state per lower-case name: { lastPing, lastReached, offlineUntil, lastSwap }
+-- Runtime state per lower-case name: { lastPing (queued), pingSent (went out), lastReached,
+-- lastPresence (heard on the channel: census, LFM_HERE, community), offlineUntil, lastSwap }
 local contactState = {}
 -- Lower-case names pinged a moment ago, so their "No player named" error can be hidden
 local pendingPings = {}
@@ -746,23 +749,36 @@ function TTS.Net:PingContacts(background)
         local key = name:lower()
         ContactState(key).lastPing = now
         -- Spaced out so the server doesn't throttle the burst
+        -- The reply wait starts when the ping actually goes out: on a busy channel it can sit
+        -- in the send queue for longer than CONTACT_REPLY_WAIT (or be dropped from it)
         TTS:SafeAfter((i - 1) * 0.15, function()
-            pendingPings[key] = time() + CONTACT_REPLY_WAIT
-            SendDirect("T:" .. name .. ":" .. MyName() .. ":CONTACT_PING:" .. fields, "WHISPER", name, true)
-            TTS:SafeAfter(CONTACT_REPLY_WAIT, function()
-                local s = ContactState(key)
-                if (s.lastReached or 0) < (s.lastPing or 0) then
-                    s.offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
-                end
-                if pendingPings[key] and pendingPings[key] <= time() then pendingPings[key] = nil end
+            SendDirect("T:" .. name .. ":" .. MyName() .. ":CONTACT_PING:" .. fields, "WHISPER", name, true, function()
+                local sentAt = time()
+                ContactState(key).pingSent = sentAt
+                pendingPings[key] = sentAt + CONTACT_REPLY_WAIT
+                TTS:SafeAfter(CONTACT_REPLY_WAIT, function()
+                    local s = ContactState(key)
+                    if (s.lastReached or 0) < sentAt then
+                        s.offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
+                    end
+                    if pendingPings[key] and pendingPings[key] <= time() then pendingPings[key] = nil end
+                end)
             end)
         end)
     end
 end
 
 -- Contacts known to be online but not in the waiting room: { name, score, pvp }, sorted by name.
--- Online = answered (or sent) a ping within ONLINE_WINDOW, and not silent on a later ping.
+-- Online = answered (or sent) a ping within ONLINE_WINDOW, and not silent on a later ping
+-- (unless the channel heard from them within PRESENCE_GRACE: one lost whisper on a busy
+-- channel doesn't hide someone the census just found).
 local ONLINE_WINDOW = BACKGROUND_PING_EVERY + 120
+local PRESENCE_GRACE = 240
+local function SilentOnPing(s, now)
+    local sent = s.pingSent or 0
+    if sent <= s.lastReached or (now - sent) <= CONTACT_REPLY_WAIT then return false end
+    return not (s.lastPresence and (now - s.lastPresence) <= PRESENCE_GRACE)
+end
 function TTS.Net:GetOnlineIdleContacts()
     local now, list = time(), {}
     local WR = TTS.WaitingRoom
@@ -770,7 +786,7 @@ function TTS.Net:GetOnlineIdleContacts()
         local s = contactState[key]
         if type(c) == "table" and c.name and s and s.lastReached and not s.queued
             and (now - s.lastReached) <= ONLINE_WINDOW
-            and not ((s.lastPing or 0) > s.lastReached and (now - s.lastPing) > CONTACT_REPLY_WAIT)
+            and not SilentOnPing(s, now)
             and not (WR and WR.players and WR.players[c.name])
             and not SameName(c.name, MyName()) then
             list[#list + 1] = { name = c.name, score = s.score, pvp = s.pvp }
@@ -805,6 +821,7 @@ local function NotePresence(name, queued, score, pvp)
     TTS.Net:AddContact(name)
     local s = ContactState(name:lower())
     s.lastReached = time()
+    s.lastPresence = s.lastReached
     s.offlineUntil = nil
     s.queued = queued
     s.score = score or s.score
