@@ -1,3 +1,7 @@
+## 1.0.8
+*   fix for PvP games going out of sync after a blocked attack when the attacker's turn ended straight after combat (e.g. Commit to Attacks & End Turn): the end of turn could reach the defender before the combat did, so the combat never happened on their side and blockers that should have died stayed on the board
+*   PvP: game messages are now numbered and handled in the order they were sent, so two moves made in quick succession can no longer arrive the wrong way round and put the two boards out of sync. Both players need 1.0.8 for this; games against 1.0.7 still work as before
+
 ## 1.0.7
 *   new: Collection Guide - a button under Open Deckbuilder (or /tragic collection). Zones and Dungeons tabs list every place with cards and how many you still need there; pick one to see its cards by name with your copies (n/4). A Hearthstones tab does the same for the Hearthstones, Dark Hearthstones and Cracked Hearthstones. It opens on the zone you're in
 

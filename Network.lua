@@ -67,6 +67,8 @@ local INVITE_COOLDOWN = 45
 --   "LFM_..."                  waiting-room messages, to a group or one player
 --   "T:<recipient>:<from>:<payload>"  addressed to one player (challenges, pre-match)
 --   "M:<matchId>:<from>:<payload>"    in-match traffic, only the two players know the id
+--   "S:<matchId>:<from>:<seq>:<payload>"  the same, numbered, when both are on 1.0.8+
+--                                         (SEQUENCED MATCH MESSAGES below)
 -- <from> is the sender's waiting-room name, used as the sender everywhere
 -- =========================================================================
 
@@ -351,8 +353,44 @@ local function SendDirect(msg, chatType, target, low, onSent)
     QueueSend(msg, chatType, target and CharName(target), low, onSent)
 end
 
-local function WrapMessage(target, msg)
+-- =========================================================================
+-- SEQUENCED MATCH MESSAGES (1.0.8+)
+-- Two messages sent one after the other can reach the opponent the other way round (seen:
+-- RESOLVE_COMBAT overtaken by END_TURN), and the boards then differ. When both players are
+-- on SEQ_MIN_VERSION or later (each learns the other's version from INVITE / ACCEPT), game
+-- messages to the opponent are numbered:
+--   "S:<matchId>:<from>:<seq>:<payload>"
+-- and handled strictly in that order: one that arrives early waits for the ones before it,
+-- for up to SEQ_GAP_WAIT seconds (a message the server dropped never comes; the game then
+-- carries on without it, as it always did). With an older opponent nothing changes: plain
+-- "M:" envelopes, which they understand. Background traffic (CONTACT_*) leaves after game
+-- messages (the "low" queue), so it stays unnumbered rather than hold the game up.
+-- =========================================================================
+local SEQ_MIN_VERSION = { 1, 0, 8 }
+local SEQ_GAP_WAIT = 4
+local SEQ_PLACEHOLDER = "99999"   -- measured in place of the number (see WrapMessage)
+
+-- Whether version text ("1.0.8") is at least min ({ 1, 0, 8 })
+local function VersionAtLeast(v, min)
+    if type(v) ~= "string" then return false end
+    local i = 0
+    for n in v:gmatch("%d+") do
+        i = i + 1
+        local want = min[i]
+        if not want then return true end
+        n = tonumber(n)
+        if n ~= want then return n > want end
+    end
+    return i >= #min
+end
+
+-- seq: the message's number; nil = sized for one (callers measuring a message's length);
+-- false = an unnumbered message (background traffic)
+local function WrapMessage(target, msg, seq)
     if TTS.Net.matchId and IsMatchOpponent(target) then
+        if TTS.Net.seqOn and seq ~= false then
+            return "S:" .. TTS.Net.matchId .. ":" .. MyName() .. ":" .. (seq or SEQ_PLACEHOLDER) .. ":" .. msg
+        end
         return "M:" .. TTS.Net.matchId .. ":" .. MyName() .. ":" .. msg
     end
     return "T:" .. target .. ":" .. MyName() .. ":" .. msg
@@ -1033,12 +1071,79 @@ if ChatFrame_AddMessageEventFilter then
     ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", OfflinePingFilter)
 end
 
+-- A match is set up with theirVersion (from their INVITE or ACCEPT): numbering starts over,
+-- on only if they understand it (SEQUENCED MATCH MESSAGES)
+function TTS.Net:BeginMatchSequence(theirVersion)
+    self.seqOn = VersionAtLeast(theirVersion, SEQ_MIN_VERSION) and VersionAtLeast(TTS.VERSION, SEQ_MIN_VERSION)
+    self.sendSeq = 0
+    self.recvSeq = 0
+    self.recvBuffer = {}
+    self.seqGapFor = nil
+end
+
+-- Hands the waiting messages to OnReceive in order, as far as there is no gap
+function TTS.Net:DrainSequenced()
+    local buf = self.recvBuffer
+    while buf do
+        local nextSeq = (self.recvSeq or 0) + 1
+        local m = buf[nextSeq]
+        if not m then return end
+        buf[nextSeq] = nil
+        self.recvSeq = nextSeq   -- before handling it, so an error there can't repeat it
+        self:OnReceive(m[1], m[2])
+        if self.recvBuffer ~= buf then return end   -- a new match started meanwhile
+    end
+end
+
+-- A message is missing with later ones waiting: give it SEQ_GAP_WAIT seconds, then carry on
+-- from the next one that did arrive
+function TTS.Net:ArmSeqGapWait()
+    local buf, waitingFor = self.recvBuffer, (self.recvSeq or 0) + 1
+    if not (buf and next(buf)) or self.seqGapFor == waitingFor then return end
+    self.seqGapFor = waitingFor
+    TTS:SafeAfter(SEQ_GAP_WAIT, function()
+        if self.recvBuffer ~= buf or (self.recvSeq or 0) + 1 ~= waitingFor then return end
+        self.seqGapFor = nil
+        local first
+        for s in pairs(buf) do
+            if not first or s < first then first = s end
+        end
+        if not first then return end
+        local E = TTS.Engine
+        if E and E.inMatch then
+            local which = (first - 1 > waitingFor) and ("messages " .. waitingFor .. "-" .. (first - 1))
+                or ("message " .. waitingFor)
+            E:Log("Network: " .. which .. " from " .. tostring(E.opponent)
+                .. " never arrived; carrying on without it.", "ERROR")
+        end
+        self.recvSeq = first - 1
+        self:DrainSequenced()
+        self:ArmSeqGapWait()
+    end)
+end
+
+-- A numbered match message: handled now if it's the next one, else kept until it is
+function TTS.Net:ReceiveSequenced(seq, inner, from)
+    if seq <= (self.recvSeq or 0) then return end   -- had it already (or gave up on it)
+    self.recvBuffer = self.recvBuffer or {}
+    self.recvBuffer[seq] = { inner, from }
+    self:DrainSequenced()
+    self:ArmSeqGapWait()
+end
+
 -- Unwraps an addon message and hands it to OnReceive if it is meant for us.
 -- chatType is how it arrived (WHISPER, PARTY, RAID, GUILD...); replies go back the same way.
 function TTS.Net:OnChannelMessage(message, sender, chatType)
     local kind = message:sub(1, 2)
-    local from, inner
-    if kind == "T:" then
+    local from, inner, seq
+    if kind == "S:" then
+        local matchId
+        matchId, from, seq, inner = message:match("^S:([^:]+):([^:]+):(%d+):(.*)$")
+        seq = tonumber(seq)
+        if not (matchId and seq and not SameName(from, MyName()) and self.matchId and matchId == self.matchId) then
+            return
+        end
+    elseif kind == "T:" then
         local recipient
         recipient, from, inner = message:match("^T:([^:]+):([^:]+):(.*)$")
         if not (recipient and not SameName(from, MyName()) and SameName(recipient, MyName())) then
@@ -1060,7 +1165,11 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
             -- A fresh challenge: answer by whisper
             self.routes[key] = nil
         end
-        self:OnReceive(inner, from)
+        if seq then
+            self:ReceiveSequenced(seq, inner, from)
+        else
+            self:OnReceive(inner, from)
+        end
     elseif message:match("^LFM_") then
         self:OnReceive(message, sender)
     end
@@ -1135,15 +1244,22 @@ function TTS.Net:Send(target, msg)
         return
     end
     target = NormalizeName(target)
-    local envelope = WrapMessage(target, msg)
+    -- Contact upkeep is background traffic; challenges and matches go first. It's never
+    -- numbered (see SEQUENCED MATCH MESSAGES): it leaves after game messages sent later.
+    local low = msg:match("^CONTACT_") and true or false
+    local seqArg   -- nil: sized for a number; false: unnumbered ("low and false or nil" is always nil)
+    if low then seqArg = false end
+    local envelope = WrapMessage(target, msg, seqArg)
     if #envelope > MAX_ADDON_MESSAGE_LENGTH then
         Print("Network message exceeds the 255-character limit and was not sent.")
         return false
     end
+    if not low and envelope:sub(1, 2) == "S:" then
+        self.sendSeq = (self.sendSeq or 0) + 1
+        envelope = WrapMessage(target, msg, self.sendSeq)
+    end
     -- One route per message: a whisper unless another route is set for this player
     -- and it can still reach them
-    -- Contact upkeep is background traffic; challenges and matches go first
-    local low = msg:match("^CONTACT_") and true or false
     local route = self.routes[target:lower()]
     if route and RouteAvailable(route, target) then
         SendDirect(envelope, route, route == "WHISPER" and target or nil, low)
@@ -1694,10 +1810,39 @@ local function ApplyDamageOrders(bs, orders)
     end
 end
 
+-- The opponent ended their turn: ours begins
+local function RunRemoteEndTurn(E, sender)
+    E:Log(L("log.oppEndedTurn", sender), "SYSTEM")
+    E:OnRemoteEndTurn()
+end
+
 local function ResolveRemoteCombat(E, bs)
     if E.blockingState ~= bs or bs.remoteResolutionDone then return end
     bs.remoteResolutionDone = true
     E:ResolveCombatDamage()
+    -- An END_TURN that overtook this resolution was held until now (see END_TURN below)
+    if bs.heldEndTurn and E.inMatch then RunRemoteEndTurn(E, bs.heldEndTurn) end
+end
+
+-- Seconds an END_TURN waits for the combat resolution it overtook before combat is resolved
+-- with what we have (the resolution itself asked for resends meanwhile, if chunked)
+local HELD_END_TURN_TIMEOUT = 8
+
+-- The attacker can't end their turn with combat unresolved (E:EndTurn), so an END_TURN
+-- while their attack is still open here means it arrived ahead of the RESOLVE_COMBAT sent
+-- just before it. Starting our turn now would drop that combat (OnRemoteEndTurn clears it)
+-- and the boards would differ, so the END_TURN waits for it. Returns true if held.
+local function HoldEndTurnForCombat(E, sender)
+    local bs = E.blockingState
+    if not (bs and bs.isRemoteAttacking and not bs.remoteResolutionDone) then return false end
+    bs.heldEndTurn = sender
+    TTS:SafeAfter(HELD_END_TURN_TIMEOUT, function()
+        if E.inMatch and E.blockingState == bs and not bs.remoteResolutionDone then
+            E:Log("Combat resolution from " .. sender .. " never arrived; resolving combat as declared.", "ERROR")
+            ResolveRemoteCombat(E, bs)
+        end
+    end)
+    return true
 end
 
 local function ReceiveDamagePart(E, sender, id, sequence, total, encoded)
@@ -1954,6 +2099,7 @@ function TTS.Net:OnReceive(msg, sender)
                         end
                         TTS.Net:Send(sender, "ACCEPT:" .. TTS.VERSION .. ":" .. theirMatchId .. ":" .. MyScore() .. ":" .. MyPvP())
                         TTS.Net.matchId = theirMatchId
+                        TTS.Net:BeginMatchSequence(theirVersion)
                         TTS.Net:AddContact(sender)
                         TTS.Engine:StartMatch(sender, false, false)
                         TTS.Engine.opponentScore = theirScore
@@ -2031,6 +2177,7 @@ function TTS.Net:OnReceive(msg, sender)
         -- They have started already and wait for our first turn while we pick a deck.
         -- The match id lets their messages in meanwhile (a concede, see ACTION below).
         TTS.Net.matchId = invite.matchId
+        TTS.Net:BeginMatchSequence(theirVersion)
         -- A popup first: the game's emote is only allowed from a native popup's button
         -- (the client blocks it from the deck picker's), as the match result's is
         TTS.Net.acceptedBy = sender
@@ -2435,9 +2582,9 @@ function TTS.Net:OnReceive(msg, sender)
             if n then E:OnRemoteDeckCount(n, parts[4] == "1") end
 
         elseif actionType == "END_TURN" then
-            -- (their side untapped at the start of their turn, in E:EndTurn)
-            E:Log(L("log.oppEndedTurn", sender), "SYSTEM")
-            E:OnRemoteEndTurn()
+            -- (their side untapped at the start of their turn, in E:EndTurn). Held while
+            -- their combat is still open here: the resolution is on its way.
+            if not HoldEndTurnForCombat(E, sender) then RunRemoteEndTurn(E, sender) end
         end
     end
 end

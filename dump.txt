@@ -1,0 +1,571 @@
+ForeverCCG match log v1 | addon 1.0.7 | client 1.60.1.70790 | 2026-11-06 14:59:46
+me Aeku-CAMWOW EU5 Realm 9 RP PvP (hero 1:PRIEST:4:3:2582,253887,4309,4312,4308,4307,6564,271095,279898,11288) vs Ulrich Vonwobbleton | pvp match 6aedeb5bca3c71c7 | first: me
+deck 3 "WR"
+options autoPay=true autoPass=true controls=both
+result: conceded (Conceded match.) | my turns 15, op turns 14 | 19:16
+opening hand: PAL03,HOT06,WAR07,PRY01,R01,WES03,R01
+deck order (top first): WES06,PRI02,PAL04,HOT11,R01,HOT02,MAG02,W01,WES06,R01,PRI02,ARMR11,PAL04,W01,HOT08,HOT07,TEL08,TEL06,W01,TEL08,TEL06,WAR02,HOT02,TEL09,R01,WAR02,WES06,W01,WES03,ARMR12,HOT02,TEL06,R01,WES06,W01,R01,TEL09,PRI01,R01,PAL03,WAR07,W01,W01
+--- events ---
+[setup] >> ACTION:HEROINFO:1:PRIEST:4:3:2582,253887,4309,4312,4308,4307,6564,271095,279898,11288
+[setup] >> ACTION:FOILS:WES06
+[setup] >> ACTION:DECK:43:1
+[00:00 me1 M1] == start
+   me L20 H7 D43 G0 mana -
+     field: -
+     hand: PAL03, HOT06, WAR07, PRY01, R01, WES03, R01
+   op L20 H0 D? G0 mana -
+     field: -
+[00:00 me1 M1] << ACTION:DECK:35:0
+[00:03 me1 M1] ACT Played prayer: Lakeshire Hearth.
+[00:03 me1 M1] >> ACTION:PLAY_LAND:PRY01
+[00:08 op0 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[00:08 op0 WAIT] >> ACTION:END_TURN
+[00:08 op1 WAIT] >> ACTION:EFFECTS:0:0
+[00:08 op1 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H6 D43 G0 mana -
+     field: 1:PRY01
+     hand: PAL03, HOT06, WAR07, R01, WES03, R01
+   op L20 H8 D35 G0 mana -
+     field: -
+[00:09 op1 WAIT] << ACTION:EFFECTS:0:0
+[00:10 op1 WAIT] << ACTION:DECK:34:0
+[00:35 op1 WAIT] << ACTION:PLAY_LAND:U01
+[00:35 op1 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[00:39 op1 WAIT] << ACTION:END_TURN
+[00:39 op1 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[00:39 me2 WAIT] SYS === Turn 2 === Your cards Recover.
+[00:39 me2 WAIT] ACT Drew Harvest Watcher.
+[00:39 me2 WAIT] >> ACTION:DECK:42:0
+[00:39 me2 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H7 D42 G0 mana -
+     field: 1:PRY01
+     hand: PAL03, HOT06, WAR07, R01, WES03, R01, WES06
+   op L20 H7 D34 G0 mana -
+     field: 1:U01
+[00:41 me2 M1] ACT Played prayer: Prayer of Fire.
+[00:41 me2 M1] >> ACTION:PLAY_LAND:R01
+[00:42 me2 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[00:42 me2 M1] >> ACTION:TAP_PERM:1
+[00:42 me2 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[00:42 me2 M1] >> ACTION:TAP_PERM:2
+[00:42 me2 M1] ACT Cast Denizen: Harvest Golem.
+[00:42 me2 M1] >> ACTION:PLAY_PERM:WES03
+[00:44 op1 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[00:44 op1 WAIT] >> ACTION:END_TURN
+[00:44 op2 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H5 D42 G0 mana -
+     field: 1:PRY01 T, 2:R01 T, 3:WES03 1/5 S
+     hand: PAL03, HOT06, WAR07, R01, WES06
+   op L20 H8 D34 G0 mana -
+     field: 1:U01
+[00:44 op2 WAIT] << ACTION:DECK:33:0
+[01:54 op2 WAIT] << ACTION:PLAY_LAND:U01
+[01:54 op2 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[01:57 op2 WAIT] << ACTION:END_TURN
+[01:57 op2 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[01:57 me3 WAIT] SYS === Turn 3 === Your cards Recover.
+[01:57 me3 WAIT] ACT Drew Renew.
+[01:57 me3 WAIT] >> ACTION:DECK:41:0
+[01:57 me3 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H6 D41 G0 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 1/5
+     hand: PAL03, HOT06, WAR07, R01, WES06, PRI02
+   op L20 H7 D33 G0 mana -
+     field: 1:U01, 2:U01
+[02:11 me3 M1] ACT Played prayer: Prayer of Fire.
+[02:11 me3 M1] >> ACTION:PLAY_LAND:R01
+[02:13 me3 M1] SYS Select target for Blessing of Might (Right-click to cancel).
+[02:13 me3 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[02:13 me3 M1] >> ACTION:TAP_PERM:1
+[02:13 me3 M1] >> ACTION:CAST_SPELL:PAL03:CREATURE:MINE:3
+[02:13 me3 M1] ACT Resolved Spell: Blessing of Might.
+[02:13 me3 M1] ACT Blessing of Might affected Harvest Golem.
+[02:21 op2 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[02:21 op2 WAIT] >> ACTION:END_TURN
+[02:21 op3 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H4 D41 G1 mana -
+     field: 1:PRY01 T, 2:R01, 3:WES03 3/6, 4:R01
+     hand: HOT06, WAR07, WES06, PRI02
+   op L20 H8 D33 G0 mana -
+     field: 1:U01, 2:U01
+[02:21 op3 WAIT] << ACTION:DECK:32:0
+[02:43 op3 WAIT] << ACTION:PLAY_LAND:U01
+[02:43 op3 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[02:46 op3 WAIT] << ACTION:TAP_PERM:3
+[02:46 op3 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[02:46 op3 WAIT] << ACTION:TAP_PERM:2
+[02:46 op3 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[02:46 op3 WAIT] << ACTION:TAP_PERM:1
+[02:46 op3 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[02:46 op3 WAIT] << ACTION:PLAY_PERM:DUN06
+[02:46 op3 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Wendigo.
+[02:49 op3 WAIT] << ACTION:END_TURN
+[02:49 op3 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[02:49 me4 WAIT] SYS === Turn 4 === Your cards Recover.
+[02:49 me4 WAIT] ACT Drew Blessing of Protection.
+[02:49 me4 WAIT] >> ACTION:DECK:40:0
+[02:49 me4 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H5 D40 G1 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 3/6, 4:R01
+     hand: HOT06, WAR07, WES06, PRI02, PAL04
+   op L20 H6 D32 G0 mana -
+     field: 1:U01 T, 2:U01 T, 3:U01 T, 4:DUN06 3/3 S
+[02:59 me4 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[02:59 me4 M1] >> ACTION:TAP_PERM:4
+[02:59 me4 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[02:59 me4 M1] >> ACTION:TAP_PERM:2
+[02:59 me4 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[02:59 me4 M1] >> ACTION:TAP_PERM:1
+[02:59 me4 M1] ACT Cast Denizen: Dark Iron Engineer.
+[02:59 me4 M1] >> ACTION:PLAY_PERM:HOT06
+[03:03 op3 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[03:03 op3 WAIT] >> ACTION:END_TURN
+[03:03 op4 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H4 D40 G1 mana -
+     field: 1:PRY01 T, 2:R01 T, 3:WES03 3/6, 4:R01 T, 5:HOT06 3/3 S
+     hand: WAR07, WES06, PRI02, PAL04
+   op L20 H7 D32 G0 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 3/3
+[03:04 op4 WAIT] << ACTION:DECK:31:0
+[04:04 op4 WAIT] << ACTION:PLAY_LAND:U01
+[04:04 op4 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[04:20 op4 WAIT] << ACTION:TAP_PERM:5
+[04:20 op4 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[04:20 op4 WAIT] << ACTION:CAST_SPELL:GEAR01:CREATURE:MINE:4
+[04:20 op4 WAIT] ACT Ulrich Vonwobbleton cast Gear: Goldshire Shortsword.
+[04:20 op4 WAIT] ACT Ulrich Vonwobbleton resolved Gear: Goldshire Shortsword.
+[04:20 op4 WAIT] ACT Goldshire Shortsword equipped Wendigo.
+[04:25 op4 WAIT] << ACTION:TAP_PERM:3
+[04:25 op4 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[04:25 op4 WAIT] << ACTION:CAST_SPELL:GEAR02:CREATURE:MINE:4
+[04:25 op4 WAIT] ACT Ulrich Vonwobbleton cast Gear: Kharanos Hand Axe.
+[04:25 op4 WAIT] ACT Ulrich Vonwobbleton resolved Gear: Kharanos Hand Axe.
+[04:25 op4 WAIT] ACT Kharanos Hand Axe equipped Wendigo.
+[04:31 op4 WAIT] << ACTION:END_TURN
+[04:31 op4 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[04:31 me5 WAIT] SYS === Turn 5 === Your cards Recover.
+[04:31 me5 WAIT] ACT Drew Magmatus.
+[04:31 me5 WAIT] >> ACTION:DECK:39:0
+[04:31 me5 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H5 D39 G1 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 3/6, 4:R01, 5:HOT06 3/3
+     hand: WAR07, WES06, PRI02, PAL04, HOT11
+   op L20 H4 D31 G2 mana -
+     field: 1:U01, 2:U01, 3:U01 T, 4:DUN06 5/3, 5:U01 T
+[05:11 me5 M1] SYS Select target for Renew (Right-click to cancel).
+[05:11 me5 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[05:11 me5 M1] >> ACTION:TAP_PERM:1
+[05:11 me5 M1] >> ACTION:CAST_SPELL:PRI02:CREATURE:MINE:3
+[05:11 me5 M1] ACT Resolved Spell: Renew.
+[05:11 me5 M1] ACT Renew: Harvest Golem will permanently get +0/+1 each turn for 3 turns.
+[05:11 me5 M1] ACT Drew Prayer of Fire.
+[05:11 me5 M1] >> ACTION:DECK:38:0
+[05:14 me5 M1] ACT Played prayer: Prayer of Fire.
+[05:14 me5 M1] >> ACTION:PLAY_LAND:R01
+[05:20 me5 M1] ERR Not enough mana to cast Blessing of Protection ({W}).
+[05:21 op4 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[05:21 op4 WAIT] >> ACTION:END_TURN
+[05:21 op5 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H4 D38 G2 mana -
+     field: 1:PRY01 T, 2:R01, 3:WES03 3/6, 4:R01, 5:HOT06 3/3, 6:R01
+     hand: WAR07, WES06, PAL04, HOT11
+   op L20 H5 D31 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01
+[05:22 op5 WAIT] << ACTION:DECK:30:0
+[05:26 op5 WAIT] << ACTION:PLAY_LAND:U01
+[05:26 op5 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:TAP_PERM:6
+[05:27 op5 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:TAP_PERM:5
+[05:27 op5 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:TAP_PERM:3
+[05:27 op5 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:TAP_PERM:2
+[05:27 op5 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:TAP_PERM:1
+[05:27 op5 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[05:27 op5 WAIT] << ACTION:PLAY_PERM:DUN08
+[05:27 op5 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Winter Wolf.
+[05:33 op5 WAIT] << ACTION:END_TURN
+[05:33 op5 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[05:33 me6 WAIT] SYS === Turn 6 === Your cards Recover.
+[05:33 me6 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[05:33 me6 WAIT] ACT Drew Fiery Assistant.
+[05:33 me6 WAIT] >> ACTION:DECK:37:0
+[05:33 me6 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H5 D37 G2 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 3/7, 4:R01, 5:HOT06 3/3, 6:R01
+     hand: WAR07, WES06, PAL04, HOT11, HOT02
+   op L20 H3 D30 G2 mana -
+     field: 1:U01 T, 2:U01 T, 3:U01 T, 4:DUN06 5/3, 5:U01 T, 6:U01 T, 7:DUN08 6/4
+[06:16 me6 M1] SYS Select target for Blessing of Protection (Right-click to cancel).
+[06:16 me6 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[06:16 me6 M1] >> ACTION:TAP_PERM:1
+[06:16 me6 M1] >> ACTION:CAST_SPELL:PAL04:CREATURE:MINE:3
+[06:16 me6 M1] ACT Resolved Spell: Blessing of Protection.
+[06:16 me6 M1] ACT Blessing of Protection made Harvest Golem Shielded.
+[06:16 me6 M1] ACT Blessing of Protection affected Harvest Golem.
+[06:22 me6 M1] ERR Not enough mana in pool.
+[06:23 me6 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[06:23 me6 M1] >> ACTION:TAP_PERM:6
+[06:23 me6 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[06:23 me6 M1] >> ACTION:TAP_PERM:4
+[06:23 me6 M1] ACT Cast Denizen: Fiery Assistant.
+[06:23 me6 M1] >> ACTION:PLAY_PERM:HOT02
+[06:24 op5 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[06:24 op5 WAIT] >> ACTION:END_TURN
+[06:24 op6 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H3 D37 G3 mana -
+     field: 1:PRY01 T, 2:R01, 3:WES03 4/8, 4:R01 T, 5:HOT06 3/3, 6:R01 T, 7:HOT02 3/2 S
+     hand: WAR07, WES06, HOT11
+   op L20 H4 D30 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/4
+[06:25 op6 WAIT] << ACTION:DECK:29:0
+[06:27 op6 WAIT] << ACTION:PLAY_LAND:U01
+[06:27 op6 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:8
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:6
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:5
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:2
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:3
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:TAP_PERM:1
+[06:32 op6 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[06:32 op6 WAIT] << ACTION:PLAY_PERM:DUN09
+[06:32 op6 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Ice Claw Bear.
+[06:49 op6 WAIT] << ACTION:END_TURN
+[06:49 op6 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[06:49 me7 WAIT] SYS === Turn 7 === Your cards Recover.
+[06:49 me7 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[06:49 me7 WAIT] ACT Drew Fire Blast.
+[06:49 me7 WAIT] >> ACTION:DECK:36:0
+[06:49 me7 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H4 D36 G3 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/9, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 3/2
+     hand: WAR07, WES06, HOT11, MAG02
+   op L20 H2 D29 G2 mana -
+     field: 1:U01 T, 2:U01 T, 3:U01 T, 4:DUN06 5/3, 5:U01 T, 6:U01 T, 7:DUN08 6/4, 8:U01 T, 9:DUN09 6/7 S
+[07:51 me7 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[07:51 me7 M1] >> ACTION:TAP_PERM:1
+[07:51 me7 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[07:51 me7 M1] >> ACTION:TAP_PERM:6
+[07:51 me7 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[07:51 me7 M1] >> ACTION:TAP_PERM:4
+[07:51 me7 M1] ACT Cast Denizen: Harvest Watcher.
+[07:51 me7 M1] >> ACTION:PLAY_PERM:WES06
+[07:58 me7 M1] SYS Select target for Fire Blast (Right-click to cancel).
+[07:58 me7 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[07:58 me7 M1] >> ACTION:TAP_PERM:2
+[07:58 me7 M1] >> ACTION:CAST_SPELL:MAG02:CREATURE:THEIRS:7
+[07:58 me7 M1] ACT Resolved Spell: Fire Blast.
+[07:58 me7 M1] CMB Fire Blast dealt 2 damage to Winter Wolf.
+[07:58 me7 M1] ACT Fire Blast: Winter Wolf will permanently get -0/-1 each turn for 2 turns.
+[07:59 op6 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[07:59 op6 WAIT] >> ACTION:END_TURN
+[07:59 op7 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H2 D36 G4 mana -
+     field: 1:PRY01 T, 2:R01 T, 3:WES03 4/9, 4:R01 T, 5:HOT06 3/3, 6:R01 T, 7:HOT02 3/2, 8:WES06 1/7 S
+     hand: WAR07, HOT11
+   op L20 H3 D29 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/4, 8:U01, 9:DUN09 6/7
+[07:59 op7 WAIT] << ACTION:DECK:28:0
+[08:19 op7 WAIT] << ACTION:PLAY_LAND:U01
+[08:19 op7 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[08:26 op7 WAIT] << ACTION:END_TURN
+[08:26 op7 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[08:26 me8 WAIT] SYS === Turn 8 === Your cards Recover.
+[08:26 me8 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[08:26 me8 WAIT] CMB Fire Blast: Winter Wolf permanently gets -0/-1.
+[08:26 me8 WAIT] ACT Drew Prayer of Light.
+[08:26 me8 WAIT] >> ACTION:DECK:35:0
+[08:26 me8 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H3 D35 G4 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/10, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 3/2, 8:WES06 1/7
+     hand: WAR07, HOT11, W01
+   op L20 H2 D28 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/3, 8:U01, 9:DUN09 6/7, 10:U01
+[09:38 me8 M1] ACT Played prayer: Prayer of Light.
+[09:38 me8 M1] >> ACTION:PLAY_LAND:W01
+[09:39 me8 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[09:39 me8 M1] >> ACTION:TAP_PERM:6
+[09:39 me8 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[09:39 me8 M1] >> ACTION:TAP_PERM:4
+[09:39 me8 M1] MNA Exhausted Prayer of Light for +1 {W}.
+[09:39 me8 M1] >> ACTION:TAP_PERM:9
+[09:39 me8 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[09:39 me8 M1] >> ACTION:TAP_PERM:2
+[09:39 me8 M1] MNA Exhausted Lakeshire Hearth for +1 {W}.
+[09:39 me8 M1] >> ACTION:TAP_PERM:1
+[09:39 me8 M1] ACT Cast Denizen: Magmatus.
+[09:39 me8 M1] >> ACTION:PLAY_PERM:HOT11
+[09:48 op7 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[09:48 op7 WAIT] >> ACTION:END_TURN
+[09:48 op8 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H1 D35 G4 mana -
+     field: 1:PRY01 T, 2:R01 T, 3:WES03 4/10, 4:R01 T, 5:HOT06 3/3, 6:R01 T, 7:HOT02 4/3, 8:WES06 1/7, 9:W01 T, 10:HOT11 6/5 S
+     hand: WAR07
+   op L20 H3 D28 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/3, 8:U01, 9:DUN09 6/7, 10:U01
+[09:49 op8 WAIT] << ACTION:DECK:27:0
+[09:52 op8 WAIT] << ACTION:TAP_PERM:10
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:TAP_PERM:5
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:TAP_PERM:6
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:TAP_PERM:8
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:TAP_PERM:3
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:TAP_PERM:2
+[09:52 op8 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[09:52 op8 WAIT] << ACTION:PLAY_PERM:DUN09
+[09:52 op8 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Ice Claw Bear.
+[10:10 op8 WAIT] << ACTION:END_TURN
+[10:10 op8 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[10:10 me9 WAIT] SYS === Turn 9 === Your cards Recover.
+[10:10 me9 WAIT] CMB Fire Blast: Winter Wolf permanently gets -0/-1.
+[10:10 me9 WAIT] ACT Drew Harvest Watcher.
+[10:10 me9 WAIT] >> ACTION:DECK:34:0
+[10:10 me9 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H2 D34 G4 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/10, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/3, 8:WES06 1/7, 9:W01, 10:HOT11 6/5
+     hand: WAR07, WES06
+   op L20 H2 D27 G2 mana -
+     field: 1:U01, 2:U01 T, 3:U01 T, 4:DUN06 5/3, 5:U01 T, 6:U01 T, 7:DUN08 6/2, 8:U01 T, 9:DUN09 6/7, 10:U01 T, 11:DUN09 6/7 S
+[11:26 me9 M1] MNA Exhausted Prayer of Light for +1 {W}.
+[11:26 me9 M1] >> ACTION:TAP_PERM:9
+[11:26 me9 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[11:26 me9 M1] >> ACTION:TAP_PERM:6
+[11:26 me9 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[11:26 me9 M1] >> ACTION:TAP_PERM:4
+[11:26 me9 M1] ACT Cast Denizen: Harvest Watcher.
+[11:26 me9 M1] >> ACTION:PLAY_PERM:WES06
+[11:32 op8 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[11:32 op8 WAIT] >> ACTION:END_TURN
+[11:32 op9 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H1 D34 G4 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/10, 4:R01 T, 5:HOT06 3/3, 6:R01 T, 7:HOT02 4/3, 8:WES06 1/7, 9:W01 T, 10:HOT11 6/5, 11:WES06 1/7 S
+     hand: WAR07
+   op L20 H3 D27 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/2, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7
+[11:32 op9 WAIT] << ACTION:DECK:26:0
+[11:58 op9 WAIT] << ACTION:PLAY_LAND:U01
+[11:58 op9 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[12:16 op9 WAIT] << ACTION:END_TURN
+[12:16 op9 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[12:16 me10 WAIT] SYS === Turn 10 === Your cards Recover.
+[12:16 me10 WAIT] ACT Drew Prayer of Fire.
+[12:16 me10 WAIT] >> ACTION:DECK:33:0
+[12:16 me10 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H2 D33 G4 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/10, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/3, 8:WES06 1/7, 9:W01, 10:HOT11 6/5, 11:WES06 1/7
+     hand: WAR07, R01
+   op L20 H2 D26 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/2, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01
+[12:46 me10 M1] SYS Select target for Execute (Right-click to cancel).
+[12:46 me10 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[12:46 me10 M1] >> ACTION:TAP_PERM:6
+[12:46 me10 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[12:46 me10 M1] >> ACTION:TAP_PERM:4
+[12:46 me10 M1] MNA Exhausted Prayer of Light for +1 {W}.
+[12:46 me10 M1] >> ACTION:TAP_PERM:9
+[12:46 me10 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[12:46 me10 M1] >> ACTION:TAP_PERM:2
+[12:46 me10 M1] >> ACTION:CAST_SPELL:WAR07:CREATURE:THEIRS:7
+[12:46 me10 M1] ACT Resolved Spell: Execute.
+[12:46 me10 M1] ACT Execute affected Winter Wolf.
+[13:02 me10 M1] ACT Played prayer: Prayer of Fire.
+[13:02 me10 M1] >> ACTION:PLAY_LAND:R01
+[13:42 op9 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[13:42 op9 WAIT] >> ACTION:END_TURN
+[13:42 op10 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H0 D33 G5 mana -
+     field: 1:PRY01, 2:R01 T, 3:WES03 4/10, 4:R01 T, 5:HOT06 3/3, 6:R01 T, 7:HOT02 4/3, 8:WES06 1/7, 9:W01 T, 10:HOT11 6/5, 11:WES06 1/7, 12:R01
+     hand: -
+   op L20 H3 D26 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01
+[13:42 op10 WAIT] << ACTION:DECK:25:0
+[14:00 op10 WAIT] << ACTION:PLAY_LAND:U01
+[14:00 op10 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[14:01 op10 WAIT] << ACTION:TAP_PERM:13
+[14:01 op10 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[14:01 op10 WAIT] << ACTION:PLAY_PERM:DUN04
+[14:01 op10 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Frostmane Troll Whelp.
+[14:01 op10 WAIT] << ACTION:TAP_PERM:12
+[14:01 op10 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[14:08 op10 WAIT] << ACTION:END_TURN
+[14:08 op10 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[14:08 me11 WAIT] SYS === Turn 11 === Your cards Recover.
+[14:08 me11 WAIT] ACT Drew Renew.
+[14:08 me11 WAIT] >> ACTION:DECK:32:0
+[14:08 me11 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H1 D32 G5 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/10, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/3, 8:WES06 1/7, 9:W01, 10:HOT11 6/5, 11:WES06 1/7, 12:R01
+     hand: PRI02
+   op L20 H1 D25 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01 T, 13:U01 T, 14:DUN04 2/2 S
+[14:17 me11 M1] SYS Select target for Renew (Right-click to cancel).
+[14:17 me11 M1] MNA Exhausted Prayer of Light for +1 {W}.
+[14:17 me11 M1] >> ACTION:TAP_PERM:9
+[14:17 me11 M1] >> ACTION:CAST_SPELL:PRI02:CREATURE:MINE:3
+[14:17 me11 M1] ACT Resolved Spell: Renew.
+[14:17 me11 M1] ACT Renew: Harvest Golem will permanently get +0/+1 each turn for 3 turns.
+[14:17 me11 M1] ACT Drew Lakeshire Guard's Coif.
+[14:17 me11 M1] >> ACTION:DECK:31:0
+[14:21 me11 M1] SYS Select target for Lakeshire Guard's Coif (Right-click to cancel).
+[14:21 me11 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[14:21 me11 M1] >> ACTION:TAP_PERM:12
+[14:21 me11 M1] MNA Exhausted Prayer of Fire for +1 {R}.
+[14:21 me11 M1] >> ACTION:TAP_PERM:6
+[14:21 me11 M1] >> ACTION:CAST_SPELL:ARMR11:CREATURE:MINE:3
+[14:21 me11 M1] ACT Resolved Gear: Lakeshire Guard's Coif.
+[14:21 me11 M1] ACT Lakeshire Guard's Coif equipped Harvest Golem.
+[14:21 me11 M1] ACT Lakeshire Guard's Coif made Harvest Golem Shielded.
+[15:40 op10 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[15:40 op10 WAIT] >> ACTION:END_TURN
+[15:40 op11 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H0 D31 G7 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/12, 4:R01, 5:HOT06 3/3, 6:R01 T, 7:HOT02 4/3, 8:WES06 1/7, 9:W01 T, 10:HOT11 6/5, 11:WES06 1/7, 12:R01 T
+     hand: -
+   op L20 H2 D25 G2 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:DUN04 2/2
+[15:41 op11 WAIT] << ACTION:DECK:24:0
+[16:17 op11 WAIT] << ACTION:PLAY_LAND:U01
+[16:17 op11 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[16:47 op11 WAIT] << ACTION:TAP_PERM:15
+[16:47 op11 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[16:47 op11 WAIT] << ACTION:CAST_SPELL:HUN01:CREATURE:THEIRS:7
+[16:47 op11 WAIT] ACT Ulrich Vonwobbleton cast Spell: Arcane Shot.
+[16:47 op11 WAIT] ACT Ulrich Vonwobbleton resolved Spell: Arcane Shot.
+[16:47 op11 WAIT] CMB Arcane Shot dealt 2 damage to Fiery Assistant.
+[16:47 op11 WAIT] ACT Arcane Shot: Fiery Assistant will permanently get -0/-1 each turn for 2 turns.
+[16:49 op11 WAIT] << ACTION:END_TURN
+[16:49 op11 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[16:49 me12 WAIT] SYS === Turn 12 === Your cards Recover.
+[16:49 me12 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[16:49 me12 WAIT] ACT Drew Blessing of Protection.
+[16:49 me12 WAIT] >> ACTION:DECK:30:0
+[16:49 me12 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H1 D30 G7 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/13, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/3, 8:WES06 1/7, 9:W01, 10:HOT11 6/5, 11:WES06 1/7, 12:R01
+     hand: PAL04
+   op L20 H0 D24 G3 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:DUN04 2/2, 15:U01 T
+[17:00 me12 M1] SYS Select target for Blessing of Protection (Right-click to cancel).
+[17:00 me12 M1] MNA Exhausted Prayer of Light for +1 {W}.
+[17:00 me12 M1] >> ACTION:TAP_PERM:9
+[17:00 me12 M1] >> ACTION:CAST_SPELL:PAL04:CREATURE:MINE:10
+[17:00 me12 M1] ACT Resolved Spell: Blessing of Protection.
+[17:00 me12 M1] ACT Blessing of Protection made Magmatus Shielded.
+[17:00 me12 M1] ACT Blessing of Protection affected Magmatus.
+[17:03 me12 ATK] SYS --- Combat Phase --- Click ready denizens to declare attack.
+[17:03 me12 ATK] CMB Declared attacker: Magmatus.
+[17:04 me12 ATK] SYS Your turn will end as soon as combat is over.
+[17:04 me12 ATK] >> ACTION:ATTACKS:10
+[17:04 me12 BLK] SYS Waiting for opponent to declare blockers...
+[17:18 me12 BLK] << ACTION:RESOLVE_COMBAT
+[17:18 me12 BLK] >> ACTION:DAMAGE:7:HOT11/attack
+[17:18 me12 BLK] CMB Dealt 7 damage to Ulrich Vonwobbleton (Magmatus Attack). (Opponent Life: 13)
+[17:18 me12 M2] SYS --- Main Phase 2 ---
+[17:18 op11 M2] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[17:18 op11 WAIT] >> ACTION:END_TURN
+[17:18 op12 WAIT] CMB Arcane Shot: Fiery Assistant permanently gets -0/-1.
+[17:18 op12 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H0 D30 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/13, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/2, 8:WES06 1/7, 9:W01 T, 10:HOT11 7/6 T, 11:WES06 1/7, 12:R01
+     hand: -
+   op L13 H1 D24 G3 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:DUN04 2/2, 15:U01
+[17:18 op12 WAIT] << ACTION:DECK:23:0
+[17:20 op12 WAIT] << ACTION:PLAY_LAND:U01
+[17:20 op12 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[17:35 op12 WAIT] << ACTION:END_TURN
+[17:35 op12 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[17:35 me13 WAIT] SYS === Turn 13 === Your cards Recover.
+[17:35 me13 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[17:35 me13 WAIT] ACT Drew Prayer of Light.
+[17:35 me13 WAIT] >> ACTION:DECK:29:0
+[17:35 me13 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H1 D29 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/14, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/2, 8:WES06 1/7, 9:W01, 10:HOT11 7/6, 11:WES06 1/7, 12:R01
+     hand: W01
+   op L13 H0 D23 G3 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:DUN04 2/2, 15:U01, 16:U01
+[17:37 me13 M1] ACT Played prayer: Prayer of Light.
+[17:37 me13 M1] >> ACTION:PLAY_LAND:W01
+[17:38 me13 ATK] SYS --- Combat Phase --- Click ready denizens to declare attack.
+[17:38 me13 ATK] CMB Declared attacker: Magmatus.
+[17:39 me13 ATK] SYS Your turn will end as soon as combat is over.
+[17:39 me13 ATK] >> ACTION:ATTACKS:10
+[17:39 me13 BLK] SYS Waiting for opponent to declare blockers...
+[17:43 me13 BLK] << ACTION:BLOCKS:14,10
+[17:43 me13 BLK] CMB Ulrich Vonwobbleton assigned Frostmane Troll Whelp to block Magmatus.
+[17:43 me13 BLK] CMB Ulrich Vonwobbleton declared blockers. Review the blocks, then click Next Phase: Damage.
+[17:44 me13 BLK] >> ACTION:RESOLVE_COMBAT
+[17:44 me13 BLK] CMB Magmatus's shield negated the damage.
+[17:44 me13 BLK] CMB Combat clash: Magmatus (7  6) vs Frostmane Troll Whelp (2  2).
+[17:44 me13 BLK] CMB Ulrich Vonwobbleton's Frostmane Troll Whelp was destroyed.
+[17:44 me13 M2] SYS --- Main Phase 2 ---
+[17:44 op12 M2] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[17:44 op12 WAIT] >> ACTION:END_TURN
+[17:44 op13 WAIT] CMB Arcane Shot: Fiery Assistant permanently gets -0/-1.
+[17:44 op13 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H0 D29 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/14, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/1, 8:WES06 1/7, 9:W01, 10:HOT11 7/6 T, 11:WES06 1/7, 12:R01, 13:W01
+     hand: -
+   op L13 H1 D23 G4 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:U01, 15:U01
+[17:44 op13 WAIT] << ACTION:DECK:22:0
+[17:48 op13 WAIT] << ACTION:PLAY_LAND:U01
+[17:48 op13 WAIT] ACT Ulrich Vonwobbleton played land: Prayer of Arcane.
+[17:54 op13 WAIT] << ACTION:END_TURN
+[17:54 op13 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[17:54 me14 WAIT] SYS === Turn 14 === Your cards Recover.
+[17:54 me14 WAIT] ACT Renew: Harvest Golem permanently gets +0/+1.
+[17:54 me14 WAIT] ACT Drew Lesser Stone Golem.
+[17:54 me14 WAIT] >> ACTION:DECK:28:0
+[17:54 me14 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H1 D28 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/15, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/1, 8:WES06 1/7, 9:W01, 10:HOT11 7/6, 11:WES06 1/7, 12:R01, 13:W01
+     hand: HOT08
+   op L13 H0 D22 G4 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:U01, 15:U01, 16:U01
+[18:18 op13 M1] SYS Ended turn. Mana pool emptied and damage on denizens removed.
+[18:18 op13 WAIT] >> ACTION:END_TURN
+[18:18 op14 WAIT] == op turn start (after untap, ticks, draw)
+   me L20 H1 D28 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/15, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/1, 8:WES06 1/7, 9:W01, 10:HOT11 7/6, 11:WES06 1/7, 12:R01, 13:W01
+     hand: HOT08
+   op L13 H1 D22 G4 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:U01, 15:U01, 16:U01
+[18:18 op14 WAIT] << ACTION:DECK:21:0
+[18:37 op14 WAIT] << ACTION:TAP_PERM:16
+[18:37 op14 WAIT] MNA Ulrich Vonwobbleton Exhausted Prayer of Arcane.
+[18:37 op14 WAIT] << ACTION:TAP_PERM:17
+[18:37 op14 WAIT] << ACTION:PLAY_PERM:DUN04
+[18:37 op14 WAIT] ACT Ulrich Vonwobbleton cast Denizen: Frostmane Troll Whelp.
+[18:38 op14 WAIT] << ACTION:END_TURN
+[18:38 op14 WAIT] SYS Ulrich Vonwobbleton ended their turn.
+[18:38 me15 WAIT] SYS === Turn 15 === Your cards Recover.
+[18:38 me15 WAIT] ACT Drew Dark Iron Summoner.
+[18:38 me15 WAIT] >> ACTION:DECK:27:0
+[18:38 me15 WAIT] == me turn start (after untap, ticks, draw)
+   me L20 H2 D27 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/15, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/1, 8:WES06 1/7, 9:W01, 10:HOT11 7/6, 11:WES06 1/7, 12:R01, 13:W01
+     hand: HOT08, HOT07
+   op L13 H0 D21 G4 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:U01, 15:U01, 16:U01 T, 17:DUN04 2/2 S
+[19:16 me15 M1] >> ACTION:CONCEDE
+[19:16 me15 M1] SYS match ending: conceded (Conceded match.)
+[19:16 me15 M1] == final
+   me L20 H2 D27 G8 mana -
+     field: 1:PRY01, 2:R01, 3:WES03 4/15, 4:R01, 5:HOT06 3/3, 6:R01, 7:HOT02 4/1, 8:WES06 1/7, 9:W01, 10:HOT11 7/6, 11:WES06 1/7, 12:R01, 13:W01
+     hand: HOT08, HOT07
+   op L13 H0 D21 G4 mana -
+     field: 1:U01, 2:U01, 3:U01, 4:DUN06 5/3, 5:U01, 6:U01, 7:DUN08 6/1, 8:U01, 9:DUN09 6/7, 10:U01, 11:DUN09 6/7, 12:U01, 13:U01, 14:U01, 15:U01, 16:U01 T, 17:DUN04 2/2 S
+[19:16 me15 M1] SYS Match ended (CONCEDED): Conceded match.
