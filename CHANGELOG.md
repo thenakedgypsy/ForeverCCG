@@ -1,3 +1,6 @@
+## 1.0.9
+*   fix for "No player named ... is currently playing" showing in chat over and over for a contact who had logged off. Contacts who stay offline are now checked on less and less often (up to once an hour), and errors from whispers you type yourself still show
+
 ## 1.0.8
 *   fix for PvP games going out of sync after a blocked attack when the attacker's turn ended straight after combat (e.g. Commit to Attacks & End Turn): the end of turn could reach the defender before the combat did, so the combat never happened on their side and blockers that should have died stayed on the board
 *   PvP: game messages are now numbered and handled in the order they were sent, so two moves made in quick succession can no longer arrive the wrong way round and put the two boards out of sync. Both players need 1.0.8 for this; games against 1.0.7 still work as before

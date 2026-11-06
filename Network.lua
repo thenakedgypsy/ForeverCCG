@@ -223,7 +223,12 @@ local reportedFailures = {}
 -- queued, and kept for the whole window: chat filters run once per chat window showing the
 -- message, so clearing it on the first match let the error through in the others.
 local recentWhispers = {}
-local WHISPER_ERROR_WINDOW = 10
+-- The server can be slow to answer when there is a lot of addon traffic (heartbeats, hello
+-- replies): 10 s let some errors through
+local WHISPER_ERROR_WINDOW = 60
+-- Lower-case names the player whispered by hand -> until when: their errors always show
+local ownWhispers = {}
+local addonWhispering = false   -- set around the addon's own SendChatMessage whisper
 
 -- Result codes that mean "too fast, try again": the per-prefix addon limit (3) and the
 -- custom channel's own limit (8, hit by bursts like a big attack)
@@ -565,7 +570,10 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
         end
 
         local whisperMsg = L("net.whisper", TTS.DOWNLOAD_URL)
-        SendChatMessage(whisperMsg, "WHISPER", nil, CharName(target))
+        addonWhispering = true
+        pcall(SendChatMessage, whisperMsg, "WHISPER", nil, CharName(target))
+        addonWhispering = false
+        recentWhispers[CharName(target):lower()] = time() + WHISPER_ERROR_WINDOW
         local tried = table.concat(invite.tried, ", ")
         if triedGroup then
             Print(L("net.noResponse", target, tried))
@@ -602,7 +610,8 @@ local BACKGROUND_PING_TICK = 15         -- seconds between background rounds
 local BACKGROUND_PING_EVERY = 300       -- seconds between background pings to one contact
 local BACKGROUND_PINGS_PER_TICK = 2
 local CONTACT_REPLY_WAIT = 6            -- no pong by then: treat them as offline
-local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left alone
+local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left alone...
+local CONTACT_OFFLINE_MAX = 3600        -- ...doubling with each unanswered ping, up to this
 local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
 local CONTACT_SWAP_COOLDOWN = 600       -- seconds before swapping lists with the same player again
 local CONTACT_LIST_CHUNK = 170          -- characters of entries per message (addon messages cap at 255)
@@ -798,7 +807,13 @@ function TTS.Net:PingContacts(background)
                 TTS:SafeAfter(CONTACT_REPLY_WAIT, function()
                     local s = ContactState(key)
                     if (s.lastReached or 0) < sentAt then
-                        s.offlineUntil = time() + CONTACT_OFFLINE_BACKOFF
+                        -- Unanswered pings in a row (since they last answered) double the wait,
+                        -- so a player who is gone for the day isn't pinged every few minutes
+                        if (s.lastReached or 0) > (s.lastMissAt or 0) then s.missed = 0 end
+                        s.missed = (s.missed or 0) + 1
+                        s.lastMissAt = time()
+                        local wait = math.min(CONTACT_OFFLINE_BACKOFF * 2 ^ (s.missed - 1), CONTACT_OFFLINE_MAX)
+                        s.offlineUntil = math.max(s.offlineUntil or 0, time() + wait)
                     end
                     if pendingPings[key] and pendingPings[key] <= time() then pendingPings[key] = nil end
                 end)
@@ -1042,28 +1057,59 @@ end
 -- Hides the "No player named ... is currently playing" error for players the addon just
 -- whispered (contact pings, waiting-room messages: they are offline, nothing the player did).
 -- Other such errors, e.g. from the player's own whispers, still show.
+-- Matched in lower case: Forever's server sends its own wording ("No Player named '...'")
 local notFoundPattern
 if ERR_CHAT_PLAYER_NOT_FOUND_S then
-    notFoundPattern = "^" .. ERR_CHAT_PLAYER_NOT_FOUND_S:gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%s", "(.+)") .. "$"
+    notFoundPattern = "^" .. ERR_CHAT_PLAYER_NOT_FOUND_S:lower():gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%s", "(.+)") .. "$"
 end
 
+-- Whispers the player types themselves: their errors are real and must show
+local function NoteOwnWhisper(_, chatType, _, target)
+    if addonWhispering or chatType ~= "WHISPER" or type(target) ~= "string" then return end
+    ownWhispers[NormalizeName(target):lower()] = time() + WHISPER_ERROR_WINDOW
+end
+if hooksecurefunc then
+    if type(SendChatMessage) == "function" then pcall(hooksecurefunc, "SendChatMessage", NoteOwnWhisper) end
+    if C_ChatInfo and type(C_ChatInfo.SendChatMessage) == "function" then
+        pcall(hooksecurefunc, C_ChatInfo, "SendChatMessage", NoteOwnWhisper)
+    end
+end
+
+-- Names compared without case, spaces or punctuation ("Thordak  Stormrend" = "thordak stormrend")
+local function Squash(s) return (s:lower():gsub("[%s%p]", "")) end
+
 local function OfflinePingFilter(_, _, msg, ...)
-    if type(msg) ~= "string" or not next(recentWhispers) then return false, msg, ... end
-    local now = time()
-    local named = notFoundPattern and msg:match(notFoundPattern)
-    local namedKey = named and NormalizeName(named:gsub("^['\"]", ""):gsub("['\"]$", "")):lower()
+    if type(msg) ~= "string" then return false, msg, ... end
     local lower = msg:lower()
+    local named = notFoundPattern and lower:match(notFoundPattern)
+    if not named and not lower:find("no player named", 1, true) then return false, msg, ... end
+    local now = time()
+    local squashedMsg = Squash(msg)
+    local namedKey = named and Squash(NormalizeName((named:gsub("^['\"]", ""):gsub("['\"]$", ""))))
+    local function Matches(key)
+        local k = Squash(key)
+        if k == "" then return false end
+        if namedKey then return namedKey == k end
+        return squashedMsg:find(k, 1, true) ~= nil
+    end
+    local function OwnWhisper(key) return (ownWhispers[key] or 0) >= now end
+
     for key, expires in pairs(recentWhispers) do
         if expires < now then
             recentWhispers[key] = nil
-        elseif (namedKey and namedKey == key) or (not named and lower:find(key, 1, true)) then
+        elseif not OwnWhisper(key) and Matches(key) then
             -- A contact we pinged is offline: leave them alone for a while
             if pendingPings[key] then
                 pendingPings[key] = nil
-                ContactState(key).offlineUntil = now + CONTACT_OFFLINE_BACKOFF
+                local s = ContactState(key)
+                s.offlineUntil = math.max(s.offlineUntil or 0, now + CONTACT_OFFLINE_BACKOFF)
             end
             return true
         end
+    end
+    -- Late or oddly worded: still ours if it names a saved contact the player didn't whisper
+    for key, c in pairs(ContactDB()) do
+        if type(c) == "table" and not OwnWhisper(key) and Matches(key) then return true end
     end
     return false, msg, ...
 end
