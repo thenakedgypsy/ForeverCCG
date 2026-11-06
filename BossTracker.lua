@@ -262,6 +262,11 @@ for key, id in pairs(INSTANCE_IDS) do INSTANCE_KEY_BY_ID[id] = key end
 local DUNGEON_KEYS = {}
 for _, instance in pairs(BOSS_CARD_INSTANCES) do DUNGEON_KEYS[InstanceKey(instance)] = true end
 
+-- Whether a card.zone is a dungeon rather than an outdoor zone (the Collection Guide's tabs)
+function TTS.BossTracker:IsDungeonZone(zone)
+    return zone ~= nil and DUNGEON_KEYS[InstanceKey(zone)] == true
+end
+
 -- Chances (in %) for copies 1-4 of a card: its own (card.dropChance), or by kind of creature
 local function DropChances(card)
     if card.dropChance then return card.dropChance end

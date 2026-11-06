@@ -148,6 +148,26 @@ S["cc.imported"] = "|cFF00FF00[TTSE]|r Your collection was imported."
 S["main.collection"] = "Collection"
 S["main.openDeckbuilder"] = "Open Deckbuilder"
 S["main.rules"] = "Official Rules"
+S["main.collectionGuide"] = "Collection Guide"
+
+-- COLLECTION GUIDE (UI\CollectionGuide.lua)
+S["guide.title"] = "Collection Guide"
+S["guide.zones"] = "Zones"
+S["guide.dungeons"] = "Dungeons"
+S["guide.hearths"] = "Hearthstones"
+S["guide.hearth.basic"] = "Hearthstones"
+S["guide.hearth.dark"] = "Dark Hearthstones"
+S["guide.hearth.greater"] = "Cracked Hearthstones"
+S["guide.remainingSet"] = "Remaining in this set: %s of %d cards"
+S["guide.done"] = "Done"
+S["guide.complete"] = "Complete - you have every card here 4/4."
+S["guide.remainingZone"] = "Remaining in this zone: %s of %d cards"
+S["guide.remainingDungeon"] = "Remaining in this dungeon: %s of %d cards"
+S["guide.mastery"] = "Left to master: %s of %d"
+S["guide.foils"] = "Have in foil: %s of %d"
+S["guide.sort"] = "Sort:"
+S["guide.sort.name"] = "Name"
+S["guide.sort.left"] = "Cards left"
 S["main.pve"] = "PvE"
 S["main.campaign"] = "Campaign"
 S["main.practice"] = "Practice vs Dummy"
@@ -869,6 +889,10 @@ S["boss.deathUnlock"] ="|cFF00FF00[TTSE]|r You died... at least you have chicken
 
 -- MOB TOOLTIP
 S["mobtip.card"] = "Forever: CCG card:"
+-- NPCs who hand out gift cards (UI\NpcGossip.lua): one line under their name, by state
+S["mobtip.gift.ready"] = "Has a spare card for you"
+S["mobtip.gift.wait"] = "Hands out cards (check back later)"
+S["mobtip.gift.done"] = "Hands out cards (all collected)"
 
 -- NPC GOSSIP (UI\NpcGossip.lua): what each NPC says (npc.<npcId>.*) when asked for spare cards
 S["npc.ask"] = "Got any spare cards?"
@@ -1832,7 +1856,7 @@ S["rules.pvp.rating"] = "• Every PvP game you win or lose moves your |cFFFFD20
 S["rules.pvp.h.versions"] = "Versions"
 S["rules.pvp.versions"] = "You can play anyone whose version starts with the same two numbers: |cFFFFFFFF1.4.0|r plays |cFFFFFFFF1.4.7|r, but not |cFFFFFFFF1.5.0|r."
 S["rules.pvp.h.connection"] = "Connection"
-S["rules.pvp.connection"] = "• Games run over the |cFFFFFFFFFCCGTTSE|r channel, which the addon joins for you.\n• No answer within |cFFFFFFFF8 seconds|r? It tries whisper, party, raid, guild, then yell (only reaches players near you).\n• The first one that works is used for the rest of the game."
+S["rules.pvp.connection"] = "• Players find each other on the |cFFFFFFFFFCCGTTSE|r channel, which the addon joins for you: opening the Waiting Room says hello there, and everyone with the addon answers.\n• Challenges and games go by whisper. No answer within |cFFFFFFFF8 seconds|r? It tries party, raid, guild, then yell (only reaches players near you).\n• The first one that works is used for the rest of the game."
 S["rules.pvp.h.links"] = "Showing off cards in chat"
 S["rules.pvp.links"] = "• With the chat box open, |cFFFFD200Shift-click|r any card (Deckbuilder, board, or this guide) to add it to your message.\n• Addon users see a gold |cFFFFD200[Card Name]|r link: hover to see it, click to see how to get it.\n• Without the addon: |cFFFFFFFF[Forever CCG: Card Name #ID]|r.\n• Works in every chat."
 S["rules.pvp.tip"] = "Try it now: open chat and Shift-click this card."

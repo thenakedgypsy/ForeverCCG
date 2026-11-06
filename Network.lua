@@ -33,8 +33,15 @@ elseif RegisterAddonMessagePrefix then
     RegisterAddonMessagePrefix(PREFIX)
 end
 
--- Custom chat channel used for ALL addon traffic (waiting room, challenges and matches)
+-- Chat channel where players find each other. Forever's server refuses addon messages in
+-- custom channels ("That operation is not permitted in this channel"), and an addon may only
+-- type into one during a click, so the channel carries just a few typed lines, each sent from
+-- a click (CHANNEL LINES below). Everything else - replies, heartbeats, challenges, matches -
+-- goes by addon whisper, with party, raid and guild copies.
 local LFM_CHANNEL = "FCCGTTSE"
+local function CurrentChannel()
+    return LFM_CHANNEL
+end
 
 -- Seconds the receiver has to click Accept/Decline on the challenge popup
 local CHALLENGE_POPUP_TIMEOUT = 60
@@ -55,12 +62,9 @@ local INVITE_ACK_TIMEOUT = 8
 -- Seconds after sending a challenge before the Invite buttons work again
 local INVITE_COOLDOWN = 45
 
--- How many times (1s apart) to retry joining the channel before dropping queued messages
-local MAX_JOIN_ATTEMPTS = 5
-
 -- =========================================================================
--- CHANNEL ENVELOPES
---   "LFM_..."                  broadcast to everyone in the channel
+-- ENVELOPES (addon messages: whisper, party, raid, guild)
+--   "LFM_..."                  waiting-room messages, to a group or one player
 --   "T:<recipient>:<from>:<payload>"  addressed to one player (challenges, pre-match)
 --   "M:<matchId>:<from>:<payload>"    in-match traffic, only the two players know the id
 -- <from> is the sender's waiting-room name, used as the sender everywhere
@@ -129,28 +133,38 @@ function TTS:SafeAfter(seconds, callback)
     C_Timer.After(seconds, callback)
 end
 
--- Returns the channel number of FCCGTTSE, or nil if we haven't joined it
+-- Returns the channel number of our channel, or nil if we haven't joined it
 local function GetLFMChannelId()
-    local id = GetChannelName(LFM_CHANNEL)
+    local id = GetChannelName(CurrentChannel())
     if id and id > 0 then return id end
     return nil
 end
 
+-- Joined the way /join does (JoinPermanentChannel): on Forever a channel joined with
+-- JoinTemporaryChannel can't be typed in. No chat window is given, so its lines stay hidden.
 local function JoinLFMChannel()
     if GetLFMChannelId() then return end
-    if JoinTemporaryChannel then
-        JoinTemporaryChannel(LFM_CHANNEL)
+    if JoinPermanentChannel then
+        JoinPermanentChannel(CurrentChannel())
+    elseif JoinChannelByName then
+        JoinChannelByName(CurrentChannel())
     else
-        JoinChannelByName(LFM_CHANNEL)
+        JoinTemporaryChannel(CurrentChannel())
     end
 end
 
--- A player moved to another shard without a loading screen (a party invite can do it) stays
--- in the copy of FCCGTTSE they joined before and stops hearing everyone around them, so the
--- channel is left and joined again when the party changes and when the waiting room opens.
--- Not during a PvP match, whose messages may be using the channel.
-local REJOIN_COOLDOWN = 30
+-- Our channel's left/joined lines are hidden until then (rejoins)
+local hideNoticesUntil = 0
 local REJOIN_GAP = 2           -- seconds between leaving and joining again
+
+local function HideChannelNotices()
+    hideNoticesUntil = GetTime() + REJOIN_GAP + 5
+end
+
+-- A player moved to another shard without a loading screen (a party invite can do it) stays
+-- in the copy of the channel they joined before and stops hearing everyone around them, so
+-- the channel is left and joined again once the party has changed. Not during a PvP match.
+local REJOIN_COOLDOWN = 30
 local lastRejoin = -REJOIN_COOLDOWN
 
 local function RejoinLFMChannel()
@@ -162,24 +176,21 @@ local function RejoinLFMChannel()
         JoinLFMChannel()
         return
     end
-    LeaveChannelByName(LFM_CHANNEL)
-    TTS:SafeAfter(REJOIN_GAP, function()
-        JoinLFMChannel()
-        -- Ask the new copy who is waiting, as opening the waiting room does
-        local WR = TTS.WaitingRoom
-        if WR and WR.frame and WR.frame:IsShown() then
-            TTS:SafeAfter(1, function() TTS.Net:BroadcastLFM("LFM_QUERY") end)
-        end
-    end)
+    HideChannelNotices()
+    LeaveChannelByName(CurrentChannel())
+    TTS:SafeAfter(REJOIN_GAP, JoinLFMChannel)
 end
 TTS.Net.RejoinLFMChannel = RejoinLFMChannel
 
 -- Hides the channel's left/joined lines while rejoining, so it doesn't look like chat spam
 local function RejoinNoticeFilter(_, _, notice, ...)
-    if GetTime() - lastRejoin > REJOIN_GAP + 5 then return false, notice, ... end
+    if GetTime() > hideNoticesUntil then return false, notice, ... end
     local baseName = select(8, ...)
     local channelName = select(3, ...)
-    if baseName == LFM_CHANNEL or (type(channelName) == "string" and channelName:find(LFM_CHANNEL, 1, true)) then
+    local function ours(s)
+        return type(s) == "string" and s:upper():find(LFM_CHANNEL, 1, true) ~= nil
+    end
+    if ours(baseName) or ours(channelName) then
         return true
     end
     return false, notice, ...
@@ -247,7 +258,7 @@ local function ReportSendFailure(m, code)
     local key = tostring(m.chatType) .. ":" .. tostring(code)
     if reportedFailures[key] then return end
     reportedFailures[key] = true
-    Print(L("net.sendFailed", m.chatType == "CHANNEL" and LFM_CHANNEL or tostring(m.chatType), tostring(code)))
+    Print(L("net.sendFailed", m.chatType == "CHANNEL" and CurrentChannel() or tostring(m.chatType), tostring(code)))
 end
 
 local function PumpSendQueue()
@@ -335,52 +346,6 @@ loadingWatcher:SetScript("OnEvent", function(_, event)
     end
 end)
 
-local function RawChannelSend(channelId, msg, low, key)
-    QueueSend(msg, "CHANNEL", channelId, low, nil, key)
-end
-
--- Messages sent before the channel is joined are queued so they go out in order
-local channelQueue = {}
-local flushScheduled = false
-local joinAttempts = 0
-
-local function FlushChannelQueue()
-    flushScheduled = false
-    local id = GetLFMChannelId()
-    if not id then
-        joinAttempts = joinAttempts + 1
-        if joinAttempts >= MAX_JOIN_ATTEMPTS then
-            joinAttempts = 0
-            wipe(channelQueue)
-            Print(L("net.channelFailed", LFM_CHANNEL))
-            return
-        end
-        JoinLFMChannel()
-        flushScheduled = true
-        TTS:SafeAfter(1, FlushChannelQueue)
-        return
-    end
-    joinAttempts = 0
-    for i = 1, #channelQueue do
-        RawChannelSend(id, channelQueue[i].msg, channelQueue[i].low, channelQueue[i].key)
-    end
-    wipe(channelQueue)
-end
-
-local function SendChannel(msg, low, key)
-    local id = GetLFMChannelId()
-    if id and #channelQueue == 0 then
-        RawChannelSend(id, msg, low, key)
-        return
-    end
-    table.insert(channelQueue, { msg = msg, low = low, key = key })
-    if not flushScheduled then
-        flushScheduled = true
-        JoinLFMChannel()
-        TTS:SafeAfter(1, FlushChannelQueue)
-    end
-end
-
 -- chatType is one of the fallback routes; target (a waiting-room name) is only used for "WHISPER"
 local function SendDirect(msg, chatType, target, low, onSent)
     QueueSend(msg, chatType, target and CharName(target), low, onSent)
@@ -419,8 +384,8 @@ local function InMyRaid(name)
     return false
 end
 
--- Fallback order after FCCGTTSE (which is always tried first)
-local FALLBACK_ROUTES = { "WHISPER", "PARTY", "RAID", "GUILD", "YELL" }
+-- Fallback order after an addon whisper (which is always tried first)
+local FALLBACK_ROUTES = { "PARTY", "RAID", "GUILD", "YELL" }
 
 -- Route names shown to the player (route.<ROUTE>)
 local ROUTE_LABELS = setmetatable({}, { __index = function(_, route) return L("route." .. route) end })
@@ -434,7 +399,7 @@ local function RouteAvailable(route, target)
     return false
 end
 
--- The next usable route after `current` (nil = FCCGTTSE), or nil when none are left
+-- The next usable route after `current` (nil or "WHISPER" = the whisper), or nil when none are left
 local function NextRoute(current, target)
     local start = 1
     if current then
@@ -454,17 +419,16 @@ TTS.Net.pendingInvites = {}   -- [lowerName] = name : waiting for INVITE_ACK (ad
 TTS.Net.outgoingInvites = {}  -- [lowerName] = { sentAt = time(), matchId = id } : challenges we sent that may still be accepted
 TTS.Net.incomingChallenge = nil -- name of the player whose challenge popup is currently open
 TTS.Net.matchId = nil         -- id of the current (or most recent) match
--- [lowerName] = one of FALLBACK_ROUTES : fallback route to a player. nil means FCCGTTSE (always tried first)
+-- [lowerName] = the route a player last reached us by, or one of FALLBACK_ROUTES. nil means whisper
 TTS.Net.routes = {}
 
+-- Sends a waiting-room message to party (or raid) and guild. The channel can't carry addon
+-- messages; online contacts get theirs by whisper (WhisperOnlineContacts).
 -- announce = true: the waiting-room announce, sent ahead of other background traffic, and
 -- replacing one of the same kind still waiting to go out
 function TTS.Net:BroadcastLFM(msg, announce)
     local low = announce and "mid" or true
     local key = announce and (msg:match("^(LFM_[%u_]+)") or msg) or nil
-    SendChannel(msg, low, key)
-    -- Party (or raid) and guild also reach players the channel misses, e.g. someone in
-    -- another copy of it. Every build reads LFM_ messages whatever route they arrive by.
     if IsInRaid and IsInRaid(LE_PARTY_CATEGORY_HOME) then
         QueueSend(msg, "RAID", nil, low, nil, key)
     elseif IsInGroup and IsInGroup(LE_PARTY_CATEGORY_HOME) then
@@ -513,13 +477,12 @@ function TTS.Net:InvitePlayer(target)
 
     local inviteKey = target:lower()
     local matchId = NewMatchId()
-    -- FCCGTTSE first, unless a contact just answered by whisper (likely on another realm's channel)
-    local viaWhisper = self.routes[inviteKey] == "WHISPER" and self:ContactRecentlyReached(target)
-    if not viaWhisper then self.routes[inviteKey] = nil end
-    -- route: the one this challenge is on now (nil = FCCGTTSE). Kept here rather than read back
+    -- Whisper first
+    self.routes[inviteKey] = nil
+    -- route: the one this challenge is on now (nil = whisper). Kept here rather than read back
     -- from self.routes, which any message from them (e.g. a contact ping) changes.
-    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, route = viaWhisper and "WHISPER" or nil,
-        tried = { viaWhisper and ROUTE_LABELS.WHISPER or LFM_CHANNEL } }
+    self.outgoingInvites[inviteKey] = { sentAt = time(), matchId = matchId, route = nil,
+        tried = { ROUTE_LABELS.WHISPER } }
     self.pendingInvites[inviteKey] = target
     self.lastInviteAt = GetTime()
     if TTS.WaitingRoom and TTS.WaitingRoom.UpdateUI then TTS.WaitingRoom:UpdateUI() end
@@ -530,7 +493,7 @@ function TTS.Net:InvitePlayer(target)
 end
 
 -- If the invite gets no INVITE_ACK, retry on the next route:
--- FCCGTTSE -> whisper -> party -> raid -> guild -> yell -> give up
+-- whisper -> party -> raid -> guild -> yell -> give up
 -- Routes that can't reach the player (not grouped, no guild) are skipped.
 function TTS.Net:AwaitInviteAck(inviteKey, matchId)
     TTS:SafeAfter(INVITE_ACK_TIMEOUT, function()
@@ -548,7 +511,7 @@ function TTS.Net:AwaitInviteAck(inviteKey, matchId)
             Net.routes[inviteKey] = nextRoute
             invite.sentAt = time()
             table.insert(invite.tried, ROUTE_LABELS[nextRoute])
-            Print(L("net.retrying", target, current and ROUTE_LABELS[current] or LFM_CHANNEL, ROUTE_LABELS[nextRoute]))
+            Print(L("net.retrying", target, ROUTE_LABELS[current or "WHISPER"], ROUTE_LABELS[nextRoute]))
             Net:Send(target, "INVITE:" .. TTS.VERSION .. ":" .. matchId .. ":" .. MyScore() .. ":" .. MyPvP())
             Net:AwaitInviteAck(inviteKey, matchId)
             return
@@ -605,9 +568,8 @@ local CONTACT_OFFLINE_BACKOFF = 120     -- seconds an offline contact is left al
 local CONTACT_REACHED_FRESH = 60        -- a pong this recent sends challenges by whisper straight away
 local CONTACT_SWAP_COOLDOWN = 600       -- seconds before swapping lists with the same player again
 local CONTACT_LIST_CHUNK = 170          -- characters of entries per message (addon messages cap at 255)
--- Heard on the channel this recently (census, LFM_HERE, LFM_QUEUED): online without a ping,
--- so they aren't pinged, and one unanswered ping doesn't hide them (the census runs every
--- 60 seconds with a waiting room open, 180 without)
+-- Heard from this recently (a channel hello, LFM_HERE, LFM_QUEUED): one unanswered ping
+-- doesn't hide them
 local PRESENCE_GRACE = 240
 
 -- Runtime state per lower-case name: { lastPing (queued), pingSent (went out), lastReached,
@@ -744,6 +706,12 @@ local function MyLFMFields()
     return (queued and "1" or "0") .. ":" .. MyScore() .. ":" .. MyPvP()
 end
 
+-- Asks who is waiting (queued players answer with LFM_QUEUED), and says we're online:
+--   LFM_QUERY:<queued 0/1>:<score>:<pvp>:<name>   (1.0.4 and earlier send a bare LFM_QUERY)
+function TTS.Net:SendQuery()
+    self:BroadcastLFM("LFM_QUERY:" .. MyLFMFields() .. ":" .. MyName())
+end
+
 -- A contact reported they are queued: show them like a channel announce would.
 -- pvp: their { rating, wins, losses } (PvPRecord.lua), if sent
 local function NoteContactWaiting(name, score, pvp)
@@ -767,8 +735,7 @@ function TTS.Net:PingContacts(background)
     for key, c in pairs(db) do
         local s = ContactState(key)
         if type(c) == "table" and c.name and not SameName(c.name, MyName())
-            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= every
-            and not (s.lastPresence and (now - s.lastPresence) <= PRESENCE_GRACE) then
+            and (s.offlineUntil or 0) <= now and (now - (s.lastPing or 0)) >= every then
             due[#due + 1] = c
         end
     end
@@ -829,15 +796,37 @@ function TTS.Net:GetOnlineIdleContacts()
     return list
 end
 
+-- Whispers msg to up to max contacts known to be online (queued or not, as above), the ones
+-- sent this kind (tag) least recently first. The channel can't carry addon messages, so this
+-- is how a queued player's heartbeat and leave reach the players around them.
+function TTS.Net:WhisperOnlineContacts(msg, max, tag)
+    local now, list = time(), {}
+    for key, c in pairs(ContactDB()) do
+        local s = contactState[key]
+        if type(c) == "table" and c.name and s and s.lastReached
+            and (now - s.lastReached) <= ONLINE_WINDOW and not SilentOnPing(s, now)
+            and not SameName(c.name, MyName()) then
+            list[#list + 1] = { name = c.name, s = s }
+        end
+    end
+    local field = "sent_" .. (tag or "msg")
+    table.sort(list, function(a, b) return (a.s[field] or 0) < (b.s[field] or 0) end)
+    for i = 1, math.min(#list, max) do
+        list[i].s[field] = now
+        SendDirect(msg, "WHISPER", list[i].name, "mid")
+    end
+end
+
 -- =========================================================================
 -- CENSUS
--- Finds everyone with the addon on our FCCGTTSE channel, queued or not, so they show in the
--- waiting room (and become contacts, which spreads them to other backend realms).
+-- Finds everyone with the addon in our party, raid or guild, queued or not, so they show in
+-- the waiting room (and become contacts, which spreads them to other backend realms). The
+-- channel's players are found by its hellos instead (CHANNEL LINES).
 --   LFM_CENSUS:<score>:<pvp>:<name>             asked while our waiting room is open and we're not queued
 --   LFM_HERE:<queued 0/1>:<score>:<pvp>:<name>  every client's answer, broadcast so all askers benefit
 -- (<pvp> = <rating>:<wins>:<losses>, PvPRecord.lua)
--- One census per CENSUS_EVERY across the whole channel (anyone's counts), and each client
--- answers at most once per CENSUS_REPLY_COOLDOWN after a random delay, so a full channel
+-- One census per CENSUS_EVERY across the whole guild (anyone's counts), and each client
+-- answers at most once per CENSUS_REPLY_COOLDOWN after a random delay, so a big guild
 -- doesn't answer in one burst. Older builds ignore both.
 -- =========================================================================
 local CENSUS_EVERY = 60
@@ -847,10 +836,10 @@ local CENSUS_REPLY_JITTER = 5
 local lastCensusSeen = 0
 local lastCensusReply = 0
 
--- Someone is online: remember them like an answered ping. onChannel: heard in an LFM_
--- broadcast (FCCGTTSE, or its party / guild copies), which keeps hearing them without pings
--- or list swaps (AddContact's fromChannel). Community.lua's players, maybe on another
--- backend realm, are added like any other contact.
+-- Someone is online: remember them like an answered ping. onChannel: heard in a channel
+-- hello or an LFM_ message (party, guild, whisper), so on our backend realm: no list swap
+-- (AddContact's fromChannel). Community.lua's players, maybe on another backend realm, are
+-- added like any other contact.
 local function NotePresence(name, queued, score, pvp, onChannel)
     name = NormalizeName(name or "")
     if name == "" or SameName(name, MyName()) then return end
@@ -902,6 +891,99 @@ local function OnHere(msg, sender)
     if name then NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true) end
 end
 
+-- =========================================================================
+-- CHANNEL LINES
+-- Forever refuses addon messages in custom channels, and an addon may only type into one
+-- during a click or key press (a timer can't). So the channel carries just these typed
+-- lines, each sent from a click, and hidden from chat by a filter:
+--   FCCG1:H:<queued 0/1>:<score>:<pvp>:<name>   hello: opening the waiting room, Refresh, Join
+--   FCCG1:L:<name>                               Leave
+-- Everyone who hears a hello whispers back an LFM_HERE (queued or not), so whoever says hello
+-- sees who is online and who is waiting. After that, whispers keep them listed: a queued
+-- player's heartbeat (WhisperOnlineContacts) and the contact pings.
+-- =========================================================================
+local LINE_TAG = "FCCG1:"
+local HELLO_REPLY_COOLDOWN = 20   -- seconds before answering the same player's hello again
+local HELLO_REPLY_JITTER = 3      -- replies are spread out, so a busy channel doesn't answer at once
+local LINE_REPEAT_GAP = 5         -- the same line twice within this many seconds is sent once
+local helloReplies = {}           -- [lowerName] = time() we last answered their hello
+local lastLineText, lastLineAt = nil, -math.huge
+
+-- Only from a click handler, or code it runs straight away: typed chat sent from anywhere
+-- else (a timer, an event) is blocked by the game
+local function SayInChannel(body)
+    local id = GetLFMChannelId()
+    if not id or not SendChatMessage then return false end
+    local text = LINE_TAG .. body
+    if text == lastLineText and GetTime() - lastLineAt < LINE_REPEAT_GAP then return true end
+    lastLineText, lastLineAt = text, GetTime()
+    SendChatMessage(text, "CHANNEL", nil, id)
+    return true
+end
+
+-- Click handlers only (see SayInChannel)
+function TTS.Net:SayHello()
+    local E = TTS.Engine
+    if E and E.inMatch then return end
+    SayInChannel("H:" .. MyLFMFields() .. ":" .. MyName())
+end
+
+function TTS.Net:SayLeave()
+    SayInChannel("L:" .. MyName())
+end
+
+local function OnChannelLine(text)
+    local body = text:sub(#LINE_TAG + 1)
+    local kind = body:sub(1, 2)
+    if kind == "H:" then
+        local queued, score, r, w, l, name = body:match("^H:(%d):(%d+):(%d+):(%d+):(%d+):(.+)$")
+        if not name then return end
+        name = NormalizeName(name)
+        if name == "" or SameName(name, MyName()) then return end
+        NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true)
+        local E = TTS.Engine
+        if E and E.inMatch then return end
+        local key = name:lower()
+        if time() - (helloReplies[key] or 0) < HELLO_REPLY_COOLDOWN then return end
+        helloReplies[key] = time()
+        TTS:SafeAfter(math.random() * HELLO_REPLY_JITTER, function()
+            SendDirect("LFM_HERE:" .. MyLFMFields() .. ":" .. MyName(), "WHISPER", name, "mid")
+        end)
+    elseif kind == "L:" then
+        local name = NormalizeName(body:match("^L:(.+)$") or "")
+        if name ~= "" and not SameName(name, MyName()) then
+            TTS.Net:OnReceive("LFM_LEAVE:" .. name, name)
+        end
+    end
+end
+
+-- "5. FCCGTTSE" or "FCCGTTSE" -> is it ours
+local function IsOurChannel(...)
+    for i = 1, select("#", ...) do
+        local s = select(i, ...)
+        if type(s) == "string" and s:gsub("^%d+%.%s*", ""):upper() == LFM_CHANNEL then return true end
+    end
+    return false
+end
+
+-- Our lines never show in chat (the channel isn't in a chat window, unless someone adds it)
+if ChatFrame_AddMessageEventFilter then
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", function(_, _, text, ...)
+        if type(text) == "string" and text:sub(1, #LINE_TAG) == LINE_TAG then return true end
+        return false, text, ...
+    end)
+end
+
+local lineFrame = CreateFrame("Frame")
+lineFrame:RegisterEvent("CHAT_MSG_CHANNEL")
+-- text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID,
+-- channelIndex, channelBaseName
+lineFrame:SetScript("OnEvent", function(_, _, text, _, _, channelName, _, _, _, _, baseName)
+    if type(text) ~= "string" or text:sub(1, #LINE_TAG) ~= LINE_TAG then return end
+    if not IsOurChannel(baseName, channelName) then return end
+    OnChannelLine(text)
+end)
+
 -- Slow background rounds from login on. The waiting room pings faster while it is open,
 -- so these skip then (and during a match, which PingContacts already skips).
 function TTS.Net:StartBackgroundPings()
@@ -951,8 +1033,8 @@ if ChatFrame_AddMessageEventFilter then
     ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", OfflinePingFilter)
 end
 
--- Unwraps a channel message and hands it to OnReceive if it is meant for us.
--- chatType is how it arrived ("CHANNEL" or a fallback route); replies go back the same way.
+-- Unwraps an addon message and hands it to OnReceive if it is meant for us.
+-- chatType is how it arrived (WHISPER, PARTY, RAID, GUILD...); replies go back the same way.
 function TTS.Net:OnChannelMessage(message, sender, chatType)
     local kind = message:sub(1, 2)
     local from, inner
@@ -975,7 +1057,7 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
         if ROUTE_LABELS[chatType] then
             self.routes[key] = chatType
         elseif inner:match("^INVITE:") then
-            -- A fresh challenge over FCCGTTSE: answer over FCCGTTSE too
+            -- A fresh challenge: answer by whisper
             self.routes[key] = nil
         end
         self:OnReceive(inner, from)
@@ -1020,14 +1102,27 @@ f:SetScript("OnEvent", function(self, event, ...)
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
         -- Delay so the default channels (General, Trade...) take their usual numbers first
-        TTS:SafeAfter(5, JoinLFMChannel)
+        local _, isReloadingUi = ...
+        TTS:SafeAfter(5, function()
+            -- A /reload keeps the channel as it was joined, which may be an older build's
+            -- JoinTemporaryChannel (can't speak in it): leave and join it again our way
+            if isReloadingUi and GetLFMChannelId() and LeaveChannelByName and not TTS.Net.channelRejoinedOnReload then
+                TTS.Net.channelRejoinedOnReload = true
+                HideChannelNotices()
+                LeaveChannelByName(CurrentChannel())
+                TTS:SafeAfter(REJOIN_GAP, JoinLFMChannel)
+            else
+                JoinLFMChannel()
+            end
+        end)
         TTS.Net:StartBackgroundPings()
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, channel, sender = ...
         if prefix == PREFIX then
             local cleanSender = NormalizeName(Ambiguate(sender, "none"))
-            -- The channel echoes our own messages back to us
-            if SameName(cleanSender, UnitName("player")) then return end
+            -- Guild and party copies come back to us too. On Forever the sender can be
+            -- "Firstname Surname" while UnitName is the first name alone
+            if SameName(cleanSender, UnitName("player")) or SameName(cleanSender, MyName()) then return end
             TTS.Net:OnChannelMessage(message, cleanSender, channel)
         end
     end
@@ -1045,7 +1140,7 @@ function TTS.Net:Send(target, msg)
         Print("Network message exceeds the 255-character limit and was not sent.")
         return false
     end
-    -- One route per message: FCCGTTSE unless a fallback route is set for this player
+    -- One route per message: a whisper unless another route is set for this player
     -- and it can still reach them
     -- Contact upkeep is background traffic; challenges and matches go first
     local low = msg:match("^CONTACT_") and true or false
@@ -1053,7 +1148,7 @@ function TTS.Net:Send(target, msg)
     if route and RouteAvailable(route, target) then
         SendDirect(envelope, route, route == "WHISPER" and target or nil, low)
     else
-        SendChannel(envelope, low)
+        SendDirect(envelope, "WHISPER", target, low)
     end
     return true
 end
@@ -1730,6 +1825,9 @@ function TTS.Net:OnReceive(msg, sender)
         return
 
     elseif cmd == "LFM_QUERY" then
+        -- The asker has their waiting room open (or just rejoined the channel)
+        local queued, score, r, w, l, name = msg:match("^LFM_QUERY:(%d):(%d+):(%d+):(%d+):(%d+):(.+)$")
+        if name then NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true) end
         -- One query can arrive by channel, party and guild at once: answer it once
         if GetTime() - (self.lastQueryAnswer or -10) < 3 then return end
         self.lastQueryAnswer = GetTime()
@@ -1759,8 +1857,12 @@ function TTS.Net:OnReceive(msg, sender)
         end
         if parts[2] == "1" then
             NoteContactWaiting(sender, tonumber(parts[3]), pvp)
-        elseif TTS.WaitingRoom and TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then
-            TTS.WaitingRoom:UpdateUI()
+        elseif TTS.WaitingRoom then
+            -- Not queued any more (e.g. a game started, which sends no leave line)
+            for pName in pairs(TTS.WaitingRoom.players) do
+                if SameName(pName, sender) then TTS.WaitingRoom.players[pName] = nil end
+            end
+            if TTS.WaitingRoom.frame and TTS.WaitingRoom.frame:IsShown() then TTS.WaitingRoom:UpdateUI() end
         end
         return
 

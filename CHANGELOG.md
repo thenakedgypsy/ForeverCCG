@@ -1,3 +1,12 @@
+## 1.0.7
+*   new: Collection Guide - a button under Open Deckbuilder (or /tragic collection). Zones and Dungeons tabs list every place with cards and how many you still need there; pick one to see its cards by name with your copies (n/4). A Hearthstones tab does the same for the Hearthstones, Dark Hearthstones and Cracked Hearthstones. It opens on the zone you're in
+
+## 1.0.6
+*   new: NPCs who hand out Forever: CCG cards (innkeepers, weapon merchants, armorers...) now show a card icon in their tooltip - green when they have a spare card for you, grey when you need to check back later or have collected them all
+
+## 1.0.5
+*   fix for public matching. the server was refusing addon messages on the FCCGTTSE channel so nothing the addon sent there ever reached anyone outside of contacts, party, guild. Players now find each other with a short hidden line in the channel when you open the Waiting Room, join or leave it.
+
 ## 1.0.4
 *   fix for the Waiting Room's "Recent players online" list missing most players on the addon's channel (it often only showed people you'd partied with): a busy channel no longer makes them look offline
 *   fix for queued players dropping out of others' Waiting Rooms when the addon's channel is busy: the addon now sends far less background traffic, and your place in the queue is announced ahead of the rest

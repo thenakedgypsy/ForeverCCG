@@ -570,3 +570,37 @@ M:SetScript("OnEvent", function(_, event)
         if GiftCardOf(npcId) and not (GossipFrame and GossipFrame:IsShown()) then ShowPanel(npcId) end
     end)
 end)
+
+-- =========================================================================
+-- TOOLTIP ICON
+-- Hovering an NPC that hands out gift cards adds a card-back icon line to its tooltip:
+-- green while it has a card ready for the player, grey while they wait or have them all
+-- (mobtip.gift.ready / .wait / .done).
+-- =========================================================================
+local function AddGiftLine(tooltip)
+    if tooltip ~= GameTooltip then return end
+    local ok, _, unit = pcall(tooltip.GetUnit, tooltip)
+    if not ok or not unit or IsSecret(unit) then return end
+    local okGuid, guid = pcall(UnitGUID, unit)
+    if not okGuid or not guid or IsSecret(guid) or type(guid) ~= "string" then return end
+    local id = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
+    local npcId = id and tonumber(id)
+    if not GiftCardOf(npcId) then return end
+
+    local state, r, g, b
+    if HasMoreToGive(npcId, true) then
+        state, r, g, b = "ready", 0.1, 1, 0.1
+    elseif HasMoreToGive(npcId) then
+        state, r, g, b = "wait", 0.6, 0.6, 0.6
+    else
+        state, r, g, b = "done", 0.6, 0.6, 0.6
+    end
+    tooltip:AddLine(string.format("|T%s:20:10|t %s", CARD_BACK_ICON, L("mobtip.gift." .. state)), r, g, b)
+    tooltip:Show()
+end
+
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Unit then
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, AddGiftLine)
+else
+    GameTooltip:HookScript("OnTooltipSetUnit", AddGiftLine)
+end

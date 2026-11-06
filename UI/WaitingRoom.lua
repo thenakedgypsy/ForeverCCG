@@ -15,6 +15,9 @@ TTS.WaitingRoom = TTS.WaitingRoom or {
 }
 
 local WR = TTS.WaitingRoom
+-- Others drop a waiting player not heard from for this long (UpdateUI). Heartbeats arrive by
+-- whisper, a few contacts at a time (BroadcastPresence), so this is longer than the beat.
+local WAITING_EXPIRY = 90
 WR.scores = WR.scores or {}       -- [lowerName] = collection score (from LFM_QUEUED, LFM_HERE and LFM_CENSUS)
 WR.pvp = WR.pvp or {}             -- [lowerName] = { rating, wins, losses } (PvPRecord.lua), from the same messages
 WR.pvp = WR.pvp or {}             -- [lowerName] = { rating, wins, losses } (PvPRecord.lua), from the same messages
@@ -323,7 +326,7 @@ function WR:UpdateUI()
     end
 
     for pName, seenTime in pairs(self.players) do
-        if (now - seenTime) <= 25 then
+        if (now - seenTime) <= WAITING_EXPIRY then
             if pName:lower() ~= myKey then
                 table.insert(displayList, {
                     name = pName,
@@ -390,24 +393,25 @@ function WR:UpdateUI()
     UpdateOnlineList()
 end
 
--- 0.14 and earlier only list LFM_ANNOUNCE; without it they never see us, and a challenge
--- (which reports the version mismatch) is never sent. They can't play this build, so it only
--- goes out this often (they show us for 25 seconds of each), halving the heartbeat's traffic.
-local LEGACY_ANNOUNCE_EVERY = 60
-local lastLegacyAnnounce = -LEGACY_ANNOUNCE_EVERY
+-- The heartbeat whispers HEARTBEAT_WHISPERS online contacts each beat, in turn, so with a
+-- lot of them each hears it less often than every beat (hence WAITING_EXPIRY); their own
+-- pings fill the gaps
+local HEARTBEAT_WHISPERS = 4
+local JOIN_WHISPERS = 8
 
-function WR:BroadcastPresence()
+-- Our place in the queue, to party / guild and by whisper to online contacts (the channel
+-- can't carry addon messages; Network.lua, CHANNEL LINES)
+function WR:BroadcastPresence(whispers)
     if TTS.Net and TTS.Net.BroadcastLFM then
-        local myName = GetPlayerFullName()
-        TTS.Net:BroadcastLFM("LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. TTS.Net.MyPvP() .. ":" .. myName, true)
-        if GetTime() - lastLegacyAnnounce >= LEGACY_ANNOUNCE_EVERY then
-            lastLegacyAnnounce = GetTime()
-            TTS.Net:BroadcastLFM("LFM_ANNOUNCE:" .. myName, true)
-        end
+        local msg = "LFM_QUEUED:" .. TTS.Net.MyScore() .. ":" .. TTS.Net.MyPvP() .. ":" .. GetPlayerFullName()
+        TTS.Net:BroadcastLFM(msg, true)
+        TTS.Net:WhisperOnlineContacts(msg, whispers or HEARTBEAT_WHISPERS, "queued")
     end
 end
 
-function WR:ToggleQueue()
+-- fromClick: called from a click, so the channel line can be typed (Network.lua, SayInChannel);
+-- a game starting or the deck check leave without one
+function WR:ToggleQueue(fromClick)
     -- The deck is picked when a game starts, so any playable deck will do (and the
     -- Deckbuilder keeps at least one playable while queued)
     if not self.isQueued and TTS.Engine and not TTS.Engine:HasPlayableDeck() then
@@ -419,13 +423,17 @@ function WR:ToggleQueue()
     local myName = GetPlayerFullName()
 
     if self.isQueued then
-        self:BroadcastPresence()
+        -- Everyone on the channel hears this one, and those waiting whisper back
+        if fromClick and TTS.Net and TTS.Net.SayHello then TTS.Net:SayHello() end
+        self:BroadcastPresence(JOIN_WHISPERS)
         -- Reaches players on other backend realms, who FCCGTTSE doesn't (Community.lua)
         if TTS.Community then TTS.Community:AnnounceQueued() end
         DEFAULT_CHAT_FRAME:AddMessage(L("wr.joined", myName))
     else
+        if fromClick and TTS.Net and TTS.Net.SayLeave then TTS.Net:SayLeave() end
         if TTS.Net and TTS.Net.BroadcastLFM then
             TTS.Net:BroadcastLFM("LFM_LEAVE:" .. myName)
+            TTS.Net:WhisperOnlineContacts("LFM_LEAVE:" .. myName, JOIN_WHISPERS, "leave")
         end
         DEFAULT_CHAT_FRAME:AddMessage(L("wr.left"))
     end
@@ -438,12 +446,13 @@ function WR:ToggleQueue()
 end
 
 toggleBtn:SetScript("OnClick", function()
-    WR:ToggleQueue()
+    WR:ToggleQueue(true)
 end)
 
 refreshBtn:SetScript("OnClick", function()
     if TTS.Net and TTS.Net.BroadcastLFM then
-        TTS.Net:BroadcastLFM("LFM_QUERY")
+        TTS.Net:SayHello()
+        TTS.Net:SendQuery()
     end
     WR:UpdateUI()
 end)
@@ -457,10 +466,8 @@ F:SetScript("OnShow", function(self)
     end
     UpdateVersionText()
     UpdateToggleButton()
-    -- In case a shard move left us in an old copy of FCCGTTSE (Network.lua); it asks again once rejoined
-    if TTS.Net and TTS.Net.RejoinLFMChannel then TTS.Net.RejoinLFMChannel() end
     if TTS.Net and TTS.Net.BroadcastLFM then
-        TTS.Net:BroadcastLFM("LFM_QUERY")
+        TTS.Net:SendQuery()
     end
     -- Saved contacts may be on another backend realm, out of reach of the channel (Network.lua)
     if TTS.Net and TTS.Net.PingContacts then TTS.Net:PingContacts() end
@@ -469,9 +476,18 @@ F:SetScript("OnShow", function(self)
     WR:UpdateUI()
 end)
 
+-- Opening the window says hello in the channel: everyone there whispers back (Network.lua,
+-- CHANNEL LINES). On F:Show() rather than OnShow, which also fires when the whole UI comes
+-- back (after a cinematic, say) - not a click, so typing into the channel would be blocked.
+-- Every F:Show() comes from a click, key press or slash command (main window, minimap
+-- button, Rules, /tragic queue).
+hooksecurefunc(F, "Show", function()
+    if TTS.Net and TTS.Net.SayHello and F:IsShown() then TTS.Net:SayHello() end
+end)
+
 -- Presence heartbeat every 10 seconds while queued. On its own frame because a queued
 -- player can close the window (e.g. to use the Deckbuilder); others drop anyone not
--- heard from in 25 seconds (UpdateUI).
+-- heard from in WAITING_EXPIRY seconds (UpdateUI).
 local heartbeat = CreateFrame("Frame")
 local heartbeatTicker = 0
 heartbeat:SetScript("OnUpdate", function(self, elapsed)

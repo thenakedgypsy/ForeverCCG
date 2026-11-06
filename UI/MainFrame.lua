@@ -21,7 +21,7 @@ local M = TTS.MainFrame
 local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
 local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
-M:SetSize(400, 335)
+M:SetSize(400, 363)
 M:SetPoint("CENTER")
 M:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -158,7 +158,7 @@ end)
 -- =========================================================================
 -- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
 -- =========================================================================
-local deckSection = CreateSection("main.collection", 372, 104)
+local deckSection = CreateSection("main.collection", 372, 132)
 deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
 
 local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "main.openDeckbuilder")
@@ -168,6 +168,13 @@ deckBtn:SetScript("OnClick", function()
         TTS.DeckBuilderFrame:TryOpen()
         OpenFromMain(TTS.DeckBuilderFrame)
     end
+end)
+
+-- Which cards each zone and dungeon holds, and how many of each you have (CollectionGuide.lua)
+local guideBtn = CreatePanelButton("TTS_CollectionGuideBtn", deckSection, 170, 24, "main.collectionGuide")
+guideBtn:SetPoint("TOP", deckBtn, "BOTTOM", 0, -4)
+guideBtn:SetScript("OnClick", function()
+    if TTS.CollectionGuide then OpenFromMain(TTS.CollectionGuide:Open()) end
 end)
 
 local rulesBtn = CreatePanelButton("TTS_RulesBtn", deckSection, 170, 24, "main.rules")
@@ -185,7 +192,7 @@ scoreLabel:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -9)
 scoreLabel:SetJustifyH("RIGHT")
 
 local statusLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-statusLabel:SetPoint("TOP", deckSection, "TOP", 0, -66)
+statusLabel:SetPoint("TOP", deckSection, "TOP", 0, -94)
 statusLabel:SetWidth(340)
 statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
@@ -353,6 +360,12 @@ SlashCmdList["TRAGIC"] = function(msg)
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. choice .. " - " .. L("locale.reload"))
         else
             DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r " .. L("options.language") .. ": " .. Loc:GetChoice() .. " (" .. Loc.code .. ")")
+        end
+    elseif cmd == "collection" or cmd == "cards" then
+        -- The Collection Guide (CollectionGuide.lua)
+        if TTS.CollectionGuide then
+            local f = TTS.CollectionGuide.frame
+            if f and f:IsShown() then f:Hide() else TTS.CollectionGuide:Open() end
         end
     elseif cmd == "tutorial" then
         if TTS.StartTutorial then TTS:StartTutorial() end
