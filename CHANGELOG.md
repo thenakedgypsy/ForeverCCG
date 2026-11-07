@@ -1,3 +1,7 @@
+## 1.0.11
+*   possible fix for the game occasionally crashing on a loading screen (entering a dungeon, taking a portal, hearthing). These crashes are likely not caused by this addon, but as a precaution the addon's 3D card models and their spell effects are now unloaded just before the loading screen and come back about a second after it ends. That covers the board, the deckbuilder and the creature card preview, including when it's in its own window
+*   the creature card preview closes when a loading screen starts and shows again the next time you hover a creature
+
 ## 1.0.10
 *   new: Campfire Warmth - play a PvP game with your opponent at a campfire and you both get an hour of better creature card drops, once a day. While it lasts, the minimap button's tooltip shows the time left, and chat tells you as it runs down. See Rules & Guide > Playing Others
 *   the minimap button's tooltip now shows your PvP rating under your collection score

@@ -2950,6 +2950,8 @@ function TTS.RedrawCardModels() modelGeneration = modelGeneration + 1 end
 local function SetupCardVisual(f, card, foil)
     SetCardFoil(f, foil, card)
     PaintZoneArt(f, card)   -- (cheap when unchanged: before the same-card shortcut, so the option applies)
+    -- During a loading screen no model loads; ModelGuard.lua loads it once the world is in
+    if TTS.ModelGuard and TTS.ModelGuard:Hold(f, card) then return end
     -- The same card still showing on this frame keeps its model: reloading it on every
     -- refresh made models flicker (worst on dressed ones like hero cards and Leeroy)
     if card and f.visualCard == card and f.visualGen == modelGeneration and f:IsShown() then

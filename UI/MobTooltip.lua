@@ -653,3 +653,19 @@ GameTooltip:HookScript("OnSizeChanged", function(self)
         UpdateRules(mobCard)
     end
 end)
+
+-- Loading screen (ModelGuard.lua): the cards close and drop their creature models; the
+-- next creature hovered fills them again
+function M:UnloadModels()
+    for _, f in ipairs({ mobCard or false, win and win.card or false, preview or false }) do
+        if f then
+            local actor = f.scene and f.scene.actor
+            if actor and actor.ClearModel then pcall(actor.ClearModel, actor) end
+            if f.scene then f.scene:Hide() end
+            f.card = nil
+        end
+    end
+    HideWindow()
+    HideMobCard()
+    if preview then preview:Hide() end
+end
