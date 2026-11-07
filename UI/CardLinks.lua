@@ -193,10 +193,14 @@ local function CollectionStatus(card)
             how = L("link.betaOnly")
         elseif card.unlockOnDeath then
             how = L("link.dieToUnlock")
-        elseif card.zone then
-            how = L("link.defeatIn", TTS:CardName(card), TTS.Locale:Term("zone", card.zone))
         else
-            how = L("link.defeat", TTS:CardName(card))
+            -- dropsFrom: copies come from killing another NPC (Sneed's Shredder from Sneed)
+            local victim = TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card)
+            if card.zone then
+                how = L("link.defeatIn", victim, TTS.Locale:Term("zone", card.zone))
+            else
+                how = L("link.defeat", victim)
+            end
         end
         return "|cFFFF4444" .. L("link.notCollected") .. "|r\n|cFFBBBBBB" .. how .. "|r"
     end

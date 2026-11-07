@@ -63,11 +63,13 @@ TTS:AddCards({
         text = ""
     },
     ["DMS08"] = {
-        id = "DMS08", name = "Sneed's Shredder", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 1269,
-        zone = "The Deadmines", creatureType = "Mechanical", faction = "Defias", npcId = 642,
+        id = "DMS08", name = "Sneed's Shredder", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 1269,
+        zone = "The Deadmines", creatureType = "Mechanical", npcId = 642,
+        onDeath = { ops = { { op = "token", id = "TOK07", n = 1 } } },   -- Sneed climbs out of the wreck
+        dropsFrom = { npcId = 643, card = "TOK07" },   -- copies drop from Sneed (the pilot), not the shredder
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Martyrdom: Spawn: 1 Sneed Add (2/2)."
     },
     ["DMS09"] = {
         id = "DMS09", name = "Cookie", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -93,12 +95,11 @@ TTS:AddCards({
     },
     -- Solo reward
     ["DMS12"] = {
-        id = "DMS12", name = "Sneed", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 3, toughness = 3, isReward = true, displayId = 7125,
-        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcEntry = 643,
-        anthem = { tag = "faction", value = "Defias", p = 0, kw = { "haste" } },
-        rally = { tag = "faction", value = "Defias", p = 1, t = 1 },
+        id = "DMS12", name = "Defias Taskmaster", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
+        power = 4, toughness = 3, firstStrike = true, isReward = true, displayId = 2440,   -- classicdb model preview for npc 4417
+        zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcEntry = 4417,
+        anthem = { tag = "zone", value = "The Deadmines", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Quick."
+        text = "Strikes-First. Other Deadmines denizens you control get +1/+1."
     },
 })

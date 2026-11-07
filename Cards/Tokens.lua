@@ -58,4 +58,14 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Blocker."
     },
+    -- Sneed's Shredder (Cards\Dungeons\Deadmines.lua): the pilot, once his shredder is scrap
+    ["TOK07"] = {
+        id = "TOK07", name = "Sneed", cost = "", cmc = 0, color = "R", type = "Creature",
+        power = 2, toughness = 2, isToken = true, displayId = 7125,   -- Sneed (classic npc 643)
+        creatureType = "Humanoid", faction = "Defias",
+        anthem = { tag = "faction", value = "Defias", p = 0, kw = { "haste" } },
+        rally = { tag = "faction", value = "Defias", p = 1, t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Quick."
+    },
 })

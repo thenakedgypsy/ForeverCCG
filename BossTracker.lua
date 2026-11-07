@@ -172,13 +172,18 @@ function TTS.BossTracker:BuildMobCardCache()
         -- Solo reward cards are earned only by winning their encounter, never from kills;
         -- unlockOnDeath cards (Leeroy Jenkins) only from your own deaths
         if card.isMob and not card.isReward and not card.unlockOnDeath then
-            if card.npcId then
-                mobCardsByNpcID[card.npcId] = card
+            -- dropsFrom = { npcId, card }: copies come from killing another NPC instead (Sneed's
+            -- Shredder drops from Sneed); `card` names it, so its translated name matches too
+            local src = card.dropsFrom
+            local npcId = src and src.npcId or card.npcId
+            local named = src and TTS.Cards[src.card] or card
+            if npcId then
+                mobCardsByNpcID[npcId] = card
             end
-            if card.name then
-                mobCardsByName[Normalize(card.name)] = card
+            if named.name then
+                mobCardsByName[Normalize(named.name)] = card
                 -- Kill messages and unit names come in the client's language: match the translated name too
-                local shown = TTS:CardName(card)
+                local shown = TTS:CardName(named)
                 if shown then mobCardsByName[Normalize(shown)] = card end
             end
         end

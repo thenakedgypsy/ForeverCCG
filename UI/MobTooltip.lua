@@ -64,6 +64,15 @@ local function BuildLookup()
             if card.npcId then
                 cardsByNpcId[card.npcId] = card
             end
+            -- A card that drops from another NPC (Sneed's Shredder from Sneed) shows on that one too
+            local src = card.dropsFrom
+            local named = src and TTS.Cards[src.card]
+            if src and src.npcId then cardsByNpcId[src.npcId] = card end
+            if named and named.name then
+                cardsByName[named.name:lower()] = card
+                local shown = TTS:CardName(named)
+                if shown then cardsByName[shown:lower()] = card end
+            end
             if card.name then
                 cardsByName[card.name:lower()] = card
                 -- The client reports names in its own language; match the translated name too

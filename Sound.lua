@@ -270,7 +270,7 @@ TTS.CreatureSounds = {
     ["DMS09"] = { aggro = 416, death = 420 }, -- Cookie
     ["DMS10"] = { aggro = 283608, death = 18493 }, -- Captain Greenskin
     ["DMS11"] = { enter = 5775, aggro = { 5777, 5778, 5779 }, aggroAgain = 1353, death = 1356 }, -- Mr. Smite
-    ["DMS12"] = { aggro = 1415, death = 1413 }, -- Sneed
+    ["DMS12"] = { aggro = 1263, death = 2944 }, -- Defias Taskmaster (as the other Defias humans)
     ["DSK01"] = { aggro = 1016, death = 337 }, -- Skeletal Warrior
     ["DSK02"] = { aggro = 390, death = 394 }, -- Young Black Ravager
     ["DSK03"] = { aggro = 2517, death = 2515 }, -- Skeletal Horror
@@ -832,6 +832,7 @@ TTS.CreatureSounds = {
     ["TOK03"] = { aggro = 1016, death = 337 }, -- Skeleton (as Skeletal Warrior)
     ["TOK05"] = { aggro = 428, death = 432 }, -- Rookery Whelp (as Scalding Whelp)
     ["TOK06"] = { aggro = 1398, death = 1396 }, -- Voidwalker
+    ["TOK07"] = { aggro = 1415, death = 1413 }, -- Sneed
 }
 
 -- =========================================================================

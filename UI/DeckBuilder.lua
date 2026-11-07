@@ -464,7 +464,7 @@ local function UnlockHint(card)
     if card.isGift then return TTS:GiftHow(card) end
     if card.isBeta then return L("link.betaOnly") end
     if card.unlockOnDeath then return L("link.dieToUnlock") end
-    return L("link.defeat", TTS:CardName(card))
+    return L("link.defeat", TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card))
 end
 
 local function IsCardUnlocked(cardId, card)
