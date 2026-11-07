@@ -1,3 +1,8 @@
+## 1.0.10
+*   new: Campfire Warmth - play a PvP game with your opponent at a campfire and you both get an hour of better creature card drops, once a day. While it lasts, the minimap button's tooltip shows the time left, and chat tells you as it runs down. See Rules & Guide > Playing Others
+*   the minimap button's tooltip now shows your PvP rating under your collection score
+*   the "Addon messages are blocked by the game right now" line no longer shows in chat on boss pulls. Messages held back are still sent once the game allows them again
+
 ## 1.0.9
 *   fix for "No player named ... is currently playing" showing in chat over and over for a contact who had logged off. Contacts who stay offline are now checked on less and less often (up to once an hour), and errors from whispers you type yourself still show
 

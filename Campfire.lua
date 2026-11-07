@@ -29,9 +29,10 @@ TTS.Campfire = {}
 local C = TTS.Campfire
 
 -- Welcoming Campfire (1229739) is what a Forever campfire gives: 60 s, put back on while
--- near the fire. The Cozy Fire auras (7353, 7358, 1232234) are the classic ones, from a
--- Basic Campfire. Camp Benefits (1229741, 2 h) lingers after leaving, so doesn't count.
-local FIRE_AURAS = { 1229739, 7353, 7358, 1232234 }
+-- near the fire; Campfire Nearby (1283391) is Forever's other one. The Cozy Fire auras
+-- (7353, 7358, 1232234) are the classic ones, from a Basic Campfire. Camp Benefits
+-- (1229741, 2 h) lingers after leaving, so doesn't count.
+local FIRE_AURAS = { 1229739, 1283391, 7353, 7358, 1232234 }
 local RANGE = 15             -- yards between the two players
 local DURATION = 3600        -- seconds
 local MIN_BONUS, MAX_BONUS = 10, 69
