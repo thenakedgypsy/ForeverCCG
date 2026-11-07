@@ -240,6 +240,14 @@ function E:EndMatch(outcome, reason)
         local line = (delta or why) and TTS.PvP:ResultText(delta, why)
         if line then rewardText = (rewardText or "") .. "\n\n" .. line end
         if delta and delta ~= 0 then newRating = TTS.PvP:Get() end
+        -- A finished game started at the same campfire warms both players (Campfire.lua)
+        if TTS.Campfire then
+            if (outcome == "won" or outcome == "lost" or outcome == "conceded") and why ~= "disconnect" then
+                TTS.Campfire:MatchFinished()
+            else
+                TTS.Campfire.shared = false
+            end
+        end
     end
 
     local headline = outcome and RESULT_HEADLINES[outcome] and L("result." .. outcome)
@@ -1293,6 +1301,8 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
         if TTS:HasFoil(cardId) then self.localFoils[cardId] = true end
     end
     if not self.isSolo then TTS.Net:SendFoils(self.opponent, self.localFoils) end
+    -- Started at a campfire with them? (Campfire.lua, checked at the start only)
+    if TTS.Campfire then TTS.Campfire:BeginMatch(self.isSolo, self.opponent) end
 
     if not (scripted and scripted.fixedOrder) then
         for i = #self.localState.deck, 2, -1 do

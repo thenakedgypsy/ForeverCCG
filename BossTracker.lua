@@ -332,7 +332,9 @@ function TTS.BossTracker:RecordMobKill(card, msgKey)
 
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
     local killsBefore = currentKills
-    if currentKills < 4 and math.random() * 100 < (DropChances(card)[currentKills + 1] or 0) then
+    -- Campfire warmth (Campfire.lua) raises the copy chance; never the foil's
+    local warmth = TTS.Campfire and TTS.Campfire:DropMultiplier() or 1
+    if currentKills < 4 and math.random() * 100 < (DropChances(card)[currentKills + 1] or 0) * warmth then
         local newKills = currentKills + 1
         currentKills = newKills
         TTS_KilledBosses[card.id] = newKills

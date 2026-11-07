@@ -794,6 +794,8 @@ local PAGES = {
         { "p", "rules.pvp.find" },
         { "h", "rules.pvp.h.rating" },
         { "p", "rules.pvp.rating" },
+        { "h", "rules.pvp.h.campfire" },
+        { "p", "rules.pvp.campfire" },
         { "h", "rules.pvp.h.versions" },
         { "p", "rules.pvp.versions" },
         { "h", "rules.pvp.h.connection" },

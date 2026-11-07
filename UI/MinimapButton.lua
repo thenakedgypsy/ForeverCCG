@@ -156,6 +156,15 @@ local function BuildMinimapTooltip(tip)
     if TTS.GetCollectionScore then
         tip:AddDoubleLine(L("minimap.score"), TTS:ColoredScore((TTS:GetCollectionScore())), 1, 1, 1, 1, 0.82, 0)
     end
+    if TTS.PvP then
+        tip:AddDoubleLine(L("minimap.rating"), TTS.PvP.ColoredRating((TTS.PvP:Get())), 1, 1, 1, 1, 0.82, 0)
+    end
+    -- Campfire warmth running (Campfire.lua): the time left, never the size
+    local warmth = TTS.Campfire and TTS.Campfire:Remaining()
+    if warmth then
+        local m = math.ceil(warmth / 60)
+        tip:AddDoubleLine(L("minimap.campfire"), L(m == 1 and "campfire.minute" or "campfire.minutes", m), 1, 0.6, 0.2, 1, 1, 1)
+    end
 
     if TTS.Engine and TTS.Engine.inMatch then
         tip:AddLine(" ")

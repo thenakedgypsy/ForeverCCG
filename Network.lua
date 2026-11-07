@@ -241,7 +241,6 @@ local THROTTLE_CODES = {
 -- queue and resend once it lifts instead of dropping game messages
 local LOCKDOWN_CODE = (RESULTS and RESULTS.AddOnMessageLockdown) or 11
 local LOCKDOWN_RETRY = 2    -- seconds between retries while locked down
-local lockdownNoticed = false
 -- A general error (9) comes back for whispers sent around a loading screen: background
 -- messages are dropped quietly (the next round sends them again), game messages retried
 local GENERAL_ERROR_CODE = (RESULTS and RESULTS.GeneralError) or 9
@@ -288,16 +287,12 @@ local function PumpSendQueue()
         end
         if status == "lockdown" then
             -- Keep it until the client allows addon messages again. Tokens restart from
-            -- empty so the backlog trickles out at SEND_RATE rather than as one burst
+            -- empty so the backlog trickles out at SEND_RATE rather than as one burst.
+            -- Said nothing about: it happens on every boss pull and fixes itself.
             sendTokens = 0
-            if not lockdownNoticed then
-                lockdownNoticed = true
-                Print(L("net.throttled"))
-            end
             delay = LOCKDOWN_RETRY
             break
         end
-        lockdownNoticed = false
         if status == "general" and not m.low then
             m.tries = (m.tries or 0) + 1
             if m.tries < GENERAL_ERROR_TRIES then
@@ -2229,6 +2224,7 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net.acceptedBy = sender
         TTS.Net.earlyHero = nil
         TTS.Net.earlyFoils = nil
+        TTS.Net.earlyCampfire = nil
         local acceptedAt = GetTime()
         -- No way back from here: unclicked, the popup times out into the deck picker
         -- (without the emote), which plays the selected deck when its own time runs out
@@ -2254,6 +2250,12 @@ function TTS.Net:OnReceive(msg, sender)
                     TTS.Net.earlyFoils = nil
                     if foils and SameName(foils.name, sender) then
                         for _, list in ipairs(foils.lists) do TTS.Engine:AddRemoteFoils(list) end
+                    end
+                    -- Their campfire too, now that StartMatch has looked for ours (Campfire.lua)
+                    local fire = TTS.Net.earlyCampfire
+                    TTS.Net.earlyCampfire = nil
+                    if fire and SameName(fire.name, sender) and TTS.Campfire then
+                        TTS.Campfire:SetTheirs(fire.parts[3], fire.parts[4], fire.parts[5])
                     end
                     TTS.Engine:RefreshUI()
                 end,
@@ -2337,6 +2339,12 @@ function TTS.Net:OnReceive(msg, sender)
             table.insert(TTS.Net.earlyFoils.lists, parts[3])
             return
         end
+        -- Their campfire (Campfire.lua) comes with them: kept the same way
+        if actionType == "CAMPFIRE" and (SameName(TTS.Net.acceptedBy, sender)
+            or (TTS.DeckPicker and TTS.DeckPicker:IsPendingWith(sender))) then
+            TTS.Net.earlyCampfire = { name = sender, parts = parts }
+            return
+        end
 
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
@@ -2356,6 +2364,10 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "FOILS" then
             -- FOILS:<card ids>, sent as the match starts (E:StartMatch)
             E:AddRemoteFoils(parts[3])
+
+        elseif actionType == "CAMPFIRE" then
+            -- CAMPFIRE:<map>:<x>:<y>, sent as the match starts when they're at a fire (Campfire.lua)
+            if TTS.Campfire then TTS.Campfire:SetTheirs(parts[3], parts[4], parts[5]) end
 
         elseif actionType == "CONCEDE" then
             E:WinMatch(L("end.oppConceded", sender))
