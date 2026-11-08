@@ -281,6 +281,7 @@ function E:AIPlayLand(handIdx)
     table.insert(field, { id = cardId, tapped = card and card.entersTapped and true or false, uid = self:NewUid() })
     self.remoteState.handCount = #self.remoteState.hand
     self.remoteLandPlayed = true
+    self:NoteCardPlayed(cardId, true)
     self:Log(L("log.aiPlayedPrayer", self.opponent, TTS:CardName(card)), "ACTION")
     if bounced then self:Log(L("log.oppBouncedPrayer", self.opponent, TTS:CardName(bounced.id)), "ACTION") end
     self:CallDisplay("PlayNonCreatureCardSound")
@@ -1105,6 +1106,7 @@ function E:AIExecute(a)
         if self.remoteState.hand[a.handIdx] ~= a.card.id or not self:PayMana(a.cost, true) then return false end
         local cardId = table.remove(self.remoteState.hand, a.handIdx)
         self.remoteState.handCount = #self.remoteState.hand
+        self:NoteCardPlayed(cardId, true)
         if a.cost == "" and (a.card.cost or "") ~= "" then
             self:Log("|cFFFF4444" .. L("log.aiCastFree", self.opponent, TTS:CardName(a.card)) .. "|r", "ACTION")
         else
@@ -1120,6 +1122,7 @@ function E:AIExecute(a)
         local cardId = table.remove(self.remoteState.hand, a.handIdx)
         self.remoteState.handCount = #self.remoteState.hand
         table.insert(self.remoteState.graveyard, cardId)
+        self:NoteCardPlayed(cardId, true)
         self:Log(L("log.aiCast", self.opponent, TTS:CardName(a.card), TargetText(self, a.tgt)), "ACTION")
         self:CallDisplay("PlaySpellCastSound", a.card)
         self:ResolveSpell(a.card, a.tgt, true)

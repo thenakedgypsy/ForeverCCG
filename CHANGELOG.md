@@ -1,3 +1,6 @@
+## 1.0.12
+*   new: Last Played button at the bottom of the game log - hover it to see the last card played by either player and who played it. Click it to keep the card on show until you click again or hover another card
+
 ## 1.0.11
 *   possible fix for the game occasionally crashing on a loading screen (entering a dungeon, taking a portal, hearthing). These crashes are likely not caused by this addon, but as a precaution the addon's 3D card models and their spell effects are now unloaded just before the loading screen and come back about a second after it ends. That covers the board, the deckbuilder and the creature card preview, including when it's in its own window
 *   the creature card preview closes when a loading screen starts and shows again the next time you hover a creature

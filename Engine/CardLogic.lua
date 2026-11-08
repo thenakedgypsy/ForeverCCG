@@ -1351,6 +1351,15 @@ function E:PlaySpellCastSound(card)
     end
 end
 
+-- The last card played from a hand by either side, for the board's Last Played button:
+-- { id = cardId, isRemote = true when the opponent played it }. Our plays are noted by
+-- CommitUndoablePlay (Undo.lua), the opponent's by Network.lua (PvP) or AI.lua (solo).
+-- It is one of Undo.lua's ENGINE_KEYS, so a play that is taken back takes this back too.
+function E:NoteCardPlayed(cardId, isRemote)
+    if not cardId then return end
+    self.lastPlayed = { id = cardId, isRemote = isRemote and true or false }
+end
+
 -- bounceIndex (optional): for a prayer that returns a basic prayer to hand as it arrives
 -- (card.bouncesPrayer), the field index of the prayer returned; without one the player picks it.
 function E:PlayCard(handIndex, bounceIndex)

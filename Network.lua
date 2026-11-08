@@ -2414,6 +2414,7 @@ function TTS.Net:OnReceive(msg, sender)
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()   -- saves the board first, in case they ask to undo this card
+            E:NoteCardPlayed(cardId, true)
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             -- Optional: the field index of the prayer it returned to their hand (card.bouncesPrayer)
             local bounceIdx = tonumber(parts[4])
@@ -2439,6 +2440,7 @@ function TTS.Net:OnReceive(msg, sender)
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()
+            E:NoteCardPlayed(cardId, true)
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             E:Log(L("log.oppCast", sender, card and TTS:CardTypeName(card) or L("type.Permanent"), card and TTS:CardName(card) or cardId), "ACTION")
             -- Optional Arrival target, as for CAST_SPELL: PLAYER|CREATURE, MINE|THEIRS from
@@ -2461,6 +2463,7 @@ function TTS.Net:OnReceive(msg, sender)
             local cardId = parts[3]
             local card = TTS.Cards[cardId]
             E:OnRemotePlay()
+            E:NoteCardPlayed(cardId, true)
             E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
             table.insert(E.remoteState.graveyard, cardId)
             E:Log(L("log.oppCast", sender, card and TTS:CardTypeName(card) or L("type.Spell"), card and TTS:CardName(card) or cardId), "ACTION")
