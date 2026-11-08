@@ -1,3 +1,7 @@
+## 1.0.13
+*   new: What Just Happened button under the game log, replacing Last Played - click it to see the last card played or ability used by either player, its target and what it did (spells, gear, Arrival effects and activated abilities), and how the last combat went: each attacker, what blocked it, the damage each way, who died and how much damage the defending player took. Hover a card in the list to see it
+*   with Auto-pay on, playing a Dark Hearth now Exhausts an untapped prayer for its mana before returning it to your hand
+
 ## 1.0.12
 *   new: Last Played button at the bottom of the game log - hover it to see the last card played by either player and who played it. Click it to keep the card on show until you click again or hover another card
 

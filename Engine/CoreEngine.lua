@@ -67,6 +67,11 @@ function E:Log(msg, category)
     local formattedMsg = TTS.FormatSymbols and TTS:FormatSymbols(msg, 14) or msg
     local fullText = prefix .. formattedMsg
 
+    -- While a card's effect resolves, its lines are kept for What Just Happened (CardLogic.lua)
+    if self.effectCapture and category ~= "SYSTEM" then
+        table.insert(self.effectCapture.lines, formattedMsg)
+    end
+
     if TTS.MatchLog and TTS.MatchLog.AddMessage then
         TTS.MatchLog:AddMessage(fullText)
     else
@@ -1254,7 +1259,10 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.encounter = nil
     self.matchReward = nil
     self.bossIndex = nil
-    self.lastPlayed = nil   -- the board's Last Played button (CardLogic.lua)
+    self.lastPlayed = nil   -- the board's What Just Happened button (CardLogic.lua)
+    self.lastCombat = nil
+    self.lastEffect = nil
+    self.effectCapture = nil
     self:ResetUndo()
     self.sentDeckCount = nil
     self.sentEffects = nil

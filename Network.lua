@@ -2403,10 +2403,12 @@ function TTS.Net:OnReceive(msg, sender)
             end
             if idx and TTS.Cards[cardId] then
                 table.remove(gy, idx)
+                local cap = E:ReopenLastEffect(sourceId)
                 E:Log(L("log.reanimatedOpp", sourceId and TTS.Cards[sourceId] and TTS:CardName(sourceId) or sender,
                     TTS:CardName(cardId), sender), "ACTION")
                 E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
                 E:CheckStateBasedActions()
+                E:EndEffectCapture(cap)
                 E:RefreshUI()
             end
 
@@ -2571,7 +2573,10 @@ function TTS.Net:OnReceive(msg, sender)
             -- A tick of a DoT they put on us flies from its icon (UI\TargetFX.lua)
             if TTS.NoteIncomingDamage then pcall(TTS.NoteIncomingDamage, reason) end
             -- DamagePlayer applies our own damage shield, logs, and handles defeat
+            -- (a spell's damage to us arrives after we've resolved our copy of it)
+            local cap = E:ReopenLastEffect(reason)
             E:DamagePlayer(false, amt, L("reason.from", shown, sender))
+            E:EndEffectCapture(cap)
 
         elseif actionType == "EFFECTS" then
             -- Snapshot of the over-time effects / shields the opponent is tracking (display only)

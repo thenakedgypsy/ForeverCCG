@@ -383,7 +383,7 @@ end
 
 local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
 logPanel:SetPoint("TOPLEFT", 14, -71)
-logPanel:SetPoint("BOTTOMRIGHT", -14, 38)
+logPanel:SetPoint("BOTTOMRIGHT", -14, 60)   -- above two rows of buttons
 Skin(logPanel, "panel", STYLE.panelBg, STYLE.panelBorder)
 
 local logMsg = CreateFrame("ScrollingMessageFrame", "TTS_MatchLogFrame", sideLog)
@@ -426,7 +426,7 @@ do
 
     function sideLog:SetFolded(folded)
         for _, part in ipairs(logParts) do part:SetShown(not folded) end
-        if B.lastPlayedBtn then B.lastPlayedBtn:SetShown(not folded) end   -- (made further down)
+        if B.whatHappenedBtn then B.whatHappenedBtn:SetShown(not folded) end   -- (made further down)
         self:SetHeight(folded and 74 or 820)   -- folded: the title strip and the frame's border
         foldBtn:SetText(folded and "+" or "-")
         if TTS.Options then TTS.Options:Set("gameLogFolded", folded) end
@@ -3120,87 +3120,210 @@ HideBoardPreview = function(owner)
 end
 
 -- =========================================================================
--- LAST PLAYED
--- A button at the bottom of the game log, between Clear and Bottom: hovering it shows the
--- last card played by either side (E.lastPlayed, CardLogic.lua) in the docked preview;
--- clicking it pins the preview open until it's clicked again or another card is hovered.
--- Greyed out until a card has been played this match. Folds away with the log.
+-- WHAT JUST HAPPENED
+-- A button in a row of its own under the game log: clicking it opens a panel over the log
+-- with the last card played or ability used by either side (E.lastPlayed, CardLogic.lua), its
+-- target and what it did (E.lastEffect), and how the last combat resolved (E.lastCombat,
+-- CardLogic.lua): each attacker, what blocked it, the damage
+-- each way, who died, and what the defending player took. Hovering a card's row shows it in
+-- the docked preview. Greyed out until there's something to show this match.
 -- (In a function of its own: the file is at Lua's 200 locals.)
 -- =========================================================================
 ;(function()
+local LIST_W, ROW_H = 290, 18
+local SKULL = "|TInterface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull.png:12:12|t "
+
 local btn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
-btn:SetSize(90, 20)
-btn:SetPoint("BOTTOM", 0, 12)
+btn:SetHeight(20)
+btn:SetPoint("BOTTOMLEFT", 14, 34)
+btn:SetPoint("BOTTOMRIGHT", -14, 34)
 StyleButton(btn)
-Loc:Bind(btn, "board.lastPlayed")
+Loc:Bind(btn, "board.whatHappened")
 if btn.SetMotionScriptsWhileDisabled then btn:SetMotionScriptsWhileDisabled(true) end
-B.lastPlayedBtn = btn
+B.whatHappenedBtn = btn
 
-local function LastPlayed()
-    local E = TTS.Engine
-    local lp = E.inMatch and E.lastPlayed
-    local card = lp and TTS.Cards[lp.id]
-    if card then return card, lp end
+local list = CreateFrame("Frame", nil, btn, backdropTemplate)
+list:SetFrameStrata("DIALOG")
+list:SetWidth(LIST_W)
+list:SetClampedToScreen(true)
+list:SetPoint("BOTTOMRIGHT", logPanel, "BOTTOMRIGHT", 0, 0)
+Skin(list, "panel", { 0.04, 0.04, 0.04, 0.95 }, STYLE.panelBorder)
+list:EnableMouse(true)
+list:Hide()
+list.rows = {}
+
+list.title = list:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+list.title:SetPoint("TOPLEFT", 10, -8)
+list.footer = list:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+list.footer:SetPoint("BOTTOMLEFT", 10, 8)
+list.footer:SetPoint("BOTTOMRIGHT", -10, 8)
+list.footer:SetJustifyH("LEFT")
+
+local function Row_OnEnter(self)
+    local card = self.cardId and TTS.Cards[self.cardId]
+    if card then ShowBoardPreview(self, card, self.isFoil) end
 end
 
-local function Showing()
-    return previewOwner == btn and boardPreview and boardPreview:IsShown()
-end
-
-local shown   -- the E.lastPlayed entry the preview was painted from
-
-local function ShowIt()
-    local card, lp = LastPlayed()
-    if card then
-        shown = lp
-        ShowBoardPreview(btn, card, TTS.Engine:IsFoil(lp.id, lp.isRemote))
-    end
-end
-
-local function ShowTip(self)
-    local card, lp = LastPlayed()
-    local E = TTS.Engine
-    if not card then
-        TT:ShowText(self, "ANCHOR_TOP", L("board.lastPlayed"), L("board.lastPlayedNone"))
-        return
-    end
-    local by = lp.isRemote and L("board.lastPlayedOpp", E.opponent or L("side.opponentCap")) or L("board.lastPlayedYou")
-    TT:ShowText(self, "ANCHOR_TOP", TTS:CardName(card), by)
-end
-
-btn:SetScript("OnEnter", function(self)
-    if not Showing() then self.pinned = nil end   -- another card's preview took its place
-    ShowTip(self)
-    ShowIt()
-end)
-btn:SetScript("OnLeave", function(self)
-    TT:Hide(self)
-    if not self.pinned then HideBoardPreview(self) end
-end)
-btn:SetScript("OnClick", function(self)
-    if self.pinned and Showing() then
-        self.pinned = nil
-        HideBoardPreview(self)
-    else
-        self.pinned = true
-        ShowIt()
-    end
-end)
-
--- Enabled once there's a card to show; a preview of it that's open follows a newer play
-function B:UpdateLastPlayed()
-    local card, lp = LastPlayed()
-    if card then btn:Enable() else btn:Disable() end
-    if Showing() and lp ~= shown then   -- (repainting reloads the model: only for a new play)
-        if card then ShowIt() else btn.pinned = nil; HideBoardPreview(btn) end
-    end
-end
-
--- Hidden with the board or by folding the log: nothing is left to unpin a preview with
-btn:SetScript("OnHide", function(self)
-    self.pinned = nil
+local function Row_OnLeave(self)
     HideBoardPreview(self)
+end
+
+local function GetRow(r)
+    local row = list.rows[r]
+    if row then return row end
+    row = CreateFrame("Button", nil, list)
+    row:SetSize(LIST_W - 12, ROW_H)
+    row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    row.ttsSilent = true
+    row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.right:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    row.right:SetJustifyH("RIGHT")
+    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.text:SetJustifyH("LEFT")
+    row:SetScript("OnEnter", Row_OnEnter)
+    row:SetScript("OnLeave", Row_OnLeave)
+    row:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId, self.isFoil) end)   -- shift-click links it
+    row:SetScript("OnHide", Row_OnLeave)
+    list.rows[r] = row
+    return row
+end
+
+local function Stats(e)
+    return string.format("%d/%d", e.p, e.t)
+end
+
+-- A card's name, with a skull if it died and a note if its Shielded took the hit
+local function Name(e)
+    return (e.died and SKULL or "") .. (TTS:CardName(e.id) or tostring(e.id))
+        .. (e.shielded and (" " .. L("board.lastCombatShielded")) or "")
+end
+
+local function Fill()
+    local E = TTS.Engine
+    local lp, c = E.lastPlayed, E.lastCombat
+    if lp and not TTS.Cards[lp.id] then lp = nil end
+    list.paintedPlay, list.paintedCombat = E.lastPlayed, c
+    list.paintedEffect, list.paintedLines = E.lastEffect, E.lastEffect and #E.lastEffect.lines
+    if not (lp or c) then list:Hide(); return end
+    list.title:SetText(L("board.whatHappened"))
+    local opponent = E.opponent or L("side.opponentCap")
+
+    local n, y = 0, 0
+    -- e: the card the row is for, if any; indent: a line under its attacker;
+    -- wrap: a whole sentence, on as many lines as it takes
+    local function Add(text, right, e, indent, wrap)
+        n = n + 1
+        local row = GetRow(n)
+        row.cardId, row.isFoil = e and e.id, e and e.foil
+        row:EnableMouse(e ~= nil)
+        row.text:ClearAllPoints()
+        row.text:SetWordWrap(wrap and true or false)
+        local h = ROW_H
+        if wrap then
+            row.text:SetPoint("TOPLEFT", row, "TOPLEFT", 16, -2)
+            row.text:SetWidth(LIST_W - 36)
+            row.text:SetText(text)
+            h = math.max(ROW_H, row.text:GetStringHeight() + 4)
+        else
+            row.text:SetWidth(0)
+            row.text:SetPoint("LEFT", row, "LEFT", indent and 16 or 4, 0)
+            row.text:SetPoint("RIGHT", row.right, "LEFT", -4, 0)
+            row.text:SetText(text)
+        end
+        row.right:SetText(right or "")
+        row:SetHeight(h)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 6, -28 - y)
+        y = y + h
+        row:Show()
+    end
+    local function Header(text, right)
+        Add("|cFFFFD200" .. text .. "|r", right)
+    end
+
+    Header(L((lp and lp.ability) and "board.lastAbility" or "board.lastPlayed"))
+    if lp then
+        local by
+        if lp.ability then
+            by = lp.isRemote and L("board.lastAbilityOpp", opponent) or L("board.lastAbilityYou")
+        else
+            by = lp.isRemote and L("board.lastPlayedOpp", opponent) or L("board.lastPlayedYou")
+        end
+        Add(TTS:CardName(lp.id), by, { id = lp.id, foil = E:IsFoil(lp.id, lp.isRemote) }, true)
+
+        -- What it did (a card with nothing to resolve has no entry of its own)
+        local fx = E.lastEffect
+        if fx and fx.id == lp.id and fx.isRemote == lp.isRemote then
+            if fx.target then
+                Add(L("board.lastPlayedTarget", TTS:CardName(fx.target.id) or tostring(fx.target.id)), nil, fx.target, true)
+            elseif fx.targetPlayer == true then
+                Add(L("board.lastPlayedTarget", opponent), nil, nil, true)
+            elseif fx.targetPlayer == false then
+                Add(L("board.lastPlayedTargetYou"), nil, nil, true)
+            end
+            for _, line in ipairs(fx.lines) do Add(line, nil, nil, true, true) end
+        end
+    else
+        Add(L("board.lastPlayedNone"), nil, nil, true)
+    end
+
+    if c then
+        Header(L("board.lastCombat"), c.isRemoteAttacking and L("board.lastCombatOpp", opponent) or L("board.lastCombatYou"))
+        for _, a in ipairs(c.attackers) do
+            Add(Name(a), Stats(a), a)
+            for _, b in ipairs(a.blocks) do
+                Add(L("board.lastCombatBlocked", Name(b) .. " " .. Stats(b)), L("board.lastCombatFight", b.dealt, b.taken), b, true)
+            end
+            if (a.toPlayer or 0) > 0 then
+                Add(L(#a.blocks > 0 and "board.lastCombatCarried" or "board.lastCombatUnblocked", a.toPlayer), nil, nil, true)
+            end
+        end
+    else
+        Header(L("board.lastCombat"))
+        Add(L("board.lastCombatNone"), nil, nil, true)
+    end
+    for r = n + 1, #list.rows do list.rows[r]:Hide() end
+
+    local footer = ""
+    if c and c.prevented then
+        footer = L("board.lastCombatPrevented")
+    elseif c then
+        footer = c.isRemoteAttacking and L("board.lastCombatTookYou", c.total) or L("board.lastCombatTookOpp", opponent, c.total)
+        if c.absorbed > 0 then footer = footer .. " " .. L("board.lastCombatAbsorbed", c.absorbed) end
+    end
+    list.footer:SetText(footer)
+    list:SetHeight(28 + y + (c and list.footer:GetStringHeight() + 16 or 8))
+end
+
+local function HasAny()
+    local E = TTS.Engine
+    return E.inMatch and (E.lastPlayed or E.lastCombat) and true or false
+end
+
+btn:SetScript("OnClick", function(self)
+    TT:Hide(self)
+    if list:IsShown() then list:Hide(); return end
+    Fill()
+    if list.paintedPlay or list.paintedCombat then list:Show() end
 end)
+btn:SetScript("OnEnter", function(self)
+    if list:IsShown() then return end
+    TT:ShowText(self, "ANCHOR_TOP", L("board.whatHappened"),
+        L(HasAny() and "board.whatHappenedDesc" or "board.whatHappenedNone"))
+end)
+btn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+-- Closes with the board or by folding the log (or it would come back open next match)
+btn:SetScript("OnHide", function() list:Hide() end)
+
+-- Enabled once there's something to show; an open panel follows a newer play or combat
+function B:UpdateWhatHappened()
+    local E = TTS.Engine
+    if HasAny() then btn:Enable() else btn:Disable() end
+    if list:IsShown() and (E.lastPlayed ~= list.paintedPlay or E.lastCombat ~= list.paintedCombat
+        or E.lastEffect ~= list.paintedEffect or (E.lastEffect and #E.lastEffect.lines) ~= list.paintedLines) then
+        Fill()
+    end
+end
 end)()
 
 -- =========================================================================
@@ -4142,7 +4265,7 @@ function B:UpdateDisplay()
     B.SetDeckStack(myDeckFrame, #E.localState.deck)
     B.SetDeckStack(oppDeckFrame, E:RemoteDeckCount())
     B:UpdateGraveyards()
-    B:UpdateLastPlayed()
+    B:UpdateWhatHappened()
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
     for i = 1, 10 do

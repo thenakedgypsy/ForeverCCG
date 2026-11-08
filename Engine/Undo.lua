@@ -31,7 +31,7 @@ local UNDO_REPLY_TIMEOUT = 60
 
 -- Engine fields that a card play can change, saved along with both sides' state
 local ENGINE_KEYS = { "landPlayedThisTurn", "preventCombatDamage", "cantBlockThisTurn",
-    "remoteLandPlayed", "bossIndex", "opponent", "lastPlayed" }
+    "remoteLandPlayed", "bossIndex", "opponent", "lastPlayed", "lastEffect" }
 
 -- Copies tables all the way down. One `seen` table per snapshot keeps shared
 -- references shared (a stolen creature is in both stolenCreatures and a field).
