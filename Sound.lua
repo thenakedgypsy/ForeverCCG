@@ -496,7 +496,7 @@ TTS.CreatureSounds = {
     ["SEA09"] = { aggro = 570, death = 569 }, -- Incendosaur
     ["SEA10"] = { aggro = 739, death = 738 }, -- Smoldar
     ["SEA11"] = { aggro = 1263, death = 2944 }, -- Kalaran Windblade
-    ["SFK01"] = { aggro = 437, death = 441 }, -- Shadowfang Whitescalp
+    ["SFK01"] = { aggro = 437, death = 441 }, -- Shadowfang Moonwalker
     ["SFK02"] = { aggro = 390, death = 394 }, -- Slavering Worg
     ["SFK03"] = { aggro = 1263, death = 2944 }, -- Haunted Servitor
     ["SFK04"] = { aggro = 3369, death = 3367 }, -- Vile Bat

@@ -50,6 +50,7 @@ TTS.SoloMapPositions = {
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
     HYJ = { "KAL", 0.5450, 0.3250 },  -- Mount Hyjal (Forever), between Felwood and Winterspring: foreverdb's Kalimdor flight-path pins
+    ZEP = { "KAL", 0.3150, 0.6900 },  -- Zephras Isle (Forever): its own map, so no real spot; placed at sea west of Feralas, where its founders sailed
     LOC = { "EK", 0.5504, 0.5486 },
     MAR = { "KAL", 0.3893, 0.5761 },
     MUL = { "KAL", 0.4779, 0.6027 },

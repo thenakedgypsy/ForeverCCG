@@ -14,11 +14,11 @@
 TTS:AddCards({
     -- SHADOWFANG KEEP
     ["SFK01"] = {
-        id = "SFK01", name = "Shadowfang Whitescalp", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 729,
-        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3851,
+        id = "SFK01", name = "Shadowfang Moonwalker", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
+        power = 3, toughness = 3, hexproof = true, isMob = true, isBoss = true, displayId = 729,
+        zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3853,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Warded."
     },
     ["SFK02"] = {
         id = "SFK02", name = "Slavering Worg", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",

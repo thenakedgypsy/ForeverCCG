@@ -14,7 +14,7 @@ local L = TTS.L
 -- =========================================================================
 -- SOLO ENCOUNTERS
 -- Zone Gauntlet: one opponent per zone playing that zone's 10 creatures; winning grants
--- the zone's reward card (<ZONE>11). Dungeons: the dungeon's creatures plus its BOSSxx
+-- the zone's reward card (<ZONE>11 unless its ZONES row names another). Dungeons: the dungeon's creatures plus its BOSSxx
 -- card(s) under one or two boss rules; winning grants the dungeon's reward card.
 --
 -- Encounter fields:
@@ -40,7 +40,7 @@ local ENC = TTS.SoloEncounters
 -- Zones that are open from the start
 local START_ZONES = { ELW = true, TIR = true, DUR = true, MUL = true, TEL = true }
 
--- id, zone, opponent, world map folder, AI profile
+-- id, zone, opponent, world map folder, AI profile, reward card (nil = <id>11)
 local ZONES = {
     -- Eastern Kingdoms
     { "ELW", "Elwynn Forest",        "Elwynn Exterminators",            "Elwynn",              "basic" },
@@ -84,10 +84,12 @@ local ZONES = {
     { "SLI", "Silithus",             "Silithus Swarm",                  "Silithus",            "expert" },
     { "WIN", "Winterspring",         "Winterspring Wendigos",           "Winterspring",        "expert" },
     { "HYJ", "Mount Hyjal",          "Hyjal Harrowers",                 "Hyjal",               "expert" },
+    { "ZEP", "Zephras Isle",         "Zephras Zealots",                 "ZephrasIsle",         "expert", "ZEP13" },
 }
 
 -- Zones that border each other (and the Deeprun Tram between Elwynn and Dun Morogh).
--- Clearing a zone opens every zone connected to it.
+-- Clearing a zone opens every zone connected to it. oneWay: only the first opens the second
+-- (an island reached from one zone, which shouldn't be listed as a way into that zone).
 TTS.SoloConnections = {
     -- Eastern Kingdoms
     { "ELW", "WES" }, { "ELW", "RED" }, { "ELW", "DSK" }, { "ELW", "DUN" },
@@ -108,6 +110,7 @@ TTS.SoloConnections = {
     { "BRN", "STO" }, { "BRN", "DUS" }, { "BRN", "THO" },
     { "STO", "DES" }, { "DES", "FER" }, { "FER", "THO" },
     { "THO", "TAN" }, { "TAN", "UNG" }, { "UNG", "SLI" },
+    { "FER", "ZEP", oneWay = true },
 }
 
 -- The zone each dungeon's entrance is in; clearing that zone opens the dungeon
@@ -124,7 +127,7 @@ for _, link in ipairs(TTS.SoloConnections) do
     local a, b = link[1], link[2]
     neighbours[a] = neighbours[a] or {}
     neighbours[b] = neighbours[b] or {}
-    table.insert(neighbours[a], b)
+    if not link.oneWay then table.insert(neighbours[a], b) end
     table.insert(neighbours[b], a)
 end
 
@@ -133,7 +136,7 @@ for i, z in ipairs(ZONES) do
         id = z[1], kind = "zone", order = i,
         name = z[2], zone = z[2], opponent = z[3],
         life = 20, ai = z[5],
-        reward = z[1] .. "11",
+        reward = z[6] or (z[1] .. "11"),
         requires = (not START_ZONES[z[1]]) and { cleared = neighbours[z[1]] } or nil,
         background = { map = z[4] },
     }

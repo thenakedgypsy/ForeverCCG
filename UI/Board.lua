@@ -2246,7 +2246,7 @@ end
 -- map pieces as the board backgrounds (tiles, then explored-area overlays on top), cut to
 -- the art window. Each card shows its own spot near the map's middle (from its id), so
 -- cards from one zone differ. A token (an Add) shows its maker's zone. Switched off with
--- the cardZoneArt option; cards with no zone map (spells, heroes, Zephras Isle, tokens made
+-- the cardZoneArt option; cards with no zone map (spells, heroes, tokens made
 -- by such cards) keep the plain background.
 -- =========================================================================
 local PaintZoneArt
