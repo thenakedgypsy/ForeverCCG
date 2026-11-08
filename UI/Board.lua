@@ -426,6 +426,7 @@ do
 
     function sideLog:SetFolded(folded)
         for _, part in ipairs(logParts) do part:SetShown(not folded) end
+        if B.lastPlayedBtn then B.lastPlayedBtn:SetShown(not folded) end   -- (made further down)
         self:SetHeight(folded and 74 or 820)   -- folded: the title strip and the frame's border
         foldBtn:SetText(folded and "+" or "-")
         if TTS.Options then TTS.Options:Set("gameLogFolded", folded) end
@@ -2950,6 +2951,8 @@ function TTS.RedrawCardModels() modelGeneration = modelGeneration + 1 end
 local function SetupCardVisual(f, card, foil)
     SetCardFoil(f, foil, card)
     PaintZoneArt(f, card)   -- (cheap when unchanged: before the same-card shortcut, so the option applies)
+    -- During a loading screen no model loads; ModelGuard.lua loads it once the world is in
+    if TTS.ModelGuard and TTS.ModelGuard:Hold(f, card) then return end
     -- The same card still showing on this frame keeps its model: reloading it on every
     -- refresh made models flicker (worst on dressed ones like hero cards and Leeroy)
     if card and f.visualCard == card and f.visualGen == modelGeneration and f:IsShown() then
@@ -3115,6 +3118,90 @@ HideBoardPreview = function(owner)
     previewOwner = nil
     boardPreview:Hide()
 end
+
+-- =========================================================================
+-- LAST PLAYED
+-- A button at the bottom of the game log, between Clear and Bottom: hovering it shows the
+-- last card played by either side (E.lastPlayed, CardLogic.lua) in the docked preview;
+-- clicking it pins the preview open until it's clicked again or another card is hovered.
+-- Greyed out until a card has been played this match. Folds away with the log.
+-- (In a function of its own: the file is at Lua's 200 locals.)
+-- =========================================================================
+;(function()
+local btn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
+btn:SetSize(90, 20)
+btn:SetPoint("BOTTOM", 0, 12)
+StyleButton(btn)
+Loc:Bind(btn, "board.lastPlayed")
+if btn.SetMotionScriptsWhileDisabled then btn:SetMotionScriptsWhileDisabled(true) end
+B.lastPlayedBtn = btn
+
+local function LastPlayed()
+    local E = TTS.Engine
+    local lp = E.inMatch and E.lastPlayed
+    local card = lp and TTS.Cards[lp.id]
+    if card then return card, lp end
+end
+
+local function Showing()
+    return previewOwner == btn and boardPreview and boardPreview:IsShown()
+end
+
+local shown   -- the E.lastPlayed entry the preview was painted from
+
+local function ShowIt()
+    local card, lp = LastPlayed()
+    if card then
+        shown = lp
+        ShowBoardPreview(btn, card, TTS.Engine:IsFoil(lp.id, lp.isRemote))
+    end
+end
+
+local function ShowTip(self)
+    local card, lp = LastPlayed()
+    local E = TTS.Engine
+    if not card then
+        TT:ShowText(self, "ANCHOR_TOP", L("board.lastPlayed"), L("board.lastPlayedNone"))
+        return
+    end
+    local by = lp.isRemote and L("board.lastPlayedOpp", E.opponent or L("side.opponentCap")) or L("board.lastPlayedYou")
+    TT:ShowText(self, "ANCHOR_TOP", TTS:CardName(card), by)
+end
+
+btn:SetScript("OnEnter", function(self)
+    if not Showing() then self.pinned = nil end   -- another card's preview took its place
+    ShowTip(self)
+    ShowIt()
+end)
+btn:SetScript("OnLeave", function(self)
+    TT:Hide(self)
+    if not self.pinned then HideBoardPreview(self) end
+end)
+btn:SetScript("OnClick", function(self)
+    if self.pinned and Showing() then
+        self.pinned = nil
+        HideBoardPreview(self)
+    else
+        self.pinned = true
+        ShowIt()
+    end
+end)
+
+-- Enabled once there's a card to show; a preview of it that's open follows a newer play
+function B:UpdateLastPlayed()
+    local card, lp = LastPlayed()
+    if card then btn:Enable() else btn:Disable() end
+    if Showing() and lp ~= shown then   -- (repainting reloads the model: only for a new play)
+        if card then ShowIt() else btn.pinned = nil; HideBoardPreview(btn) end
+    end
+end
+
+-- Hidden with the board or by folding the log: nothing is left to unpin a preview with
+btn:SetScript("OnHide", function(self)
+    self.pinned = nil
+    HideBoardPreview(self)
+end)
+end)()
 
 -- =========================================================================
 -- TUCKED CARDS
@@ -4055,6 +4142,7 @@ function B:UpdateDisplay()
     B.SetDeckStack(myDeckFrame, #E.localState.deck)
     B.SetDeckStack(oppDeckFrame, E:RemoteDeckCount())
     B:UpdateGraveyards()
+    B:UpdateLastPlayed()
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
     for i = 1, 10 do

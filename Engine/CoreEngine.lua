@@ -1254,6 +1254,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.encounter = nil
     self.matchReward = nil
     self.bossIndex = nil
+    self.lastPlayed = nil   -- the board's Last Played button (CardLogic.lua)
     self:ResetUndo()
     self.sentDeckCount = nil
     self.sentEffects = nil
