@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["BRN10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BRN10", name = "Azzere the Skyblade", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
         power = 8, toughness = 8, flying = true, isMob = true, isNamed = true, isBoss = true, displayId = 2702,
         zone = "The Barrens", creatureType = "Beast", npcId = 5834,

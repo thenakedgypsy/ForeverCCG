@@ -77,6 +77,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["TIR10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "TIR10", name = "Fellicent's Shade", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 7, toughness = 9, isMob = true, isNamed = true, isBoss = true, displayId = 5430,
         zone = "Tirisfal Glades", creatureType = "Undead", npcId = 10358,

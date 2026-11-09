@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Strikes-First."
     },
     ["WIN10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "WIN10", name = "Lady Hederine", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 10925,
         zone = "Winterspring", creatureType = "Demon", npcId = 10201,

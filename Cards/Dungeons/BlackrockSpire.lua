@@ -105,6 +105,7 @@ TTS:AddCards({
         text = "Fatal. Anti-Air."
     },
     ["BRS14"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BRS14", name = "Jed Runewatcher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 6, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 9686,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 10509,
@@ -113,6 +114,7 @@ TTS:AddCards({
         text = "Support. Other Blackrock you control get +1/+1."
     },
     ["BRS15"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BRS15", name = "Spirestone Butcher", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 8, isMob = true, isBoss = true, displayId = 11574,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Ogre", npcId = 9219,

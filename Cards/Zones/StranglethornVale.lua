@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["STV10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STV10", name = "Lord Sakrasis", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
         power = 9, toughness = 9, hexproof = true, isMob = true, isNamed = true, isBoss = true, displayId = 4910,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 2541,

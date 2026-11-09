@@ -49,6 +49,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["GNO06"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "GNO06", name = "Dark Iron Ambassador", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6669,
         zone = "Gnomeregan", creatureType = "Humanoid", faction = "Dark Iron", npcId = 6228,

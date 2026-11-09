@@ -49,6 +49,7 @@ TTS:AddCards({
         text = "Drain."
     },
     ["RFK06"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "RFK06", name = "Blind Hunter", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 5, flying = true, isMob = true, isBoss = true, displayId = 4735,
         zone = "Razorfen Kraul", creatureType = "Beast", npcId = 4425,
@@ -77,6 +78,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["RFK10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "RFK10", name = "Earthcaller Halmgar", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 6102,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4842,

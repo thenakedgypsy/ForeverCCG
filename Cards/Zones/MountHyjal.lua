@@ -77,6 +77,7 @@ TTS:AddCards({
         text = "Blocker."
     },
     ["HYJ10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "HYJ10", name = "Jezerelle the Swaying", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 138685,
         zone = "Mount Hyjal", creatureType = "Demon", npcId = 255183,
@@ -105,6 +106,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["HYJ15"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "HYJ15", name = "Death Wailer", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 5, toughness = 5, flying = true, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 8783,
         zone = "Mount Hyjal", creatureType = "Undead", npcId = 249226,

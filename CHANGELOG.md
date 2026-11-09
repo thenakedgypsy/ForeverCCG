@@ -1,3 +1,8 @@
+## 1.0.17
+*   new language: Brazilian Portuguese, in the ForeverCCG_Languages addon. The other languages have also been updated for Spectating and the Collection Guide
+*   rare creatures now drop their cards far more often: your first kill always gives a copy, then 25%, 12% and 6%. That covers the rares out in the world and the dungeon rares that only spawn some of the time
+*   the rares with the longest respawns drop their cards more often still, depending on the respawn: Monnos the Elder, Zalas Witherbark, Cyclok the Mad, Uhk'loc, Foulbelly and Volchan are guaranteed for your first two copies (then 50% and 25%). Lord Angler, Mith'rethis the Enchanter, Vultros and Terrowulf Packlord are 100%, 50%, 25% and 12%
+
 ## 1.0.16
 *   new: Spectating - the waiting room has a Games in Progress list with a Watch button. You see the game from one player's seat on the real board, their hand included. You and the player you watch both need this version; their opponent doesn't
 *   new: Spectators tab beside the game log shows who's watching your game. Untick Spectatable there to keep your game private; once someone is watching, it can't be unticked. Spectators only use spare network capacity, so they can never slow your game down

@@ -79,6 +79,7 @@ TTS:AddCards({
         text = "Martyrdom: Spawn: 2 Murloc Tadpole Adds (1/1)."
     },
     ["ELW10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "ELW10", name = "Gruff Swiftbite", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 8, toughness = 8, isMob = true, isNamed = true, isBoss = true, displayId = 175,
         zone = "Elwynn Forest", creatureType = "Humanoid", npcId = 100,

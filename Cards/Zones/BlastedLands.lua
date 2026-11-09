@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["BLA10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BLA10", name = "Dreadscorn", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 9, toughness = 9, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 7844,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 8304,

@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["THO10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "THO10", name = "Vile Sting", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 8, toughness = 10, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 10988,
         zone = "Thousand Needles", creatureType = "Beast", npcId = 5937,

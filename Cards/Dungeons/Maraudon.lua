@@ -100,6 +100,7 @@ TTS:AddCards({
     },
     -- Solo reward
     ["MAR13"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "MAR13", name = "Meshlok the Harvester", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 5, toughness = 6, trample = true, isReward = true, displayId = 9014,
         zone = "Maraudon", creatureType = "Elemental", npcEntry = 12237,

@@ -78,6 +78,7 @@ TTS:AddCards({
     ["HIN10"] = {
         id = "HIN10", name = "Mith'rethis the Enchanter", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
         power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 6512,
+        dropChance = { 100, 50, 25, 12 },   -- long respawn (about 26h)
         zone = "The Hinterlands", creatureType = "Humanoid", npcId = 8217,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
