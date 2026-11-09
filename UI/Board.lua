@@ -382,9 +382,10 @@ do
 end
 
 local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
-logPanel:SetPoint("TOPLEFT", 14, -71)
+logPanel:SetPoint("TOPLEFT", 14, -93)       -- under the Game Log / Spectators tabs (Spectate.lua)
 logPanel:SetPoint("BOTTOMRIGHT", -14, 60)   -- above two rows of buttons
 Skin(logPanel, "panel", STYLE.panelBg, STYLE.panelBorder)
+B.sideLog, B.logPanel = sideLog, logPanel
 
 local logMsg = CreateFrame("ScrollingMessageFrame", "TTS_MatchLogFrame", sideLog)
 logMsg:SetPoint("TOPLEFT", logPanel, "TOPLEFT", 8, -8)
@@ -420,6 +421,7 @@ bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 -- Minimising the log folds it up to its title strip (remembered between games)
 do
     local logParts = { logPanel, logMsg, clearLogBtn, bottomLogBtn }
+    B.logParts = logParts   -- Spectate.lua adds its tabs and swaps the log for its list
     local foldBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
     foldBtn:SetSize(24, 24)
     foldBtn:SetPoint("TOPRIGHT", -16, -25)   -- centred on the title strip
@@ -570,6 +572,7 @@ concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
 Loc:Bind(concedeBtn, "board.concede")
 StyleButton(concedeBtn)
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConfirmConcede() end)
+B.concedeBtn = concedeBtn   -- hidden while spectating (Spectate.lua)
 
 -- The top bar's checkboxes, right to left from Concede (a block of their own: the file is at
 -- Lua's 200 locals; the rest of the file reaches them as B.soundCheck and so on)
@@ -3465,6 +3468,8 @@ local lastShown = { [false] = {}, [true] = {} }   -- side -> perms in the order 
 local lastField = {}                               -- side -> the field table last drawn (new match = new table)
 local leavingPerms = setmetatable({}, { __mode = "k" })
 local diedPerms = setmetatable({}, { __mode = "k" })
+-- A spectator's board is told who died, as its engine doesn't run the game (Spectate.lua)
+function B.MarkDied(perm) diedPerms[perm] = true end
 
 -- How dark a creature is drawn: tapped 0.4, summoning-sick in your attack step this
 TIMING.SICK_SHADE = 0.7
@@ -4603,7 +4608,7 @@ fade:SetSmoothing("IN_OUT")
 
 -- What the match waits on us for, or nil
 local function WaitingOnUs(E)
-    if not E.inMatch or E.awaitingDeckPick then return nil end
+    if not E.inMatch or E.awaitingDeckPick or E.viewing then return nil end
     if E.targeting or E.pendingDiscard or E:HasPendingChoice() then return "choice" end
     local bs = E.blockingState
     if E.phase == "COMBAT_BLOCK" and bs then

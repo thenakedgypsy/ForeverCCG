@@ -394,6 +394,12 @@ function TTS.Engine:ShowRemoteSpell(cardId, tgt)
     if #targets > 0 then PlayFX(SOUND_TARGET) end
 end
 
+-- A spell cast by either player in the game being spectated (Spectate.lua): no arrows
+function TTS.Engine:ShowSpectatedSpell(cardId, casterIsRemote)
+    local card = TTS.Cards[cardId]
+    if card then RevealSpell(card, casterIsRemote and true or false, {}) end
+end
+
 -- The card a pending spell is being cast from: staged (STAGED SPELLS), or in the hand
 local function AimSourceFrame(targeting)
     if stage and targeting and stage.targeting == targeting and not stage.back then return RevealFrame() end

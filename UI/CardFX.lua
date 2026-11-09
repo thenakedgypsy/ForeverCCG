@@ -270,6 +270,11 @@ local function Resnap(eng)
     end
 end
 
+-- What the engine hooks below would note, for a spectator's board (Spectate.lua)
+function FX:MarkCause(perm, key)
+    if perm and self:Enabled() then Cause(perm)[key] = true end
+end
+
 -- (each through E:HookDisplay, CoreEngine.lua: an error here never stops the game itself)
 do
     E:HookDisplay("ApplySpellOp", function(self, op, tgt, card)

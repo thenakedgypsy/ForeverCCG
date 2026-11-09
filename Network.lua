@@ -415,6 +415,13 @@ local function SendDirect(msg, chatType, target, low, onSent)
     QueueSend(msg, chatType, target and CharName(target), low, onSent)
 end
 
+-- Everything to do with spectating (Spectate.lua) goes out on the low queue, behind every game
+-- message. Not through Net:Send: a viewer is flagged as a solo game, which Send refuses.
+function TTS.Net:SendSpectator(target, inner, onSent)
+    target = CharName(target)
+    SendDirect("T:" .. target .. ":" .. TTS.GetPlayerFullName() .. ":" .. inner, "WHISPER", target, true, onSent)
+end
+
 -- =========================================================================
 -- SEQUENCED MATCH MESSAGES (1.0.8+)
 -- Two messages sent one after the other can reach the opponent the other way round (seen:
@@ -1051,6 +1058,8 @@ local function OnChannelLine(text)
         name = NormalizeName(name)
         if name == "" or SameName(name, MyName()) then return end
         NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true)
+        -- Someone opened the waiting room: if we're in a game, it goes on their list
+        if TTS.Spectate then TTS.Spectate:OnHello(name) end
         local E = TTS.Engine
         if E and E.inMatch then return end
         local key = name:lower()
@@ -2030,6 +2039,11 @@ function TTS.Net:OnReceive(msg, sender)
     local parts = { strsplit(":", msg) }
     local cmd = parts[1]
 
+    if cmd:sub(1, 5) == "SPEC_" then
+        if TTS.Spectate then TTS.Spectate:OnMessage(cmd, msg, parts, sender) end
+        return
+    end
+
     -- =====================================================================
     -- WAITING ROOM / LFM HANDLERS
     -- =====================================================================
@@ -2118,6 +2132,8 @@ function TTS.Net:OnReceive(msg, sender)
             pendingPings[key] = nil
         else
             TTS.Net:Send(sender, "CONTACT_PONG:" .. MyLFMFields())
+            -- A contact's waiting room checks on us: if we're in a game, it goes on their list
+            if TTS.Spectate then TTS.Spectate:OnHello(sender) end
         end
         if parts[2] == "1" then
             NoteContactWaiting(sender, tonumber(parts[3]), pvp)

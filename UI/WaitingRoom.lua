@@ -75,7 +75,7 @@ TTS.GetPlayerFullName = GetPlayerFullName
 -- =========================================================================
 local F = CreateFrame("Frame", "TTS_WaitingRoomFrame", UIParent, backdropTemplate)
 WR.frame = F
-F:SetSize(520, 580)
+F:SetSize(520, 690)
 F:SetPoint("CENTER", 50, 0)
 F:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -240,6 +240,81 @@ local function UpdateOnlineList()
 end
 
 -- =========================================================================
+-- GAMES IN PROGRESS
+-- Players in a PvP game who answered when we opened this window (Spectate.lua)
+-- =========================================================================
+local GAME_ROWS = 4
+
+local gamesDesc = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+gamesDesc:SetPoint("TOPLEFT", onlineContainer, "BOTTOMLEFT", 0, -10)
+gamesDesc:SetPoint("TOPRIGHT", onlineContainer, "BOTTOMRIGHT", 0, -10)
+gamesDesc:SetJustifyH("CENTER")
+
+local gamesContainer = CreateFrame("Frame", nil, F, backdropTemplate)
+gamesContainer:SetPoint("TOPLEFT", onlineContainer, "BOTTOMLEFT", 0, -26)
+gamesContainer:SetPoint("TOPRIGHT", onlineContainer, "BOTTOMRIGHT", 0, -26)
+gamesContainer:SetHeight(8 + GAME_ROWS * 26)
+gamesContainer:SetBackdrop({
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 12,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 }
+})
+gamesContainer:SetBackdropColor(0, 0, 0, 0.3)
+gamesContainer:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
+
+local gameRows = {}
+for i = 1, GAME_ROWS do
+    local row = CreateFrame("Frame", nil, gamesContainer)
+    row:SetSize(460, 24)
+    row:SetPoint("TOPLEFT", 10, -6 - ((i - 1) * 26))
+
+    row.watchBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.watchBtn:SetSize(70, 20)
+    row.watchBtn:SetPoint("RIGHT", -6, 0)
+
+    row.turnText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.turnText:SetPoint("RIGHT", row.watchBtn, "LEFT", -8, 0)
+    row.turnText:SetWidth(60)
+    row.turnText:SetJustifyH("RIGHT")
+
+    row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    row.nameText:SetPoint("LEFT", 6, 0)
+    row.nameText:SetPoint("RIGHT", row.turnText, "LEFT", -6, 0)
+    row.nameText:SetJustifyH("LEFT")
+    row.nameText:SetWordWrap(false)
+
+    row:Hide()
+    gameRows[i] = row
+end
+
+local gamesEmpty = gamesContainer:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+gamesEmpty:SetPoint("CENTER")
+gamesEmpty:SetWidth(380)
+Loc:Bind(gamesEmpty, "spec.wrNoGames")
+
+local function UpdateGamesList()
+    local Spec = TTS.Spectate
+    local list = Spec and Spec:GetGames() or {}
+    gamesDesc:SetText(L("spec.wrGames", #list))
+    gamesEmpty:SetShown(#list == 0)
+    for i, row in ipairs(gameRows) do
+        local game = list[i]
+        if game then
+            row.nameText:SetText(L("spec.wrVs", game.a, game.b))
+            row.turnText:SetText(L("spec.wrTurn", game.turn))
+            local asked = Spec:IsAsking()
+            row.watchBtn:SetText(L(asked == game.host and "spec.requested" or "spec.watch"))
+            row.watchBtn:SetEnabled(not asked)
+            row.watchBtn:SetScript("OnClick", function() Spec:Watch(game.host) end)
+            row:Show()
+        else
+            row:Hide()
+        end
+    end
+end
+
+-- =========================================================================
 -- BOTTOM ACTION BUTTONS
 -- =========================================================================
 local toggleBtn = CreateFrame("Button", nil, F, "UIPanelButtonTemplate")
@@ -391,6 +466,7 @@ function WR:UpdateUI()
     end
 
     UpdateOnlineList()
+    UpdateGamesList()
 end
 
 -- The heartbeat whispers HEARTBEAT_WHISPERS online contacts each beat, in turn, so with a

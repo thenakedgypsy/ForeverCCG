@@ -1,3 +1,7 @@
+## 1.0.16
+*   new: Spectating - the waiting room has a Games in Progress list with a Watch button. You see the game from one player's seat on the real board, their hand included. You and the player you watch both need this version; their opponent doesn't
+*   new: Spectators tab beside the game log shows who's watching your game. Untick Spectatable there to keep your game private; once someone is watching, it can't be unticked. Spectators only use spare network capacity, so they can never slow your game down
+
 ## 1.0.15
 *   fix for "No player named '' is currently playing" with a blank name showing in chat. Errors like this caused by the addon's own messages are now hidden, and it still shows if you've just whispered someone yourself
 
