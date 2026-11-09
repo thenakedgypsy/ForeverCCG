@@ -184,6 +184,68 @@ local function RejoinLFMChannel()
 end
 TTS.Net.RejoinLFMChannel = RejoinLFMChannel
 
+-- A channel joined takes the lowest free number and there's no asking for another, so ours
+-- could take /1 from General. It's moved to the highest free slot after any channel change
+-- (every send looks its number up by name). If a client won't swap with an empty slot, it
+-- goes behind the channels above it instead, which keep their order.
+do
+    local LAST_SLOT = 10
+    local PLACE_DELAY = 1       -- after a channel notice: several arrive together at login
+    local SWAP_CHECK = 2        -- seconds before checking a swap happened
+    local placing = false       -- a pass is waiting, or a swap is being checked
+    local freeSwapFails = false
+
+    local function Swap(a, b)
+        pcall(C_ChatInfo.SwapChatChannelsByChannelIndex, a, b)
+    end
+
+    local function MoveChannelLast()
+        if not (C_ChatInfo and C_ChatInfo.SwapChatChannelsByChannelIndex) then return end
+        local ours = GetLFMChannelId()
+        if not ours then return end
+        local free
+        local occupied = {}     -- slots above ours with a channel in them, lowest first
+        for i = ours + 1, LAST_SLOT do
+            if (GetChannelName(i) or 0) > 0 then
+                occupied[#occupied + 1] = i
+            else
+                free = i
+            end
+        end
+        if not freeSwapFails then
+            if free then
+                Swap(ours, free)
+                placing = true
+                TTS:SafeAfter(SWAP_CHECK, function()
+                    placing = false
+                    if GetLFMChannelId() == ours then
+                        freeSwapFails = true
+                        MoveChannelLast()
+                    end
+                end)
+            end
+            return
+        end
+        for _, slot in ipairs(occupied) do
+            Swap(ours, slot)
+            ours = slot
+        end
+    end
+
+    function TTS.Net.PlaceChannel()
+        if placing then return end
+        placing = true
+        TTS:SafeAfter(PLACE_DELAY, function()
+            placing = false
+            MoveChannelLast()
+        end)
+    end
+
+    local noticeFrame = CreateFrame("Frame")
+    noticeFrame:RegisterEvent("CHAT_MSG_CHANNEL_NOTICE")
+    noticeFrame:SetScript("OnEvent", TTS.Net.PlaceChannel)
+end
+
 -- Hides the channel's left/joined lines while rejoining, so it doesn't look like chat spam
 local function RejoinNoticeFilter(_, _, notice, ...)
     if GetTime() > hideNoticesUntil then return false, notice, ... end
@@ -1089,6 +1151,21 @@ local function OfflinePingFilter(_, _, msg, ...)
     end
     local function OwnWhisper(key) return (ownWhispers[key] or 0) >= now end
 
+    -- Some failures come back with no name at all ("No Player named ''"), so there's nothing
+    -- to match: it's ours if the addon has whispered lately and the player hasn't
+    local blank = lower:match("no player named%s*(.-)%s*is currently playing")
+    if blank and blank:gsub("['\"%s]", "") == "" then
+        local oursRecently = false
+        for key, expires in pairs(recentWhispers) do
+            if expires >= now then oursRecently = true end
+        end
+        for _, expires in pairs(ownWhispers) do
+            if expires >= now then return false, msg, ... end
+        end
+        if oursRecently then return true end
+        return false, msg, ...
+    end
+
     for key, expires in pairs(recentWhispers) do
         if expires < now then
             recentWhispers[key] = nil
@@ -1263,6 +1340,7 @@ f:SetScript("OnEvent", function(self, event, ...)
                 TTS:SafeAfter(REJOIN_GAP, JoinLFMChannel)
             else
                 JoinLFMChannel()
+                TTS.Net.PlaceChannel()
             end
         end)
         TTS.Net:StartBackgroundPings()

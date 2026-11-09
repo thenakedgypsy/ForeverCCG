@@ -46,7 +46,8 @@ FX.ANIM = ANIM
 FX.LASTING = {
     { state = "shielded", kit = 252 },    -- Divine Shield (Power Word: Shield's 847 replays its pop-in on a loop)
     { state = "soul",     kit = 3769 },   -- Power Infusion: a stand-in for Soulstone (or Banish, 1286)
-    { state = "frozen",   kit = 3709, onModel = true },   -- Ice Block / Freezing Trap's ice, until it untaps
+    { state = "frozen",   kit = 3709 },   -- Ice Block / Freezing Trap's ice, until it untaps (shown steady: FX.KIT_PLACE)
+    { state = "frozen",   kit = 566, onModel = true },   -- Pacify's ice-blue tint on the denizen (3709's own tint can't go without its ice)
     { state = "borrowed", kit = 325 },    -- Mind Control
 }
 
@@ -459,10 +460,11 @@ end
 -- one shown again would stack another.
 -- model: the kit's own model file, shown on the carrier looping one animation (anim, else
 -- Stand) instead of the kit. A kit applied to loop replays from the start, and so does this
--- model's Stand, so a bubble kept popping in again; its 158 is the steady loop.
+-- model's Stand, so a bubble kept popping in again; its 158 is the steady loop (the ice's too).
 FX.DOT_RAISE = 0.5  -- how far DoT kits sit up a card, as a share of its height
 FX.KIT_PLACE = {
     [252]  = { raise = 0.5, plateRaise = 0, model = 165961, anim = 158, size = 0.65 },   -- Divine Shield (divineshield_low_base.m2)
+    [3709] = { raise = 0.5, model = 166388, anim = 158, size = 0.65 },   -- Frozen's ice (icebarrier_state.m2)
     -- DoTs (FX.DOT_KITS): up on the denizen's body rather than at its feet (life plates keep
     -- them on their layer)
     [535]  = { raise = FX.DOT_RAISE },   -- Corruption

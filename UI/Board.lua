@@ -2242,7 +2242,7 @@ end
 -- =========================================================================
 -- CARD ZONE ART
 -- Behind a creature's model, a piece of its zone's world map (a dungeon's: the zone it
--- sits in, as its encounter background has), in greyscale and dimmed so the model stands out. The same
+-- sits in, as its encounter background has), in greyscale, dimmed so the model stands out and hued a little towards the card's colour. The same
 -- map pieces as the board backgrounds (tiles, then explored-area overlays on top), cut to
 -- the art window. Each card shows its own spot near the map's middle (from its id), so
 -- cards from one zone differ. A token (an Add) shows its maker's zone. Switched off with
@@ -2253,6 +2253,7 @@ local PaintZoneArt
 do
 local ZONE_ART_W = 260                 -- map pixels across the art window
 local ZONE_ART_SHADE = 0.18            -- the art's brightness, so the model stands out
+local ZONE_ART_TINT = 0.4              -- how far the grey art leans towards the card's colour (0 to 1)
 local ZONE_ART_SPREAD_X, ZONE_ART_SPREAD_Y = 120, 80   -- how far from the map's middle a card's spot can be
 local ZONE_ART_RAISE = 2               -- px the art reaches above the art window, under the frame (no dark line)
 local zoneMaps                         -- zone name -> world map folder (from the encounters)
@@ -2304,6 +2305,35 @@ local function ArtZone(f, card)
     return card.zone
 end
 
+-- The art's vertex colour leaning towards sphere colour c, at the art's usual brightness
+-- (a colourless card's art stays grey)
+local function ArtShade(c)
+    if c == FOIL.GOLD then return { ZONE_ART_SHADE, ZONE_ART_SHADE, ZONE_ART_SHADE } end
+    local r, g, b = 1 + (c[1] - 1) * ZONE_ART_TINT, 1 + (c[2] - 1) * ZONE_ART_TINT, 1 + (c[3] - 1) * ZONE_ART_TINT
+    local k = ZONE_ART_SHADE / (0.3 * r + 0.59 * g + 0.11 * b)
+    return { r * k, g * k, b * k }
+end
+
+-- The art's colours at the window's left and right edges: the same unless the card has two
+local function ArtTint(card)
+    local list = FoilColors(card)
+    local left = ArtShade(list[1])
+    return { left, list[2] and ArtShade(list[2]) or left }
+end
+
+-- Colours map piece t: u0 to u1 is how far across the window (0 to 1) it runs. SetGradient
+-- takes colour objects in newer clients, numbers in older.
+local function TintPiece(t, tint, u0, u1)
+    local a, b = tint[1], tint[2]
+    if a == b then t:SetVertexColor(a[1], a[2], a[3]); return end
+    local r0, g0, b0 = a[1] + (b[1] - a[1]) * u0, a[2] + (b[2] - a[2]) * u0, a[3] + (b[3] - a[3]) * u0
+    local r1, g1, b1 = a[1] + (b[1] - a[1]) * u1, a[2] + (b[2] - a[2]) * u1, a[3] + (b[3] - a[3]) * u1
+    if CreateColor and pcall(t.SetGradient, t, "HORIZONTAL", CreateColor(r0, g0, b0, 1), CreateColor(r1, g1, b1, 1)) then return end
+    if not pcall(t.SetGradient, t, "HORIZONTAL", r0, g0, b0, r1, g1, b1) then
+        t:SetVertexColor((r0 + r1) / 2, (g0 + g1) / 2, (b0 + b1) / 2)
+    end
+end
+
 -- The f.zoneArt texture n (made as needed): on the model's frame, just over its full-art
 -- backing (fxBack) and under the model itself, so it shows in either window and fades with
 -- a tapped or summoning-sick model
@@ -2319,8 +2349,8 @@ end
 
 -- One map piece (px0, py0, pw x ph map pixels of a file fw x fh) cut to the crop
 -- (cx0, cy0, cw x ch map pixels), drawn s screen pixels per map pixel from the window box
--- (its top raised by ZONE_ART_RAISE)
-local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s)
+-- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint)
+local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s, tint)
     local ix0, ix1 = math.max(px0, cx0), math.min(px0 + pw, cx0 + cw, BG.MAP_W)
     local iy0, iy1 = math.max(py0, cy0), math.min(py0 + ph, cy0 + ch, BG.MAP_H)
     if ix1 <= ix0 or iy1 <= iy0 then return n end
@@ -2332,7 +2362,7 @@ local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch
     t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
     t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
     if t.SetDesaturated then t:SetDesaturated(true) end   -- in grey, so the model's colours lead
-    t:SetVertexColor(ZONE_ART_SHADE, ZONE_ART_SHADE, ZONE_ART_SHADE)
+    TintPiece(t, tint, (ix0 - cx0) / cw, (ix1 - cx0) / cw)
     t:Show()
     return n + 1
 end
@@ -2359,11 +2389,12 @@ function PaintZoneArt(f, card)
         local cy0 = BG.MAP_H / 2 - ch / 2 + ((math.floor(h / 201) % 201) / 100 - 1) * ZONE_ART_SPREAD_Y
         local s = box.w / cw
         local tile = BG.MAP_TILE
+        local tint = ArtTint(card)
         for row = 0, 2 do
             for col = 0, 3 do
                 local i = row * 4 + col + 1
                 used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i),
-                    col * tile, row * tile, tile, tile, tile, tile, cx0, cy0, cw, ch, s)
+                    col * tile, row * tile, tile, tile, tile, tile, cx0, cy0, cw, ch, s, tint)
             end
         end
         for _, o in ipairs((TTS.MapOverlays and TTS.MapOverlays[map]) or {}) do
@@ -2376,7 +2407,7 @@ function PaintZoneArt(f, card)
                         local pw = (c < across - 1) and tile or (w - c * tile)
                         local ph = (r < down - 1) and tile or (h2 - r * tile)
                         used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s", map, name),
-                            ox + c * tile, oy + r * tile, pw, ph, TextureFileSize(pw), TextureFileSize(ph), cx0, cy0, cw, ch, s)
+                            ox + c * tile, oy + r * tile, pw, ph, TextureFileSize(pw), TextureFileSize(ph), cx0, cy0, cw, ch, s, tint)
                     end
                 end
             end
