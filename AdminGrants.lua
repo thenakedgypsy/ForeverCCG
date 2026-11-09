@@ -193,6 +193,7 @@ end
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
+    if issecretvalue and (issecretvalue(prefix) or issecretvalue(msg) or issecretvalue(channel) or issecretvalue(sender)) then return end
     if prefix ~= PREFIX or channel ~= "WHISPER" or type(msg) ~= "string" then return end
     -- Replies are never answered, or two clients (or one whispering itself) would bounce
     -- errors back and forth forever

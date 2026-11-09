@@ -246,13 +246,16 @@ do
     noticeFrame:SetScript("OnEvent", TTS.Net.PlaceChannel)
 end
 
+-- Chat text can arrive as a secret value: type() still says "string", but reading it is an error
+local function IsSecret(v) return issecretvalue and issecretvalue(v) or false end
+
 -- Hides the channel's left/joined lines while rejoining, so it doesn't look like chat spam
 local function RejoinNoticeFilter(_, _, notice, ...)
     if GetTime() > hideNoticesUntil then return false, notice, ... end
     local baseName = select(8, ...)
     local channelName = select(3, ...)
     local function ours(s)
-        return type(s) == "string" and s:upper():find(LFM_CHANNEL, 1, true) ~= nil
+        return not IsSecret(s) and type(s) == "string" and s:upper():find(LFM_CHANNEL, 1, true) ~= nil
     end
     if ours(baseName) or ours(channelName) then
         return true
@@ -1080,7 +1083,7 @@ end
 local function IsOurChannel(...)
     for i = 1, select("#", ...) do
         local s = select(i, ...)
-        if type(s) == "string" and s:gsub("^%d+%.%s*", ""):upper() == LFM_CHANNEL then return true end
+        if not IsSecret(s) and type(s) == "string" and s:gsub("^%d+%.%s*", ""):upper() == LFM_CHANNEL then return true end
     end
     return false
 end
@@ -1088,6 +1091,7 @@ end
 -- Our lines never show in chat (the channel isn't in a chat window, unless someone adds it)
 if ChatFrame_AddMessageEventFilter then
     ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", function(_, _, text, ...)
+        if IsSecret(text) then return false end
         if type(text) == "string" and text:sub(1, #LINE_TAG) == LINE_TAG then return true end
         return false, text, ...
     end)
@@ -1098,7 +1102,7 @@ lineFrame:RegisterEvent("CHAT_MSG_CHANNEL")
 -- text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID,
 -- channelIndex, channelBaseName
 lineFrame:SetScript("OnEvent", function(_, _, text, _, _, channelName, _, _, _, _, baseName)
-    if type(text) ~= "string" or text:sub(1, #LINE_TAG) ~= LINE_TAG then return end
+    if IsSecret(text) or type(text) ~= "string" or text:sub(1, #LINE_TAG) ~= LINE_TAG then return end
     if not IsOurChannel(baseName, channelName) then return end
     OnChannelLine(text)
 end)
@@ -1131,6 +1135,7 @@ end
 
 -- Whispers the player types themselves: their errors are real and must show
 local function NoteOwnWhisper(_, chatType, _, target)
+    if IsSecret(chatType) or IsSecret(target) then return end
     if addonWhispering or chatType ~= "WHISPER" or type(target) ~= "string" then return end
     ownWhispers[NormalizeName(target):lower()] = time() + WHISPER_ERROR_WINDOW
 end
@@ -1145,6 +1150,7 @@ end
 local function Squash(s) return (s:lower():gsub("[%s%p]", "")) end
 
 local function OfflinePingFilter(_, _, msg, ...)
+    if IsSecret(msg) then return false end
     if type(msg) ~= "string" then return false, msg, ... end
     local lower = msg:lower()
     local named = notFoundPattern and lower:match(notFoundPattern)
@@ -1355,6 +1361,7 @@ f:SetScript("OnEvent", function(self, event, ...)
         TTS.Net:StartBackgroundPings()
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, channel, sender = ...
+        if IsSecret(prefix) or IsSecret(message) or IsSecret(channel) or IsSecret(sender) then return end
         if prefix == PREFIX then
             local cleanSender = NormalizeName(Ambiguate(sender, "none"))
             -- Guild and party copies come back to us too. On Forever the sender can be

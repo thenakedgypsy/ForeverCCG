@@ -101,7 +101,8 @@ local function ReplaceTag(inner)
 end
 
 local function ChatFilter(self, event, msg, ...)
-    if type(msg) ~= "string" or not msg:find("[Forever CCG: ", 1, true) then return false end
+    -- Chat text can arrive as a secret value: type() still says "string", but reading it is an error
+    if (issecretvalue and issecretvalue(msg)) or type(msg) ~= "string" or not msg:find("[Forever CCG: ", 1, true) then return false end
     return false, msg:gsub(TAG_PATTERN, ReplaceTag), ...
 end
 
