@@ -162,22 +162,36 @@ local PERM_NAME = {}
 for name, short in pairs(PERM_KEY) do PERM_NAME[short] = name end
 local PERM_SKIP = { uid = true, attackUndo = true, spawnShown = true, hasAttackedThisTurn = true }
 
-local cap               -- the game being captured: { rec, sids, byUid, nextSid, startedAt }
+local cap               -- the game being captured: { rec, sids, byUid, holders, nextSid, startedAt }
 local events = {}       -- since the last look
 local recentLog = {}
 local spectators = {}   -- [lowerName] = { name, sent, fresh, batch, events, heard, chain, lastSend }
 
--- A permanent's id for as long as the game lasts. Undo puts copies back, which keep their uid.
+local function OnBoard(perm)
+    for _, st in ipairs({ E.localState, E.remoteState }) do
+        for _, p in ipairs(st.field) do
+            if p == perm then return true end
+        end
+    end
+    return false
+end
+
+-- A permanent's id for as long as the game lasts. Undo puts copies back, which keep their uid
+-- and take over the id of the permanent they replace. A uid isn't unique (several are just
+-- time() plus a small number), so one whose holder is still on the board is a different
+-- permanent and gets an id of its own.
 local function SidOf(perm)
     local sid = cap.sids[perm]
     if sid then return sid end
     sid = perm.uid and cap.byUid[perm.uid]
+    if sid and OnBoard(cap.holders[sid]) then sid = nil end
     if not sid then
         cap.nextSid = cap.nextSid + 1
         sid = cap.nextSid
         if perm.uid then cap.byUid[perm.uid] = sid end
     end
     cap.sids[perm] = sid
+    cap.holders[sid] = perm
     return sid
 end
 
@@ -387,7 +401,7 @@ end)
 E:HookDisplay("StartMatch", nil, function(_, self)
     if not self.inMatch or self.viewing then return end
     cap = { rec = { frames = {}, sent = {}, fresh = true, isSolo = self.isSolo, opponent = self.opponent },
-        sids = setmetatable({}, { __mode = "k" }), byUid = {}, nextSid = 0, startedAt = GetTime() }
+        sids = setmetatable({}, { __mode = "k" }), byUid = {}, holders = {}, nextSid = 0, startedAt = GetTime() }
     events, recentLog = {}, {}
     wipe(spectators)
     S:UpdateTab()
@@ -397,6 +411,7 @@ E:HookDisplay("EndMatch", nil, function(_, self, results, outcome)
     if not cap then return end
     Look(true, outcome)
     wipe(spectators)
+    cap.rec.outcome = outcome
     R.lastGame = cap.rec
     cap = nil
     S:UpdateTab()
@@ -493,7 +508,8 @@ local games = {}   -- [pair key] = { a, b, turn, seen, seats = { [name] = true }
 
 local bar = CreateFrame("Frame", nil, B, BackdropTemplateMixin and "BackdropTemplate" or nil)
 bar:SetSize(440, 30)
-bar:SetPoint("TOP", B, "TOP", 0, -12)
+bar:SetPoint("BOTTOM", B, "TOP", 0, 4)   -- above the board, clear of the health bar
+bar:SetClampedToScreen(true)             -- a board filling the screen would push it off the top
 bar:SetFrameLevel(B:GetFrameLevel() + 120)
 if bar.SetBackdrop then
     bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -816,6 +832,31 @@ local function OnPart(msg)
     end
 end
 
+-- The game finished: says how, in the middle of the board. Accepting leaves the board; until
+-- then the final position stays up behind it.
+StaticPopupDialogs["TTS_SPECTATE_OVER"] = {
+    text = "%s\n\n%s",
+    button1 = ACCEPT or "Accept",
+    OnAccept = function() S:StopViewing() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = false,
+    preferredIndex = 3,
+}
+
+local END_OUTCOMES = { won = true, lost = true, conceded = true, cancelled = true }
+
+local function ShowGameOver(outcome)
+    if V.endShown then return end
+    V.endShown = true
+    local key = "spec.end." .. (END_OUTCOMES[outcome] and outcome or "cancelled")
+    local dialog = StaticPopup_Show("TTS_SPECTATE_OVER", L("spec.end.title"), L(key, V.host or "?", E.opponent or "?"))
+    if dialog and dialog.SetPoint then
+        dialog:ClearAllPoints()
+        dialog:SetPoint("CENTER", B:IsShown() and B or UIParent, "CENTER", 0, 0)
+    end
+end
+
 function S:ViewerTick()
     local now = GetTime()
     if V.test then
@@ -831,6 +872,7 @@ function S:ViewerTick()
         if not frames[V.test.i] and not V.over then
             V.over = true
             SetBar(L("spec.barOver", V.host or "?", "-"))
+            ShowGameOver(V.test.outcome)
         end
         return
     end
@@ -905,6 +947,10 @@ function S:StopViewing()
     V.host, V.asking, V.test, V.over, V.expected, V.gapSince, V.heard, V.lastPing, V.lastSync = nil, nil, nil, nil, nil, nil, nil, nil, nil
     wipe(V.parts); wipe(V.ready); wipe(V.data); wipe(V.perms)
     V.meta, V.bsFrom = nil, nil
+    if V.endShown then
+        V.endShown = nil
+        StaticPopup_Hide("TTS_SPECTATE_OVER")   -- (left with the bar's button instead)
+    end
     if not E.viewing then return end
     E.viewing, E.inMatch, E.isSolo = nil, false, false
     ResetEngineSeat()
@@ -966,6 +1012,7 @@ function S:OnMessage(cmd, msg, parts, sender)
             V.over = true
             local outcome = (parts[2] or ""):match("^%a+$") or "cancelled"
             SetBar(L("spec.barOver", V.host, L("outcome." .. outcome)))
+            ShowGameOver(outcome)
         end
     end
 end
@@ -986,7 +1033,7 @@ SlashCmdList["FCCGSPECTEST"] = function()
     local frames = {}
     for i, s in ipairs(game.frames) do frames[i] = Decode(s) or {} end
     V.host = MyName()
-    V.test = { frames = frames, i = 1, clock = 0 }
+    V.test = { frames = frames, i = 1, clock = 0, outcome = game.outcome }
 end
 
 -- =========================================================================

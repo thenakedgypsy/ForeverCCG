@@ -564,9 +564,10 @@ local SORT_KEY = {
     end,
 }
 
-local function CompareCards(a, b)
+-- Orders two card ids by a sort mode (the Collection Guide has its own, so it's passed in)
+function D.CompareCardsBy(mode, a, b)
     local ca, cb = TTS.Cards[a], TTS.Cards[b]
-    local key = SORT_KEY[sortMode]
+    local key = SORT_KEY[mode]
     if key then
         local ga, va = key(ca)
         local gb, vb = key(cb)
@@ -579,6 +580,8 @@ local function CompareCards(a, b)
     if na ~= nb then return na < nb end
     return a < b
 end
+
+local function CompareCards(a, b) return D.CompareCardsBy(sortMode, a, b) end
 
 -- The value the current sort groups this card by (nil when sorting by cost, or when it has none)
 local function SortLabel(card)
@@ -1087,6 +1090,13 @@ local function CardTooltip_OnLeave()
         previewCard:Hide()
     end
 end
+
+-- The Deckbuilder's look, for the Collection Guide (kept in one table to spare the file's locals)
+D.UI = {
+    STYLE = STYLE, LAYOUT = LAYOUT,
+    Skin = Skin, SetBg = SetBg, SetBorder = SetBorder,
+    CreateFlatButton = CreateFlatButton, GetTypeGroup = GetTypeGroup,
+}
 
 -- =========================================================================
 -- DROPDOWN MENUS
