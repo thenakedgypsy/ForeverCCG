@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Warded."
     },
     ["FEL10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "FEL10", name = "Mezzir the Howler", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
         power = 9, toughness = 9, support = true, isMob = true, isNamed = true, isBoss = true, displayId = 3208,
         zone = "Felwood", creatureType = "Humanoid", npcId = 10197,

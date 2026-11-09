@@ -397,6 +397,18 @@ function TTS.BossTracker:RollFoil(card, msgKey)
     end
 end
 
+-- Instance creatures whose real names are a card's name plus a word: never scrambled kill names
+-- (keys as Normalize writes them)
+local NOT_SCRAMBLED = {
+    ["aku mai snapjaw"] = true,
+    ["aku mai servant"] = true,
+    ["fireguard destroyer"] = true,
+    ["noxxion s spawn"] = true,
+    ["hukku s voidwalker"] = true,
+    ["hukku s succubus"] = true,
+    ["hukku s imp"] = true,
+}
+
 function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
     local window = dedupeSeconds or KILL_DEDUPE_SECONDS
     if guid and not IsSecret(guid) then
@@ -432,8 +444,10 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
 
     if name and not IsSecret(name) then
         -- Instances scramble kill names with a trailing word ("Tormented Soul Jinx"):
-        -- drop trailing words until a card name matches, longest first
+        -- drop trailing words until a card name matches, longest first. Only there, and only
+        -- without a readable GUID: anywhere else the name is real and has to match exactly
         local norm = Normalize(name)
+        local exactOnly = (guid and not IsSecret(guid)) or not SafeCall(IsInInstance) or NOT_SCRAMBLED[norm]
         while norm ~= "" do
             local card = mobCardsByName[norm]
             if card then
@@ -444,6 +458,7 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
                 self:RecordMobKill(card)
                 return
             end
+            if exactOnly then break end
             local shorter = norm:match("^(.+) %S+$")
             if not shorter then break end
             norm = shorter

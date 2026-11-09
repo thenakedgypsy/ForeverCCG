@@ -382,9 +382,10 @@ do
 end
 
 local logPanel = CreateFrame("Frame", nil, sideLog, backdropTemplate)
-logPanel:SetPoint("TOPLEFT", 14, -71)
-logPanel:SetPoint("BOTTOMRIGHT", -14, 38)
+logPanel:SetPoint("TOPLEFT", 14, -93)       -- under the Game Log / Spectators tabs (Spectate.lua)
+logPanel:SetPoint("BOTTOMRIGHT", -14, 60)   -- above two rows of buttons
 Skin(logPanel, "panel", STYLE.panelBg, STYLE.panelBorder)
+B.sideLog, B.logPanel = sideLog, logPanel
 
 local logMsg = CreateFrame("ScrollingMessageFrame", "TTS_MatchLogFrame", sideLog)
 logMsg:SetPoint("TOPLEFT", logPanel, "TOPLEFT", 8, -8)
@@ -420,13 +421,14 @@ bottomLogBtn:SetScript("OnClick", function() logMsg:ScrollToBottom() end)
 -- Minimising the log folds it up to its title strip (remembered between games)
 do
     local logParts = { logPanel, logMsg, clearLogBtn, bottomLogBtn }
+    B.logParts = logParts   -- Spectate.lua adds its tabs and swaps the log for its list
     local foldBtn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
     foldBtn:SetSize(24, 24)
     foldBtn:SetPoint("TOPRIGHT", -16, -25)   -- centred on the title strip
 
     function sideLog:SetFolded(folded)
         for _, part in ipairs(logParts) do part:SetShown(not folded) end
-        if B.lastPlayedBtn then B.lastPlayedBtn:SetShown(not folded) end   -- (made further down)
+        if B.whatHappenedBtn then B.whatHappenedBtn:SetShown(not folded) end   -- (made further down)
         self:SetHeight(folded and 74 or 820)   -- folded: the title strip and the frame's border
         foldBtn:SetText(folded and "+" or "-")
         if TTS.Options then TTS.Options:Set("gameLogFolded", folded) end
@@ -570,6 +572,7 @@ concedeBtn:SetPoint("RIGHT", minimizeBtn, "LEFT", -4, 0)
 Loc:Bind(concedeBtn, "board.concede")
 StyleButton(concedeBtn)
 concedeBtn:SetScript("OnClick", function() TTS.Engine:ConfirmConcede() end)
+B.concedeBtn = concedeBtn   -- hidden while spectating (Spectate.lua)
 
 -- The top bar's checkboxes, right to left from Concede (a block of their own: the file is at
 -- Lua's 200 locals; the rest of the file reaches them as B.soundCheck and so on)
@@ -2242,7 +2245,7 @@ end
 -- =========================================================================
 -- CARD ZONE ART
 -- Behind a creature's model, a piece of its zone's world map (a dungeon's: the zone it
--- sits in, as its encounter background has), in greyscale and dimmed so the model stands out. The same
+-- sits in, as its encounter background has), in greyscale, dimmed so the model stands out and hued a little towards the card's colour. The same
 -- map pieces as the board backgrounds (tiles, then explored-area overlays on top), cut to
 -- the art window. Each card shows its own spot near the map's middle (from its id), so
 -- cards from one zone differ. A token (an Add) shows its maker's zone. Switched off with
@@ -2253,6 +2256,7 @@ local PaintZoneArt
 do
 local ZONE_ART_W = 260                 -- map pixels across the art window
 local ZONE_ART_SHADE = 0.18            -- the art's brightness, so the model stands out
+local ZONE_ART_TINT = 0.4              -- how far the grey art leans towards the card's colour (0 to 1)
 local ZONE_ART_SPREAD_X, ZONE_ART_SPREAD_Y = 120, 80   -- how far from the map's middle a card's spot can be
 local ZONE_ART_RAISE = 2               -- px the art reaches above the art window, under the frame (no dark line)
 local zoneMaps                         -- zone name -> world map folder (from the encounters)
@@ -2304,6 +2308,35 @@ local function ArtZone(f, card)
     return card.zone
 end
 
+-- The art's vertex colour leaning towards sphere colour c, at the art's usual brightness
+-- (a colourless card's art stays grey)
+local function ArtShade(c)
+    if c == FOIL.GOLD then return { ZONE_ART_SHADE, ZONE_ART_SHADE, ZONE_ART_SHADE } end
+    local r, g, b = 1 + (c[1] - 1) * ZONE_ART_TINT, 1 + (c[2] - 1) * ZONE_ART_TINT, 1 + (c[3] - 1) * ZONE_ART_TINT
+    local k = ZONE_ART_SHADE / (0.3 * r + 0.59 * g + 0.11 * b)
+    return { r * k, g * k, b * k }
+end
+
+-- The art's colours at the window's left and right edges: the same unless the card has two
+local function ArtTint(card)
+    local list = FoilColors(card)
+    local left = ArtShade(list[1])
+    return { left, list[2] and ArtShade(list[2]) or left }
+end
+
+-- Colours map piece t: u0 to u1 is how far across the window (0 to 1) it runs. SetGradient
+-- takes colour objects in newer clients, numbers in older.
+local function TintPiece(t, tint, u0, u1)
+    local a, b = tint[1], tint[2]
+    if a == b then t:SetVertexColor(a[1], a[2], a[3]); return end
+    local r0, g0, b0 = a[1] + (b[1] - a[1]) * u0, a[2] + (b[2] - a[2]) * u0, a[3] + (b[3] - a[3]) * u0
+    local r1, g1, b1 = a[1] + (b[1] - a[1]) * u1, a[2] + (b[2] - a[2]) * u1, a[3] + (b[3] - a[3]) * u1
+    if CreateColor and pcall(t.SetGradient, t, "HORIZONTAL", CreateColor(r0, g0, b0, 1), CreateColor(r1, g1, b1, 1)) then return end
+    if not pcall(t.SetGradient, t, "HORIZONTAL", r0, g0, b0, r1, g1, b1) then
+        t:SetVertexColor((r0 + r1) / 2, (g0 + g1) / 2, (b0 + b1) / 2)
+    end
+end
+
 -- The f.zoneArt texture n (made as needed): on the model's frame, just over its full-art
 -- backing (fxBack) and under the model itself, so it shows in either window and fades with
 -- a tapped or summoning-sick model
@@ -2319,8 +2352,8 @@ end
 
 -- One map piece (px0, py0, pw x ph map pixels of a file fw x fh) cut to the crop
 -- (cx0, cy0, cw x ch map pixels), drawn s screen pixels per map pixel from the window box
--- (its top raised by ZONE_ART_RAISE)
-local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s)
+-- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint)
+local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s, tint)
     local ix0, ix1 = math.max(px0, cx0), math.min(px0 + pw, cx0 + cw, BG.MAP_W)
     local iy0, iy1 = math.max(py0, cy0), math.min(py0 + ph, cy0 + ch, BG.MAP_H)
     if ix1 <= ix0 or iy1 <= iy0 then return n end
@@ -2332,7 +2365,7 @@ local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch
     t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
     t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
     if t.SetDesaturated then t:SetDesaturated(true) end   -- in grey, so the model's colours lead
-    t:SetVertexColor(ZONE_ART_SHADE, ZONE_ART_SHADE, ZONE_ART_SHADE)
+    TintPiece(t, tint, (ix0 - cx0) / cw, (ix1 - cx0) / cw)
     t:Show()
     return n + 1
 end
@@ -2359,11 +2392,12 @@ function PaintZoneArt(f, card)
         local cy0 = BG.MAP_H / 2 - ch / 2 + ((math.floor(h / 201) % 201) / 100 - 1) * ZONE_ART_SPREAD_Y
         local s = box.w / cw
         local tile = BG.MAP_TILE
+        local tint = ArtTint(card)
         for row = 0, 2 do
             for col = 0, 3 do
                 local i = row * 4 + col + 1
                 used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s%d", map, map, i),
-                    col * tile, row * tile, tile, tile, tile, tile, cx0, cy0, cw, ch, s)
+                    col * tile, row * tile, tile, tile, tile, tile, cx0, cy0, cw, ch, s, tint)
             end
         end
         for _, o in ipairs((TTS.MapOverlays and TTS.MapOverlays[map]) or {}) do
@@ -2376,7 +2410,7 @@ function PaintZoneArt(f, card)
                         local pw = (c < across - 1) and tile or (w - c * tile)
                         local ph = (r < down - 1) and tile or (h2 - r * tile)
                         used = Place(f, box, used, string.format("Interface\\WorldMap\\%s\\%s", map, name),
-                            ox + c * tile, oy + r * tile, pw, ph, TextureFileSize(pw), TextureFileSize(ph), cx0, cy0, cw, ch, s)
+                            ox + c * tile, oy + r * tile, pw, ph, TextureFileSize(pw), TextureFileSize(ph), cx0, cy0, cw, ch, s, tint)
                     end
                 end
             end
@@ -3120,87 +3154,210 @@ HideBoardPreview = function(owner)
 end
 
 -- =========================================================================
--- LAST PLAYED
--- A button at the bottom of the game log, between Clear and Bottom: hovering it shows the
--- last card played by either side (E.lastPlayed, CardLogic.lua) in the docked preview;
--- clicking it pins the preview open until it's clicked again or another card is hovered.
--- Greyed out until a card has been played this match. Folds away with the log.
+-- WHAT JUST HAPPENED
+-- A button in a row of its own under the game log: clicking it opens a panel over the log
+-- with the last card played or ability used by either side (E.lastPlayed, CardLogic.lua), its
+-- target and what it did (E.lastEffect), and how the last combat resolved (E.lastCombat,
+-- CardLogic.lua): each attacker, what blocked it, the damage
+-- each way, who died, and what the defending player took. Hovering a card's row shows it in
+-- the docked preview. Greyed out until there's something to show this match.
 -- (In a function of its own: the file is at Lua's 200 locals.)
 -- =========================================================================
 ;(function()
+local LIST_W, ROW_H = 290, 18
+local SKULL = "|TInterface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull.png:12:12|t "
+
 local btn = CreateFrame("Button", nil, sideLog, "UIPanelButtonTemplate")
-btn:SetSize(90, 20)
-btn:SetPoint("BOTTOM", 0, 12)
+btn:SetHeight(20)
+btn:SetPoint("BOTTOMLEFT", 14, 34)
+btn:SetPoint("BOTTOMRIGHT", -14, 34)
 StyleButton(btn)
-Loc:Bind(btn, "board.lastPlayed")
+Loc:Bind(btn, "board.whatHappened")
 if btn.SetMotionScriptsWhileDisabled then btn:SetMotionScriptsWhileDisabled(true) end
-B.lastPlayedBtn = btn
+B.whatHappenedBtn = btn
 
-local function LastPlayed()
-    local E = TTS.Engine
-    local lp = E.inMatch and E.lastPlayed
-    local card = lp and TTS.Cards[lp.id]
-    if card then return card, lp end
+local list = CreateFrame("Frame", nil, btn, backdropTemplate)
+list:SetFrameStrata("DIALOG")
+list:SetWidth(LIST_W)
+list:SetClampedToScreen(true)
+list:SetPoint("BOTTOMRIGHT", logPanel, "BOTTOMRIGHT", 0, 0)
+Skin(list, "panel", { 0.04, 0.04, 0.04, 0.95 }, STYLE.panelBorder)
+list:EnableMouse(true)
+list:Hide()
+list.rows = {}
+
+list.title = list:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+list.title:SetPoint("TOPLEFT", 10, -8)
+list.footer = list:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+list.footer:SetPoint("BOTTOMLEFT", 10, 8)
+list.footer:SetPoint("BOTTOMRIGHT", -10, 8)
+list.footer:SetJustifyH("LEFT")
+
+local function Row_OnEnter(self)
+    local card = self.cardId and TTS.Cards[self.cardId]
+    if card then ShowBoardPreview(self, card, self.isFoil) end
 end
 
-local function Showing()
-    return previewOwner == btn and boardPreview and boardPreview:IsShown()
-end
-
-local shown   -- the E.lastPlayed entry the preview was painted from
-
-local function ShowIt()
-    local card, lp = LastPlayed()
-    if card then
-        shown = lp
-        ShowBoardPreview(btn, card, TTS.Engine:IsFoil(lp.id, lp.isRemote))
-    end
-end
-
-local function ShowTip(self)
-    local card, lp = LastPlayed()
-    local E = TTS.Engine
-    if not card then
-        TT:ShowText(self, "ANCHOR_TOP", L("board.lastPlayed"), L("board.lastPlayedNone"))
-        return
-    end
-    local by = lp.isRemote and L("board.lastPlayedOpp", E.opponent or L("side.opponentCap")) or L("board.lastPlayedYou")
-    TT:ShowText(self, "ANCHOR_TOP", TTS:CardName(card), by)
-end
-
-btn:SetScript("OnEnter", function(self)
-    if not Showing() then self.pinned = nil end   -- another card's preview took its place
-    ShowTip(self)
-    ShowIt()
-end)
-btn:SetScript("OnLeave", function(self)
-    TT:Hide(self)
-    if not self.pinned then HideBoardPreview(self) end
-end)
-btn:SetScript("OnClick", function(self)
-    if self.pinned and Showing() then
-        self.pinned = nil
-        HideBoardPreview(self)
-    else
-        self.pinned = true
-        ShowIt()
-    end
-end)
-
--- Enabled once there's a card to show; a preview of it that's open follows a newer play
-function B:UpdateLastPlayed()
-    local card, lp = LastPlayed()
-    if card then btn:Enable() else btn:Disable() end
-    if Showing() and lp ~= shown then   -- (repainting reloads the model: only for a new play)
-        if card then ShowIt() else btn.pinned = nil; HideBoardPreview(btn) end
-    end
-end
-
--- Hidden with the board or by folding the log: nothing is left to unpin a preview with
-btn:SetScript("OnHide", function(self)
-    self.pinned = nil
+local function Row_OnLeave(self)
     HideBoardPreview(self)
+end
+
+local function GetRow(r)
+    local row = list.rows[r]
+    if row then return row end
+    row = CreateFrame("Button", nil, list)
+    row:SetSize(LIST_W - 12, ROW_H)
+    row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    row.ttsSilent = true
+    row.right = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.right:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    row.right:SetJustifyH("RIGHT")
+    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.text:SetJustifyH("LEFT")
+    row:SetScript("OnEnter", Row_OnEnter)
+    row:SetScript("OnLeave", Row_OnLeave)
+    row:SetScript("OnClick", function(self) TTS:TryLinkCard(self.cardId, self.isFoil) end)   -- shift-click links it
+    row:SetScript("OnHide", Row_OnLeave)
+    list.rows[r] = row
+    return row
+end
+
+local function Stats(e)
+    return string.format("%d/%d", e.p, e.t)
+end
+
+-- A card's name, with a skull if it died and a note if its Shielded took the hit
+local function Name(e)
+    return (e.died and SKULL or "") .. (TTS:CardName(e.id) or tostring(e.id))
+        .. (e.shielded and (" " .. L("board.lastCombatShielded")) or "")
+end
+
+local function Fill()
+    local E = TTS.Engine
+    local lp, c = E.lastPlayed, E.lastCombat
+    if lp and not TTS.Cards[lp.id] then lp = nil end
+    list.paintedPlay, list.paintedCombat = E.lastPlayed, c
+    list.paintedEffect, list.paintedLines = E.lastEffect, E.lastEffect and #E.lastEffect.lines
+    if not (lp or c) then list:Hide(); return end
+    list.title:SetText(L("board.whatHappened"))
+    local opponent = E.opponent or L("side.opponentCap")
+
+    local n, y = 0, 0
+    -- e: the card the row is for, if any; indent: a line under its attacker;
+    -- wrap: a whole sentence, on as many lines as it takes
+    local function Add(text, right, e, indent, wrap)
+        n = n + 1
+        local row = GetRow(n)
+        row.cardId, row.isFoil = e and e.id, e and e.foil
+        row:EnableMouse(e ~= nil)
+        row.text:ClearAllPoints()
+        row.text:SetWordWrap(wrap and true or false)
+        local h = ROW_H
+        if wrap then
+            row.text:SetPoint("TOPLEFT", row, "TOPLEFT", 16, -2)
+            row.text:SetWidth(LIST_W - 36)
+            row.text:SetText(text)
+            h = math.max(ROW_H, row.text:GetStringHeight() + 4)
+        else
+            row.text:SetWidth(0)
+            row.text:SetPoint("LEFT", row, "LEFT", indent and 16 or 4, 0)
+            row.text:SetPoint("RIGHT", row.right, "LEFT", -4, 0)
+            row.text:SetText(text)
+        end
+        row.right:SetText(right or "")
+        row:SetHeight(h)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 6, -28 - y)
+        y = y + h
+        row:Show()
+    end
+    local function Header(text, right)
+        Add("|cFFFFD200" .. text .. "|r", right)
+    end
+
+    Header(L((lp and lp.ability) and "board.lastAbility" or "board.lastPlayed"))
+    if lp then
+        local by
+        if lp.ability then
+            by = lp.isRemote and L("board.lastAbilityOpp", opponent) or L("board.lastAbilityYou")
+        else
+            by = lp.isRemote and L("board.lastPlayedOpp", opponent) or L("board.lastPlayedYou")
+        end
+        Add(TTS:CardName(lp.id), by, { id = lp.id, foil = E:IsFoil(lp.id, lp.isRemote) }, true)
+
+        -- What it did (a card with nothing to resolve has no entry of its own)
+        local fx = E.lastEffect
+        if fx and fx.id == lp.id and fx.isRemote == lp.isRemote then
+            if fx.target then
+                Add(L("board.lastPlayedTarget", TTS:CardName(fx.target.id) or tostring(fx.target.id)), nil, fx.target, true)
+            elseif fx.targetPlayer == true then
+                Add(L("board.lastPlayedTarget", opponent), nil, nil, true)
+            elseif fx.targetPlayer == false then
+                Add(L("board.lastPlayedTargetYou"), nil, nil, true)
+            end
+            for _, line in ipairs(fx.lines) do Add(line, nil, nil, true, true) end
+        end
+    else
+        Add(L("board.lastPlayedNone"), nil, nil, true)
+    end
+
+    if c then
+        Header(L("board.lastCombat"), c.isRemoteAttacking and L("board.lastCombatOpp", opponent) or L("board.lastCombatYou"))
+        for _, a in ipairs(c.attackers) do
+            Add(Name(a), Stats(a), a)
+            for _, b in ipairs(a.blocks) do
+                Add(L("board.lastCombatBlocked", Name(b) .. " " .. Stats(b)), L("board.lastCombatFight", b.dealt, b.taken), b, true)
+            end
+            if (a.toPlayer or 0) > 0 then
+                Add(L(#a.blocks > 0 and "board.lastCombatCarried" or "board.lastCombatUnblocked", a.toPlayer), nil, nil, true)
+            end
+        end
+    else
+        Header(L("board.lastCombat"))
+        Add(L("board.lastCombatNone"), nil, nil, true)
+    end
+    for r = n + 1, #list.rows do list.rows[r]:Hide() end
+
+    local footer = ""
+    if c and c.prevented then
+        footer = L("board.lastCombatPrevented")
+    elseif c then
+        footer = c.isRemoteAttacking and L("board.lastCombatTookYou", c.total) or L("board.lastCombatTookOpp", opponent, c.total)
+        if c.absorbed > 0 then footer = footer .. " " .. L("board.lastCombatAbsorbed", c.absorbed) end
+    end
+    list.footer:SetText(footer)
+    list:SetHeight(28 + y + (c and list.footer:GetStringHeight() + 16 or 8))
+end
+
+local function HasAny()
+    local E = TTS.Engine
+    return E.inMatch and (E.lastPlayed or E.lastCombat) and true or false
+end
+
+btn:SetScript("OnClick", function(self)
+    TT:Hide(self)
+    if list:IsShown() then list:Hide(); return end
+    Fill()
+    if list.paintedPlay or list.paintedCombat then list:Show() end
 end)
+btn:SetScript("OnEnter", function(self)
+    if list:IsShown() then return end
+    TT:ShowText(self, "ANCHOR_TOP", L("board.whatHappened"),
+        L(HasAny() and "board.whatHappenedDesc" or "board.whatHappenedNone"))
+end)
+btn:SetScript("OnLeave", function(self) TT:Hide(self) end)
+-- Closes with the board or by folding the log (or it would come back open next match)
+btn:SetScript("OnHide", function() list:Hide() end)
+
+-- Enabled once there's something to show; an open panel follows a newer play or combat
+function B:UpdateWhatHappened()
+    local E = TTS.Engine
+    if HasAny() then btn:Enable() else btn:Disable() end
+    if list:IsShown() and (E.lastPlayed ~= list.paintedPlay or E.lastCombat ~= list.paintedCombat
+        or E.lastEffect ~= list.paintedEffect or (E.lastEffect and #E.lastEffect.lines) ~= list.paintedLines) then
+        Fill()
+    end
+end
 end)()
 
 -- =========================================================================
@@ -3311,6 +3468,8 @@ local lastShown = { [false] = {}, [true] = {} }   -- side -> perms in the order 
 local lastField = {}                               -- side -> the field table last drawn (new match = new table)
 local leavingPerms = setmetatable({}, { __mode = "k" })
 local diedPerms = setmetatable({}, { __mode = "k" })
+-- A spectator's board is told who died, as its engine doesn't run the game (Spectate.lua)
+function B.MarkDied(perm) diedPerms[perm] = true end
 
 -- How dark a creature is drawn: tapped 0.4, summoning-sick in your attack step this
 TIMING.SICK_SHADE = 0.7
@@ -4142,7 +4301,7 @@ function B:UpdateDisplay()
     B.SetDeckStack(myDeckFrame, #E.localState.deck)
     B.SetDeckStack(oppDeckFrame, E:RemoteDeckCount())
     B:UpdateGraveyards()
-    B:UpdateLastPlayed()
+    B:UpdateWhatHappened()
 
     local oppCount = math.min(10, E.remoteState.handCount or 0)
     for i = 1, 10 do
@@ -4449,7 +4608,7 @@ fade:SetSmoothing("IN_OUT")
 
 -- What the match waits on us for, or nil
 local function WaitingOnUs(E)
-    if not E.inMatch or E.awaitingDeckPick then return nil end
+    if not E.inMatch or E.awaitingDeckPick or E.viewing then return nil end
     if E.targeting or E.pendingDiscard or E:HasPendingChoice() then return "choice" end
     local bs = E.blockingState
     if E.phase == "COMBAT_BLOCK" and bs then

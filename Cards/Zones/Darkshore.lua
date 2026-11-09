@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["DAR10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "DAR10", name = "Apothecary Falthis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 9, toughness = 9, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 4156,
         zone = "Darkshore", creatureType = "Humanoid", npcId = 3735,

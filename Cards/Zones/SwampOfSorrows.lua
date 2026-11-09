@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["SWA10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SWA10", name = "Zekkis", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 9, toughness = 11, isMob = true, isNamed = true, isBoss = true, displayId = 6693,
         zone = "Swamp of Sorrows", creatureType = "Undead", npcId = 5400,

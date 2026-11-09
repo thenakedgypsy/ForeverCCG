@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Airborne."
     },
     ["TEL10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "TEL10", name = "Blackmoss the Fetid", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
         power = 8, toughness = 10, support = true, isMob = true, isNamed = true, isBoss = true, displayId = 1549,
         zone = "Teldrassil", creatureType = "Elemental", npcId = 3535,

@@ -91,6 +91,7 @@ TTS:AddCards({
         text = ""
     },
     ["STR12"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STR12", name = "Skul", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 2606,
         zone = "Stratholme", creatureType = "Undead", npcId = 10393,
@@ -133,6 +134,7 @@ TTS:AddCards({
         text = "Fatal."
     },
     ["STR18"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STR18", name = "Stonespine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 8, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 7856,
         zone = "Stratholme", creatureType = "Undead", npcId = 10809,

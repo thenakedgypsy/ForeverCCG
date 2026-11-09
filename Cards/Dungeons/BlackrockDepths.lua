@@ -148,6 +148,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["BRD20"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BRD20", name = "Panzor the Invincible", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 3, toughness = 11, hexproof = true, isMob = true, isBoss = true, displayId = 8270,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 8923,

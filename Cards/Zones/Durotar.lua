@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["DUR10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "DUR10", name = "Death Flayer", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 6, toughness = 8, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 2491,
         zone = "Durotar", creatureType = "Beast", npcId = 5823,

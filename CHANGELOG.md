@@ -1,3 +1,29 @@
+## 1.0.19
+*   Rules & Guide: Collecting Cards now explains the new drop rates for rare spawns, in the world and in dungeons
+
+## 1.0.18
+*   fix for creatures dropping the card of a different creature whose name starts the same way: Aku'mai Snapjaws no longer drop Aku'mai, and Coyote Packleaders, Prairie Wolf Alphas, Ravasaur Runners, Hunters and Matriarchs and Firegut Ogre Mages no longer drop Coyote, Prairie Wolf, Ravasaur or Firegut Ogre
+
+## 1.0.17
+*   rare creatures now drop their cards far more often: your first kill always gives a copy, then 25%, 12% and 6%
+*   the rares with the longest respawns drop their cards more often still, depending on the respawn: Monnos the Elder, Zalas Witherbark, Cyclok the Mad, Uhk'loc, Foulbelly and Volchan are guaranteed for your first two copies (then 50% and 25%). Lord Angler, Mith'rethis the Enchanter, Vultros and Terrowulf Packlord are 100%, 50%, 25% and 12%
+*   fix for a "secret string value" Lua error from the addon reading chat messages the game has restricted. These messages are now left alone
+
+## 1.0.16
+*   new: Spectating - the waiting room has a Games in Progress list with a Watch button. You see the game from one player's seat on the real board, their hand included. You and the player you watch both need this version; their opponent doesn't
+*   new: Spectators tab beside the game log shows who's watching your game. Untick Spectatable there to keep your game private; once someone is watching, it can't be unticked. Spectators only use spare network capacity, so they can never slow your game down
+
+## 1.0.15
+*   fix for "No player named '' is currently playing" with a blank name showing in chat. Errors like this caused by the addon's own messages are now hidden, and it still shows if you've just whispered someone yourself
+
+## 1.0.14
+*   fix for the ice on a Frozen denizen popping in again and again: it now appears once and stays up until the denizen Recovers
+*   the addon's chat channel no longer takes channel 1: it now moves to the highest free channel number, up to 10, leaving the lower numbers for General, Trade and your other channels
+
+## 1.0.13
+*   new: What Just Happened button under the game log, replacing Last Played - click it to see the last card played or ability used by either player, its target and what it did (spells, gear, Arrival effects and activated abilities), and how the last combat went: each attacker, what blocked it, the damage each way, who died and how much damage the defending player took. Hover a card in the list to see it
+*   with Auto-pay on, playing a Dark Hearth now Exhausts an untapped prayer for its mana before returning it to your hand
+
 ## 1.0.12
 *   new: Last Played button at the bottom of the game log - hover it to see the last card played by either player and who played it. Click it to keep the card on show until you click again or hover another card
 

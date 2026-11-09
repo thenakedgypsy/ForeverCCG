@@ -77,6 +77,7 @@ TTS:AddCards({
         text = "Other Venture Co. you control get +1/+1."
     },
     ["MUL10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "MUL10", name = "Snagglespear", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 275,
         zone = "Mulgore", creatureType = "Humanoid", faction = "Quilboar", npcId = 5786,

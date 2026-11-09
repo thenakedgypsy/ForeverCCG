@@ -184,13 +184,78 @@ local function RejoinLFMChannel()
 end
 TTS.Net.RejoinLFMChannel = RejoinLFMChannel
 
+-- A channel joined takes the lowest free number and there's no asking for another, so ours
+-- could take /1 from General. It's moved to the highest free slot after any channel change
+-- (every send looks its number up by name). If a client won't swap with an empty slot, it
+-- goes behind the channels above it instead, which keep their order.
+do
+    local LAST_SLOT = 10
+    local PLACE_DELAY = 1       -- after a channel notice: several arrive together at login
+    local SWAP_CHECK = 2        -- seconds before checking a swap happened
+    local placing = false       -- a pass is waiting, or a swap is being checked
+    local freeSwapFails = false
+
+    local function Swap(a, b)
+        pcall(C_ChatInfo.SwapChatChannelsByChannelIndex, a, b)
+    end
+
+    local function MoveChannelLast()
+        if not (C_ChatInfo and C_ChatInfo.SwapChatChannelsByChannelIndex) then return end
+        local ours = GetLFMChannelId()
+        if not ours then return end
+        local free
+        local occupied = {}     -- slots above ours with a channel in them, lowest first
+        for i = ours + 1, LAST_SLOT do
+            if (GetChannelName(i) or 0) > 0 then
+                occupied[#occupied + 1] = i
+            else
+                free = i
+            end
+        end
+        if not freeSwapFails then
+            if free then
+                Swap(ours, free)
+                placing = true
+                TTS:SafeAfter(SWAP_CHECK, function()
+                    placing = false
+                    if GetLFMChannelId() == ours then
+                        freeSwapFails = true
+                        MoveChannelLast()
+                    end
+                end)
+            end
+            return
+        end
+        for _, slot in ipairs(occupied) do
+            Swap(ours, slot)
+            ours = slot
+        end
+    end
+
+    function TTS.Net.PlaceChannel()
+        if placing then return end
+        placing = true
+        TTS:SafeAfter(PLACE_DELAY, function()
+            placing = false
+            MoveChannelLast()
+        end)
+    end
+
+    local noticeFrame = CreateFrame("Frame")
+    noticeFrame:RegisterEvent("CHAT_MSG_CHANNEL_NOTICE")
+    noticeFrame:SetScript("OnEvent", TTS.Net.PlaceChannel)
+end
+
+-- Chat text can arrive as a secret value: type() still says "string", but reading it is an error
+local function IsSecret(v) return issecretvalue and issecretvalue(v) or false end
+
 -- Hides the channel's left/joined lines while rejoining, so it doesn't look like chat spam
 local function RejoinNoticeFilter(_, _, notice, ...)
     if GetTime() > hideNoticesUntil then return false, notice, ... end
     local baseName = select(8, ...)
     local channelName = select(3, ...)
     local function ours(s)
-        return type(s) == "string" and s:upper():find(LFM_CHANNEL, 1, true) ~= nil
+        return not IsSecret(s) and type(s) == "string" and s:upper():find(LFM_CHANNEL, 1, true) ~= nil
     end
     if ours(baseName) or ours(channelName) then
         return true
@@ -351,6 +416,13 @@ end)
 -- chatType is one of the fallback routes; target (a waiting-room name) is only used for "WHISPER"
 local function SendDirect(msg, chatType, target, low, onSent)
     QueueSend(msg, chatType, target and CharName(target), low, onSent)
+end
+
+-- Everything to do with spectating (Spectate.lua) goes out on the low queue, behind every game
+-- message. Not through Net:Send: a viewer is flagged as a solo game, which Send refuses.
+function TTS.Net:SendSpectator(target, inner, onSent)
+    target = CharName(target)
+    SendDirect("T:" .. target .. ":" .. TTS.GetPlayerFullName() .. ":" .. inner, "WHISPER", target, true, onSent)
 end
 
 -- =========================================================================
@@ -989,6 +1061,8 @@ local function OnChannelLine(text)
         name = NormalizeName(name)
         if name == "" or SameName(name, MyName()) then return end
         NotePresence(name, queued == "1", tonumber(score), TTS.PvP.Parse(r, w, l), true)
+        -- Someone opened the waiting room: if we're in a game, it goes on their list
+        if TTS.Spectate then TTS.Spectate:OnHello(name) end
         local E = TTS.Engine
         if E and E.inMatch then return end
         local key = name:lower()
@@ -1009,7 +1083,7 @@ end
 local function IsOurChannel(...)
     for i = 1, select("#", ...) do
         local s = select(i, ...)
-        if type(s) == "string" and s:gsub("^%d+%.%s*", ""):upper() == LFM_CHANNEL then return true end
+        if not IsSecret(s) and type(s) == "string" and s:gsub("^%d+%.%s*", ""):upper() == LFM_CHANNEL then return true end
     end
     return false
 end
@@ -1017,6 +1091,7 @@ end
 -- Our lines never show in chat (the channel isn't in a chat window, unless someone adds it)
 if ChatFrame_AddMessageEventFilter then
     ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", function(_, _, text, ...)
+        if IsSecret(text) then return false end
         if type(text) == "string" and text:sub(1, #LINE_TAG) == LINE_TAG then return true end
         return false, text, ...
     end)
@@ -1027,7 +1102,7 @@ lineFrame:RegisterEvent("CHAT_MSG_CHANNEL")
 -- text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID,
 -- channelIndex, channelBaseName
 lineFrame:SetScript("OnEvent", function(_, _, text, _, _, channelName, _, _, _, _, baseName)
-    if type(text) ~= "string" or text:sub(1, #LINE_TAG) ~= LINE_TAG then return end
+    if IsSecret(text) or type(text) ~= "string" or text:sub(1, #LINE_TAG) ~= LINE_TAG then return end
     if not IsOurChannel(baseName, channelName) then return end
     OnChannelLine(text)
 end)
@@ -1060,6 +1135,7 @@ end
 
 -- Whispers the player types themselves: their errors are real and must show
 local function NoteOwnWhisper(_, chatType, _, target)
+    if IsSecret(chatType) or IsSecret(target) then return end
     if addonWhispering or chatType ~= "WHISPER" or type(target) ~= "string" then return end
     ownWhispers[NormalizeName(target):lower()] = time() + WHISPER_ERROR_WINDOW
 end
@@ -1074,6 +1150,7 @@ end
 local function Squash(s) return (s:lower():gsub("[%s%p]", "")) end
 
 local function OfflinePingFilter(_, _, msg, ...)
+    if IsSecret(msg) then return false end
     if type(msg) ~= "string" then return false, msg, ... end
     local lower = msg:lower()
     local named = notFoundPattern and lower:match(notFoundPattern)
@@ -1088,6 +1165,21 @@ local function OfflinePingFilter(_, _, msg, ...)
         return squashedMsg:find(k, 1, true) ~= nil
     end
     local function OwnWhisper(key) return (ownWhispers[key] or 0) >= now end
+
+    -- Some failures come back with no name at all ("No Player named ''"), so there's nothing
+    -- to match: it's ours if the addon has whispered lately and the player hasn't
+    local blank = lower:match("no player named%s*(.-)%s*is currently playing")
+    if blank and blank:gsub("['\"%s]", "") == "" then
+        local oursRecently = false
+        for key, expires in pairs(recentWhispers) do
+            if expires >= now then oursRecently = true end
+        end
+        for _, expires in pairs(ownWhispers) do
+            if expires >= now then return false, msg, ... end
+        end
+        if oursRecently then return true end
+        return false, msg, ...
+    end
 
     for key, expires in pairs(recentWhispers) do
         if expires < now then
@@ -1263,11 +1355,13 @@ f:SetScript("OnEvent", function(self, event, ...)
                 TTS:SafeAfter(REJOIN_GAP, JoinLFMChannel)
             else
                 JoinLFMChannel()
+                TTS.Net.PlaceChannel()
             end
         end)
         TTS.Net:StartBackgroundPings()
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, channel, sender = ...
+        if IsSecret(prefix) or IsSecret(message) or IsSecret(channel) or IsSecret(sender) then return end
         if prefix == PREFIX then
             local cleanSender = NormalizeName(Ambiguate(sender, "none"))
             -- Guild and party copies come back to us too. On Forever the sender can be
@@ -1952,6 +2046,11 @@ function TTS.Net:OnReceive(msg, sender)
     local parts = { strsplit(":", msg) }
     local cmd = parts[1]
 
+    if cmd:sub(1, 5) == "SPEC_" then
+        if TTS.Spectate then TTS.Spectate:OnMessage(cmd, msg, parts, sender) end
+        return
+    end
+
     -- =====================================================================
     -- WAITING ROOM / LFM HANDLERS
     -- =====================================================================
@@ -2040,6 +2139,8 @@ function TTS.Net:OnReceive(msg, sender)
             pendingPings[key] = nil
         else
             TTS.Net:Send(sender, "CONTACT_PONG:" .. MyLFMFields())
+            -- A contact's waiting room checks on us: if we're in a game, it goes on their list
+            if TTS.Spectate then TTS.Spectate:OnHello(sender) end
         end
         if parts[2] == "1" then
             NoteContactWaiting(sender, tonumber(parts[3]), pvp)
@@ -2403,10 +2504,12 @@ function TTS.Net:OnReceive(msg, sender)
             end
             if idx and TTS.Cards[cardId] then
                 table.remove(gy, idx)
+                local cap = E:ReopenLastEffect(sourceId)
                 E:Log(L("log.reanimatedOpp", sourceId and TTS.Cards[sourceId] and TTS:CardName(sourceId) or sender,
                     TTS:CardName(cardId), sender), "ACTION")
                 E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true) end)
                 E:CheckStateBasedActions()
+                E:EndEffectCapture(cap)
                 E:RefreshUI()
             end
 
@@ -2571,7 +2674,10 @@ function TTS.Net:OnReceive(msg, sender)
             -- A tick of a DoT they put on us flies from its icon (UI\TargetFX.lua)
             if TTS.NoteIncomingDamage then pcall(TTS.NoteIncomingDamage, reason) end
             -- DamagePlayer applies our own damage shield, logs, and handles defeat
+            -- (a spell's damage to us arrives after we've resolved our copy of it)
+            local cap = E:ReopenLastEffect(reason)
             E:DamagePlayer(false, amt, L("reason.from", shown, sender))
+            E:EndEffectCapture(cap)
 
         elseif actionType == "EFFECTS" then
             -- Snapshot of the over-time effects / shields the opponent is tracking (display only)

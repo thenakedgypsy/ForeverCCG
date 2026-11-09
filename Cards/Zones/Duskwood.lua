@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Strikes-First."
     },
     ["DSK10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "DSK10", name = "Nefaru", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 11181,
         zone = "Duskwood", creatureType = "Humanoid", npcId = 534,

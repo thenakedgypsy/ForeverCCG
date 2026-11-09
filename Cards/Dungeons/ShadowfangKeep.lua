@@ -101,6 +101,7 @@ TTS:AddCards({
     },
     -- Solo reward
     ["SFK13"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SFK13", name = "Deathsworn Captain", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 4, isReward = true, displayId = 3224,
         zone = "Shadowfang Keep", creatureType = "Undead", npcEntry = 3872,

@@ -42,6 +42,7 @@ TTS:AddCards({
         text = "Drain."
     },
     ["WCV05"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "WCV05", name = "Deviate Faerie Dragon", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 3, flying = true, isMob = true, isBoss = true, displayId = 1267,
         zone = "Wailing Caverns", creatureType = "Dragonkin", npcId = 5912,

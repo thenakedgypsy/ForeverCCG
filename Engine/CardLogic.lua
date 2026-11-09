@@ -821,11 +821,13 @@ SPELL_GLOBAL_OPS.raise = function(self, op, card, cr)
             return
         end
         table.remove(gy, idx)
+        local cap = self:ReopenLastEffect(card.id)   -- (picked after the spell has resolved)
         self:Log(L(cr and "log.reanimatedOpp" or "log.reanimatedYou", TTS:CardName(card), TTS:CardName(o.cardId), self.opponent or L("side.opponent")), "ACTION")
         if not cr and not self.isSolo then
             TTS.Net:Send(self.opponent, string.format("ACTION:RAISE:%s:%s:%s", o.fromTheirs and "THEIRS" or "MINE", o.cardId, card.id))
         end
         self:PutCreatureOntoBattlefield(o.cardId, cr)
+        self:EndEffectCapture(cap)
     end
 
     if cr then
@@ -893,13 +895,47 @@ function E:ResolveEffect(eff, card, casterIsRemote, tgt)
     self:CheckStateBasedActions()
 end
 
+-- What a card's effect did, for the board's What Just Happened button: E:Log's lines while it
+-- resolves, and its target. E.lastEffect = { id, isRemote, lines, target = { id, foil } or
+-- targetPlayer = whether it was the opponent }. An effect inside another one (returns nil
+-- here) adds its lines to the outer one. It is one of Undo.lua's ENGINE_KEYS.
+function E:BeginEffectCapture(cardId, isRemote, tgt)
+    if self.effectCapture then return nil end
+    local cap = { id = cardId, isRemote = isRemote and true or false, lines = {} }
+    if tgt and tgt.kind == "PLAYER" then
+        cap.targetPlayer = tgt.isRemote and true or false
+    elseif tgt and tgt.perm then
+        cap.target = { id = tgt.perm.id, foil = self:IsPermFoil(tgt.perm, tgt.isRemote) }
+    end
+    self.effectCapture = cap
+    return cap
+end
+
+function E:EndEffectCapture(cap)
+    if not cap then return end
+    self.effectCapture = nil
+    self.lastEffect = cap
+end
+
+-- For what an effect does after it has resolved (a raise's choice, PvP damage the opponent's
+-- client sends us): if it's still the last effect (cardId), carries on capturing into it.
+-- Ended by E:EndEffectCapture.
+function E:ReopenLastEffect(cardId)
+    local cap = self.lastEffect
+    if self.effectCapture or not cap or cap.id ~= cardId then return nil end
+    self.effectCapture = cap
+    return cap
+end
+
 function E:ResolveSpell(card, tgt, casterIsRemote)
     if casterIsRemote then
         self:Log(L("log.resolvedOpp", self.opponent or L("side.opponentCap"), TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
     else
         self:Log(L("log.resolved", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
     end
+    local cap = self:BeginEffectCapture(card.id, casterIsRemote, tgt)
     self:ResolveEffect(card.effect, card, casterIsRemote, tgt)
+    self:EndEffectCapture(cap)
 end
 
 -- Damage / healing over time. Each effect ticks at the start of its caster's turn
@@ -1094,7 +1130,9 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
         end
         -- A targeted Arrival with no target (nothing to choose, or it has left) does nothing
         if not card.etb.target or tgt then
+            local cap = self:BeginEffectCapture(card.id, isRemote, tgt)
             self:ResolveEffect(card.etb, card, isRemote, tgt)
+            self:EndEffectCapture(cap)
         end
     end
 end
@@ -1196,6 +1234,8 @@ function E:ActivateAbility(perm, isRemote, tgt)
     local st = isRemote and self.remoteState or self.localState
     local id = perm.id
     self:CallSound("QueueCreature", "ability", id)
+    self:NoteCardPlayed(id, isRemote, true)
+    local cap = self:BeginEffectCapture(id, isRemote, tgt)
     if id == "BOSS01" then
         self:DamagePlayer(tgt.isRemote, 2, "BOSS01")
         st.life = st.life + 2
@@ -1236,6 +1276,7 @@ function E:ActivateAbility(perm, isRemote, tgt)
         self:Log(L("log.boss.tortheldrin", TTS:CardName(id)), "ACTION")
     end
 
+    self:EndEffectCapture(cap)
     self:RefreshUI()
     return true
 end
@@ -1351,13 +1392,14 @@ function E:PlaySpellCastSound(card)
     end
 end
 
--- The last card played from a hand by either side, for the board's Last Played button:
--- { id = cardId, isRemote = true when the opponent played it }. Our plays are noted by
--- CommitUndoablePlay (Undo.lua), the opponent's by Network.lua (PvP) or AI.lua (solo).
+-- The last card played from a hand by either side, for the board's What Just Happened button:
+-- { id = cardId, isRemote = true when the opponent played it, ability = true when it was an
+-- activated ability instead }. Our plays are noted by CommitUndoablePlay (Undo.lua), the
+-- opponent's by Network.lua (PvP) or AI.lua (solo), abilities by E:ActivateAbility.
 -- It is one of Undo.lua's ENGINE_KEYS, so a play that is taken back takes this back too.
-function E:NoteCardPlayed(cardId, isRemote)
+function E:NoteCardPlayed(cardId, isRemote, ability)
     if not cardId then return end
-    self.lastPlayed = { id = cardId, isRemote = isRemote and true or false }
+    self.lastPlayed = { id = cardId, isRemote = isRemote and true or false, ability = ability or nil }
 end
 
 -- bounceIndex (optional): for a prayer that returns a basic prayer to hand as it arrives
@@ -1433,6 +1475,12 @@ function E:PlayCard(handIndex, bounceIndex)
                     end })
             end
             return
+        end
+
+        -- Auto-pay: an untapped prayer gives its mana before it goes back to hand. Before the
+        -- undo snapshot, as for E:AutoPayMana, so both clients save it tapped.
+        if bounced and not bounced.tapped and self:AutoPayEnabled() then
+            self:TapCard(bounceIndex)
         end
 
         local undoSnap = self:BeginUndoablePlay()
@@ -2303,6 +2351,76 @@ function E:ChooseDamageOrders(bs, onDone)
     return true
 end
 
+-- What the combat about to resolve comes to, for the board's What Just Happened button
+-- (UI/Board.lua): card ids and numbers, so it outlasts the creatures. Taken before any damage
+-- is marked; E:KeepLastCombat notes who died. Returns nil for a combat with no attackers.
+function E:ReadLastCombat(bs, plan)
+    local atkRemote = bs.isRemoteAttacking and true or false
+    local defRemote = not atkRemote
+    local atkField = atkRemote and self.remoteState.field or self.localState.field
+    local prevented = self.preventCombatDamage and true or false
+
+    local dealt = {}   -- dealt[src][dst] = the damage src did to dst
+    for _, h in ipairs(prevented and {} or plan.hits) do
+        dealt[h.src] = dealt[h.src] or {}
+        dealt[h.src][h.dst] = (dealt[h.src][h.dst] or 0) + h.n
+    end
+
+    local entries = {}
+    local function Entry(perm, isRemote)
+        local p, t = self:GetCreatureStats(perm, isRemote)
+        local e = { id = perm.id, perm = perm, p = p, t = t, foil = self:IsPermFoil(perm, isRemote),
+            shielded = (not prevented and plan.popped[perm]) and true or false }
+        table.insert(entries, e)
+        return e
+    end
+
+    local attackers, raw = {}, 0
+    for _, atkIdx in ipairs(bs.attackers or {}) do
+        local atk = atkField[atkIdx]
+        if atk then
+            local a = Entry(atk, atkRemote)
+            a.blocks = {}
+            for _, f in ipairs(plan.fights) do
+                if f.atk == atk then
+                    local b = Entry(f.blk, defRemote)
+                    b.dealt = dealt[atk] and dealt[atk][f.blk] or 0   -- by the attacker, to this blocker
+                    b.taken = dealt[f.blk] and dealt[f.blk][atk] or 0   -- by this blocker, to the attacker
+                    table.insert(a.blocks, b)
+                end
+            end
+            if not prevented then
+                a.toPlayer = #a.blocks > 0 and (plan.trample[atk] or 0) or math.max(0, a.p)
+                raw = raw + a.toPlayer
+            end
+            table.insert(attackers, a)
+        end
+    end
+    if #attackers == 0 then return nil end
+
+    -- The defender's damage shield (the PvP opponent's: our copy of it, see E:DamagePlayer)
+    local defState = atkRemote and self.localState or self.remoteState
+    local shield = defState.damageShield or 0
+    if defRemote and not self.isSolo then
+        shield = shield + (defState.mirror and defState.mirror.shield or 0)
+    end
+    local absorbed = math.min(raw, shield)
+    return { isRemoteAttacking = atkRemote, prevented = prevented, attackers = attackers,
+        total = raw - absorbed, absorbed = absorbed, entries = entries }
+end
+
+-- After the deaths are settled: marks who died and makes this the last combat
+function E:KeepLastCombat(combat)
+    if not combat then return end
+    for _, e in ipairs(combat.entries) do
+        local _, idx = self:FindPerm(e.perm)
+        e.died = not idx
+        e.perm = nil   -- only ids and numbers stay
+    end
+    combat.entries = nil
+    self.lastCombat = combat
+end
+
 function E:ResolveCombatDamage()
     if not self.blockingState then return end
     local bs = self.blockingState
@@ -2320,6 +2438,7 @@ function E:ResolveCombatDamage()
     -- Blocked creatures all deal their damage at once (see E:PlanCombatDamage)
     local plan = self:PlanCombatDamage(bs)
     local info = plan.info
+    local lastCombat = self:ReadLastCombat(bs, plan)
     if not self.preventCombatDamage then
         for perm in pairs(plan.popped) do
             perm.shielded = nil
@@ -2401,6 +2520,7 @@ function E:ResolveCombatDamage()
 
     self.blockingState = nil
     self:CheckStateBasedActions()
+    self:KeepLastCombat(lastCombat)
 
     if isRemoteAttacking then
         if self.isSolo then

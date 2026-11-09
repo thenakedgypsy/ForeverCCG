@@ -56,6 +56,7 @@ TTS:AddCards({
         text = ""
     },
     ["STK07"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STK07", name = "Bruegal Ironknuckle", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 2142,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1720,

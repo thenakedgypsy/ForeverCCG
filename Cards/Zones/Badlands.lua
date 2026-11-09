@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["BAD10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BAD10", name = "Anathemus", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 10, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 10040,
         zone = "Badlands", creatureType = "Giant", npcId = 2754,

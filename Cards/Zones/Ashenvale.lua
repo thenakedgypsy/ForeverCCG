@@ -79,6 +79,7 @@ TTS:AddCards({
     ["ASH10"] = {
         id = "ASH10", name = "Terrowulf Packlord", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 522,
+        dropChance = { 100, 50, 25, 12 },   -- long respawn (about 26h)
         zone = "Ashenvale", creatureType = "Humanoid", npcId = 3792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."

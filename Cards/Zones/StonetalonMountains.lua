@@ -77,6 +77,7 @@ TTS:AddCards({
         text = "Airborne."
     },
     ["STO10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STO10", name = "Sorrow Wing", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
         power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 11012,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 5928,

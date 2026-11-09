@@ -70,6 +70,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["RED09"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "RED09", name = "Squiddic", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 6, isMob = true, isNamed = true, isBoss = true, displayId = 5243,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 14270,
@@ -78,6 +79,7 @@ TTS:AddCards({
         text = "Other Murlocs you control get +1/+1."
     },
     ["RED10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "RED10", name = "Kazon", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 6041,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 584,

@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["DUN10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "DUN10", name = "Hammerspine", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 830,
         zone = "Dun Morogh", creatureType = "Humanoid", npcId = 1119,

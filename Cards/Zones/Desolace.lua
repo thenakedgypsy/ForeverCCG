@@ -76,6 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["DES10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "DES10", name = "Kaskk", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
         power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 14255,
         zone = "Desolace", creatureType = "Demon", npcId = 14226,

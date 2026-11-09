@@ -79,6 +79,7 @@ TTS:AddCards({
         text = "Quick. Other Beasts you control have Quick."
     },
     ["SMO10"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SMO10", name = "Fallen Champion", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 5230,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6488,
@@ -86,6 +87,7 @@ TTS:AddCards({
         text = "Drain."
     },
     ["SMO11"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SMO11", name = "Ironspine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 5231,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6489,
@@ -109,6 +111,7 @@ TTS:AddCards({
     },
     -- Solo reward
     ["SMO14"] = {
+        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SMO14", name = "Azshir the Sleepless", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 6, isReward = true, displayId = 5534,
         zone = "Scarlet Monastery", creatureType = "Undead", npcEntry = 6490,
