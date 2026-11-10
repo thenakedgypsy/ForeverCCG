@@ -537,7 +537,9 @@ function E:UntappedLands(isRemote)
     for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
         local card = TTS.Cards[perm.id]
         if card and card.type == "Land" and not perm.tapped then
-            if card.makesBoth then
+            if card.manaBurst then
+                -- A one-shot prayer (Black Lotus) is only ever used on purpose: never auto-paid
+            elseif card.makesBoth then
                 table.insert(doubles, perm)
             elseif card.colors then
                 table.insert(duals, perm)
@@ -549,12 +551,18 @@ function E:UntappedLands(isRemote)
     return lands, duals, doubles
 end
 
+-- Whether a prayer can be tapped as a double prayer's partner: not one that uses itself up,
+-- as it would lose a use without making any mana
+function E:CanPartnerDouble(card)
+    return card and card.type == "Land" and not card.deplete and not card.manaBurst and true or false
+end
+
 -- The other untapped prayers that could be tapped with a double prayer (perm)
 function E:DoublePartners(perm, isRemote)
     local list = {}
     for i, p in ipairs((isRemote and self.remoteState or self.localState).field) do
         local c = TTS.Cards[p.id]
-        if p ~= perm and c and c.type == "Land" and not p.tapped then table.insert(list, i) end
+        if p ~= perm and self:CanPartnerDouble(c) and not p.tapped then table.insert(list, i) end
     end
     return list
 end
@@ -582,10 +590,12 @@ local BasePlan
 -- each double prayer the other prayer tapped with it, or the colour of pool mana spent on
 -- it instead (partnerOf[perm]); nothing is tapped yet.
 -- Double prayers are tried with each possible partner and pool colour, keeping the plan
--- that pays with the fewest prayers tapped.
+-- that pays using up the fewest Deplete uses, then with the fewest prayers tapped.
 function E:PlanLandTaps(costString, isRemote)
     local req = self:ParseCost(costString)
     local lands, duals, doubles = self:UntappedLands(isRemote)
+    -- Copies of one card next to each other, so identical ones are only tried once (Try)
+    table.sort(doubles, function(a, b) return a.id < b.id end)
     local mana = (isRemote and self.remoteState or self.localState).mana
     local pool = {}
     for _, col in ipairs(MANA_COLORS) do pool[col] = mana[col] or 0 end
@@ -606,38 +616,42 @@ function E:PlanLandTaps(costString, isRemote)
     end
 
     local best
-    local function Consider(plan, colorOf, pays, partnerOf, used)
+    local function Consider(plan, colorOf, pays, partnerOf, used, spent)
         local taps = #plan
         for _, p in pairs(partnerOf) do
             if type(p) == "table" then taps = taps + 1 end
         end
-        if not best or (pays and not best.pays) or (pays == best.pays and (taps < best.taps
-            or (taps == best.taps and used < best.used))) then
-            best = { plan = plan, colorOf = colorOf, pays = pays, partnerOf = partnerOf, taps = taps, used = used }
+        if not best or (pays and not best.pays) or (pays == best.pays and (spent < best.spent
+            or (spent == best.spent and (taps < best.taps or (taps == best.taps and used < best.used))))) then
+            best = { plan = plan, colorOf = colorOf, pays = pays, partnerOf = partnerOf, taps = taps, used = used, spent = spent }
         end
     end
 
     -- doubles[i..]: skip it, or tap it with each prayer still free
-    local function Try(i, lands, duals, doubles, pool, front, partnerOf, used)
+    -- (spent: how many Deplete uses the plan so far costs)
+    local function Try(i, lands, duals, doubles, pool, front, partnerOf, used, spent)
         if i > #doubles then
             local plan, colorOf, pays = BasePlan(self, req, CopyLands(lands), { unpack(duals) }, Copy(pool))
             local full, colors = {}, {}
             for _, p in ipairs(front) do table.insert(full, p); colors[p] = "BOTH" end
             for _, p in ipairs(plan) do table.insert(full, p); colors[p] = colorOf[p] end
-            Consider(full, colors, pays, partnerOf, used)
+            Consider(full, colors, pays, partnerOf, used, spent)
             return
         end
         local d = doubles[i]
-        Try(i + 1, lands, duals, doubles, pool, front, partnerOf, used)   -- not used
+        Try(i + 1, lands, duals, doubles, pool, front, partnerOf, used, spent)   -- not used
         if d.planPartner then return end   -- already the partner of an earlier double
         local c = TTS.Cards[d.id]
         if c.noPartner then
+            -- Identical copies are interchangeable: only use this one if the one before it is used
+            local prev = doubles[i - 1]
+            if prev and prev.id == d.id and not Remove({ unpack(front) }, prev) then return end
             -- Both colours on its own
             local p2, f2 = Copy(pool), { unpack(front) }
             p2[c.colors[1]] = p2[c.colors[1]] + 1
             p2[c.colors[2]] = p2[c.colors[2]] + 1
             table.insert(f2, d)
-            Try(i + 1, lands, duals, doubles, p2, f2, partnerOf, used + 1)
+            Try(i + 1, lands, duals, doubles, p2, f2, partnerOf, used + 1, spent + (c.deplete and 1 or 0))
             return
         end
         -- Its (1) paid from the pool (its own colours first: they come straight back)
@@ -653,7 +667,7 @@ function E:PlanLandTaps(costString, isRemote)
                 p2[c.colors[2]] = p2[c.colors[2]] + 1
                 table.insert(f2, d)
                 po2[d] = col
-                Try(i + 1, lands, duals, doubles, p2, f2, po2, used + 1)
+                Try(i + 1, lands, duals, doubles, p2, f2, po2, used + 1, spent)
             end
         end
         local partners = {}
@@ -661,7 +675,9 @@ function E:PlanLandTaps(costString, isRemote)
             if lands[col][1] then table.insert(partners, lands[col][1]) end   -- one of each colour is enough
         end
         for _, p in ipairs(duals) do table.insert(partners, p) end
-        for j = i + 1, #doubles do table.insert(partners, doubles[j]) end
+        for j = i + 1, #doubles do
+            if self:CanPartnerDouble(TTS.Cards[doubles[j].id]) then table.insert(partners, doubles[j]) end
+        end
         for _, p in ipairs(partners) do
             local l2, d2, p2 = CopyLands(lands), { unpack(duals) }, Copy(pool)
             local card = TTS.Cards[p.id]
@@ -675,11 +691,11 @@ function E:PlanLandTaps(costString, isRemote)
             local po2 = Copy(partnerOf)
             po2[d] = p
             if card.makesBoth then p.planPartner = true end
-            Try(i + 1, l2, d2, doubles, p2, f2, po2, used + 1)
+            Try(i + 1, l2, d2, doubles, p2, f2, po2, used + 1, spent)
             p.planPartner = nil
         end
     end
-    Try(1, lands, duals, doubles, pool, {}, {}, 0)
+    Try(1, lands, duals, doubles, pool, {}, {}, 0, 0)
     return best.plan, best.colorOf, best.pays, best.partnerOf
 end
 
@@ -1083,6 +1099,7 @@ function E:UntapSide(isRemote)
         perm.isAttacking = nil
         perm.hasAttackedThisTurn = nil
         perm.blockedThisCombat = nil
+        perm.workshopUsed = nil
         if perm.freezeUntap then
             perm.freezeUntap = false
         else

@@ -183,12 +183,41 @@ function E:AITapLand(perm, col, partner)
         for _, c in ipairs(card.colors) do
             self.remoteState.mana[c] = (self.remoteState.mana[c] or 0) + 1
         end
+        self:AfterPrayerTap(perm, true)
         return
     end
     col = col or (card and self:ManaColorsOf(card)[1])
     if col then
-        self.remoteState.mana[col] = (self.remoteState.mana[col] or 0) + 1
+        self.remoteState.mana[col] = (self.remoteState.mana[col] or 0) + ((card and card.manaBurst) or 1)
     end
+    self:AfterPrayerTap(perm, true)
+end
+
+-- A one-shot prayer isn't in the tap plans (E:UntappedLands), so the AI uses one here: on the
+-- first card in hand it can only pay for with that burst, for the colour that makes it payable
+function E:AIUseManaBurst()
+    for _, perm in ipairs(self.remoteState.field) do
+        local burst = Card(perm.id)
+        if burst and burst.manaBurst and not perm.tapped then
+            local pool = self.remoteState.mana
+            for _, id in ipairs(self.remoteState.hand) do
+                local c = Card(id)
+                local cost = c and c.type ~= "Land" and self:AICardCost(c)
+                if cost and not self:AICanAfford(cost) then
+                    for _, col in ipairs(COLORS) do
+                        pool[col] = (pool[col] or 0) + burst.manaBurst
+                        local pays = self:AICanAfford(cost)
+                        pool[col] = pool[col] - burst.manaBurst
+                        if pays then
+                            self:AITapLand(perm, col)
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return false
 end
 
 -- =========================================================================
@@ -263,7 +292,7 @@ function E:AIBounceTarget()
     local best, bestScore
     for i, p in ipairs(self.remoteState.field) do
         local c = Card(p.id)
-        if c and c.type == "Land" and not c.colors then
+        if c and c.type == "Land" and not c.colors and not c.isProfession then
             local score = (p.tapped and 100 or 0) + (have[c.color] or 0)
             if not bestScore or score > bestScore then best, bestScore = i, score end
         end
@@ -285,6 +314,7 @@ function E:AIPlayLand(handIdx)
     self:Log(L("log.aiPlayedPrayer", self.opponent, TTS:CardName(card)), "ACTION")
     if bounced then self:Log(L("log.oppBouncedPrayer", self.opponent, TTS:CardName(bounced.id)), "ACTION") end
     self:CallDisplay("PlayNonCreatureCardSound")
+    self:OnPrayerArrive(card, true)
 end
 
 -- =========================================================================
@@ -1163,6 +1193,7 @@ function E:AITakeTurn()
     -- Casts (and abilities) for one main phase, best first, until nothing is worth it
     local function MainStep(phase, after, skip)
         skip = skip or {}
+        if E:AIUseManaBurst() then E:RefreshUI() end
         local action = E:AIChooseAction(profile, phase, skip)
         -- A basic AI sometimes holds a spell it could have cast; it won't try that card again this phase
         while action and profile.spellChance and action.kind == "spell" and math.random() > profile.spellChance do

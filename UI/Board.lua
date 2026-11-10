@@ -1414,7 +1414,9 @@ local function Card_OnEnter(self)
         ctx.perm = (self.isRemote and TTS.Engine.remoteState.field or TTS.Engine.localState.field)[self.fieldIndex]
         ctx.isRemote = self.isRemote
         ctx.fieldIndex = self.fieldIndex
-        if card.colors and not self.isRemote then
+        if card.anyColor and not self.isRemote then
+            ctx.hint = L("hint.anyPrayer")
+        elseif card.colors and not self.isRemote then
             ctx.hint = L(card.noPartner and "hint.bothPrayer" or card.makesBoth and "hint.doublePrayer" or "hint.dualPrayer",
                 TT:Def("symbol", card.colors[1], "name"), TT:Def("symbol", card.colors[2], "name"))
         end
@@ -1446,6 +1448,7 @@ local function DualFrameTexture(card)
     end
     if #spheres ~= 2 then return nil end
     table.sort(spheres)
+    if spheres[1] == spheres[2] then return nil end   -- two of one colour ({R}{R}): the plain frame
     return TEXTURE_ROOT .. "Cards\\card_frame_" .. spheres[1] .. "_" .. spheres[2] .. ".png"
 end
 
@@ -4410,6 +4413,7 @@ function B:UpdateDisplay()
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
+                TTS.PaintPrayerUses(f, perm, card)
                 PaintLeaving(f, leavingKind)
                 f.leavingKind = leavingKind   -- read by CardFX.lua (death animation)
                 f:Show()
@@ -4490,6 +4494,7 @@ function B:UpdateDisplay()
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
                 if perm.tapped then f.tapIcon:Show() else f.tapIcon:Hide() end
+                TTS.PaintPrayerUses(f, perm, card)
                 PaintLeaving(f, leavingKind)
                 f.leavingKind = leavingKind   -- read by CardFX.lua (death animation)
                 f:Show()
@@ -4665,3 +4670,21 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
         B:SetScale(math.max(LAYOUT.BOARD_MIN_SCALE, math.min(LAYOUT.BOARD_MAX_SCALE, saved)))
     end
 end)
+
+-- =========================================================================
+-- DEPLETE: the uses a Prayer has left, in the corner of its card
+-- =========================================================================
+;(function()
+    function TTS.PaintPrayerUses(f, perm, card)
+        if not (card and card.deplete) then
+            if f.usesText then f.usesText:Hide() end
+            return
+        end
+        if not f.usesText then
+            f.usesText = f.overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            f.usesText:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 8)
+        end
+        f.usesText:SetText(perm.uses or card.deplete)
+        f.usesText:Show()
+    end
+end)()

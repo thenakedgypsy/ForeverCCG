@@ -934,8 +934,58 @@ function E:ResolveSpell(card, tgt, casterIsRemote)
         self:Log(L("log.resolved", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
     end
     local cap = self:BeginEffectCapture(card.id, casterIsRemote, tgt)
+    if card.subType == "Gear" then self:RecoverWorkshops(casterIsRemote) end
     self:ResolveEffect(card.effect, card, casterIsRemote, tgt)
     self:EndEffectCapture(cap)
+end
+
+-- Workshop (keyword): casting a Gear Card Recovers the caster's Exhausted Workshop prayers,
+-- each once a turn (perm.workshopUsed, cleared in E:UntapSide). Runs as the Gear resolves on
+-- every client, so a PvP opponent's board matches without a message of its own.
+function E:RecoverWorkshops(casterIsRemote)
+    for _, perm in ipairs((casterIsRemote and self.remoteState or self.localState).field) do
+        local c = TTS.Cards[perm.id]
+        if c and c.workshop and perm.tapped and not perm.workshopUsed then
+            perm.tapped = false
+            perm.workshopUsed = true
+            self:Log(L("log.workshopRecovered", TTS:CardName(c)), "MANA")
+        end
+    end
+end
+
+-- A prayer's Arrival (card.etb, untargeted ops only) as it comes into play, on every client
+function E:OnPrayerArrive(card, isRemote)
+    if not (card and card.etb and self.inMatch) then return end
+    local cap = self:BeginEffectCapture(card.id, isRemote)
+    self:ResolveEffect(card.etb, card, isRemote)
+    self:EndEffectCapture(cap)
+end
+
+-- A prayer has just been Exhausted for mana: one that uses itself up may now leave the
+-- battlefield for its owner's graveyard (card.deplete counts down perm.uses; card.manaBurst
+-- goes at once, destroying it is the cost). Run by every client in the same order as the
+-- taps, so field indices in later messages still agree. Returns true if it left.
+function E:AfterPrayerTap(perm, isRemote)
+    local card = TTS.Cards[perm.id]
+    if not card or card.type ~= "Land" then return false end
+    local logKey
+    if card.manaBurst then
+        logKey = "log.prayerDestroyed"
+    elseif card.deplete then
+        perm.uses = (perm.uses or card.deplete) - 1
+        if perm.uses <= 0 then logKey = "log.prayerDepleted" end
+    end
+    if not logKey then return false end
+    local st = isRemote and self.remoteState or self.localState
+    for i, p in ipairs(st.field) do
+        if p == perm then
+            table.remove(st.field, i)
+            table.insert(st.graveyard, perm.id)
+            self:Log(L(logKey, TTS:CardName(card)), "MANA")
+            return true
+        end
+    end
+    return false
 end
 
 -- Damage / healing over time. Each effect ticks at the start of its caster's turn
@@ -1432,10 +1482,10 @@ function E:PlayCard(handIndex, bounceIndex)
         end
 
         local field = self.localState.field
-        -- Only a basic prayer (no colors) can be returned
+        -- Only a basic prayer (no colors, not a profession's) can be returned
         local function IsBasic(p)
             local c = p and TTS.Cards[p.id]
-            return c and c.type == "Land" and not c.colors
+            return c and c.type == "Land" and not c.colors and not c.isProfession
         end
         local bounced = card.bouncesPrayer and bounceIndex and field[bounceIndex]
         if card.bouncesPrayer and not IsBasic(bounced) then
@@ -1498,6 +1548,7 @@ function E:PlayCard(handIndex, bounceIndex)
         if not self.isSolo then
             TTS.Net:Send(self.opponent, "ACTION:PLAY_LAND:" .. cardId .. (bounced and (":" .. bounceIndex) or ""))
         end
+        self:OnPrayerArrive(card, false)
         self:CommitUndoablePlay(undoSnap, cardId)
         self:RefreshUI()
         return
@@ -1904,6 +1955,7 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         end
         self:Log(L("log.tappedBoth", TTS:CardName(card), card.colors[1], card.colors[2]), "MANA")
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex) end
+        self:AfterPrayerTap(perm, false)
         self:RefreshUI()
         return
     end
@@ -1924,7 +1976,7 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         end
         local partner = partnerIndex and field[partnerIndex]
         local pc = partner and TTS.Cards[partner.id]
-        if not (partner and partner ~= perm and pc and pc.type == "Land" and not partner.tapped) then
+        if not (partner and partner ~= perm and self:CanPartnerDouble(pc) and not partner.tapped) then
             local options = {}
             for _, i in ipairs(self:DoublePartners(perm, false)) do
                 table.insert(options, { value = i, cardId = field[i].id })
@@ -1967,9 +2019,16 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
             if c == manaColor then col = c end
         end
         perm.tapped = true
-        self.localState.mana[col] = (self.localState.mana[col] or 0) + 1
-        self:Log(L("log.tappedPrayer", TTS:CardName(card), col), "MANA")
+        -- card.manaBurst: several mana of the one colour picked (Black Lotus)
+        local amount = card.manaBurst or 1
+        self.localState.mana[col] = (self.localState.mana[col] or 0) + amount
+        if card.manaBurst then
+            self:Log(L("log.tappedBurst", TTS:CardName(card), amount, col), "MANA")
+        else
+            self:Log(L("log.tappedPrayer", TTS:CardName(card), col), "MANA")
+        end
         if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:TAP_PERM:" .. fieldIndex) end
+        self:AfterPrayerTap(perm, false)
         self:RefreshUI()
         return
     end

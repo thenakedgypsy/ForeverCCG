@@ -81,12 +81,19 @@ local function GiftSource(npcId)
     for pool, def in pairs(TTS.GIFT_POOLS or {}) do
         for _, id in pairs(def.npcs) do
             if id == npcId then
-                local cards = {}
-                for _, card in pairs(TTS.Cards or {}) do
-                    if card.isGift and card.giftPool == pool then table.insert(cards, card) end
+                if def.profession then
+                    -- A profession trainer: only once unlocked, and never for a profession the
+                    -- character knows. Lowest tier first (Professions.lua).
+                    local cards = TTS.Professions and TTS.Professions:TrainerCards(def.profession)
+                    if cards then return { key = "pool:" .. pool, cards = cards, inOrder = true } end
+                else
+                    local cards = {}
+                    for _, card in pairs(TTS.Cards or {}) do
+                        if card.isGift and card.giftPool == pool then table.insert(cards, card) end
+                    end
+                    table.sort(cards, function(a, b) return a.id < b.id end)
+                    return { key = "pool:" .. pool, cards = cards }
                 end
-                table.sort(cards, function(a, b) return a.id < b.id end)
-                return { key = "pool:" .. pool, cards = cards }
             end
         end
     end
@@ -99,6 +106,24 @@ local function GiftSource(npcId)
     end
 end
 local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
+
+-- A profession trainer's pool, or nil
+local function TrainerPool(npcId)
+    for _, def in pairs(TTS.GIFT_POOLS or {}) do
+        if def.profession then
+            for _, id in pairs(def.npcs) do
+                if id == npcId then return def end
+            end
+        end
+    end
+end
+
+-- What an NPC says: its own npc.<npcId>.<line>, or the words all trainers share
+local function NpcLine(npcId, line)
+    local trainer = TrainerPool(npcId)
+    if trainer then return L("npc.trainer." .. line, TTS.Professions:Name(trainer.profession)) end
+    return L("npc." .. npcId .. "." .. line)
+end
 
 -- =========================================================================
 -- THE OTHER FACTION'S GEAR CARDS
@@ -170,6 +195,7 @@ end
 -- How to get a gift card (collection hints): "Ask Innkeeper ... for spare cards". The other
 -- faction's Gear Cards add that the player's own merchants give them too, once they've switched.
 function TTS:GiftHow(card)
+    if card and card.isProfession then return TTS.Professions:HowToEarn(card) end
     if card and card.giftPool then return L("gift." .. card.giftPool .. ".how") end
     local how = L("npc." .. tostring(TTS:GiftNpcFor(card)) .. ".giftHow")
     if card and card.subType == "Gear" and not OwnSideGives(card, PlayerFaction()) then
@@ -193,9 +219,27 @@ local function NextGift(g, source)
     return last and last + MIN_WAIT_HOURS * HOUR
 end
 
--- Gives the player a copy of a source's card (a random one not yet complete, for a pool)
--- once its wait is over. Returns "give", "comeBack" (with the npc.wait.<key> hint at how
--- long is left) or "allOut".
+-- Adds one copy of a gift or profession card to the collection, up to 4, marks it new and
+-- says so in chat: message = the line's key (default npc.gotCard; false says nothing, for
+-- several cards at once). Returns the copies now owned, or nil if it was already complete.
+function TTS:AddGiftCopy(card, message)
+    local copies = (TTS:GetOwnedCopies(card) or 0) + 1
+    if copies > MAX_GIFT_COPIES then return nil end
+    Gifts().copies[card.id] = copies
+    TTS:MarkCardNew(card.id)
+    if message ~= false then
+        local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+        DEFAULT_CHAT_FRAME:AddMessage(L(message or "npc.gotCard", link, copies))
+    end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
+        TTS.DeckBuilderFrame:RefreshAll()
+    end
+    return copies
+end
+
+-- Gives the player a copy of a source's card (a random one not yet complete for a pool, or
+-- the first of them with source.inOrder) once its wait is over. Returns "give", "comeBack"
+-- (with the npc.wait.<key> hint at how long is left) or "allOut".
 local function GiveFrom(source)
     if not source then return "allOut" end
     local open = {}
@@ -213,15 +257,11 @@ local function GiveFrom(source)
         end
     end
 
-    local card = open[math.random(#open)]
-    local copies = (TTS:GetOwnedCopies(card) or 0) + 1
-    g.copies[card.id] = copies
+    local card = source.inOrder and open[1] or open[math.random(#open)]
     g.next[source.key] = Now() + math.random(MIN_WAIT_HOURS, MAX_WAIT_HOURS) * HOUR
     g.last[card.id] = nil
     for _, id in pairs(card.giftNpcs or {}) do g.last[id] = nil end   -- older saves' entries
-    TTS:MarkCardNew(card.id)
-    local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
-    DEFAULT_CHAT_FRAME:AddMessage(L("npc.gotCard", link, copies))
+    TTS:AddGiftCopy(card)
     -- "/e was gifted [Card Name] by Innkeeper Brianna!" (a card link, UI\CardLinks.lua;
     -- sent from the gossip click)
     local npcName = UnitName("npc")
@@ -230,9 +270,6 @@ local function GiveFrom(source)
         pcall(SendChatMessage, L("emote.giftedCard", tag, npcName), "EMOTE")
         -- then a /ty (the THANK emote token), a moment later so it doesn't collide with the text above
         TTS:SafeAfter(0.5, function() DoEmote("THANK") end)
-    end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
-        TTS.DeckBuilderFrame:RefreshAll()
     end
     return "give"
 end
@@ -339,7 +376,7 @@ end
 -- The NPC's answer, then (when it has nothing for the player) where else to try
 local function Said(npcId)
     if not (replyNpc == npcId and reply) then return nil end
-    local said = L("npc." .. npcId .. "." .. reply)
+    local said = NpcLine(npcId, reply)
     if reply == "comeBack" and waitHint then said = said .. " " .. L("npc.wait." .. waitHint) end
     if reply == "comeBack" or reply == "allOut" then
         local hint = TrailHint(npcId)
@@ -390,7 +427,9 @@ Loc:Bind(ask, "npc.ask")
 
 local function ShowPanel(npcId)
     local gossip = GossipFrame and GossipFrame:IsShown() and GossipFrame
-    local merchant = not gossip and MerchantFrame and MerchantFrame:IsShown() and MerchantFrame
+    -- A trainer with nothing else to say opens its training window instead, like a vendor
+    local merchant = not gossip and ((MerchantFrame and MerchantFrame:IsShown() and MerchantFrame)
+        or (ClassTrainerFrame and ClassTrainerFrame:IsShown() and ClassTrainerFrame))
     G:ClearAllPoints()
     if gossip then
         G:SetPoint("TOPLEFT", gossip, "BOTTOMLEFT", 0, 2)
@@ -556,15 +595,17 @@ end
 local M = CreateFrame("Frame")
 M:RegisterEvent("MERCHANT_SHOW")
 M:RegisterEvent("MERCHANT_CLOSED")
+pcall(M.RegisterEvent, M, "TRAINER_SHOW")
+pcall(M.RegisterEvent, M, "TRAINER_CLOSED")
 M:SetScript("OnEvent", function(_, event)
-    if event == "MERCHANT_CLOSED" then
+    if event == "MERCHANT_CLOSED" or event == "TRAINER_CLOSED" then
         if not (GossipFrame and GossipFrame:IsShown()) then
             G:Hide()
             reply = nil
         end
         return
     end
-    if event ~= "MERCHANT_SHOW" then return end
+    if event ~= "MERCHANT_SHOW" and event ~= "TRAINER_SHOW" then return end
     C_Timer.After(0, function()
         local npcId = GossipNpcId()
         if GiftCardOf(npcId) and not (GossipFrame and GossipFrame:IsShown()) then ShowPanel(npcId) end

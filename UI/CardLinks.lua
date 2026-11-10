@@ -170,10 +170,10 @@ local previewCard
 
 -- How the player stands with this card: owned copies, or how to get it
 local function CollectionStatus(card)
-    if card.type == "Land" and not card.isGift then
+    if card.type == "Land" and not card.isGift and not card.isProfession then
         return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
-    if card.isBoss or card.isReward or card.isGift or card.isBeta then
+    if card.isBoss or card.isReward or card.isGift or card.isProfession or card.isBeta then
         local copies = TTS:GetOwnedCopies(card) or 0
         -- A beta card is one copy at most (DataStamp.lua)
         if card.isBeta and copies > 0 then
@@ -188,7 +188,7 @@ local function CollectionStatus(card)
         if card.isReward then
             local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
             how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
-        elseif card.isGift then
+        elseif card.isGift or card.isProfession then
             how = TTS:GiftHow(card)
         elseif card.isBeta then
             how = L("link.betaOnly")

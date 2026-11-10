@@ -68,4 +68,12 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Quick."
     },
+    -- Arcanite Dragonling (Cards\Professions.lua). No displayId yet, so it shows its icon
+    ["TOK08"] = {
+        id = "TOK08", name = "Arcanite Dragonling", cost = "", cmc = 0, color = "C", type = "Creature",
+        power = 3, toughness = 3, flying = true, isToken = true,
+        art = "Interface\\Icons\\INV_Misc_Head_Dragon_01",
+        creatureType = "Mechanical",
+        text = "Airborne."
+    },
 })

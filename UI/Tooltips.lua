@@ -76,7 +76,7 @@ end
 TT.KEYWORD_ORDER = {
     "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch",
     "lifelink", "trample", "hexproof", "shielded", "defender", "unblockable", "bulwark", "support",
-    "kinsmanship", "unique",
+    "kinsmanship", "unique", "deplete", "workshop",
 }
 
 TT.KEYWORDS = {
@@ -97,6 +97,8 @@ TT.KEYWORDS = {
     -- Shown for cards with a rally (card.rally); on the card it reads "Defias Kinsmanship:" over "+1/+1"
     kinsmanship = { name = "Kinsmanship",   text = "Gets the bonus once for each other denizen you control that shares its tag." },
     unique      = { name = "Unique",        text = "You can have only one copy of it on your battlefield. You can't cast another while it's there, and if another arrives by an effect, the one already there is destroyed." },
+    deplete     = { name = "Deplete",       text = "Deplete X: after this Prayer has been Exhausted for mana X times, it goes to the graveyard." },
+    workshop    = { name = "Workshop",      text = "Whenever you cast a Gear Card, this Prayer Recovers (once each turn)." },
 }
 
 -- =========================================================================
@@ -180,6 +182,7 @@ TT.EFFECTS = {
     selected   = { name = "Choosing Block",    tag = "Status", text = "Selected as a blocker: click an attacking denizen to assign it. Right-click to deselect." },
     modified   = { name = "Modified Stats",    tag = "Status", text = "Its power and toughness differ from the printed card." },
     borrowed   = { name = "Borrowed",          tag = "Status", text = "Under your control until the end of the turn, then it returns to its owner." },
+    depleting  = { name = "Uses Left",         tag = "Status", text = "How many more times this Prayer can make mana before it goes to the graveyard." },
 }
 
 -- Who an area effect reaches
@@ -883,6 +886,9 @@ local function StatusPanels(card, ctx)
         table.insert(specs, TT:EffectPanel("sick"))
     end
     if perm.tapped then table.insert(specs, TT:EffectPanel("tapped")) end
+    if card.deplete then
+        table.insert(specs, TT:EffectPanel("depleting", { { L("tt.usesLeft", perm.uses or card.deplete, card.deplete), 1, 0.82, 0 } }))
+    end
     if perm.freezeUntap then table.insert(specs, TT:EffectPanel("frozen")) end
     if perm.regenerateShield then table.insert(specs, TT:EffectPanel("regenerating")) end
     if (perm.damage or 0) > 0 then
@@ -1020,6 +1026,8 @@ local function AbilityPanels(card)
         end
         if text:find("Whenever") then table.insert(specs, TT:EffectPanel("triggered")) end
     end
+
+    if card.type == "Land" and text:find("Arrival:", 1, true) then table.insert(specs, TT:EffectPanel("arrival")) end
 
     -- Adds: what this card is, or the Adds its abilities spawn
     if card.isToken then table.insert(specs, TT:EffectPanel("token")) end

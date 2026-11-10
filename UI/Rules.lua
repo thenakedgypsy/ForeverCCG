@@ -750,7 +750,7 @@ local PAGES = {
             { "shielded", "PRI01" }, { "hexproof", "DAL06" },
         } },
         { "h", "rules.keywords.h.other" },
-        { "glossary", "keyword", { { "kinsmanship", "BFD09" }, { "unique", "HERO" } } },
+        { "glossary", "keyword", { { "kinsmanship", "BFD09" }, { "unique", "HERO" }, { "deplete", "MNG01" }, { "workshop", "BSM02" } } },
     },
     {
         key = "rules.tab.terms", icon = "INV_Scroll_03",

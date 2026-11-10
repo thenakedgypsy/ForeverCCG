@@ -253,7 +253,7 @@ local AI_SPELL_OPS = { damage = true, dot = true, destroy = true, freeze = true,
 
 local function IsAIFriendlySpell(card)
     if card.type ~= "Sorcery" or not card.effect or not card.effect.ops then return false end
-    if card.isGift then return false end   -- Gear is the zone's own (ZONE_GEAR_COPIES), not a class spell
+    if card.isGift or card.isProfession then return false end   -- Gear is the zone's own (ZONE_GEAR_COPIES), not a class spell
     for _, op in ipairs(card.effect.ops) do
         if not AI_SPELL_OPS[op.op] then return false end
         if op.to == "self_player" and op.op == "damage" then return false end
@@ -501,8 +501,9 @@ function TTS:GetOwnedCopies(card)
     if card.isBoss then
         return KillCount(card.id)
     end
-    if card.isGift then
-        -- Handed out by an NPC (UI\NpcGossip.lua): TTS_NpcGifts.copies[cardId]
+    if card.isGift or card.isProfession then
+        -- Handed out by an NPC (UI\NpcGossip.lua) or earned by a profession (Professions.lua):
+        -- TTS_NpcGifts.copies[cardId]
         local copies = TTS_NpcGifts and TTS_NpcGifts.copies and TTS_NpcGifts.copies[card.id]
         return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
     end
@@ -542,7 +543,7 @@ function TTS:GetCollectionScore()
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then hCollected = hCollected + 1 end
             if copies >= MAX_REWARD_COPIES then hMastered = hMastered + 1 end
-        elseif card.subType == "Gear" and card.isGift then
+        elseif card.isProfession or (card.subType == "Gear" and card.isGift) then   -- (a profession's Prayers too)
             gTotal = gTotal + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then gCollected = gCollected + 1 end
