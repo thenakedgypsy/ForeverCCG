@@ -447,7 +447,7 @@ local cardPoolKeys = {}
 -- (TTS:GetOwnedCopies).
 -- =========================================================================
 local function IsCollectible(card)
-    return card and (card.isBoss or card.isReward or card.isGift or card.isHero or card.isBeta) and true or false
+    return card and (card.isBoss or card.isReward or card.isGift or card.isHero or card.isBeta or card.isPrize) and true or false
 end
 
 local function GetKillCount(cardId, card)
@@ -463,6 +463,7 @@ local function UnlockHint(card)
     end
     if card.isGift then return TTS:GiftHow(card) end
     if card.isBeta then return L("link.betaOnly") end
+    if card.isPrize then return L("link.prizeOnly") end
     if card.unlockOnDeath then return L("link.dieToUnlock") end
     return L("link.defeat", TTS:CardName(card))
 end
@@ -742,7 +743,7 @@ local function CheckAdd(cardId, card, deck)
             elseif maxAllowed >= 4 then
                 return L("db.max4", TTS:CardName(card))
             else
-                if card.isReward or card.isGift or card.isBeta then
+                if card.isReward or card.isGift or card.isBeta or card.isPrize then
                     return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
                 return L("db.kills", kills, TTS:CardName(card))
@@ -1068,7 +1069,7 @@ local function CardTooltip_OnEnter(self)
             if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
-                    if card.isReward or card.isGift or card.isBeta then
+                    if card.isReward or card.isGift or card.isBeta or card.isPrize then
                         tip:AddLine("|cFFFF2222" .. L("db.lockedHow", UnlockHint(card)) .. "|r", 1, 0.2, 0.2, true)
                     else
                         tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)

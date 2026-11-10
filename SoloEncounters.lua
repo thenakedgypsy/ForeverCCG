@@ -507,6 +507,11 @@ function TTS:GetOwnedCopies(card)
         -- One copy for beta players (DataStamp.lua)
         return (TTS_DataStamp and TTS_DataStamp.beta) and 1 or 0
     end
+    if card.isPrize then
+        -- Given by the developer (Cards\Prizes.lua, AdminGrants.lua): TTS_NpcGifts.prizes[cardId]
+        local copies = TTS_NpcGifts and TTS_NpcGifts.prizes and TTS_NpcGifts.prizes[card.id]
+        return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
+    end
     return nil
 end
 
@@ -523,8 +528,9 @@ function TTS:GetCollectionScore()
     local gTotal, gCollected, gMastered = 0, 0, 0
     local fTotal, fCollected = 0, 0
     for _, card in pairs(TTS.Cards or {}) do
-        if card.isBeta then
-            -- Beta players only: no one else can get it, so it never counts towards a collection
+        if card.isBeta or card.isPrize then
+            -- Beta players and prize winners only: not everyone can get them, so they never
+            -- count towards a collection
         elseif card.type == "Creature" and (card.isBoss or card.isReward) then
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0

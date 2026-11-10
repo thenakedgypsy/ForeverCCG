@@ -13,11 +13,14 @@ local L = TTS.L
 -- prefix of their own, and they are obeyed only from the characters in ADMINS. The server
 -- sets the sender of an addon whisper, so it can't be faked (unlike the <from> inside a
 -- TTS_NET envelope).
---   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL    BETA
+--   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL    BETA    PRIZE
 -- answered with  HAS:<cardId>:<copies>:<max>,  WIPED,  GRANTEDALL:<cards that gained copies>,
--- BETAED:<1 = the beta card is new, 0 = they had it>  or  ERR:<reason>[:<cardId>].
+-- BETAED:<1 = the beta card is new, 0 = they had it>,  PRIZED:<cardId>:<copies>:<max>
+-- or  ERR:<reason>[:<cardId>].
 -- BETA is the beta welcome a beta player gets at launch (DataStamp.lua): the beta card, then
 -- its popup.
+-- PRIZE is one copy of a random prize card (Cards\Prizes.lua), drawn here from the ones the
+-- player has fewer than 4 of, weighted by prizeWeight, then shown in a popup.
 -- Copies are written where the card's own way of being earned keeps them (kills, solo
 -- rewards, NPC gifts, the beta flag), so the rest of the addon sees an ordinary collection.
 -- =========================================================================
@@ -82,6 +85,10 @@ local function SetCopies(card, n)
     elseif card.isBeta then
         TTS_DataStamp = TTS_DataStamp or { launch = true }
         TTS_DataStamp.beta = n > 0 or nil
+    elseif card.isPrize then
+        TTS_NpcGifts = TTS_NpcGifts or {}
+        TTS_NpcGifts.prizes = TTS_NpcGifts.prizes or {}
+        TTS_NpcGifts.prizes[id] = n > 0 and n or nil
     end
 end
 
@@ -138,8 +145,107 @@ local function BetaWelcome()
     return isNew
 end
 
+-- =========================================================================
+-- PRIZE
+-- A static popup with the card set in below the message, as the beta welcome's (DataStamp.lua).
+-- OK sends the emote, from the popup's own button so the client allows it.
+-- =========================================================================
+local CARD_HEAD = 62   -- the card's name and cost are drawn above its frame
+local CARD_GAP = 10    -- between the card and the OK button
+local prizeCard        -- the card frame, built on first show
+local prizeShown       -- the card id the popup is showing
+
+StaticPopupDialogs["TTS_PRIZE"] = {
+    text = "%s",
+    button1 = OKAY or "Okay",
+    -- "/e won [Thrall], a Forever: CCG prize card!" then a /cheer (OK only: Escape skips them)
+    OnAccept = function()
+        local card = prizeShown and TTS.Cards and TTS.Cards[prizeShown]
+        if not card then return end
+        local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
+        SendChatMessage(L("emote.prize", tag), "EMOTE")
+        TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
+    end,
+    OnHide = function()
+        if prizeCard then prizeCard:Hide() end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+local function PrizeCardFrame()
+    if prizeCard then return prizeCard end
+    local f = TTS.CreateCardFrame(UIParent, TTS.PREVIEW_W, TTS.PREVIEW_H)
+    f:EnableMouse(true)
+    f:SetScript("OnEnter", function(self)
+        if prizeShown and TTS.Tooltip then TTS.Tooltip:ShowCard(self, "ANCHOR_RIGHT", prizeShown) end
+    end)
+    f:SetScript("OnLeave", function(self)
+        if TTS.Tooltip then TTS.Tooltip:Hide(self) end
+    end)
+    f:SetScript("OnClick", nil)
+    prizeCard = f
+    return f
+end
+
+local function ShowPrize(card)
+    -- A popup already open is replaced, its card with it
+    StaticPopup_Hide("TTS_PRIZE")
+    prizeShown = card.id
+    local dialog = StaticPopup_Show("TTS_PRIZE", L("admin.prizePopup", TTS:CardName(card)))
+    if not (dialog and TTS.CreateCardFrame and TTS.PaintPreviewCard) then return end
+    local f = PrizeCardFrame()
+    local textFS = dialog.text or _G[dialog:GetName() .. "Text"]
+    f:SetParent(dialog)
+    f:SetFrameLevel(dialog:GetFrameLevel() + 5)
+    f:ClearAllPoints()
+    f:SetPoint("TOP", textFS or dialog, "BOTTOM", 0, -CARD_HEAD)
+    dialog:SetHeight(dialog:GetHeight() + CARD_HEAD + TTS.PREVIEW_H + CARD_GAP)
+    f:Show()
+    TTS.PaintPreviewCard(f, card)
+end
+
+-- One more copy of a random prize the player can still take copies of, weighted by
+-- prizeWeight. Returns the card and its new copy count, or nil if every prize is at its most.
+local function GivePrize()
+    local open, total = {}, 0
+    for _, card in pairs(TTS.Cards or {}) do
+        local w = card.isPrize and (tonumber(card.prizeWeight) or 1) or 0
+        if w > 0 and (TTS:GetOwnedCopies(card) or 0) < MaxCopies(card) then
+            table.insert(open, card)
+            total = total + w
+        end
+    end
+    if #open == 0 then return nil end
+    table.sort(open, function(a, b) return a.id < b.id end)   -- pairs order isn't fixed
+    local roll = math.random() * total
+    local card = open[#open]
+    for _, c in ipairs(open) do
+        roll = roll - (tonumber(c.prizeWeight) or 1)
+        if roll < 0 then card = c; break end
+    end
+    local copies = (TTS:GetOwnedCopies(card) or 0) + 1
+    SetCopies(card, copies)
+    TTS:MarkCardNew(card.id)
+    RefreshCollection()
+    DEFAULT_CHAT_FRAME:AddMessage(L("admin.prized", CardText(card), copies, MaxCopies(card)))
+    ShowPrize(card)
+    return card, copies
+end
+
 local function OnAdminMessage(msg, sender)
     local cmd, cardId, count = strsplit(":", msg)
+    if cmd == "PRIZE" then
+        local card, copies = GivePrize()
+        if card then
+            Reply(sender, "PRIZED:" .. card.id .. ":" .. copies .. ":" .. MaxCopies(card))
+        else
+            Reply(sender, "ERR:NO_PRIZES_LEFT")
+        end
+        return
+    end
     if cmd == "BETA" then
         local isNew = BetaWelcome()
         if isNew == nil then
@@ -198,7 +304,7 @@ frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
     -- Replies are never answered, or two clients (or one whispering itself) would bounce
     -- errors back and forth forever
     if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" or msg:match("^GRANTEDALL:")
-        or msg:match("^BETAED:") then return end
+        or msg:match("^BETAED:") or msg:match("^PRIZED:") then return end
     local from = NormalizeName(sender)
     if ADMINS[from:lower()] then
         OnAdminMessage(msg, from)
