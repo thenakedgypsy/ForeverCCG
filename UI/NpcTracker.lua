@@ -19,14 +19,16 @@ local L = TTS.L
 --   npcPlates    a card-back icon over their heads (on their nameplates: turning this on
 --                also shows friendly NPCs' nameplates, which it needs)
 -- Only NPCs the character's faction can deal with are shown, and duels only once they are
--- live (their Location exists) and reachable (SoloEncounters.lua). Duel opponents' icons are
--- orange. Areas are matched to the client's maps by name (C_Map), once, when first needed.
+-- live (their Location exists) and reachable (SoloEncounters.lua). Every icon is the tracker
+-- emblem (Textures\Symbols\tracker.png). Areas are matched to the client's maps by name
+-- (C_Map), once, when first needed.
 -- =========================================================================
 local T = {}
 TTS.NpcTracker = T
 
-local ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
-local DUEL_TINT = { 1, 0.62, 0.25 }
+local ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"              -- over their heads
+local ICON_SMALL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"  -- on the maps
+local DUEL_TINT = nil   -- (the emblem is in full colour: duel NPCs aren't tinted; their tooltip says what they do)
 local MINI_SIZE, WORLD_SIZE, PLATE_SIZE = 14, 12, 28
 local MINI_TICK = 0.1     -- seconds between minimap updates
 -- Minimap view radius in yards by zoom level (outdoors), for clients without GetViewRadius
@@ -63,9 +65,10 @@ local function ShowTip(owner, npcId, s)
     GameTooltip:Show()
 end
 
-local function Paint(tex, kind)
-    tex:SetTexture(ICON)
-    local c = kind == "duel" and DUEL_TINT or nil
+-- icon: ICON or ICON_SMALL (the maps')
+local function Paint(tex, kind, icon)
+    tex:SetTexture(icon or ICON)
+    local c = kind == "duel" and DUEL_TINT or nil   -- (none at present)
     if c then tex:SetVertexColor(c[1], c[2], c[3]) else tex:SetVertexColor(1, 1, 1) end
 end
 
@@ -181,7 +184,7 @@ local function UpdateMinimap()
                 n = n + 1
                 local p = MiniPin(n)
                 p.npcId, p.row = e[1], e[4]
-                Paint(p.icon, e[4][4])
+                Paint(p.icon, e[4][4], ICON_SMALL)
                 p:ClearAllPoints()
                 p:SetPoint("CENTER", Minimap, "CENTER", east / radius * half, north / radius * half)
                 p:Show()
@@ -241,7 +244,7 @@ local function UpdateWorldMap()
             n = n + 1
             local p = WorldPin(n, canvas)
             p.npcId, p.row = e[1], e[4]
-            Paint(p.icon, e[4][4])
+            Paint(p.icon, e[4][4], ICON_SMALL)
             p:SetFrameLevel(canvas:GetFrameLevel() + 2000)
             p:SetScale(k)
             p:ClearAllPoints()
@@ -281,7 +284,7 @@ end
 local function PlateIcon(plate)
     if not plate.fccgIcon then
         local t = plate:CreateTexture(nil, "OVERLAY")
-        t:SetSize(PLATE_SIZE, PLATE_SIZE * 1.35)
+        t:SetSize(PLATE_SIZE, PLATE_SIZE)
         t:SetPoint("BOTTOM", plate, "TOP", 0, 2)
         plate.fccgIcon = t
     end

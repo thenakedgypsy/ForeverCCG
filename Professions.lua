@@ -41,7 +41,7 @@ local CREDIT_STEP = 75         -- install credit: one copy per this much skill a
 local TRAINER_UNLOCK = 2       -- finished primary professions that open the trainers
 local LOOT_WINDOW = 5          -- seconds a gather or cast can wait for its loot window
 
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- (the tracker emblem, in tooltip lines)
 
 -- Gathering nodes: the skill they need, their name (English clients, when the loot source
 -- can't be read) and their game object ids. A node not listed counts as yellow.
@@ -447,7 +447,7 @@ end
 -- player has some of that profession still to collect.
 -- =========================================================================
 local function AddCardLine(tooltip, key)
-    tooltip:AddLine(string.format("|T%s:20:10|t %s", CARD_BACK_ICON, L("prof.tooltip", Prof:Name(key))), 0.1, 1, 0.1)
+    tooltip:AddLine(string.format("|T%s:16:16|t %s", CARD_BACK_ICON, L("prof.tooltip", Prof:Name(key))), 0.1, 1, 0.1)
     tooltip:Show()
 end
 

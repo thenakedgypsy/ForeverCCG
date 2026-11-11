@@ -14,7 +14,7 @@ TTS = TTS or {}
 -- icon and how many copies you have unlocked, e.g. "Forever: CCG card: 2/4",
 -- and shows the card itself docked to the left of the tooltip.
 -- =========================================================================
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- (the tracker emblem, in the tooltip line)
 local MAX_COPIES = 4
 
 -- Card shown beside the tooltip: same proportions and rules text as the Board / Deckbuilder preview
@@ -308,6 +308,12 @@ local function FitMobCardToTooltip(tooltip)
         if not h or h <= 0 then return end
         -- Both heights are in the tooltip's own units
         scale = h / PREVIEW_H
+        -- No taller than the Options' height limit (mobCardMaxHeight, in the UI's pixels; 0 = none)
+        local maxH = tonumber(Opt("mobCardMaxHeight")) or 0
+        local tipScale = tooltip:GetEffectiveScale()
+        if maxH > 0 and tipScale and tipScale > 0 then
+            scale = math.min(scale, maxH / PREVIEW_H * UIParent:GetEffectiveScale() / tipScale)
+        end
     end
     f:SetScale(scale)
     f:ClearAllPoints()
@@ -622,7 +628,7 @@ local function AddCardLine(tooltip)
     local copies = GetUnlockedCopies(card)
     local color = (copies >= MAX_COPIES) and "|cFF00FF00" or (copies == 0 and "|cFF888888" or "|cFFFFFFFF")
 
-    tooltip:AddLine(string.format("|T%s:20:10|t |cFFFFD200%s|r %s%d/%d|r",
+    tooltip:AddLine(string.format("|T%s:16:16|t |cFFFFD200%s|r %s%d/%d|r",
         CARD_BACK_ICON, TTS.L("mobtip.card"), color, copies, MAX_COPIES))
     -- Your foil of it, in the card's colour (as on the card)
     if TTS:HasFoil(card.id) then

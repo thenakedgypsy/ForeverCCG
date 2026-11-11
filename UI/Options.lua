@@ -23,6 +23,7 @@ local DEFAULTS = {
     mobCardDetached = false,    -- that card in a window of its own instead (MobTooltip.lua)
     mobCardManualScale = false, -- that card at mobCardScale instead of the tooltip's height
     mobCardScale = 1,           -- (1 = 150 x 212 at the UI's scale)
+    mobCardMaxHeight = 0,       -- tallest the card grows following the tooltip, in UI pixels (0 = no limit)
     mobCardWindow = {},         -- the detached window's x, y, scale and minimised state
     tooltipPanels = {       -- kinds of detail panel stacked beside tooltips (Tooltips.lua)
         keyword  = true,
@@ -430,6 +431,24 @@ cardScaleSlider:HookScript("OnUpdate", function(self)
     if self:IsMouseOver() then ShowCardSizePreview() end
 end)
 
+-- The tallest the card grows while it follows the tooltip's height (manual size off), in the
+-- same place as the size slider (only one of them shows). Far right: no limit (saved as 0).
+local CARD_HEIGHT_MIN, CARD_HEIGHT_MAX = 100, 500   -- (MAX = no limit)
+local cardHeightSlider = CreateSlider("TTS_OptionsMobCardHeightSlider", "options.mobCardMaxHeight",
+    -278, CARD_HEIGHT_MIN, CARD_HEIGHT_MAX, 10, "mobCardMaxHeight", "options.pixels")
+function cardHeightSlider:ShowValue(v)
+    if not v or v <= 0 or v >= CARD_HEIGHT_MAX then
+        self.valueText:SetText(L("options.noLimit"))
+    else
+        self.valueText:SetText(L("options.pixels", v))
+    end
+end
+Loc:Bind(cardHeightSlider.parts[4], "options.noLimit")   -- (its right end)
+cardHeightSlider:HookScript("OnValueChanged", function(self, v)
+    if v >= CARD_HEIGHT_MAX then O:Set("mobCardMaxHeight", 0) end
+    if self:IsVisible() and TTS.MobTooltip and TTS.MobTooltip.OptionsChanged then TTS.MobTooltip:OptionsChanged() end
+end)
+
 -- Which kinds of detail panel stack beside tooltips: three columns of switches
 local panelsText = tipSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 Loc:Bind(panelsText, "options.tipPanels")
@@ -735,7 +754,12 @@ LayoutTipSection = function()
         TTS.MobTooltip:HideScalePreview()
     end
 
-    local panelsY = showSlider and -342 or -282
+    -- Following the tooltip's height instead: its height limit, in the same place
+    local showHeight = cardOn and not detached and not showSlider
+    cardHeightSlider:SetShown(showHeight)
+    for _, part in ipairs(cardHeightSlider.parts) do part:SetShown(showHeight) end
+
+    local panelsY = (showSlider or showHeight) and -342 or -282
     panelsText:ClearAllPoints()
     panelsText:SetPoint("TOPLEFT", tipSection, "TOPLEFT", 14, panelsY)
     for _, cb in pairs(panelChecks) do
@@ -774,6 +798,9 @@ function O:SyncControls()
     cardScaleSlider:SetValue(db.mobCardScale or 1)
     syncingCardScale = false
     cardScaleSlider:ShowValue(db.mobCardScale or 1)
+    local maxH = tonumber(db.mobCardMaxHeight) or 0
+    cardHeightSlider:SetValue(maxH > 0 and maxH or CARD_HEIGHT_MAX)
+    cardHeightSlider:ShowValue(maxH)
     LayoutTipSection()
     for kind, cb in pairs(panelChecks) do cb:SetChecked(db.tooltipPanels[kind] ~= false) end
     if TTS.BoardFrame and TTS.BoardFrame.soundCheck then

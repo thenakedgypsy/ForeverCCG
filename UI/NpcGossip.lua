@@ -37,7 +37,8 @@ local Loc = TTS.Locale
 local HOUR = 60 * 60
 local MIN_WAIT_HOURS, MAX_WAIT_HOURS = 24, 168
 local MAX_GIFT_COPIES = 4
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"         -- (the tracker emblem, not the card back)
+local TRACKER_SMALL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- in tooltip lines
 
 -- How long is left, as the hint the NPC gives (npc.wait.<key>)
 local WAIT_HINTS = {
@@ -693,7 +694,7 @@ local function AddGiftLine(tooltip)
         local done = card and (TTS:GetOwnedCopies(card) or 0) >= TTS:CardMaxCopies(card)
         local dState = done and "done" or (TTS:EncounterCooldownLeft(duel) > 0 and "wait" or "ready")
         local ready = dState == "ready"
-        tooltip:AddLine(string.format("|T%s:20:10|t %s", CARD_BACK_ICON, L("mobtip.duel." .. dState)),
+        tooltip:AddLine(string.format("|T%s:16:16|t %s", TRACKER_SMALL, L("mobtip.duel." .. dState)),
             ready and 0.1 or 0.6, ready and 1 or 0.6, ready and 0.1 or 0.6)
         tooltip:Show()
     end
@@ -707,7 +708,7 @@ local function AddGiftLine(tooltip)
     else
         state, r, g, b = "done", 0.6, 0.6, 0.6
     end
-    tooltip:AddLine(string.format("|T%s:20:10|t %s", CARD_BACK_ICON, L("mobtip.gift." .. state)), r, g, b)
+    tooltip:AddLine(string.format("|T%s:16:16|t %s", TRACKER_SMALL, L("mobtip.gift." .. state)), r, g, b)
     tooltip:Show()
 end
 
