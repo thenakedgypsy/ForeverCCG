@@ -73,4 +73,18 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Nature_Regenerate",
         effect = { ops = { { op = "raise", src = "any" } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board wipe
+    ["SHA11"] = {
+        id = "SHA11", name = "Grounding Totem", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Shaman",
+        text = "Destroy target Airborne denizen.",
+        art = "Interface\\Icons\\Spell_Nature_GroundingTotem",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { kw = "flying" } } } }
+    },
+    ["SHA12"] = {
+        id = "SHA12", name = "Fire Nova Totem", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Shaman",
+        text = "Deal 2 damage to each denizen and each player.",
+        art = "Interface\\Icons\\Spell_Fire_SealOfFire",
+        effect = { ops = { { op = "damage", to = "all_creatures", n = 2 }, { op = "damage", to = "enemy_player", n = 2 },
+            { op = "damage", to = "self_player", n = 2 } } }
+    },
 })

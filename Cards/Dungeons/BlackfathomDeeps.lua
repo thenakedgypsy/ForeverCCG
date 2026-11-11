@@ -43,10 +43,11 @@ TTS:AddCards({
     },
     ["BFD05"] = {
         id = "BFD05", name = "Blackfathom Sea Witch", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 3, toughness = 5, shielded = true, isMob = true, isBoss = true, displayId = 4982,
+        power = 2, toughness = 5, shielded = true, isMob = true, isBoss = true, displayId = 4982,
+        etb = { target = "enemy_creature", ops = { { op = "bounce", to = "target" } } },
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4805,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Shielded. Arrival: Return target enemy denizen to its owner's hand."
     },
     ["BFD06"] = {
         id = "BFD06", name = "Lady Sarevess", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -59,9 +60,10 @@ TTS:AddCards({
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 2, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 5027,
+        onDeath = { ops = { { op = "tuck", to = "strongest_enemy", only = { maxCmc = 3 } } } },
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4887,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Martyrdom: Put the enemy denizen with the highest power that costs 3 or less on top of its owner's deck."
     },
     ["BFD08"] = {
         id = "BFD08", name = "Lorgus Jett", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -81,9 +83,10 @@ TTS:AddCards({
     ["BFD10"] = {
         id = "BFD10", name = "Old Serra'kis", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 1816,
+        onDeath = { ops = { { op = "tuck", to = "strongest_enemy", only = { maxCmc = 3 } } } },
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4830,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Martyrdom: Put the enemy denizen with the highest power that costs 3 or less on top of its owner's deck."
     },
     ["BFD11"] = {
         id = "BFD11", name = "Twilight Lord Kelris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

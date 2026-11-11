@@ -71,9 +71,10 @@ TTS:AddCards({
     ["BRN09"] = {
         id = "BRN09", name = "Stormhide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 6, toughness = 6, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 1539,
+        onDeath = { ops = { { op = "destroy", to = "strongest_enemy", only = { kw = "flying" } } } },
         zone = "The Barrens", creatureType = "Beast", npcId = 3238,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
     },
     ["BRN10"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates

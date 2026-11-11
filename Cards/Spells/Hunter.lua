@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Ability_Druid_FerociousBite",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, t = 3, kw = { "trample" }, perm = true } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and an anti-air wipe
+    ["HUN11"] = {
+        id = "HUN11", name = "Scatter Shot", cost = "{2}{U}", cmc = 3, color = "U", type = "Sorcery", class = "Hunter",
+        text = "Return target denizen to its owner's hand.",
+        art = "Interface\\Icons\\Ability_GolemStormBolt",
+        effect = { target = "creature", ops = { { op = "bounce", to = "target" } } }
+    },
+    ["HUN12"] = {
+        id = "HUN12", name = "Volley", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Sorcery", class = "Hunter",
+        text = "Destroy each Airborne denizen.",
+        art = "Interface\\Icons\\Ability_Marksmanship",
+        effect = { ops = { { op = "destroy", to = "all_creatures", only = { kw = "flying" } } } }
+    },
 })

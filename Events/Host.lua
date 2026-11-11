@@ -155,6 +155,31 @@ local function SendStandings(ev, p)
     for i, chunk in ipairs(chunks) do
         Comm:Send(p.name, table.concat({ "STAND", ev.id, ev.rev, i, #chunks, chunk }, ":"))
     end
+
+    -- This round's tables, for the player's window (This Round, with its Watch buttons):
+    -- PAIRS:<event>:<rev>:<round>:<part>:<parts>:<rows>, each row
+    -- table,<a's name>,<b's name>,<status: pending|playing|disputed|done|bye>,<a's games>,<b's games>,<result>;
+    -- (older players ignore it)
+    local round = T.CurrentRound(ev)
+    if not round then return end
+    chunks, current = {}, ""
+    for _, m in ipairs(round.matches) do
+        if not m.empty then
+            local a, b = ev.players[m.a], m.b and ev.players[m.b]
+            local text = table.concat({ m.table, (Comm.Clean(a and a.name or "?"):gsub("[,;]", " ")),
+                (Comm.Clean(b and b.name or ""):gsub("[,;]", " ")), m.bye and "bye" or m.status,
+                m.wins.a, m.wins.b, m.result or "" }, ",") .. ";"
+            if #current + #text > STAND_CHUNK then
+                chunks[#chunks + 1] = current
+                current = ""
+            end
+            current = current .. text
+        end
+    end
+    if current ~= "" then chunks[#chunks + 1] = current end
+    for i, chunk in ipairs(chunks) do
+        Comm:Send(p.name, table.concat({ "PAIRS", ev.id, ev.rev, #ev.rounds, i, #chunks, chunk }, ":"))
+    end
 end
 
 -- =========================================================================
@@ -360,7 +385,10 @@ function H:Announce(chatType)
     if not ev then return end
     local text
     if ev.status == "open" or ev.status == "checkin" then
-        text = "ForeverCCG tournament: " .. ev.name .. (ev.settings.prizes and " (a prize card for the champion!)" or "") .. ". Join with /fccgevents join " .. ev.code .. " " .. ev.organizer
+        -- The tag is a click-to-join link for anyone with the addon (UI\JoinLink.lua)
+        local tag = ns.UI and ns.UI.JoinTag and ns.UI.JoinTag(ev.code, ev.organizer) or ""
+        text = "ForeverCCG tournament: " .. ev.name .. (ev.settings.prizes and " (a prize card for the champion!)" or "")
+            .. ". " .. tag .. " (or /fccgevents join " .. ev.code .. " " .. ev.organizer .. ")"
     elseif ev.status == "running" then
         text = ev.name .. ": round " .. #ev.rounds .. " of " .. ev.totalRounds .. " is under way."
     else

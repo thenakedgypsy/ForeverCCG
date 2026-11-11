@@ -242,6 +242,7 @@ function UI.List(parent, x, y, width, rowHeight, count, makeRow, fillRow)
     holder:SetPoint("TOPLEFT", x, y)
     holder:SetSize(width, rowHeight * count)
     holder:EnableMouseWheel(true)
+    list.holder = holder   -- (to show or hide the whole list)
 
     function list:Refresh()
         self.offset = math.max(0, math.min(self.offset, #self.data - count))

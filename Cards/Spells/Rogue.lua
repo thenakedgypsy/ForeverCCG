@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Ability_Rogue_Garrote",
         effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal
+    ["ROG11"] = {
+        id = "ROG11", name = "Sap", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
+        text = "Return target denizen that costs 3 or less to its owner's hand.",
+        art = "Interface\\Icons\\Ability_Sap",
+        effect = { target = "creature", ops = { { op = "bounce", to = "target", only = { maxCmc = 3 } } } }
+    },
+    ["ROG12"] = {
+        id = "ROG12", name = "Deadly Poison", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Sorcery", class = "Rogue",
+        text = "Destroy target non-Shadow denizen.",
+        art = "Interface\\Icons\\Ability_Rogue_DualWeild",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { nonColor = "B" } } } }
+    },
 })

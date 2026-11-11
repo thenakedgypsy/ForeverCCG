@@ -294,6 +294,15 @@ soloBtn:SetScript("OnClick", function()
     OpenFromMain(TTS.DeckPicker)
 end)
 
+-- The tutorial game (UI\Tutorial.lua), under Practice: it brings its own decks
+local tutorialBtn = CreatePanelButton("TTS_TutorialBtn", battleSection, GRID_BTN_W, BTN_H, "tut.play")
+tutorialBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(3, BATTLE_TOP))
+tutorialBtn:SetScript("OnClick", function()
+    if not TTS.StartTutorial then return end
+    TTS:StartTutorial()
+    if TTS.Engine and TTS.Engine.inMatch then M:Hide() end
+end)
+
 local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", battleSection, GRID_BTN_W, BTN_H, "main.openWaitingRoom")
 waitingRoomBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(1, BATTLE_TOP))
 waitingRoomBtn:SetScript("OnClick", function()
@@ -357,6 +366,7 @@ function M:UpdatePlayState()
     deckBtn:SetEnabled(not inMatch)
     -- Solo encounters open whenever no game is running (the window explains anything else in the way)
     encountersBtn:SetEnabled(not inMatch)
+    tutorialBtn:SetEnabled(not inMatch and not isQueued)
     -- Decks are picked as a game starts, so one playable deck is enough. Once queued the
     -- waiting room always reopens, so the player can leave.
     waitingRoomBtn:SetEnabled(not inMatch and (isQueued or playable > 0))

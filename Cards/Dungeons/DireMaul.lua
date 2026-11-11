@@ -94,9 +94,10 @@ TTS:AddCards({
     ["DMA12"] = {
         id = "DMA12", name = "Magister Kalendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 14384,
+        onDeath = { ops = { { op = "destroy", to = "strongest_enemy" } } },
         zone = "Dire Maul", creatureType = "Undead", npcId = 11487,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Martyrdom: Destroy the enemy denizen with the highest power."
     },
     ["DMA13"] = {
         id = "DMA13", name = "Cho'Rush the Observer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",

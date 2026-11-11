@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Shadow_EnslaveDemon",
         effect = { target = "enemy_creature", ops = { { op = "steal", to = "target", maxPower = 3, permanent = true } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board wipe
+    ["WLK11"] = {
+        id = "WLK11", name = "Shadowburn", cost = "{1}{B}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Warlock",
+        text = "Destroy target denizen with power 3 or less.",
+        art = "Interface\\Icons\\Spell_Shadow_ScourgeBuild",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { maxPower = 3 } } } }
+    },
+    ["WLK12"] = {
+        id = "WLK12", name = "Rain of Fire", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Sorcery", class = "Warlock",
+        text = "Deal 4 damage to each denizen.",
+        art = "Interface\\Icons\\Spell_Shadow_RainOfFire",
+        effect = { ops = { { op = "damage", to = "all_creatures", n = 4 } } }
+    },
 })

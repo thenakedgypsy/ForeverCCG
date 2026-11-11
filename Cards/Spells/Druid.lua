@@ -73,4 +73,18 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Nature_StarFall",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 5 } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a one-sided wipe
+    ["DRU11"] = {
+        id = "DRU11", name = "Insect Swarm", cost = "{3}{G}", cmc = 4, color = "G", type = "Sorcery", class = "Druid",
+        text = "Destroy target denizen with power 5 or more.",
+        art = "Interface\\Icons\\Spell_Nature_InsectSwarm",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { minPower = 5 } } } }
+    },
+    ["DRU12"] = {
+        id = "DRU12", name = "Hurricane", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Sorcery", class = "Druid",
+        text = "Deal 3 damage to each enemy denizen, then destroy each enemy Airborne denizen.",
+        art = "Interface\\Icons\\Spell_Nature_Cyclone",
+        effect = { ops = { { op = "damage", to = "enemy_creatures", n = 3 },
+            { op = "destroy", to = "enemy_creatures", only = { kw = "flying" } } } }
+    },
 })

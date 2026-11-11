@@ -8,7 +8,8 @@ local UI, B, P = ns.UI, ns.Bridge, ns.Player
 -- =========================================================================
 -- PLAYER WINDOW
 -- Before joining: the code, the organizer's name. After: the event, this round's pairing, the
--- standings. Built the first time it opens.
+-- deck to play (locked at check-in with deck lock), your place, and either the standings or
+-- this round's tables (Watch on games being played). Built the first time it opens.
 -- =========================================================================
 local GREY, GREEN, RED, ORANGE = UI.GREY, UI.GREEN, UI.RED, UI.ORANGE
 local F
@@ -59,6 +60,14 @@ local function MatchText(j)
     return score .. "   " .. state .. ((j.note and j.note ~= "") and (GREY .. "   " .. j.note .. "|r") or "")
 end
 
+-- 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th, 21st
+local function Ordinal(n)
+    local last2, last = n % 100, n % 10
+    local suffix = (last2 >= 11 and last2 <= 13) and "th" or (last == 1 and "st") or (last == 2 and "nd")
+        or (last == 3 and "rd") or "th"
+    return n .. suffix
+end
+
 local function RefreshJoined(j)
     F.eventName:SetText(j.name or "Tournament")
     local details = (FORMAT_TEXT[j.format] or "") .. ", best of " .. tostring(j.bestOf or 1)
@@ -80,9 +89,39 @@ local function RefreshJoined(j)
     F.pairing:SetText(PairingText(j))
     F.match:SetText(MatchText(j))
 
-    local deck = B.ActiveDeck()
-    F.deck:SetText("Active deck: " .. ((deck and deck.name) or "none"))
-    F.deck:SetShown(j.status == "checkin" or j.status == "open")
+    -- The deck: chosen here, until deck lock fixes it at check-in
+    local decks, active = B.Decks()
+    wipe(F.deckOptions)
+    for _, d in ipairs(decks) do
+        if d.playable then F.deckOptions[#F.deckOptions + 1] = { d.index, d.name .. GREY .. " (" .. d.cards .. ")|r" } end
+    end
+    local locked = j.deckLock and j.myStatus ~= "registered" and j.status ~= "finished"
+    if #F.deckOptions == 0 then
+        F.deckOptions[1] = { 0, RED .. "No playable deck|r" }
+        F.deckDrop.index = 1
+        F.deckDrop:SetValue(0)
+        F.deckDrop:SetEnabled(false)
+    else
+        -- (an active deck that isn't playable isn't listed: the first that is is shown)
+        local listed = false
+        for _, o in ipairs(F.deckOptions) do if o[1] == active then listed = true end end
+        F.deckDrop.index = 1
+        F.deckDrop:SetValue(listed and active or F.deckOptions[1][1])
+        F.deckDrop:SetEnabled((not locked and j.status ~= "finished" and not B.InMatch()) and true or false)
+    end
+    F.deckNote:SetText(locked and (GREY .. "locked at check-in|r") or "")
+
+    -- You: your place, points and record
+    local me
+    for _, r in ipairs(j.standings or {}) do
+        if B.SameName(r.name, B.MyName()) then me = r end
+    end
+    if me then
+        F.me:SetText("You: |cFFFFFFFF" .. Ordinal(me.rank) .. "|r of " .. #j.standings .. "    " .. me.points
+            .. " pts    " .. me.wins .. "-" .. me.losses .. "-" .. me.draws)
+    else
+        F.me:SetText(GREY .. "Your place in the standings shows once the first round starts.|r")
+    end
 
     F.checkIn:SetShown(j.status == "checkin" and j.myStatus == "registered")
     local canChallenge = j.status == "running" and j.tableNo > 0 and j.matchStatus ~= "bye" and j.result == ""
@@ -91,7 +130,22 @@ local function RefreshJoined(j)
     F.challenge:SetEnabled(canChallenge and true or false)
     F.leave:SetText(j.status == "finished" and "Close" or "Drop Out")
     F.list:SetData(j.standings or {})
+    local rows = (j.pairings and j.pairings.round == j.round) and j.pairings.rows or {}
+    F.roundList:SetData(rows)
+    F.roundEmpty:SetShown((F.showRound and #rows == 0) and true or false)
+    F.tabStandings:SetEnabled(F.showRound and true or false)
+    F.tabRound:SetEnabled(not F.showRound)
+    F.tabRound:SetText((j.round or 0) > 0 and ("Round " .. j.round) or "This Round")
     RefreshClock()
+end
+
+-- Shows the standings, or this round's tables (round = true)
+local function ShowList(round)
+    F.showRound = round
+    for _, w in ipairs(F.standingsWidgets) do w:SetShown(not round) end
+    for _, w in ipairs(F.roundWidgets) do w:SetShown(round) end
+    local j = P:Joined()
+    if j then RefreshJoined(j) end
 end
 
 local function Refresh()
@@ -141,15 +195,24 @@ local function Build()
     F.details = UI.Label(V, "GameFontHighlightSmall", 12, -28, 370)
     F.pairing = UI.Label(V, "GameFontHighlight", 12, -52, 370)
     F.match = UI.Label(V, "GameFontHighlightSmall", 12, -74, 370)
-    F.clock = UI.Label(V, "GameFontHighlightSmall", 12, -92, 370)
-    F.deck = UI.Label(V, "GameFontHighlightSmall", 12, -92, 370)
+    -- The deck you play with (B.Decks: the playable ones), and the round's clock beside it
+    UI.Label(V, "GameFontNormalSmall", 12, -97):SetText("Deck")
+    F.deckOptions = {}
+    F.deckDrop = UI.Dropdown(V, 170, F.deckOptions, function(index)
+        if index and index > 0 then B.SetActiveDeck(index) end
+    end)
+    F.deckDrop:SetPoint("TOPLEFT", 46, -92)
+    F.deckNote = UI.Label(V, "GameFontDisableSmall", 222, -97, 100)
+    F.clock = UI.Label(V, "GameFontHighlightSmall", 230, -97, 160)
+    F.clock:SetJustifyH("RIGHT")
+    F.me = UI.Label(V, "GameFontHighlightSmall", 12, -122, 370)
 
     F.checkIn = UI.Button(V, "Check In", 110, 24, function() P:CheckIn() end)
-    F.checkIn:SetPoint("TOPLEFT", 12, -112)
+    F.checkIn:SetPoint("TOPLEFT", 12, -142)
     F.challenge = UI.Button(V, "Challenge", 110, 24, function() P:Challenge() end)
-    F.challenge:SetPoint("TOPLEFT", 12, -112)
+    F.challenge:SetPoint("TOPLEFT", 12, -142)
     local refresh = UI.Button(V, "Refresh", 80, 24, function() P:RequestUpdate(true) end)
-    refresh:SetPoint("TOPLEFT", 130, -112)
+    refresh:SetPoint("TOPLEFT", 130, -142)
     F.leave = UI.Button(V, "Drop Out", 90, 24, function()
         local j = P:Joined()
         if j and j.status == "finished" then
@@ -158,13 +221,22 @@ local function Build()
             UI.Confirm("Drop out of this event? During a round you forfeit your match.", function() P:Leave() end)
         end
     end)
-    F.leave:SetPoint("TOPRIGHT", -14, -112)
+    F.leave:SetPoint("TOPRIGHT", -14, -142)
 
-    UI.Label(V, "GameFontNormalSmall", 16, -146):SetText("#")
-    UI.Label(V, "GameFontNormalSmall", 46, -146):SetText("Player")
-    UI.Label(V, "GameFontNormalSmall", 256, -146):SetText("Pts")
-    UI.Label(V, "GameFontNormalSmall", 306, -146):SetText("W-L-D")
-    F.list = UI.List(V, 12, -162, 370, 20, 11, function(row)
+    -- Standings, or this round's tables (with a Watch button on games being played)
+    F.tabStandings = UI.Button(V, "Standings", 100, 22, function() ShowList(false) end)
+    F.tabStandings:SetPoint("TOPLEFT", 12, -176)
+    F.tabRound = UI.Button(V, "This Round", 100, 22, function() ShowList(true) end)
+    F.tabRound:SetPoint("LEFT", F.tabStandings, "RIGHT", 4, 0)
+
+    F.standingsWidgets = {
+        UI.Label(V, "GameFontNormalSmall", 16, -206), UI.Label(V, "GameFontNormalSmall", 46, -206),
+        UI.Label(V, "GameFontNormalSmall", 256, -206), UI.Label(V, "GameFontNormalSmall", 306, -206) }
+    F.standingsWidgets[1]:SetText("#")
+    F.standingsWidgets[2]:SetText("Player")
+    F.standingsWidgets[3]:SetText("Pts")
+    F.standingsWidgets[4]:SetText("W-L-D")
+    F.list = UI.List(V, 12, -222, 370, 20, 8, function(row)
         row.rank = UI.Label(row, "GameFontNormalSmall", 4, -4, 28)
         row.name = UI.Label(row, "GameFontHighlightSmall", 34, -4, 205)
         row.points = UI.Label(row, "GameFontHighlightSmall", 244, -4, 45)
@@ -175,13 +247,56 @@ local function Build()
         row.points:SetText(r.points)
         row.record:SetText(r.wins .. "-" .. r.losses .. "-" .. r.draws)
     end)
+    F.standingsWidgets[5] = F.list.holder
 
-    F.elapsed = 0
+    F.roundWidgets = {
+        UI.Label(V, "GameFontNormalSmall", 16, -206), UI.Label(V, "GameFontNormalSmall", 46, -206),
+        UI.Label(V, "GameFontNormalSmall", 236, -206) }
+    F.roundWidgets[1]:SetText("T")
+    F.roundWidgets[2]:SetText("Match")
+    F.roundWidgets[3]:SetText("Games")
+    F.roundList = UI.List(V, 12, -222, 370, 20, 8, function(row)
+        row.number = UI.Label(row, "GameFontNormalSmall", 4, -4, 28)
+        row.players = UI.Label(row, "GameFontHighlightSmall", 34, -4, 190)
+        row.score = UI.Label(row, "GameFontHighlightSmall", 226, -4, 76)
+        row.watch = UI.Button(row, "Watch", 60, 18, function()
+            if row.watchName and TTS.Spectate then TTS.Spectate:Watch(row.watchName) end
+        end)
+        row.watch:SetPoint("RIGHT", -4, 0)
+    end, function(row, m)
+        row.number:SetText(m.table)
+        local mine = B.SameName(m.a, B.MyName()) or B.SameName(m.b, B.MyName())
+        local names = (m.status == "bye") and (m.a .. GREY .. "  (bye)|r") or (m.a .. GREY .. " vs |r" .. m.b)
+        row.players:SetText(mine and (UI.GOLD .. (names:gsub("|r", "|r" .. UI.GOLD)) .. "|r") or names)
+        local state = (m.status == "bye") and "" or (m.aWins .. "-" .. m.bWins)
+        if m.status == "playing" then state = state .. GREEN .. "  live|r"
+        elseif m.status == "done" then state = state .. GREY .. "  done|r"
+        elseif m.status == "disputed" then state = state .. RED .. "  disputed|r" end
+        row.score:SetText(state)
+        -- Watch a game being played that isn't ours (Spectate.lua asks one of its players)
+        row.watchName = (m.status == "playing" and not mine and m.b ~= "") and m.a or nil
+        row.watch:SetShown(row.watchName ~= nil)
+        row.watch:SetEnabled(not B.InMatch())
+    end)
+    F.roundWidgets[4] = F.roundList.holder
+    F.roundEmpty = UI.Label(V, "GameFontDisableSmall", 16, -232, 360)
+    F.roundEmpty:SetText("No round under way yet.")
+    F.roundWidgets[5] = F.roundEmpty
+    ShowList(false)
+
+    F.elapsed, F.sincePull = 0, 0
     F:SetScript("OnUpdate", function(self, delta)
         self.elapsed = self.elapsed + delta
+        self.sincePull = self.sincePull + delta
         if self.elapsed >= 1 then
             self.elapsed = 0
             RefreshClock()
+        end
+        -- (the organizer sends them at most every 15 seconds: Host.lua STAND_COOLDOWN)
+        local j = P:Joined()
+        if self.sincePull >= 20 and j and j.status == "running" then
+            self.sincePull = 0
+            P:RequestUpdate(true)
         end
     end)
     F:SetScript("OnShow", function()

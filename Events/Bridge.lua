@@ -119,6 +119,27 @@ function B.ActiveDeck()
     return TTS_SavedDecks and TTS_SavedDecks[TTS_ActiveDeckIndex] or nil
 end
 
+-- The saved decks for the player's window to choose from: { index, name, cards, playable },
+-- and which is active
+function B.Decks()
+    local list = {}
+    for i, deck in ipairs(TTS_SavedDecks or {}) do
+        local n = 0
+        for _, qty in pairs(deck.cards or {}) do n = n + (tonumber(qty) or 0) end
+        list[#list + 1] = { index = i, name = deck.name or ("Deck " .. i), cards = n,
+            playable = (TTS and TTS.IsDeckPlayable and TTS:IsDeckPlayable(deck)) and true or false }
+    end
+    return list, TTS_ActiveDeckIndex
+end
+
+-- Makes a saved deck the one games are played with
+function B.SetActiveDeck(index)
+    if not (TTS_SavedDecks and TTS_SavedDecks[index]) then return false end
+    TTS_ActiveDeckIndex = index
+    if TTS and TTS.MainFrame and TTS.MainFrame.UpdatePlayState then pcall(TTS.MainFrame.UpdatePlayState, TTS.MainFrame) end
+    return true
+end
+
 function B.DeckPlayable(deck)
     return TTS and TTS.IsDeckPlayable and TTS:IsDeckPlayable(deck) or false
 end

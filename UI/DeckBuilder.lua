@@ -29,34 +29,40 @@ TTS.MAX_DECK_LOCATIONS = 4
 
 -- =========================================================================
 -- CLASS SPELL UNLOCKS (by character level)
--- One spell per class unlocks at level 1 and every 6 levels after (1, 7, 13 ... 55),
--- so all 10 spells of every class are available by level 55. Each tier is picked so
--- the nine new spells cover all five spheres as evenly as the card pool allows.
+-- One spell per class unlocks at level 5 and every 5 levels after (5, 10, 15 ... 60), so all
+-- 12 spells of every class are available by level 60. Each tier is picked so the nine new
+-- spells cover all five spheres as evenly as the card pool allows. (Until 1.1 it was every 6
+-- levels for 10 spells: floor(level / 5) is never less than floor(level / 6), so nobody lost
+-- a spell when it changed.) Tiers 11 and 12 are removal and board wipes.
 -- =========================================================================
-TTS.SPELL_UNLOCK_FIRST_LEVEL = 6
-TTS.SPELL_UNLOCK_LEVEL_STEP  = 6
+TTS.SPELL_UNLOCK_FIRST_LEVEL = 5
+TTS.SPELL_UNLOCK_LEVEL_STEP  = 5
 
 TTS.SPELL_UNLOCK_TIER = {
-    -- Level 1
+    -- Level 5
     WAR07 = 1, PAL04 = 1, HUN01 = 1, ROG04 = 1, PRI01 = 1, SHA09 = 1, MAG02 = 1, WLK03 = 1, DRU09 = 1,
-    -- Level 7
+    -- Level 10
     WAR02 = 2, PAL03 = 2, HUN08 = 2, ROG01 = 2, PRI02 = 2, SHA07 = 2, MAG09 = 2, WLK09 = 2, DRU04 = 2,
-    -- Level 13
+    -- Level 15
     WAR04 = 3, PAL02 = 3, HUN09 = 3, ROG09 = 3, PRI07 = 3, SHA02 = 3, MAG08 = 3, WLK07 = 3, DRU02 = 3,
-    -- Level 19
+    -- Level 20
     WAR01 = 4, PAL06 = 4, HUN02 = 4, ROG06 = 4, PRI05 = 4, SHA03 = 4, MAG10 = 4, WLK02 = 4, DRU08 = 4,
     -- Level 25
     WAR08 = 5, PAL01 = 5, HUN05 = 5, ROG07 = 5, PRI08 = 5, SHA04 = 5, MAG01 = 5, WLK01 = 5, DRU06 = 5,
-    -- Level 31
+    -- Level 30
     WAR06 = 6, PAL07 = 6, HUN07 = 6, ROG05 = 6, PRI03 = 6, SHA01 = 6, MAG05 = 6, WLK06 = 6, DRU07 = 6,
-    -- Level 37
+    -- Level 35
     WAR03 = 7, PAL05 = 7, HUN06 = 7, ROG02 = 7, PRI06 = 7, SHA08 = 7, MAG03 = 7, WLK04 = 7, DRU05 = 7,
-    -- Level 43
+    -- Level 40
     WAR05 = 8, PAL08 = 8, HUN03 = 8, ROG08 = 8, PRI10 = 8, SHA06 = 8, MAG06 = 8, WLK08 = 8, DRU01 = 8,
-    -- Level 49
+    -- Level 45
     WAR09 = 9, PAL10 = 9, HUN04 = 9, ROG10 = 9, PRI04 = 9, SHA05 = 9, MAG04 = 9, WLK05 = 9, DRU10 = 9,
-    -- Level 55
+    -- Level 50
     WAR10 = 10, PAL09 = 10, HUN10 = 10, ROG03 = 10, PRI09 = 10, SHA10 = 10, MAG07 = 10, WLK10 = 10, DRU03 = 10,
+    -- Level 55: removal
+    WAR11 = 11, PAL11 = 11, HUN11 = 11, ROG11 = 11, PRI11 = 11, SHA11 = 11, MAG11 = 11, WLK11 = 11, DRU11 = 11,
+    -- Level 60: board wipes
+    WAR12 = 12, PAL12 = 12, HUN12 = 12, ROG12 = 12, PRI12 = 12, SHA12 = 12, MAG12 = 12, WLK12 = 12, DRU12 = 12,
 }
 
 -- Character level a class spell unlocks at (nil for cards that are not level-gated)
@@ -1288,7 +1294,7 @@ end
 
 -- Search box
 local searchBox = CreateFrame("EditBox", nil, poolPanel)
-searchBox:SetSize(136, 24)   -- (narrowed so the five type toggles fit beside it)
+searchBox:SetSize(110, 24)   -- (narrow, so the five type toggles beside it show their whole labels)
 searchBox:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -10)
 Skin(searchBox, STYLE.controlBg, STYLE.controlBorder, "control")
 searchBox:SetFontObject(ChatFontNormal)
@@ -1340,8 +1346,10 @@ searchBox:SetScript("OnEditFocusLost", UpdateSearchVisuals)
 searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
--- Card type toggles
--- (five of them fit between the search box, ending at x = 146, and the sphere toggles at x = 434)
+-- Card type toggles, between the search box (ending at x = 120) and the sphere toggles
+-- (from x = 454): each as wide as its label, so a long one ("Locations", or a translation)
+-- is never cut short. Laid out again as the window opens (TYPE_DEFS.Layout), in case the
+-- language changed.
 local TYPE_DEFS = {
     { key = "Creature", label = "db.creatures" },
     { key = "Spell",    label = "db.spells" },
@@ -1349,21 +1357,43 @@ local TYPE_DEFS = {
     { key = "Gear",     label = "db.gear" },
     { key = "Prayer",   label = "db.prayers" },
 }
-for n, def in ipairs(TYPE_DEFS) do
-    local b = CreateToggle(poolPanel, 53, def.label, STYLE.accent,
+for _, def in ipairs(TYPE_DEFS) do
+    def.button = CreateToggle(poolPanel, 50, def.label, STYLE.accent,
         function() return typeOn[def.key] end,
         function(v) typeOn[def.key] = v end)
-    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 152 + (n - 1) * 56, -10)
+    def.button.label:SetPoint("LEFT", 4, 0)
+    def.button.label:SetPoint("RIGHT", -4, 0)
 end
+function TYPE_DEFS.Layout()
+    -- Each toggle needs its label's width; whatever room is left before the sphere toggles is
+    -- shared out equally, so the row is filled with no gap at its end
+    local left, right, gap = 124, 450, 4
+    local widths, total = {}, 0
+    for i, def in ipairs(TYPE_DEFS) do
+        widths[i] = math.max(34, math.ceil(def.button.label:GetStringWidth() or 0) + 10)
+        total = total + widths[i]
+    end
+    local spare = (right - left) - total - gap * (#TYPE_DEFS - 1)
+    local extra = spare > 0 and math.floor(spare / #TYPE_DEFS) or 0
+    local x = left
+    for i, def in ipairs(TYPE_DEFS) do
+        local b = def.button
+        b:SetWidth(widths[i] + extra)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", x, -10)
+        x = x + widths[i] + extra + gap
+    end
+end
+TYPE_DEFS.Layout()
 
 -- Sphere toggles (icons filled in on show, once Board.lua's symbols exist)
 local sphereToggles = {}
 for n, key in ipairs(SPHERE_ORDER) do
     local rgb = SPHERE_RGB[key]
-    local b = CreateToggle(poolPanel, 44, RGBHex(rgb) .. key .. "|r", rgb,
+    local b = CreateToggle(poolPanel, 40, RGBHex(rgb) .. key .. "|r", rgb,
         function() return colorOn[key] end,
         function(v) colorOn[key] = v end)
-    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 434 + (n - 1) * 49, -10)
+    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 454 + (n - 1) * 44, -10)
     b.tooltipTitle = function() return RGBHex(rgb) .. TT:Def("symbol", key, "name") .. "|r" end
     b.tooltipText = function() return L("db.showHideSphere", TT:Def("symbol", key, "name")) end
     b.tooltipSymbol = key
@@ -2634,3 +2664,6 @@ D:SetScript("OnHide", function()
         TTS.MainFrame:UpdatePlayState()
     end
 end)
+
+-- The type toggles fit their labels again as the window opens (the language may have changed)
+D:HookScript("OnShow", TYPE_DEFS.Layout)

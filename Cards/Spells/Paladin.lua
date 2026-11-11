@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Holy_Resurrection",
         effect = { ops = { { op = "raise", src = "own" } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board wipe
+    ["PAL11"] = {
+        id = "PAL11", name = "Holy Wrath", cost = "{1}{W}", cmc = 2, color = "W", type = "Sorcery", class = "Paladin",
+        text = "Destroy target Shadow denizen.",
+        art = "Interface\\Icons\\Spell_Holy_Excorcism",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { color = "B" } } } }
+    },
+    ["PAL12"] = {
+        id = "PAL12", name = "Divine Intervention", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Sorcery", class = "Paladin",
+        text = "Destroy all denizens.",
+        art = "Interface\\Icons\\Spell_Nature_TimeStop",
+        effect = { ops = { { op = "destroy", to = "all_creatures" } } }
+    },
 })

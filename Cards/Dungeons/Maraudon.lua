@@ -22,10 +22,11 @@ TTS:AddCards({
     },
     ["MAR02"] = {
         id = "MAR02", name = "Barbed Lasher", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 3, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 12347,
+        power = 2, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 12347,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { kw = "flying" } } } },
         zone = "Maraudon", creatureType = "Elemental", npcId = 12219,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Anti-Air. Arrival: Destroy target enemy Airborne denizen."
     },
     ["MAR03"] = {
         id = "MAR03", name = "Deeprot Stomper", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -36,10 +37,11 @@ TTS:AddCards({
     },
     ["MAR04"] = {
         id = "MAR04", name = "Celebrian Dryad", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, reach = true, lifelink = true, isMob = true, isBoss = true, displayId = 11714,
+        power = 2, toughness = 4, reach = true, lifelink = true, isMob = true, isBoss = true, displayId = 11714,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { color = "B" } } } },
         zone = "Maraudon", creatureType = "Humanoid", npcId = 11793,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Anti-Air."
+        text = "Drain. Anti-Air. Arrival: Destroy target enemy Shadow denizen."
     },
     ["MAR05"] = {
         id = "MAR05", name = "Theradrim Guardian", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -86,9 +88,10 @@ TTS:AddCards({
     ["MAR11"] = {
         id = "MAR11", name = "Rotgrip", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 13589,
+        onDeath = { ops = { { op = "destroy", to = "strongest_enemy", only = { kw = "flying" } } } },
         zone = "Maraudon", creatureType = "Beast", npcId = 13596,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
     },
     ["MAR12"] = {
         id = "MAR12", name = "Landslide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",

@@ -407,6 +407,7 @@ local SPELL_TARGET_UI = {
     friendly_creature = "CREATURE",
     creature          = "CREATURE",
     enemy_any         = "ANY",
+    creature_or_enemy = "ANY",
     friendly_any      = "ANY",
     any               = "ANY",
     enemy_player      = "PLAYER",
@@ -423,14 +424,16 @@ function E:GetCardTargetSpec(card)
 end
 
 -- Whether anything on the board is a legal target for the local player's spec
-function E:HasLegalTarget(spec)
+-- (card: whose conditions on its target count too, E:CardAllowsTarget)
+function E:HasLegalTarget(spec, card)
     if self:IsValidSpellTarget(spec, "PLAYER", false, false) or self:IsValidSpellTarget(spec, "PLAYER", true, false) then
         return true
     end
     for _, isRemote in ipairs({ false, true }) do
         for _, perm in ipairs(isRemote and self.remoteState.field or self.localState.field) do
             if IsCreaturePerm(perm) and self:IsValidSpellTarget(spec, "CREATURE", isRemote, false)
-                and not self:IsHexproofAgainst(perm, isRemote, false) then
+                and not self:IsHexproofAgainst(perm, isRemote, false)
+                and (not card or self:CardAllowsTarget(card, { kind = "CREATURE", isRemote = isRemote, perm = perm })) then
                 return true
             end
         end
@@ -442,7 +445,7 @@ function E:GetSpellTargetType(card)
     local spec = self:GetCardTargetSpec(card)
     if not spec then return nil end
     -- A creature with nothing to target is cast as usual; its Arrival does nothing
-    if not card.effect and not self:HasLegalTarget(spec) then return nil end
+    if not card.effect and not self:HasLegalTarget(spec, card) then return nil end
     return SPELL_TARGET_UI[spec]
 end
 
@@ -480,15 +483,21 @@ function E:IsValidTargetNow(kind, isRemote, perm, targeting)
         if not source then return false end
         return self:IsValidAbilityTarget(source, false, { kind = kind, isRemote = isRemote, perm = perm })
     end
-    local spec = self:GetCardTargetSpec(TTS.Cards[t.cardId])
+    local card = TTS.Cards[t.cardId]
+    local spec = self:GetCardTargetSpec(card)
     if not spec or not self:IsValidSpellTarget(spec, kind, isRemote, false) then return false end
     if kind == "CREATURE" and self:IsHexproofAgainst(perm, isRemote, false) then return false end
+    -- The spell's conditions on its target (op.only: "destroy target Shadow denizen")
+    if not self:CardAllowsTarget(card, { kind = kind, isRemote = isRemote, perm = perm }) then return false end
     return true
 end
 
 -- Builds the list of things an op applies to: {kind="PLAYER"|"CREATURE", isRemote=bool, perm=perm}
--- filter = { tag, value } keeps only creatures with that tag.
-function E:CollectSpellTargets(to, tgt, casterIsRemote, filter)
+-- filter = { tag, value } keeps only creatures with that tag. op (optional): its conditions
+-- (op.only, E:OpAllows) keep only the denizens they allow from "each ..." lists.
+-- to = "strongest_enemy": the enemy denizen with the most power that the op allows (a
+-- Martyrdom's or Arrival's own pick, not a target: Warded doesn't stop it).
+function E:CollectSpellTargets(to, tgt, casterIsRemote, filter, op)
     local cr = casterIsRemote and true or false
     local list = {}
     if to == "target" then
@@ -506,8 +515,21 @@ function E:CollectSpellTargets(to, tgt, casterIsRemote, filter)
                 end
             end
         end
-        if to == "enemy_creatures" or to == "all_creatures" then add(not cr) end
+        if to == "enemy_creatures" or to == "all_creatures" or to == "strongest_enemy" then add(not cr) end
         if to == "friendly_creatures" or to == "all_creatures" then add(cr) end
+        if op and op.only then
+            for i = #list, 1, -1 do
+                if not self:OpAllows(op, list[i]) then table.remove(list, i) end
+            end
+        end
+        if to == "strongest_enemy" then
+            local best, bestP
+            for _, d in ipairs(list) do
+                local p = self:GetCreatureStats(d.perm, d.isRemote)
+                if not bestP or p > bestP then best, bestP = d, p end
+            end
+            list = { best }
+        end
     end
     return list
 end
@@ -982,6 +1004,42 @@ SPELL_GLOBAL_OPS.raze = function(self, op, card, cr)
     if side == "friendly" or side == "each" then self:RemoveLocation(cr, "razed", card) end
 end
 
+-- =========================================================================
+-- CONDITIONS ON AN OP (op.only)
+-- What a denizen must be for an op to touch it: color (a sphere in its cost, so a two-sphere
+-- card counts as both), nonColor (no such sphere), minPower / maxPower (its power now),
+-- maxCmc (its mana value), kw (a keyword it has), type (its creature type).
+-- A single target that fails fizzles; "each ..." ops pass it by. Players always pass.
+-- =========================================================================
+function E:OpAllows(op, d)
+    local w = op.only
+    if not w or d.kind ~= "CREATURE" or not d.perm then return true end
+    local c = TTS.Cards[d.perm.id]
+    if not c then return false end
+    local cost = c.cost or ""
+    if w.color and not cost:find("{" .. w.color .. "}", 1, true) then return false end
+    if w.nonColor and cost:find("{" .. w.nonColor .. "}", 1, true) then return false end
+    if w.maxCmc and (c.cmc or 0) > w.maxCmc then return false end
+    if w.type and c.creatureType ~= w.type then return false end
+    if w.kw and not self:HasKeyword(d.perm, d.isRemote, w.kw) then return false end
+    if w.minPower or w.maxPower then
+        local p = self:GetCreatureStats(d.perm, d.isRemote)
+        if w.minPower and p < w.minPower then return false end
+        if w.maxPower and p > w.maxPower then return false end
+    end
+    return true
+end
+
+-- Whether a card's targeted ops all allow this target (the player's targeting, the AI's):
+-- a spell's effect, or a denizen's targeted Arrival
+function E:CardAllowsTarget(card, d)
+    local eff = card and (card.effect or (card.type == "Creature" and card.etb))
+    for _, op in ipairs((eff and eff.ops) or {}) do
+        if op.to == "target" and op.only and not self:OpAllows(op, d) then return false end
+    end
+    return true
+end
+
 function E:ApplySpellOp(op, tgt, card, casterIsRemote)
     local cr = casterIsRemote and true or false
     local global = SPELL_GLOBAL_OPS[op.op]
@@ -991,11 +1049,15 @@ function E:ApplySpellOp(op, tgt, card, casterIsRemote)
     end
     local handler = SPELL_OPS[op.op]
     if not handler then return end
-    for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, cr, op.filter)) do
+    for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, cr, op.filter, op)) do
         if not self.inMatch then return end
-        handler(self, op, d, card, cr)
-        if d.kind == "CREATURE" and d.perm and LINGERING_OPS[op.op] then
-            RecordSpellEffect(d.perm, op, card)
+        if not self:OpAllows(op, d) then
+            if op.to == "target" then self:Log(L("log.fizzleImmune", TTS:CardName(card), CreatureName(d.perm)), "ERROR") end
+        else
+            handler(self, op, d, card, cr)
+            if d.kind == "CREATURE" and d.perm and LINGERING_OPS[op.op] then
+                RecordSpellEffect(d.perm, op, card)
+            end
         end
     end
 end
@@ -1402,7 +1464,9 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
     if card.etb and self.inMatch then
         -- The solo AI doesn't choose: its targeted Arrival takes your strongest denizen
         if card.etb.target and not tgt and isRemote and self.isSolo then
-            local best = BestEnemyCreature(self, isRemote)
+            local best = BestEnemyCreature(self, isRemote, function(p)
+                return self:CardAllowsTarget(card, { kind = "CREATURE", isRemote = not isRemote, perm = p })
+            end)
             if best and self:IsValidSpellTarget(card.etb.target, "CREATURE", false, true) then
                 tgt = { kind = "CREATURE", isRemote = false, perm = best }
             end

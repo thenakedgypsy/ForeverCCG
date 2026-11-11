@@ -12,12 +12,10 @@ local L = TTS.L
 -- =========================================================================
 -- CARD NPC TRACKER
 -- Shows the NPCs of the card game (NpcSpots.lua: card-giving innkeepers and merchants,
--- profession trainers, duel opponents) to the player, each way switched on in the options
--- (all off at first):
+-- profession trainers, duel opponents) to the player, each way switched on or off in the
+-- options (both on at first):
 --   npcMinimap   a card-back pin on the minimap for each one within its range
 --   npcWorldMap  a pin on the world map for each one on the map being shown
---   npcPlates    a card-back icon over their heads (on their nameplates: turning this on
---                also shows friendly NPCs' nameplates, which it needs)
 -- Only NPCs the character's faction can deal with are shown, and duels only once they are
 -- live (their Location exists) and reachable (SoloEncounters.lua). Every icon is the tracker
 -- emblem (Textures\Symbols\tracker.png). Areas are matched to the client's maps by name
@@ -26,10 +24,9 @@ local L = TTS.L
 local T = {}
 TTS.NpcTracker = T
 
-local ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"              -- over their heads
 local ICON_SMALL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"  -- on the maps
 local DUEL_TINT = nil   -- (the emblem is in full colour: duel NPCs aren't tinted; their tooltip says what they do)
-local MINI_SIZE, WORLD_SIZE, PLATE_SIZE = 14, 12, 28
+local MINI_SIZE, WORLD_SIZE = 14, 12
 local MINI_TICK = 0.1     -- seconds between minimap updates
 -- Minimap view radius in yards by zoom level (outdoors), for clients without GetViewRadius
 local OUTDOOR_RADIUS = { [0] = 233.33, 200, 166.67, 133.33, 100, 66.67 }
@@ -97,10 +94,9 @@ local function Waiting(npcId)
     return waiting
 end
 
--- icon: ICON or ICON_SMALL (the maps'). Greyed out while the NPC is on a cooldown (or has
--- given everything it has).
+-- Greyed out while the NPC is on a cooldown (or has given everything it has)
 local function Paint(tex, kind, icon, npcId)
-    tex:SetTexture(icon or ICON)
+    tex:SetTexture(icon)
     local grey = Waiting(npcId)
     tex:SetDesaturated(grey)
     if grey then
@@ -310,83 +306,12 @@ worldDriver:SetScript("OnUpdate", function()
 end)
 
 -- =========================================================================
--- OVER THEIR HEADS
--- An icon on the nameplate of each wanted NPC (friendly NPCs' nameplates must be showing)
--- =========================================================================
-local function NpcIdOf(unit)
-    local guid = UnitGUID(unit)
-    if not guid or IsSecret(guid) or type(guid) ~= "string" then return nil end
-    local id = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
-    return id and tonumber(id)
-end
-
-local function PlateIcon(plate)
-    if not plate.fccgIcon then
-        local t = plate:CreateTexture(nil, "OVERLAY")
-        t:SetSize(PLATE_SIZE, PLATE_SIZE)
-        t:SetPoint("BOTTOM", plate, "TOP", 0, 2)
-        plate.fccgIcon = t
-    end
-    return plate.fccgIcon
-end
-
-local function UpdatePlate(unit)
-    local plate = C_NamePlate and C_NamePlate.GetNamePlateForUnit and C_NamePlate.GetNamePlateForUnit(unit)
-    if not plate then return end
-    local npcId = On("npcPlates") and NpcIdOf(unit)
-    local s = npcId and TTS.NPC_SPOTS and TTS.NPC_SPOTS[npcId]
-    if s and Wanted(npcId, s) then
-        local t = PlateIcon(plate)
-        Paint(t, s[4], nil, npcId)
-        t:Show()
-    elseif plate.fccgIcon then
-        plate.fccgIcon:Hide()
-    end
-end
-
-local plates = CreateFrame("Frame")
-plates:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-plates:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-plates:SetScript("OnEvent", function(_, event, unit)
-    if IsSecret(unit) then return end
-    if event == "NAME_PLATE_UNIT_ADDED" then
-        pcall(UpdatePlate, unit)
-    else
-        local plate = C_NamePlate.GetNamePlateForUnit(unit)
-        if plate and plate.fccgIcon then plate.fccgIcon:Hide() end
-    end
-end)
-
--- Icons already over heads are repainted every WAIT_RECHECK seconds, so they grey out (or
--- light up) as a cooldown starts or ends while the NPC is in view
-plates.t = 0
-plates:SetScript("OnUpdate", function(self, elapsed)
-    self.t = self.t + elapsed
-    if self.t < WAIT_RECHECK then return end
-    self.t = 0
-    if not (On("npcPlates") and C_NamePlate and C_NamePlate.GetNamePlates) then return end
-    for _, plate in ipairs(C_NamePlate.GetNamePlates() or {}) do
-        local unit = plate.fccgIcon and plate.fccgIcon:IsShown()
-            and (plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit))
-        if unit and not IsSecret(unit) then pcall(UpdatePlate, unit) end
-    end
-end)
-
--- =========================================================================
 -- OPTIONS
 -- =========================================================================
--- An option changed (UI\Options.lua): redraw at once. Turning the head icons on shows
--- friendly NPCs' nameplates, which they sit on.
+-- An option changed (UI\Options.lua): redraw at once
 function T:Refresh(changedKey)
-    if changedKey == "npcPlates" and On("npcPlates") and SetCVar then
-        pcall(SetCVar, "nameplateShowFriendlyNPCs", "1")
-    end
     miniDriver:Show()
     worldDriver:Show()
     shownMap = nil
     pcall(UpdateMinimap)
-    for _, plate in ipairs((C_NamePlate and C_NamePlate.GetNamePlates and C_NamePlate.GetNamePlates()) or {}) do
-        local unit = plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit)
-        if unit then pcall(UpdatePlate, unit) elseif plate.fccgIcon and not On("npcPlates") then plate.fccgIcon:Hide() end
-    end
 end

@@ -268,6 +268,46 @@ Comm:On("STAND", function(parts, from)
     ns.RefreshUI()
 end)
 
+-- This round's tables (Host.lua SendStandings): j.pairings = { round, rows = { { table, a, b,
+-- status, aWins, bWins, result } } }, for the window's This Round list and its Watch buttons
+local pairParts
+Comm:On("PAIRS", function(parts, from)
+    if not P:IsFromOrganizer(from, parts[2]) then return end
+    local rev, roundNo, index, total = tonumber(parts[3]), tonumber(parts[4]), tonumber(parts[5]), tonumber(parts[6])
+    if not (rev and roundNo and index and total) then return end
+    if not pairParts or pairParts.rev ~= rev then
+        pairParts = { rev = rev, total = total, parts = {} }
+    end
+    pairParts.parts[index] = parts[7] or ""
+    for i = 1, total do
+        if not pairParts.parts[i] then return end
+    end
+    local rows = {}
+    for text in table.concat(pairParts.parts):gmatch("[^;]+") do
+        local t, a, b, status, aw, bw, result = text:match("^([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),([^,]*)$")
+        if t then
+            rows[#rows + 1] = { table = tonumber(t) or 0, a = a, b = b, status = status,
+                aWins = tonumber(aw) or 0, bWins = tonumber(bw) or 0, result = result }
+        end
+    end
+    P:Joined().pairings = { round = roundNo, rows = rows }
+    pairParts = nil
+    ns.RefreshUI()
+end)
+
+-- Whether this client is playing this event's match right now (Spectate.lua lets the event's
+-- organizer watch it even with Spectatable unticked)
+function P:InEventGame()
+    return currentGame ~= nil
+end
+
+if TTS and TTS.Spectate then
+    TTS.Spectate.EventAllows = function(name)
+        local j = P:Joined()
+        return (currentGame and j and B.SameName(j.organizer, name)) and true or false
+    end
+end
+
 -- =========================================================================
 -- PRIZE
 -- The champion's own client claims a prize card once the final standings are in. ForeverCCG

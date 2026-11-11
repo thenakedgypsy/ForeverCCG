@@ -29,10 +29,11 @@ TTS:AddCards({
     },
     ["BRS03"] = {
         id = "BRS03", name = "Smolderthorn Headhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 4, toughness = 3, reach = true, haste = true, isMob = true, isBoss = true, displayId = 9682,
+        power = 3, toughness = 3, reach = true, haste = true, isMob = true, isBoss = true, displayId = 9682,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { kw = "flying" } } } },
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9241,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Anti-Air."
+        text = "Quick. Anti-Air. Arrival: Destroy target enemy Airborne denizen."
     },
     ["BRS04"] = {
         id = "BRS04", name = "Smolderthorn Shadow Priest", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -43,10 +44,11 @@ TTS:AddCards({
     },
     ["BRS05"] = {
         id = "BRS05", name = "Firebrand Pyromancer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 9656,
+        power = 3, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 9656,
+        etb = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 } } },
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9264,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Arrival: Deal 3 damage to target enemy denizen."
     },
     ["BRS06"] = {
         id = "BRS06", name = "Spire Spider", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -71,10 +73,11 @@ TTS:AddCards({
     },
     ["BRS09"] = {
         id = "BRS09", name = "Quartermaster Zigris", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 6, reach = true, support = true, isMob = true, isBoss = true, displayId = 9738,
+        power = 5, toughness = 6, reach = true, support = true, isMob = true, isBoss = true, displayId = 9738,
+        etb = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 } } },
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Anti-Air."
+        text = "Support. Anti-Air. Arrival: Deal 3 damage to target enemy denizen."
     },
     ["BRS10"] = {
         id = "BRS10", name = "Halycon", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",

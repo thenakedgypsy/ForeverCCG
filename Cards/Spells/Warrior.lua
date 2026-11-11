@@ -74,4 +74,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Ability_Whirlwind",
         effect = { ops = { { op = "damage", to = "enemy_creatures", n = 3 } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board wipe
+    ["WAR11"] = {
+        id = "WAR11", name = "Slam", cost = "{3}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Warrior",
+        text = "Deal 5 damage to target denizen.",
+        art = "Interface\\Icons\\Ability_Warrior_DecisiveStrike",
+        effect = { target = "creature", ops = { { op = "damage", to = "target", n = 5 } } }
+    },
+    ["WAR12"] = {
+        id = "WAR12", name = "Sweeping Strikes", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Sorcery", class = "Warrior",
+        text = "Deal 3 damage to each denizen.",
+        art = "Interface\\Icons\\Ability_Rogue_SliceDice",
+        effect = { ops = { { op = "damage", to = "all_creatures", n = 3 } } }
+    },
 })

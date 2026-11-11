@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Holy_MagicalSentry",
         effect = { ops = { { op = "draw", n = 2 } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board reset
+    ["MAG11"] = {
+        id = "MAG11", name = "Counterspell", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Sorcery", class = "Mage",
+        text = "Put target denizen on top of its owner's deck.",
+        art = "Interface\\Icons\\Spell_Frost_IceShock",
+        effect = { target = "creature", ops = { { op = "tuck", to = "target" } } }
+    },
+    ["MAG12"] = {
+        id = "MAG12", name = "Arcane Explosion", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Sorcery", class = "Mage",
+        text = "Return each denizen that costs 3 or less to its owner's hand.",
+        art = "Interface\\Icons\\Spell_Nature_WispSplode",
+        effect = { ops = { { op = "bounce", to = "all_creatures", only = { maxCmc = 3 } } } }
+    },
 })

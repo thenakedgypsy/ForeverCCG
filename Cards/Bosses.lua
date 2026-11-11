@@ -44,7 +44,7 @@ TTS:AddCards({
         power = 4, toughness = 5, blink = true, isMob = true, isBoss = true, displayId = 2353,
         zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 4275,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Blink. {2}{U}, {T}: Put target Exhausted denizen on top of its owner's deck."
+        text = "Blink. {T}, {2}{U}: Put target Exhausted denizen on top of its owner's deck."
     },
 
     -- Blackfathom Deeps: Aku'mai
@@ -72,7 +72,7 @@ TTS:AddCards({
         power = 7, toughness = 7, isMob = true, isBoss = true, displayId = 6980,
         zone = "Gnomeregan", creatureType = "Humanoid", npcId = 7800,
         modelCam = { zoom = 0.70, camScale = 0.90, z = 0.05, rotation = 0.15 },
-        text = "{1}{R}, {T}: Deal 1 damage to each enemy denizen."
+        text = "{T}, {1}{R}: Deal 1 damage to each enemy denizen."
     },
 
     -- Razorfen Kraul: Charlga Razorflank
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 5, toughness = 6, reach = true, isMob = true, isBoss = true, displayId = 4642,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4421,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
-        text = "{1}{G}, {T}: Freeze target denizen. Anti-Air."
+        text = "{T}, {1}{G}: Freeze target denizen. Anti-Air."
     },
 
     -- SM Graveyard: Bloodmage Thalnos
@@ -99,7 +99,7 @@ TTS:AddCards({
         power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 5266,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 6487,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{1}{R}, {T}: Deal 1 damage to each enemy denizen."
+        text = "{T}, {1}{R}: Deal 1 damage to each enemy denizen."
     },
 
     -- SM Armory: Herod

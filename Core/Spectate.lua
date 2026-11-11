@@ -488,7 +488,8 @@ local function OnRequest(sender, format)
     local key = Key(sender)
     local returning = spectators[key] ~= nil   -- (came back without saying they'd left)
     if not returning then
-        if not AllowingRequests() then return Refuse("off") end
+        -- (a tournament's organizer may always watch its games: Events\Player.lua)
+        if not AllowingRequests() and not (S.EventAllows and S.EventAllows(sender)) then return Refuse("off") end
         if CountSpectators() >= MAX_SPECTATORS then return Refuse("full") end
     end
     local queued = {}

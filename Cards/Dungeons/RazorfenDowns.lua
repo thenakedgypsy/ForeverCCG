@@ -36,10 +36,11 @@ TTS:AddCards({
     },
     ["RFD04"] = {
         id = "RFD04", name = "Death's Head Necromancer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11381,
+        power = 2, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11381,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { maxPower = 3 } } } },
         zone = "Razorfen Downs", creatureType = "Humanoid", faction = "Quilboar", npcId = 7337,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Arrival: Destroy target enemy denizen with power 3 or less."
     },
     ["RFD05"] = {
         id = "RFD05", name = "Mordresh Fire Eye", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

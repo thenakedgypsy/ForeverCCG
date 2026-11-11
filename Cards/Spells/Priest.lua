@@ -73,4 +73,17 @@ TTS:AddCards({
         art = "Interface\\Icons\\Spell_Shadow_PsychicScream",
         effect = { ops = { { op = "tap", to = "enemy_creatures" } } }
     },
+    -- Level 55 and 60 (tiers 11 and 12): removal and a board wipe
+    ["PRI11"] = {
+        id = "PRI11", name = "Shadow Word: Death", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Priest",
+        text = "Destroy target denizen with power 4 or more.",
+        art = "Interface\\Icons\\Spell_Shadow_DemonicFortitude",
+        effect = { target = "creature", ops = { { op = "destroy", to = "target", only = { minPower = 4 } } } }
+    },
+    ["PRI12"] = {
+        id = "PRI12", name = "Holy Nova", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Sorcery", class = "Priest",
+        text = "Deal 3 damage to each denizen. You regain 3 health.",
+        art = "Interface\\Icons\\Spell_Holy_HolyNova",
+        effect = { ops = { { op = "damage", to = "all_creatures", n = 3 }, { op = "heal", to = "self_player", n = 3 } } }
+    },
 })

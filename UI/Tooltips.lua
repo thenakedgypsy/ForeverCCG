@@ -204,6 +204,7 @@ local TARGET_TEXT = {
     friendly_creature = "a denizen you control",
     creature          = "any denizen",
     enemy_any         = "an enemy denizen or the opponent",
+    creature_or_enemy = "any denizen (yours too) or the opponent",
     friendly_any      = "yourself or a denizen you control",
     any               = "any denizen or player",
     enemy_player      = "the opponent",

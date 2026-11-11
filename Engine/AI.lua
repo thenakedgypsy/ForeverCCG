@@ -838,6 +838,9 @@ local function ScoreOpOn(self, op, d, card, profile)
         return enemy and v or -v
     elseif op.op == "tuck" then
         return enemy and v * 0.9 or -v
+    elseif op.op == "bounce" then
+        -- Back to the hand: it can be cast again, so worth less than gone for good
+        return enemy and v * 0.6 or -v * 0.4
     elseif op.op == "dot" then
         -- On a creature: a lasting -0/-1 each turn
         local _, t = self:GetCreatureStats(perm, d.isRemote)
@@ -955,7 +958,7 @@ function E:AIScoreEffect(eff, tgt, card, profile)
             local tok = Card(op.id)
             if tok then total = total + (op.n or 1) * CreatureCardValue(self, tok, true) end
         else
-            for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, true, op.filter)) do
+            for _, d in ipairs(self:CollectSpellTargets(op.to, tgt, true, op.filter, op)) do
                 total = total + ScoreOpOn(self, op, d, card, profile)
             end
         end
@@ -986,7 +989,11 @@ end
 -- Best target for an effect: target (false for untargeted), score
 function E:AIChooseTarget(eff, card, profile)
     local bestT, bestS
-    for _, tgt in ipairs(self:AIEnumerateTargets(eff.target)) do
+    -- (only targets the card's conditions allow: "destroy target Shadow denizen", E:OpAllows)
+    local allow = card and function(perm, side)
+        return self:CardAllowsTarget(card, { kind = "CREATURE", isRemote = side, perm = perm })
+    end
+    for _, tgt in ipairs(self:AIEnumerateTargets(eff.target, allow)) do
         local s = self:AIScoreEffect(eff, tgt or nil, card, profile)
         if not bestS or s > bestS then bestT, bestS = tgt, s end
     end

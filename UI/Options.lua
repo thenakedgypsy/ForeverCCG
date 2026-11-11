@@ -47,9 +47,8 @@ local DEFAULTS = {
     actNudge = true,         -- "It's you to act" flashes after a wait on us (Board.lua)
     actNudgeWait = 10,       -- seconds of that wait
     windowOpacity = 1,       -- factor on every window's background opacity (WINDOWS SECTION)
-    npcMinimap = false,      -- card NPCs on the minimap (UI\NpcTracker.lua)
-    npcWorldMap = false,     -- card NPCs on the world map
-    npcPlates = false,       -- a card icon over card NPCs' heads (on their nameplates)
+    npcMinimap = true,       -- card NPCs on the minimap (UI\NpcTracker.lua)
+    npcWorldMap = true,      -- card NPCs on the world map
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -85,6 +84,12 @@ end
 function O:GetDB()
     if type(TTS_Options) ~= "table" then TTS_Options = {} end
     MergeDefaults(TTS_Options, DEFAULTS)
+    -- The NPC markers started out off by default; saves from then hold that "off", so they're
+    -- switched on once (npcMarkersOn marks it done, and a player's own choice after it stands)
+    if not TTS_Options.npcMarkersOn then
+        TTS_Options.npcMarkersOn = true
+        TTS_Options.npcMinimap, TTS_Options.npcWorldMap = true, true
+    end
     return TTS_Options
 end
 
@@ -552,10 +557,10 @@ end
 -- Where the card game's NPCs are (UI\NpcTracker.lua), each way off until switched on.
 -- (Kept on O rather than in locals: the file's main chunk has many already.)
 -- =========================================================================
-O.npcSection = CreateSection("options.npcs", 106)
+O.npcSection = CreateSection("options.npcs", 82)
 O.npcSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
 O.npcChecks = {}
-for i, key in ipairs({ "npcMinimap", "npcWorldMap", "npcPlates" }) do
+for i, key in ipairs({ "npcMinimap", "npcWorldMap" }) do
     local cb = CreateCheck(O.npcSection, 10, -30 - (i - 1) * 24, "options." .. key)
     cb:SetScript("OnClick", function(self)
         O:Set(key, self:GetChecked() and true or false)

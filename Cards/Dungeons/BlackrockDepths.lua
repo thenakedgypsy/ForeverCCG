@@ -57,10 +57,11 @@ TTS:AddCards({
     },
     ["BRD07"] = {
         id = "BRD07", name = "High Interrogator Gerstahn", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 8761,
+        power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 8761,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { maxPower = 3 } } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9018,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Fatal. Arrival: Destroy target enemy denizen with power 3 or less."
     },
     ["BRD08"] = {
         id = "BRD08", name = "Verek", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -86,10 +87,11 @@ TTS:AddCards({
     },
     ["BRD11"] = {
         id = "BRD11", name = "Fineous Darkvire", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 7, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 8704,
+        power = 6, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 8704,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { color = "B" } } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9056,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Arrival: Destroy target enemy Shadow denizen."
     },
     ["BRD12"] = {
         id = "BRD12", name = "Pyromancer Loregrain", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -100,24 +102,27 @@ TTS:AddCards({
     },
     ["BRD13"] = {
         id = "BRD13", name = "Warder Stilgiss", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 5, toughness = 9, shielded = true, isMob = true, isBoss = true, displayId = 9089,
+        power = 4, toughness = 9, shielded = true, isMob = true, isBoss = true, displayId = 9089,
+        etb = { target = "enemy_creature", ops = { { op = "bounce", to = "target" } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9041,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Shielded. Arrival: Return target enemy denizen to its owner's hand."
     },
     ["BRD14"] = {
         id = "BRD14", name = "Phalanx", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 7, toughness = 11, support = true, isMob = true, isBoss = true, displayId = 8177,
+        onDeath = { ops = { { op = "damage", to = "all_creatures", n = 2 } } },
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9502,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Martyrdom: Deal 2 damage to each denizen."
     },
     ["BRD15"] = {
         id = "BRD15", name = "Doom'rel", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 8, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 8687,
+        onDeath = { ops = { { op = "destroy", to = "strongest_enemy" } } },
         zone = "Blackrock Depths", creatureType = "Undead", faction = "Dark Iron", npcId = 9039,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Martyrdom: Destroy the enemy denizen with the highest power."
     },
     ["BRD16"] = {
         id = "BRD16", name = "Golem Lord Argelmach", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -136,24 +141,27 @@ TTS:AddCards({
     ["BRD18"] = {
         id = "BRD18", name = "Bael'Gar", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 12162,
+        onDeath = { ops = { { op = "damage", to = "strongest_enemy", n = 3 } } },
         zone = "Blackrock Depths", creatureType = "Giant", npcId = 9016,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Martyrdom: Deal 3 damage to the enemy denizen with the highest power."
     },
     ["BRD19"] = {
         id = "BRD19", name = "Lord Incendius", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 8, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 1204,
+        onDeath = { ops = { { op = "damage", to = "strongest_enemy", n = 3 } } },
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9017,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Martyrdom: Deal 3 damage to the enemy denizen with the highest power."
     },
     ["BRD20"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "BRD20", name = "Panzor the Invincible", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 3, toughness = 11, hexproof = true, isMob = true, isBoss = true, displayId = 8270,
+        onDeath = { ops = { { op = "damage", to = "all_creatures", n = 2 } } },
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 8923,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Warded."
+        text = "Warded. Martyrdom: Deal 2 damage to each denizen."
     },
     ["BRD21"] = {
         id = "BRD21", name = "General Angerforge", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",

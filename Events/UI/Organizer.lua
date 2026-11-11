@@ -187,6 +187,13 @@ end
 -- =========================================================================
 local function BuildPlayers(P)
     P.count = UI.Label(P, "GameFontNormal", 12, -8)
+    -- The organizer can play in their own event: joined like anyone else, with the code
+    -- (the player's window opens as the organizer's addon answers; they can't win its prize)
+    P.joinSelf = UI.Button(P, "Join as a Player", 130, 22, function()
+        local ev = H:Event()
+        if ev and ns.Player then ns.Player:Join(ev.code, B.MyName()) end
+    end)
+    P.joinSelf:SetPoint("TOPRIGHT", -14, -4)
     P.list = UI.List(P, 12, -30, 590, 22, 16, function(row)
         row.name = UI.Label(row, "GameFontHighlightSmall", 4, -5, 190)
         row.rating = UI.Label(row, "GameFontHighlightSmall", 198, -5, 45)
@@ -243,6 +250,10 @@ local function RefreshPlayers(P)
     end
     P.count:SetText(count)
     P.list:SetData(data)
+    local joined = ns.Player and ns.Player:Joined()
+    local playing = ev and ev.players[B.Key(B.MyName())] and true or false
+    P.joinSelf:SetShown(ev and (ev.status == "open" or ev.status == "checkin") and true or false)
+    P.joinSelf:SetEnabled(not playing and not (joined and ev and joined.id == ev.id))
     local canAdd = ev and (ev.status == "open" or ev.status == "checkin") and true or false
     P.manualAdd:SetEnabled(canAdd)
 end
@@ -328,6 +339,7 @@ local function RefreshActions(P)
     P.draw:SetEnabled((playable and T.Format(ev).allowDraw) and true or false)
     P.void:SetEnabled((playable and m.status == "disputed") and true or false)
     P.reset:SetEnabled(playable and true or false)
+    P.watch:SetEnabled((playable and m.status == "playing" and not B.InMatch()) and true or false)
 end
 
 local function RefreshRound(P)
@@ -407,7 +419,18 @@ local function BuildRound(P)
         row.status:SetText(MatchStatus(ev, m))
     end)
 
-    P.selected = UI.Label(P, "GameFontHighlightSmall", 12, -356, 590)
+    P.selected = UI.Label(P, "GameFontHighlightSmall", 12, -356, 520)
+    -- Watch the selected table's game while it's being played (Spectate.lua: the organizer
+    -- may always watch an event game, Spectatable or not)
+    P.watch = UI.Button(P, "Watch", 70, 20, function()
+        local ev = H:Event()
+        local m = ev and SelectedMatch(ev)
+        if not (m and m.status == "playing" and TTS.Spectate) then return end
+        local a, b = ev.players[m.a], m.b and ev.players[m.b]
+        local who = (a and not a.manual) and a or b
+        if who then TTS.Spectate:Watch(who.name) end
+    end)
+    P.watch:SetPoint("TOPRIGHT", -14, -352)
     local function OnTable(fn)
         return function()
             if selectedTable then fn(selectedTable) end
