@@ -11,13 +11,13 @@ TTS = TTS or {}
 -- =========================================================================
 -- NPC DUELS
 -- One notable friendly NPC per zone (a hermit, loner or someone out of the way, neutral where
--- one could be found) plays a game of cards for their Location card. See TTS:AddDuel in
+-- one could be found) plays a game of cards for their Settlement card. See TTS:AddDuel in
 -- SoloEncounters.lua for the fields. Each deck is their own: 38 cards on a theme, leaving 2
--- slots for 2 copies of their Location (reward = its id; placeholders for now, Cards\Locations.lua).
--- A duel stays hidden (no gossip option, no grants) while its Location card doesn't exist.
--- Two npc ids on one duel: an NPC for each faction, sharing the deck and the Location.
+-- slots for 2 copies of their Settlement (reward = its id, Cards\Settlements.lua).
+-- A duel stays hidden (no gossip option, no grants) while its Settlement card doesn't exist.
+-- Two npc ids on one duel: an NPC for each faction, sharing the deck and the Settlement.
 -- faction = "Alliance": only Alliance can reach the NPC; Horde characters are granted the
--- Location once they have beaten every duel they can reach (TTS:CheckDuelGrants).
+-- Settlement once they have beaten every duel they can reach (TTS:CheckDuelGrants).
 -- Still to pick in game: Riverglades and Mount Hyjal.
 -- =========================================================================
 
@@ -25,12 +25,12 @@ TTS = TTS or {}
 TTS:AddDuel({
     id = "DUEL_ELW", npcs = { 241 }, name = "Remy \"Two Times\"", zone = "Elwynn Forest",
     life = 20, ai = "basic", background = { map = "Elwynn" }, faction = "Alliance",
-    reward = "LCN_ELW",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_ELW",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ARA01", "ELW01", "ELW01", "LOC01", "WES02", "ELW03", "ELW03", "ELW04", "ELW04",
         "DSK05", "DSK05", "ELW05", "ELW05", "WES07", "WES07", "ELW12", "WES08",
-        "ROG01", "ROG04", "ROG07", "GEAR01", "LCN_ELW", "LCN_ELW",
-        "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01",
+        "ROG01", "ROG04", "ROG07", "GEAR01", "STL_ELW", "STL_ELW",
+        "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "R01", "R01", "R01", "R01", "R01", "W01", "W01", "W01",   -- (Holy: a splash for Goldshire)
     },
 })
 
@@ -38,12 +38,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DUN", npcs = { 7954 }, name = "Binjy Featherwhistle", zone = "Dun Morogh",
     life = 20, ai = "basic", background = { map = "DunMorogh" },
-    reward = "LCN_DUN",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DUN",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "DUN02", "DUN02", "DUN04", "DUN04", "GNO01", "GNO01", "DUN06", "DUN06",
         "GNO03", "GNO03", "GNO04", "DUN07", "DUN07", "GNO07", "DUN08", "GNO08",
         "DUN09",
-        "MAG02", "MAG02", "MAG06", "MAG06", "EGR01", "GEAR02", "LCN_DUN", "LCN_DUN",
+        "MAG02", "MAG02", "MAG06", "MAG06", "EGR01", "GEAR02", "STL_DUN", "STL_DUN",
         "R01", "R01", "R01", "R01", "R01", "R01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -52,11 +52,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_TIR", npcs = { 6784 }, name = "Calvin Montague", zone = "Tirisfal Glades",
     life = 20, ai = "basic", background = { map = "Tirisfal" }, faction = "Horde",
-    reward = "LCN_TIR",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_TIR",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "TIR01", "TIR01", "SIL04", "TIR03", "TIR03", "TIR04", "TIR04", "TIR05", "TIR05",
         "TIR06", "TIR06", "TIR07", "TIR07", "DES08", "DSK08", "TIR08", "TIR10",
-        "PRI07", "WLK02", "PRI08", "GEAR06", "LCN_TIR", "LCN_TIR",
+        "PRI07", "WLK02", "PRI08", "GEAR06", "STL_TIR", "STL_TIR",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "U01", "U01", "U01",
     },
 })
@@ -65,11 +65,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_WES", npcs = { 392 }, name = "Captain Grayson", zone = "Westfall",
     life = 20, ai = "basic", background = { map = "Westfall" },
-    reward = "LCN_WES",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_WES",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "WES02", "WES02", "DAR04", "DAR04", "DSK03", "DSK03", "DUS03", "DAR06", "DAR06",
         "EPL05", "EPL05", "RED07", "WES07", "WES07", "DAR08", "DES08", "WES09",
-        "MAG05", "PRI07", "SHA04", "GEAR07", "LCN_WES", "LCN_WES",
+        "MAG05", "PRI07", "SHA04", "GEAR07", "STL_WES", "STL_WES",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01",
     },
 })
@@ -78,11 +78,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_LOC", npcs = { 6577 }, name = "Bingles Blastenheimer", zone = "Loch Modan",
     life = 20, ai = "basic", background = { map = "LochModan" }, faction = "Alliance",
-    reward = "LCN_LOC",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_LOC",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "LOC01", "LOC01", "LOC02", "BAD04", "BAD04", "LOC04", "LOC04", "BAD06", "BAD06",
         "LOC05", "LOC05", "LOC07", "LOC07", "LOC08", "LOC09", "BAD10", "LOC10",
-        "MAG02", "MAG02", "HUN07", "HUN07", "EGR01", "GEAR08", "LCN_LOC", "LCN_LOC",
+        "MAG02", "MAG02", "HUN07", "HUN07", "EGR01", "GEAR08", "STL_LOC", "STL_LOC",
         "R01", "R01", "R01", "R01", "R01", "R01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -91,11 +91,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_SIL", npcs = { 3530, 1950 }, name = "Pyrewood Tailor", zone = "Silverpine Forest",
     life = 20, ai = "basic", background = { map = "Silverpine" },
-    reward = "LCN_SIL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_SIL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "SIL01", "SIL01", "DSK03", "DSK03", "SIL03", "SIL04", "SIL04", "DSK05", "DSK05",
         "SIL06", "SIL06", "DSK07", "DSK07", "SIL07", "DSK08", "SIL08", "SIL09",
-        "ROG02", "WLK02", "HUN02", "GEAR10", "LCN_SIL", "LCN_SIL",
+        "ROG02", "WLK02", "HUN02", "GEAR10", "STL_SIL", "STL_SIL",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -104,11 +104,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_RED", npcs = { 342 }, name = "Martie Jainrose", zone = "Redridge Mountains",
     life = 20, ai = "tactical", background = { map = "Redridge" }, faction = "Alliance",
-    reward = "LCN_RED",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_RED",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "RED01", "RED01", "ALT04", "ALT04", "ASH03", "RED04", "RED04", "ASH05", "ASH05",
         "ELW06", "ELW06", "AZS07", "AZS07", "DAR07", "LOC08", "SIL08", "ASH09",
-        "PAL02", "DRU04", "DRU06", "GEAR12", "LCN_RED", "LCN_RED",
+        "PAL02", "DRU04", "DRU06", "GEAR12", "STL_RED", "STL_RED",
         "W01", "W01", "W01", "W01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -117,11 +117,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DSK", npcs = { 289, 5414 }, name = "Abercrombie", zone = "Duskwood",
     life = 20, ai = "tactical", background = { map = "Duskwood" },
-    reward = "LCN_DSK",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DSK",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "DSK01", "DSK01", "DSK03", "DSK03", "DSK04", "DSK04", "WPL03", "DSK05", "DSK05",
         "DSK06", "DSK06", "DSK07", "DSK07", "WPL07", "DES08", "DSK08", "DSK09",
-        "WLK01", "WLK04", "PRI10", "LCN_DSK", "LCN_DSK",
+        "WLK01", "WLK04", "PRI10", "STL_DSK", "STL_DSK",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01",
     },
 })
@@ -130,11 +130,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_WET", npcs = { 1244 }, name = "Rethiel the Greenwarden", zone = "Wetlands",
     life = 20, ai = "tactical", background = { map = "Wetlands" },
-    reward = "LCN_WET",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_WET",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "WET01", "WET01", "ARA03", "ASH03", "ASH03", "WET03", "WET03", "ASH06", "ASH06",
         "WET06", "WET06", "ASH07", "ASH07", "FEL07", "FEL08", "FER08", "ASH09",
-        "DRU07", "SHA04", "DRU05", "LCN_WET", "LCN_WET",
+        "DRU07", "SHA04", "DRU05", "STL_WET", "STL_WET",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "U01", "U01", "U01", "U01",
     },
 })
@@ -143,12 +143,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_HIL", npcs = { 3537 }, name = "Zixil", zone = "Hillsbrad Foothills",
     life = 20, ai = "tactical", background = { map = "Hilsbrad" },
-    reward = "LCN_HIL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_HIL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ARA01", "ARA01", "AZS04", "AZS04", "DES03", "DES03", "FEL03", "ALT06", "ALT06",
         "HIL05", "HIL05", "ALT07", "ALT07", "ARA07", "ARA08", "HIL08", "HIL09",
-        "WAR01", "WAR01", "PAL06", "PAL06", "GEAR17", "GEAR22", "LCN_HIL", "LCN_HIL",
-        "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "W01", "W01", "W01", "W01", "W01", "W01",
+        "WAR01", "WAR01", "PAL06", "PAL06", "GEAR17", "GEAR22", "STL_HIL", "STL_HIL",
+        "R01", "R01", "R01", "R01", "R01", "R01", "U01", "U01", "U01", "W01", "W01", "W01", "W01", "W01", "W01",   -- (Arcane: a splash for Durnholde Keep)
     },
 })
 
@@ -156,11 +156,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_ALT", npcs = { 6768 }, name = "Lord Jorach Ravenholdt", zone = "Alterac Mountains",
     life = 20, ai = "tactical", background = { map = "Alterac" },
-    reward = "LCN_ALT",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_ALT",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ALT02", "ALT02", "HIL01", "HIL02", "HIL03", "HIL03", "ALT06", "ALT06",
         "ALT07", "ALT07", "WET07", "WET07", "ALT08", "HIL09", "ALT10", "HIL10",
-        "ROG03", "ROG10", "ROG05", "ROG02", "LCN_ALT", "LCN_ALT",
+        "ROG03", "ROG10", "ROG05", "ROG02", "STL_ALT", "STL_ALT",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "R01", "R01", "R01", "R01", "R01", "R01", "R01",
     },
 })
@@ -169,11 +169,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_ARA", npcs = { 2769 }, name = "Captain Steelgut", zone = "Arathi Highlands",
     life = 20, ai = "tactical", background = { map = "Arathi" },
-    reward = "LCN_ARA",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_ARA",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ARA02", "ARA02", "ARA03", "ARA03", "ARA04", "ARA04", "AZS03", "AZS06", "AZS06",
         "RED05", "RED05", "RED07", "RED07", "TIR07", "DAR08", "ELW08", "STV09",
-        "ROG01", "MAG08", "SHA04", "GEAR22", "LCN_ARA", "LCN_ARA",
+        "ROG01", "MAG08", "SHA04", "GEAR22", "STL_ARA", "STL_ARA",
         "B01", "B01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -182,11 +182,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_STV", npcs = { 715 }, name = "Hemet Nesingwary", zone = "Stranglethorn Vale",
     life = 25, ai = "expert", background = { map = "Stranglethorn" },
-    reward = "LCN_STV",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_STV",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "STV01", "STV01", "STV03", "STV03", "STV04", "STV04", "UNG04", "STV05", "STV05",
         "STV06", "STV06", "STV07", "STV07", "UNG07", "DUR08", "HYJ12", "UNG10",
-        "HUN03", "HUN09", "HUN10", "GEAR18", "LCN_STV", "LCN_STV",
+        "HUN03", "HUN09", "HUN10", "GEAR18", "STL_STV", "STL_STV",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "R01", "R01", "R01", "R01", "R01", "R01",
     },
 })
@@ -195,11 +195,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_BAD", npcs = { 2921 }, name = "Lotwil Veriatus", zone = "Badlands",
     life = 25, ai = "expert", background = { map = "Badlands" },
-    reward = "LCN_BAD",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_BAD",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "BAD02", "BAD02", "ARA03", "ARA03", "ARA04", "SEA04", "SEA04", "BAD06", "BAD06",
         "SEA06", "SEA06", "STO07", "STO07", "ZEP09", "FER08", "BUR09", "BAD10",
-        "MAG01", "SHA03", "MAG09", "LCN_BAD", "LCN_BAD",
+        "MAG01", "SHA03", "MAG09", "STL_BAD", "STL_BAD",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -208,11 +208,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_SWA", npcs = { 5391 }, name = "Galen Goodward", zone = "Swamp of Sorrows",
     life = 25, ai = "expert", background = { map = "SwampOfSorrows" },
-    reward = "LCN_SWA",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_SWA",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "SWA01", "SWA01", "ALT04", "SWA03", "SWA03", "SWA04", "SWA04", "DUS05", "DUS05",
         "DUS06", "DUS06", "AZS07", "AZS07", "BUR07", "BRN08", "LOC08", "SWA09",
-        "HUN02", "DRU04", "ROG07", "LCN_SWA", "LCN_SWA",
+        "HUN02", "DRU04", "ROG07", "STL_SWA", "STL_SWA",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "B01", "B01", "B01", "B01", "B01", "B01", "B01",
     },
 })
@@ -221,10 +221,10 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_HIN", npcs = { 5634 }, name = "Rhapsody Shindigger", zone = "The Hinterlands",
     life = 25, ai = "expert", background = { map = "Hinterlands" },
-    reward = "LCN_HIN",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_HIN",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "HIN01", "HIN01", "HIN03", "HIN03", "SWA08", "HIL09", "SWA09",
-        "WAR04", "WAR04", "SHA05", "SHA05", "GEAR28", "LCN_HIN", "LCN_HIN",
+        "WAR04", "WAR04", "SHA05", "SHA05", "GEAR28", "STL_HIN", "STL_HIN",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -233,11 +233,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_SEA", npcs = { 14627 }, name = "Hansel Heavyhands", zone = "Searing Gorge",
     life = 25, ai = "expert", background = { map = "SearingGorge" },
-    reward = "LCN_SEA",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_SEA",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "SEA02", "SEA02", "BUR03", "BUR03", "BUR04", "SEA04", "SEA04", "BUR05", "BUR05",
         "SEA06", "SEA06", "SLI07", "SLI07", "STO07", "BUR08", "SEA08", "SEA10",
-        "WAR05", "WAR05", "WAR09", "WAR09", "GEAR29", "BSM03", "LCN_SEA", "LCN_SEA",
+        "WAR05", "WAR05", "WAR09", "WAR09", "GEAR29", "BSM03", "STL_SEA", "STL_SEA",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "W01", "W01", "W01", "W01",
     },
 })
@@ -246,11 +246,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_BLA", npcs = { 7363 }, name = "Kum'isha the Collector", zone = "Blasted Lands",
     life = 25, ai = "expert", background = { map = "BlastedLands" },
-    reward = "LCN_BLA",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_BLA",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "FEL01", "FEL01", "BLA03", "BLA03", "BLA04", "BLA04", "FEL03", "BLA06", "BLA06",
         "FEL05", "FEL05", "BLA07", "BLA07", "HYJ10", "AZS08", "BLA08", "BLA09",
-        "WLK07", "WLK06", "WLK01", "GEAR31", "LCN_BLA", "LCN_BLA",
+        "WLK07", "WLK06", "WLK01", "GEAR31", "STL_BLA", "STL_BLA",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "R01", "R01", "R01", "R01", "R01",
     },
 })
@@ -259,11 +259,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_BUR", npcs = { 9459 }, name = "Cyrus Therepentous", zone = "Burning Steppes",
     life = 25, ai = "expert", background = { map = "BurningSteppes" },
-    reward = "LCN_BUR",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_BUR",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "BUR01", "BUR01", "BUR03", "BUR03", "BUR04", "BUR04", "WET04", "BUR05", "BUR05",
         "BUR06", "BUR06", "BUR07", "BUR07", "BUR08", "RED08", "BUR09", "BUR10",
-        "MAG03", "MAG04", "WLK08", "LCN_BUR", "LCN_BUR",
+        "MAG03", "MAG04", "WLK08", "STL_BUR", "STL_BUR",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "B01", "B01",
     },
 })
@@ -272,11 +272,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_WPL", npcs = { 11872 }, name = "Myranda the Hag", zone = "Western Plaguelands",
     life = 25, ai = "expert", background = { map = "WesternPlaguelands" },
-    reward = "LCN_WPL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_WPL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "WPL02", "WPL02", "DSK03", "WPL03", "WPL03", "WPL04", "WPL04", "WPL05", "WPL05",
         "WPL06", "WPL06", "WPL07", "WPL07", "DES08", "DSK08", "WPL08", "WPL09",
-        "PRI10", "PAL07", "PRI09", "LCN_WPL", "LCN_WPL",
+        "PRI10", "PAL07", "PRI09", "STL_WPL", "STL_WPL",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "W01", "W01",
     },
 })
@@ -285,11 +285,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_EPL", npcs = { 12384 }, name = "Augustus the Touched", zone = "Eastern Plaguelands",
     life = 25, ai = "expert", background = { map = "EasternPlaguelands" },
-    reward = "LCN_EPL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_EPL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "EPL02", "EPL02", "EPL03", "EPL03", "EPL04", "EPL04", "WPL03", "EPL05", "EPL05",
         "EPL06", "EPL06", "EPL07", "EPL07", "WPL07", "BRN08", "EPL08", "EPL09",
-        "WLK03", "HUN02", "ROG09", "LCN_EPL", "LCN_EPL",
+        "WLK03", "HUN02", "ROG09", "STL_EPL", "STL_EPL",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01",
     },
 })
@@ -298,12 +298,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DUR", npcs = { 3293 }, name = "Rezlak", zone = "Durotar",
     life = 20, ai = "basic", background = { map = "Durotar" },
-    reward = "LCN_DUR",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DUR",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "BRN01", "BRN01", "BRN02", "BRN03", "BRN03", "BRN04", "DUR03", "DUR03",
         "DUR05", "DUR05", "DUR06", "DUR06", "BRN07", "BRN07", "DUR08", "BRN09",
         "DUR09",
-        "WAR02", "WAR02", "SHA01", "SHA01", "GEAR04", "LCN_DUR", "LCN_DUR",
+        "WAR02", "WAR02", "SHA01", "SHA01", "GEAR04", "STL_DUR", "STL_DUR",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -312,12 +312,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_MUL", npcs = { 277182 }, name = "Ahab Wheathoof", zone = "Mulgore",
     life = 20, ai = "basic", background = { map = "Mulgore" },
-    reward = "LCN_MUL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_MUL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "MUL01", "MUL01", "BRN03", "BRN03", "BRN04", "MUL03", "MUL03", "BRN06",
         "BRN12", "MUL06", "MUL06", "AZS07", "MUL07", "MUL07", "LOC08", "SIL08",
         "ASH09",
-        "DRU06", "HUN08", "PAL04", "GEAR05", "LCN_MUL", "LCN_MUL",
+        "DRU06", "HUN08", "PAL04", "GEAR05", "STL_MUL", "STL_MUL",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -326,11 +326,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_TEL", npcs = { 2080 }, name = "Denalan", zone = "Teldrassil",
     life = 20, ai = "basic", background = { map = "Teldrassil" }, faction = "Alliance",
-    reward = "LCN_TEL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_TEL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "TEL01", "TEL01", "DAR03", "TEL03", "TEL03", "TEL04", "TEL04", "TEL05", "TEL05",
         "TEL06", "TEL06", "DAR07", "TEL07", "TEL07", "FEL08", "TEL08", "TEL10",
-        "DRU04", "DRU03", "DRU08", "GEAR03", "LCN_TEL", "LCN_TEL",
+        "DRU04", "DRU03", "DRU08", "GEAR03", "STL_TEL", "STL_TEL",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "W01", "W01", "W01", "W01", "W01",
     },
 })
@@ -339,11 +339,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DAR", npcs = { 3616 }, name = "Onu", zone = "Darkshore",
     life = 20, ai = "basic", background = { map = "Darkshore" }, faction = "Alliance",
-    reward = "LCN_DAR",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DAR",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "DAR01", "DAR01", "ASH03", "DAR03", "DAR03", "DAR04", "DAR04", "ASH06", "ASH06",
         "DAR05", "DAR05", "ASH07", "ASH07", "DAR07", "DAR08", "FEL08", "DAR09",
-        "DRU10", "DRU02", "DRU07", "GEAR09", "LCN_DAR", "LCN_DAR",
+        "DRU10", "DRU02", "DRU07", "GEAR09", "STL_DAR", "STL_DAR",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "U01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -352,12 +352,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_BRN", npcs = { 3497 }, name = "Kilxx", zone = "The Barrens",
     life = 20, ai = "basic", background = { map = "Barrens" },
-    reward = "LCN_BRN",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_BRN",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "BRN02", "BRN02", "BRN03", "BRN03", "BRN04", "BRN04", "DUS03", "BRN06",
         "BRN12", "BRN12", "DUS05", "DUS07", "DUS07", "RED07", "DUS08", "ELW08",
         "DUS09",
-        "SHA04", "SHA04", "MAG05", "MAG05", "FSH01", "LCN_BRN", "LCN_BRN",
+        "SHA04", "SHA04", "MAG05", "MAG05", "FSH01", "STL_BRN", "STL_BRN",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -366,11 +366,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_STO", npcs = { 210845 }, name = "Jixo Madrocket", zone = "Stonetalon Mountains",
     life = 20, ai = "tactical", background = { map = "StonetalonMountains" },
-    reward = "LCN_STO",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_STO",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "STO01", "STO01", "ARA03", "STO03", "STO03", "STO04", "STO04", "STO05", "STO05",
         "STO06", "STO06", "STO07", "STO07", "ZEP09", "FER08", "MUL08", "STO09",
-        "MAG02", "MAG02", "MAG06", "MAG06", "EGR03", "LCN_STO", "LCN_STO",
+        "MAG02", "MAG02", "MAG06", "MAG06", "EGR03", "STL_STO", "STL_STO",
         "R01", "R01", "R01", "R01", "R01", "R01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -379,11 +379,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_ASH", npcs = { 3951, 12719 }, name = "Bhaldaran Ravenshade", zone = "Ashenvale",
     life = 20, ai = "tactical", background = { map = "Ashenvale" },
-    reward = "LCN_ASH",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_ASH",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ASH01", "ASH01", "ALT04", "ALT04", "ASH03", "ASH03", "BAD04", "ASH06", "ASH06",
         "AZS05", "AZS05", "ASH07", "ASH07", "AZS07", "DUN08", "LOC08", "ASH09",
-        "HUN03", "HUN04", "HUN06", "GEAR14", "LCN_ASH", "LCN_ASH",
+        "HUN03", "HUN04", "HUN06", "GEAR14", "STL_ASH", "STL_ASH",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -392,11 +392,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_THO", npcs = { 4630 }, name = "Pozzik", zone = "Thousand Needles",
     life = 20, ai = "tactical", background = { map = "ThousandNeedles" },
-    reward = "LCN_THO",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_THO",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "BRN01", "BRN01", "DES04", "DES04", "ELW04", "THO03", "THO03", "ASH05", "ASH05",
         "BRN05", "BRN05", "BRN07", "BRN07", "UNG07", "DUR08", "THO08", "AZS09",
-        "WAR02", "WAR02", "ROG06", "ROG06", "GEAR18", "LCN_THO", "LCN_THO",
+        "WAR02", "WAR02", "ROG06", "ROG06", "GEAR18", "STL_THO", "STL_THO",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "W01", "W01", "W01", "W01", "W01",
     },
 })
@@ -405,12 +405,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DES", npcs = { 11596 }, name = "Smeed Scrabblescrew", zone = "Desolace",
     life = 20, ai = "tactical", background = { map = "Desolace" },
-    reward = "LCN_DES",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DES",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "DES02", "DES02", "ALT04", "ALT04", "ASH03", "ASH03", "ASH04", "BRN06",
         "BRN12", "DES05", "DES05", "AZS07", "DES07", "DES07", "BRN08", "DES08",
         "ASH09",
-        "WLK04", "WLK04", "ROG07", "ROG07", "LCN_DES", "LCN_DES",
+        "WLK04", "WLK04", "ROG07", "ROG07", "STL_DES", "STL_DES",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "G01", "G01", "G01", "G01", "G01", "G01",
     },
 })
@@ -419,11 +419,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_DUS", npcs = { 6546 }, name = "Tabetha", zone = "Dustwallow Marsh",
     life = 25, ai = "expert", background = { map = "Dustwallow" },
-    reward = "LCN_DUS",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_DUS",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "DUS01", "DUS01", "ARA03", "DUS03", "DUS03", "DUS04", "DUS04", "ASH06", "ASH06",
         "SEA06", "SEA06", "DUS07", "DUS07", "STO07", "DUS08", "FER08", "DUS09",
-        "MAG05", "MAG07", "MAG01", "MAG10", "LCN_DUS", "LCN_DUS",
+        "MAG05", "MAG07", "MAG01", "MAG10", "STL_DUS", "STL_DUS",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "R01", "R01", "R01",
     },
 })
@@ -432,12 +432,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_FER", npcs = { 7775 }, name = "Gregan Brewspewer", zone = "Feralas",
     life = 25, ai = "expert", background = { map = "Feralas" },
-    reward = "LCN_FER",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_FER",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "FER02", "FER02", "FER03", "FER03", "RED03", "RED03", "ALT06", "ALT06",
         "FER06", "FER06", "RED06", "ALT07", "ALT07", "BUR08", "ELW12", "TAN08",
         "ALT10",
-        "WAR04", "WAR04", "WAR01", "WAR01", "GEAR26", "COK03", "LCN_FER", "LCN_FER",
+        "WAR04", "WAR04", "WAR01", "WAR01", "GEAR26", "COK03", "STL_FER", "STL_FER",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "G01", "G01",
     },
 })
@@ -446,11 +446,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_TAN", npcs = { 10460 }, name = "Prospector Ironboot", zone = "Tanaris",
     life = 25, ai = "expert", background = { map = "Tanaris" },
-    reward = "LCN_TAN",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_TAN",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "TAN02", "TAN02", "DES04", "DES04", "ELW04", "TAN03", "TAN03", "BAD05", "BAD05",
         "TAN06", "TAN06", "SLI07", "SLI07", "STO07", "DUR08", "TAN08", "TAN09",
-        "WAR06", "WAR06", "SHA02", "SHA02", "MNG02", "GEAR27", "LCN_TAN", "LCN_TAN",
+        "WAR06", "WAR06", "SHA02", "SHA02", "MNG02", "GEAR27", "STL_TAN", "STL_TAN",
         "R01", "R01", "R01", "R01", "R01", "R01", "R01", "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01",
     },
 })
@@ -459,12 +459,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_AZS", npcs = { 7783 }, name = "Loramus Thalipedes", zone = "Azshara",
     life = 25, ai = "expert", background = { map = "Aszhara" },
-    reward = "LCN_AZS",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_AZS",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "AZS01", "AZS01", "EPL01", "AZS03", "AZS03", "BLA04", "BLA04", "FER04",
         "AZS05", "AZS05", "AZS06", "AZS06", "HYJ10", "AZS08", "DAR08", "EPL08",
         "HYJ13",
-        "MAG09", "MAG09", "WLK05", "WLK05", "GEAR30", "LCN_AZS", "LCN_AZS",
+        "MAG09", "MAG09", "WLK05", "WLK05", "GEAR30", "STL_AZS", "STL_AZS",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "U01", "U01", "U01", "U01", "U01", "U01",
     },
 })
@@ -473,12 +473,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_FEL", npcs = { 9528 }, name = "Arathandris Silversky", zone = "Felwood",
     life = 25, ai = "expert", background = { map = "Felwood" },
-    reward = "LCN_FEL",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_FEL",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "FEL01", "FEL01", "ALT04", "ALT04", "ASH03", "FEL04", "FEL04", "BRN06",
         "BRN12", "BRN12", "DAR05", "AZS07", "FEL07", "FEL07", "AZS08", "FEL08",
         "ASH09",
-        "DRU07", "DRU05", "HUN02", "GEAR33", "LCN_FEL", "LCN_FEL",
+        "DRU07", "DRU05", "HUN02", "GEAR33", "STL_FEL", "STL_FEL",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "B01", "B01", "B01",
     },
 })
@@ -487,11 +487,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_UNG", npcs = { 9619 }, name = "Torwa Pathfinder", zone = "Un'Goro Crater",
     life = 25, ai = "expert", background = { map = "UngoroCrater" },
-    reward = "LCN_UNG",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_UNG",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "UNG02", "UNG02", "ALT04", "UNG03", "UNG03", "UNG04", "UNG04", "UNG05", "UNG05",
         "UNG06", "UNG06", "AZS07", "UNG07", "UNG07", "DUR08", "HYJ12", "UNG10",
-        "HUN10", "HUN10", "DRU06", "DRU06", "GEAR32", "LTW04", "LCN_UNG", "LCN_UNG",
+        "HUN10", "HUN10", "DRU06", "DRU06", "GEAR32", "LTW04", "STL_UNG", "STL_UNG",
         "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "R01", "R01", "R01", "R01",
     },
 })
@@ -500,12 +500,12 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_SLI", npcs = { 15194 }, name = "Hermit Ortell", zone = "Silithus",
     life = 25, ai = "expert", background = { map = "Silithus" },
-    reward = "LCN_SLI",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_SLI",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "SLI01", "SLI01", "SLI03", "SLI03", "SLI04", "SLI04", "RIV05", "RIV05",
         "SLI06", "SLI06", "RIV08", "RIV08", "SLI07", "SLI07", "RIV09", "SLI08",
         "SLI09",
-        "PRI07", "PRI07", "PAL08", "PAL08", "GEAR38", "LCN_SLI", "LCN_SLI",
+        "PRI07", "PRI07", "PAL08", "PAL08", "GEAR38", "STL_SLI", "STL_SLI",
         "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "W01", "W01", "W01", "W01",
     },
 })
@@ -514,11 +514,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_WIN", npcs = { 9298 }, name = "Donova Snowden", zone = "Winterspring",
     life = 25, ai = "expert", background = { map = "Winterspring" },
-    reward = "LCN_WIN",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_WIN",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "WIN01", "WIN01", "AZS04", "AZS04", "DAR04", "WIN04", "WIN04", "ASH05", "ASH05",
         "WIN05", "WIN05", "DUN07", "WIN07", "WIN07", "DUN08", "WIN08", "WIN09",
-        "MAG06", "SHA04", "MAG05", "GEAR36", "LCN_WIN", "LCN_WIN",
+        "MAG06", "SHA04", "MAG05", "GEAR36", "STL_WIN", "STL_WIN",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "W01", "W01", "W01", "W01", "W01", "W01",
     },
 })
@@ -527,11 +527,11 @@ TTS:AddDuel({
 TTS:AddDuel({
     id = "DUEL_ZEP", npcs = { 251366 }, name = "Aetheen of the Gales", zone = "Zephras Isle",
     life = 25, ai = "expert", background = { map = "ZephrasIsle" },
-    reward = "LCN_ZEP",   -- their Location (a placeholder for now: CardsLocations.lua)
-    deck = {   -- 38 cards, and 2 copies of their Location
+    reward = "STL_ZEP",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
         "ZEP02", "ZEP02", "ARA03", "ARA03", "ARA04", "ZEP04", "ZEP04", "ASH06", "ASH06",
         "ZEP05", "ZEP05", "ZEP08", "ZEP08", "ZEP09", "FER08", "ZEP10", "ZEP11",
-        "SHA04", "SHA04", "MAG09", "MAG09", "LCN_ZEP", "LCN_ZEP",
+        "SHA04", "SHA04", "MAG09", "MAG09", "STL_ZEP", "STL_ZEP",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "W01", "W01",
     },
 })

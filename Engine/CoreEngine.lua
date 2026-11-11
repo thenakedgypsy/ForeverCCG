@@ -1150,7 +1150,7 @@ function E:BeginTurn(isRemote)
 
     self:TickOverTime(isRemote)
     if not self.inMatch then return false end
-    self:RunLocationTrigger("onTurnStart", isRemote)
+    self:RunSettlementTrigger("onTurnStart", isRemote)
     if not self.inMatch then return false end
     self:RunEncounterRules(isRemote and "onAITurnStart" or "onPlayerTurnStart")
     if not self.inMatch then return false end

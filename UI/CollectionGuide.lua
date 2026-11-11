@@ -162,7 +162,7 @@ local places = {}
 local Refresh
 local shownZone                        -- the zone whose cards are listed (nil for All and the hearth sets)
 
-local TYPE_LABEL = { Creature = "db.creatures", Spell = "db.spells", Location = "db.locations", Gear = "db.gear", Prayer = "db.prayers" }
+local TYPE_LABEL = { Creature = "db.creatures", Spell = "db.spells", Settlement = "db.settlements", Gear = "db.gear", Prayer = "db.prayers" }
 
 -- Whether a card is listed in a zone other than its own (its creature is also found there)
 local function Visiting(card)

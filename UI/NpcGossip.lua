@@ -110,7 +110,7 @@ local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
 -- =========================================================================
 -- DUELS
 -- An NPC with a duel (TTS:AddDuel, SoloEncounters.lua) gets a "Fancy a game of Forever: CCG?"
--- option too: it starts a solo game against their deck for their Location card.
+-- option too: it starts a solo game against their deck for their Settlement card.
 -- =========================================================================
 local function DuelOf(npcId) return TTS.DuelForNpc and TTS:DuelForNpc(npcId) or nil end
 
@@ -817,7 +817,7 @@ end
 -- (mobtip.gift.ready / .wait / .done).
 -- =========================================================================
 -- Whether an NPC has nothing for the player right now: a duel on its cooldown (or its
--- Location all collected), cards on their wait (or all given), and nothing else ready.
+-- Settlement all collected), cards on their wait (or all given), and nothing else ready.
 -- An NPC with neither (a trainer before it hands out cards) isn't waiting. For the card
 -- NPC tracker's greyed-out icons (UI\NpcTracker.lua).
 function TTS:NpcWaiting(npcId)
@@ -845,7 +845,7 @@ local function AddGiftLine(tooltip)
     local id = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
     local npcId = id and tonumber(id)
 
-    -- A duel NPC: ready to play, waiting out the hour, or their Location all collected
+    -- A duel NPC: ready to play, waiting out the hour, or their Settlement all collected
     local duel = DuelOf(npcId)
     if duel then
         local card = duel.reward and TTS.Cards[duel.reward]

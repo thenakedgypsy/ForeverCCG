@@ -24,8 +24,8 @@ TTS.MAX_DECK_SLOTS = 3
 TTS.MAX_DECK_SPELLS = 12
 -- Maximum number of Gear Cards (Cards\Gear.lua) allowed in a deck
 TTS.MAX_DECK_GEAR = 8
--- Location cards (Cards\Locations.lua) a deck may hold in all, of any Locations
-TTS.MAX_DECK_LOCATIONS = 4
+-- Settlement cards (Cards\Settlements.lua) a deck may hold in all, of any Settlements
+TTS.MAX_DECK_SETTLEMENTS = 4
 
 -- =========================================================================
 -- CLASS SPELL UNLOCKS (by character level)
@@ -435,7 +435,7 @@ Skin(deckPanel, STYLE.panelBg, STYLE.panelBorder)
 -- =========================================================================
 local onlyUnlocked = true   -- locked cards are never shown in the card pool
 local colorOn = { W = true, U = true, B = true, R = true, G = true }
-local typeOn  = { Prayer = true, Creature = true, Spell = true, Gear = true, Location = true }
+local typeOn  = { Prayer = true, Creature = true, Spell = true, Gear = true, Settlement = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
@@ -482,20 +482,20 @@ local function IsCardUnlocked(cardId, card)
     return TTS:IsSpellUnlocked(cardId)
 end
 
--- Land = Prayer, Creature = Creature, Location = Location, Gear Cards = Gear, everything else
+-- Land = Prayer, Creature = Creature, Settlement = Settlement, Gear Cards = Gear, everything else
 -- (Sorcery, ...) = Spell. Each has a filter toggle (TYPE_DEFS).
 local function GetTypeGroup(card)
     if card.type == "Land" then return "Prayer" end
     if card.type == "Creature" then return "Creature" end
-    if card.type == "Location" then return "Location" end
+    if card.type == "Settlement" then return "Settlement" end
     if card.subType == "Gear" then return "Gear" end
     return "Spell"
 end
 
 -- The most cards of a type group a deck may hold (nil = no cap of its own)
 local GROUP_CAP = { Spell = function() return TTS.MAX_DECK_SPELLS end, Gear = function() return TTS.MAX_DECK_GEAR end,
-    Location = function() return TTS.MAX_DECK_LOCATIONS end }
-local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear", Location = "db.maxLocations" }
+    Settlement = function() return TTS.MAX_DECK_SETTLEMENTS end }
+local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear", Settlement = "db.maxSettlements" }
 
 -- Copies of a card the deck may hold (nil = unlimited, used for Prayers)
 local function GetCopyLimit(cardId, card)
@@ -541,7 +541,7 @@ local function IndexOf(list)
 end
 local CLASS_RANK  = IndexOf(CLASS_ORDER)
 local SPHERE_RANK = IndexOf(SPHERE_ORDER)
-local TYPE_RANK   = { Creature = 1, Spell = 2, Location = 2.5, Gear = 3, Prayer = 4 }
+local TYPE_RANK   = { Creature = 1, Spell = 2, Settlement = 2.5, Gear = 3, Prayer = 4 }
 
 local SORT_ORDER = { "COST", "COLOR", "TYPE", "CLASS", "FACTION", "ZONE", "CREATURETYPE" }
 -- Shown as db.sort.<mode>
@@ -670,7 +670,7 @@ function Keyword.Name(k)
 end
 -- Kinsmanship is the card's rally, not a keyword field; Aura its anthem; Spawn an Arrival,
 -- Martyrdom or Aggro that puts Adds onto the battlefield; Raze a spell, Arrival, Martyrdom,
--- Aggro or ability that destroys a Location
+-- Aggro or ability that destroys a Settlement
 function Keyword.Has(card, k)
     if k == "kinsmanship" then return card.rally ~= nil end
     if k == "aura" then return card.anthem ~= nil end
@@ -735,7 +735,7 @@ local function CheckAdd(cardId, card, deck)
         return L("db.maxDeck")
     end
 
-    -- Spell cap (TTS.MAX_DECK_SPELLS), Gear cap (TTS.MAX_DECK_GEAR) and Location cap (TTS.MAX_DECK_LOCATIONS)
+    -- Spell cap (TTS.MAX_DECK_SPELLS), Gear cap (TTS.MAX_DECK_GEAR) and Settlement cap (TTS.MAX_DECK_SETTLEMENTS)
     local group = GetTypeGroup(card)
     if GROUP_CAP[group] then
         local inGroup = 0
@@ -1347,13 +1347,13 @@ searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
 -- Card type toggles, between the search box (ending at x = 120) and the sphere toggles
--- (from x = 454): each as wide as its label, so a long one ("Locations", or a translation)
+-- (from x = 454): each as wide as its label, so a long one ("Settlements", or a translation)
 -- is never cut short. Laid out again as the window opens (TYPE_DEFS.Layout), in case the
 -- language changed.
 local TYPE_DEFS = {
     { key = "Creature", label = "db.creatures" },
     { key = "Spell",    label = "db.spells" },
-    { key = "Location", label = "db.locations" },
+    { key = "Settlement", label = "db.settlements" },
     { key = "Gear",     label = "db.gear" },
     { key = "Prayer",   label = "db.prayers" },
 }
@@ -1675,7 +1675,7 @@ local function UpdateTileState(t, deck)
         t.copyText:Show()
     else
         t.copyText:Hide()
-        -- A card with fewer than 4 copies at most (a Location: 2) shows only that many pips
+        -- A card with fewer than 4 copies at most (a Settlement: 2) shows only that many pips
         local cardMax = TTS:CardMaxCopies(card)
         for p = 1, 4 do
             local pip = t.pips[p]
@@ -1816,7 +1816,7 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 -- COLLECTION PROGRESS (bottom-left)
 -- Collected = at least 1 copy of a creature card, Mastered = all 4 copies,
 -- and the same for Hearthstones (the innkeepers' gift prayers) and Gear Cards (the weapon
--- merchants' gift spells, all 38 whichever faction gives them) and Locations (the NPC
+-- merchants' gift spells, all 38 whichever faction gives them) and Settlements (the NPC
 -- duels' rewards, both copies to master). Two lines: collected, then mastered, foils (the
 -- denizens' foils owned, BossTracker.lua) and the score.
 -- =========================================================================
@@ -2007,7 +2007,7 @@ deckEmptyText:SetPoint("CENTER", 0, 20)
 deckEmptyText:SetWidth(LAYOUT.LIST_W - 40)
 Loc:Bind(deckEmptyText, "db.deckEmpty")
 
-local GROUP_ORDER = { "Creature", "Spell", "Location", "Gear", "Prayer" }
+local GROUP_ORDER = { "Creature", "Spell", "Settlement", "Gear", "Prayer" }
 -- Deck list group headers: db.group.<group>
 local GROUP_LABEL = setmetatable({}, { __index = function(_, group) return L("db.group." .. group) end })
 
@@ -2398,8 +2398,8 @@ end
 function D:RefreshDeck()
     local deck = GetActiveDeck()
 
-    local groups = { Creature = {}, Spell = {}, Location = {}, Gear = {}, Prayer = {} }
-    local groupTotals = { Creature = 0, Spell = 0, Location = 0, Gear = 0, Prayer = 0 }
+    local groups = { Creature = {}, Spell = {}, Settlement = {}, Gear = {}, Prayer = {} }
+    local groupTotals = { Creature = 0, Spell = 0, Settlement = 0, Gear = 0, Prayer = 0 }
     local totalCards = 0
     if deck and deck.cards then
         for id, count in pairs(deck.cards) do

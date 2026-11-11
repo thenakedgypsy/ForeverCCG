@@ -17,7 +17,7 @@ local L = TTS.L
 --   npcMinimap   a card-back pin on the minimap for each one within its range
 --   npcWorldMap  a pin on the world map for each one on the map being shown
 -- Only NPCs the character's faction can deal with are shown, and duels only once they are
--- live (their Location exists) and reachable (SoloEncounters.lua). Every icon is the tracker
+-- live (their Settlement exists) and reachable (SoloEncounters.lua). Every icon is the tracker
 -- emblem (Textures\Symbols\tracker.png). Areas are matched to the client's maps by name
 -- (C_Map), once, when first needed.
 -- =========================================================================

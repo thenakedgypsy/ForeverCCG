@@ -73,7 +73,7 @@ local TEXT_BOX = {
     bottomWithPT = 0.20,
 }
 
--- A Location on the battlefield is a landscape card (the frame art's <frame>_landscape.png,
+-- A Settlement on the battlefield is a landscape card (the frame art's <frame>_landscape.png,
 -- 512 x 376): its own size, art window and text box, as fractions measured from that art.
 -- (Fields of LAYOUT rather than locals: this file is near Lua's 200-local limit.)
 LAYOUT.LOC_W, LAYOUT.LOC_H = 84, 64   -- the battlefield card turned on its side
@@ -1393,7 +1393,7 @@ local myLandFrames     = {}
 local myNonLandFrames  = {}
 local oppLandFrames    = {}
 local oppNonLandFrames = {}
--- Each side's Location once played (a landscape card, one frame), at the start of its prayer
+-- Each side's Settlement once played (a landscape card, one frame), at the start of its prayer
 -- row; in the hand it keeps the usual frame. (Fields of B: this file is near the local limit.)
 B.myLocFrames, B.oppLocFrames = {}, {}
 
@@ -1498,7 +1498,7 @@ end
 
 -- t.full (optional): the card's full-art frame texture (CreateCardFrame), set to the same
 -- frame's <name>_full.png, or cleared when there isn't one
--- t.landscape (a Location's battlefield frame): the same frames' <name>_landscape.png instead
+-- t.landscape (a Settlement's battlefield frame): the same frames' <name>_landscape.png instead
 local function ApplyFrameTexture(t, card)
     local suffix = t.landscape and "_landscape.png" or ".png"
     local function Shape(path) return path and (path:gsub("%.png$", suffix)) end
@@ -1686,7 +1686,7 @@ end
 -- CARD FRAME FACTORY
 -- =========================================================================
 -- layout (optional): { art = <ART_BOX-like>, text = <TEXT_BOX-like>, landscape = true } for a
--- card of another shape (LAYOUT.LOC_LAYOUT, a Location on the battlefield)
+-- card of another shape (LAYOUT.LOC_LAYOUT, a Settlement on the battlefield)
 local function CreateCardFrame(parent, sizeX, sizeY, layout)
     local ART_BOX = layout and layout.art or ART_BOX
     local f = CreateFrame("Button", nil, parent)
@@ -2080,7 +2080,7 @@ local function UpdateCardRules(f, opts)
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for new text
         if f.rulesText ~= text or f.rulesPT ~= hasPT then
             f.rulesText, f.rulesPT = text, hasPT
-            local TEXT_BOX = f.textBox or TEXT_BOX   -- (a landscape Location's own box)
+            local TEXT_BOX = f.textBox or TEXT_BOX   -- (a landscape Settlement's own box)
             f.rules:ClearAllPoints()
             f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1 + dx, -h * TEXT_BOX.top - 1 - dy)
             f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right + dx,
@@ -2371,7 +2371,7 @@ end
 -- The f.zoneArt texture n (made as needed): on the model's frame, just over its full-art
 -- backing (fxBack) and under the model itself, so it shows in either window and fades with
 -- a tapped or summoning-sick model
--- flat: the f.zoneArtFlat texture n instead, on the card itself over its art icon: a Location's
+-- flat: the f.zoneArtFlat texture n instead, on the card itself over its art icon: a Settlement's
 -- own art (no model, so the map is the picture, in full colour)
 local function Piece(f, n, flat)
     local key = flat and "zoneArtFlat" or "zoneArt"
@@ -2390,7 +2390,7 @@ end
 
 -- One map piece (px0, py0, pw x ph map pixels of a file fw x fh) cut to the crop
 -- (cx0, cy0, cw x ch map pixels), drawn s screen pixels per map pixel from the window box
--- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint); tint = nil: a Location's
+-- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint); tint = nil: a Settlement's
 -- own art, in the map's full colour (Piece's flat)
 local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s, tint)
     local ix0, ix1 = math.max(px0, cx0), math.min(px0 + pw, cx0 + cw, BG.MAP_W)
@@ -2417,11 +2417,11 @@ end
 
 -- card: what f shows (nil, or a card without a model or zone map: none). Fills the art
 -- window, or the full-art one while the model is in front (SetModelInFront calls again).
--- A Location with a zone (and no art of its own: card.art wins) shows its zone's map as its
+-- A Settlement with a zone (and no art of its own: card.art wins) shows its zone's map as its
 -- picture instead, in full colour, whatever the cardZoneArt option says (it's the card's art).
 function PaintZoneArt(f, card)
     local on = TTS.Options and TTS.Options:Get("cardZoneArt") ~= false
-    local flat = f.artBox and card and card.type == "Location" and card.zone and not card.art and true or false
+    local flat = f.artBox and card and card.type == "Settlement" and card.zone and not card.art and true or false
     local zone, maker
     if flat then
         zone = card.zone
@@ -2436,7 +2436,7 @@ function PaintZoneArt(f, card)
     f.zoneArtKey = key
     local used = 0
     if map then
-        -- This card's spot: near the map's middle, moved by its id (a Location sees more of it)
+        -- This card's spot: near the map's middle, moved by its id (a Settlement sees more of it)
         local h = 0
         for i = 1, #card.id do h = (h * 31 + card.id:byte(i)) % 100003 end
         local cw = flat and ZONE_ART_W * 1.6 or ZONE_ART_W
@@ -2605,7 +2605,7 @@ end
 
 local FieldFrame   -- (group, i): a battlefield row's i-th card frame, made if it doesn't exist yet
 do
--- landscape: a Location's frame (LAYOUT.LOC_LAYOUT)
+-- landscape: a Settlement's frame (LAYOUT.LOC_LAYOUT)
 local function NewFieldFrame(isRemote, onClick, landscape)
     local f = landscape and CreateCardFrame(B, LAYOUT.LOC_W, LAYOUT.LOC_H, LAYOUT.LOC_LAYOUT)
         or CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
@@ -2654,7 +2654,7 @@ local FIELD_FRAME_MAKERS = {
     [myNonLandFrames]  = function() return NewFieldFrame(false, WithFieldSound(MyNonLand_OnClick)) end,
     [oppLandFrames]    = function() return NewFieldFrame(true, OppLand_OnClick) end,
     [oppNonLandFrames] = function() return NewFieldFrame(true, OppNonLand_OnClick) end,
-    -- A Location is clicked as a prayer is (E:TapCard uses its ability)
+    -- A Settlement is clicked as a prayer is (E:TapCard uses its ability)
     [B.myLocFrames]    = function() return NewFieldFrame(false, WithFieldSound(MyLand_OnClick), true) end,
     [B.oppLocFrames]   = function() return NewFieldFrame(true, OppLand_OnClick, true) end,
 }
@@ -3100,12 +3100,12 @@ local function SetupCardVisual(f, card, foil)
         if f.model then f.model:Hide() end
         f.art:SetTexture((card and card.art) or "Interface\\Icons\\INV_Misc_QuestionMark")
         TintArt(f.art, card)
-        -- A Location without art of its own shows its zone's map instead (PaintZoneArt)
-        f.art:SetShown(not (card and card.type == "Location" and card.zone and not card.art))
+        -- A Settlement without art of its own shows its zone's map instead (PaintZoneArt)
+        f.art:SetShown(not (card and card.type == "Settlement" and card.zone and not card.art))
     end
 end
 
--- A Location's map art (PaintZoneArt's flat pieces) dimmed with its card while it's Exhausted
+-- A Settlement's map art (PaintZoneArt's flat pieces) dimmed with its card while it's Exhausted
 function B.ShadeFlatArt(f, shade)
     for _, t in ipairs(f.zoneArtFlat or {}) do t:SetVertexColor(shade, shade, shade) end
 end
@@ -4214,9 +4214,9 @@ local function PaintLeaving(f, kind)
     if kind == "died" and f.tapIcon then f.tapIcon:Hide() end
 end
 
--- Places a side's Location frame at the start of its prayer row (shown = it has one) and returns
+-- Places a side's Settlement frame at the start of its prayer row (shown = it has one) and returns
 -- how much of the row it takes up (0 without one), for the prayers to start after it
-function B.PlaceLocation(frames, shown, centerY)
+function B.PlaceSettlement(frames, shown, centerY)
     local f = frames[1]
     if not (f and shown) then
         if f then f:Hide(); f.fieldIndex = nil end
@@ -4445,8 +4445,8 @@ function B:UpdateDisplay()
         if card then
             local isLand = (card.type == "Land")
             local f = nil
-            if card.type == "Location" then
-                -- Its own landscape frame, at the start of the prayer row (B.PlaceLocation)
+            if card.type == "Settlement" then
+                -- Its own landscape frame, at the start of the prayer row (B.PlaceSettlement)
                 myLocShown = true
                 f = FieldFrame(B.myLocFrames, 1)
             elseif isLand then
@@ -4508,7 +4508,7 @@ function B:UpdateDisplay()
     end
 
     local boardResized = false
-    -- reserve: room kept at the row's left end (its side's Location, B.PlaceLocation)
+    -- reserve: room kept at the row's left end (its side's Settlement, B.PlaceSettlement)
     local function LayoutRow(frames, count, centerY, maxScale, reserve)
         count = math.min(count, #frames)
         local startX = LAYOUT.BF_START_X + (reserve or 0)
@@ -4522,7 +4522,7 @@ function B:UpdateDisplay()
         end
     end
     LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAYOUT.LAND_MAX_SCALE,
-        B.PlaceLocation(B.myLocFrames, myLocShown, ROW_Y.myLand))
+        B.PlaceSettlement(B.myLocFrames, myLocShown, ROW_Y.myLand))
     LayoutRow(myNonLandFrames, myNonLandIdx, ROW_Y.myNonLand, LAYOUT.CREATURE_MAX_SCALE)
 
     for i = myLandIdx + 1, #myLandFrames do
@@ -4543,7 +4543,7 @@ function B:UpdateDisplay()
         if card then
             local isLand = (card.type == "Land")
             local f = nil
-            if card.type == "Location" then
+            if card.type == "Settlement" then
                 oppLocShown = true
                 f = FieldFrame(B.oppLocFrames, 1)
             elseif isLand then
@@ -4596,7 +4596,7 @@ function B:UpdateDisplay()
     end
 
     LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAYOUT.LAND_MAX_SCALE,
-        B.PlaceLocation(B.oppLocFrames, oppLocShown, ROW_Y.oppLand))
+        B.PlaceSettlement(B.oppLocFrames, oppLocShown, ROW_Y.oppLand))
     LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, LAYOUT.CREATURE_MAX_SCALE)
     if boardResized then QueueBoardModelReload() end
 

@@ -76,4 +76,42 @@ TTS:AddCards({
         creatureType = "Mechanical",
         text = "Airborne."
     },
+    -- Settlements' Adds (Cards\Settlements.lua). Their models are borrowed from cards that
+    -- already show them: Hillsbrad Miner (Peasant), Warsong Peon, Skeletal Soldier,
+    -- Young Sawtooth Crocolisk and Diemetradon.
+    ["TOK09"] = {   -- Goldshire
+        id = "TOK09", name = "Peasant", cost = "", cmc = 0, color = "W", type = "Creature",
+        power = 1, toughness = 2, support = true, isToken = true, displayId = 3629,
+        creatureType = "Humanoid",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Support."
+    },
+    ["TOK10"] = {   -- Razor Hill
+        id = "TOK10", name = "Peon", cost = "", cmc = 0, color = "R", type = "Creature",
+        power = 2, toughness = 1, haste = true, isToken = true, displayId = 11857,
+        creatureType = "Humanoid",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Quick."
+    },
+    ["TOK11"] = {   -- Agamand Mills
+        id = "TOK11", name = "Rattlecage Soldier", cost = "", cmc = 0, color = "B", type = "Creature",
+        power = 3, toughness = 3, isToken = true, displayId = 7848,
+        creatureType = "Undead",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = ""
+    },
+    ["TOK12"] = {   -- Stonard
+        id = "TOK12", name = "Sawtooth Crocolisk", cost = "", cmc = 0, color = "G", type = "Creature",
+        power = 3, toughness = 3, isToken = true, displayId = 814,
+        creatureType = "Beast",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = ""
+    },
+    ["TOK13"] = {   -- Marshal's Refuge
+        id = "TOK13", name = "Diemetradon Bull", cost = "", cmc = 0, color = "G", type = "Creature",
+        power = 4, toughness = 4, trample = true, isToken = true, displayId = 8511,
+        creatureType = "Beast",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Brutish."
+    },
 })

@@ -60,7 +60,7 @@ TTS:AddCards({
         zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         etb = { ops = { { op = "raze" } } },
-        text = "Arrival: Raze the opponent's Location."
+        text = "Arrival: Raze the opponent's Settlement."
     },
     ["WES08"] = {
         id = "WES08", name = "Riverpaw Bandit", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

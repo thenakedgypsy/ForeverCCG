@@ -15,7 +15,7 @@ TTS:AddCards({
     -- DRUID
     ["DRU01"] = {
         id = "DRU01", name = "Wrath", cost = "{1}{G}", cmc = 2, color = "G", type = "Sorcery", class = "Druid",
-        text = "Deal 2 damage to target enemy denizen or the opponent. Raze the opponent's Location.",
+        text = "Deal 2 damage to target enemy denizen or the opponent. Raze the opponent's Settlement.",
         art = "Interface\\Icons\\Spell_Nature_AbolishMagic",
         effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "raze" } } }
     },

@@ -94,8 +94,8 @@ local STEPS = {
       allow = { play = { R01 = true } } },
     { key = "fireBlast",    done = function() return not OnField(true, "FER03") end,
       allow = { play = { MAG02 = true }, tap = { R01 = true }, target = { FER03 = true } } },
-    { key = "playLocation", done = function() return OnField(false, "LCN_TUT") end,
-      allow = { play = { LCN_TUT = true }, tap = { W01 = true } } },
+    { key = "playSettlement", done = function() return OnField(false, "STL_TUT") end,
+      allow = { play = { STL_TUT = true }, tap = { W01 = true } } },
     { key = "finish",       done = function() return false end,   -- the win ends the tutorial
       -- attack by dragging: Next Phase: Combat is refused, and Next Phase: Blocks waits for
       -- both denizens (one alone doesn't win)

@@ -24,7 +24,7 @@ local SPHERE_HEX = { W = "FFE6CC80", U = "FF4FA3FF", B = "FFB07FE0", R = "FFFF55
 local function TypeOf(card)
     if card.type == "Land" then return "Prayer" end
     if card.type == "Creature" then return "Creature" end
-    if card.type == "Location" then return "Location" end
+    if card.type == "Settlement" then return "Settlement" end
     if card.subType == "Gear" then return "Gear" end
     return "Spell"
 end
@@ -98,7 +98,7 @@ local function Build()
     F.search:HookScript("OnEditFocusLost", function(self) hint:SetShown(self:GetText() == "") end)
 
     F.type = UI.Dropdown(F, 100, { { "all", "All types" }, { "Creature", "Denizens" }, { "Spell", "Spells" },
-        { "Location", "Locations" }, { "Gear", "Gear" }, { "Prayer", "Prayers" } }, function(v)
+        { "Settlement", "Settlements" }, { "Gear", "Gear" }, { "Prayer", "Prayers" } }, function(v)
         filter.type = v; F.list.offset = 0; Refresh()
     end)
     F.type:SetPoint("TOPLEFT", 214, -46)

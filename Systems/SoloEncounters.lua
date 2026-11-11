@@ -193,8 +193,8 @@ end
 ENC.TUTORIAL = {
     id = "TUTORIAL", kind = "practice", name = "Tutorial", opponent = "Training Partner",
     life = 4, ai = "dummy", fixedOrder = true, isTutorial = true,
-    -- (the 7th card, in the opening hand, is the tutorial's own Location, Cards\Locations.lua)
-    playerDeck = { "W01", "DES01", "W01", "HIN04", "R01", "MAG02", "LCN_TUT",
+    -- (the 7th card, in the opening hand, is the tutorial's own Settlement, Cards\Settlements.lua)
+    playerDeck = { "W01", "DES01", "W01", "HIN04", "R01", "MAG02", "STL_TUT",
                    "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01" },
     deck = { "G01", "DUN01", "G01", "FER03", "G01", "G01", "G01",
              "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01" },
@@ -222,7 +222,7 @@ ENC.PRACTICE = {
 -- NPC DUELS
 -- A notable friendly NPC (a hermit or loner, somewhere out of the way) who plays a game of
 -- cards when asked: UI\NpcGossip.lua adds the option to their gossip. Winning grants their
--- Location card (isReward: 1 copy per win, up to 2), and like a dungeon the duel then waits
+-- Settlement card (isReward: 1 copy per win, up to 2), and like a dungeon the duel then waits
 -- an hour, won or lost. The emote on the result popup names them (CoreEngine.lua).
 --   TTS:AddDuel({
 --       id         = "DUEL_<name>",
@@ -231,7 +231,7 @@ ENC.PRACTICE = {
 --       zone       = "<zone>",            -- where they are (a zone term, for hints)
 --       life = 20, ai = "tactical",
 --       deck       = { 40 card ids },     -- their own deck, not built from zone cards
---       reward     = "<Location card id>",
+--       reward     = "<Settlement card id>",
 --       background = { map = "<WorldMap folder>" },
 --       faction    = "Alliance" | "Horde" | nil,  -- only that faction can reach the NPC (nil: both)
 --   })
@@ -257,7 +257,7 @@ function TTS:CanReachDuel(enc)
     return not (enc and enc.faction) or enc.faction == PlayerFaction()
 end
 
--- How to earn a duel's Location (collection hints): "Beat <NPC> at cards (<zone>)", or for a
+-- How to earn a duel's Settlement (collection hints): "Beat <NPC> at cards (<zone>)", or for a
 -- duel out of the character's reach, that it comes with beating all the others
 function TTS:DuelHow(enc)
     if not TTS:CanReachDuel(enc) then return L("link.duelGrant") end
@@ -265,7 +265,7 @@ function TTS:DuelHow(enc)
     return L("link.winDuel", TTS:EncounterOpponent(enc) or enc.name or "?", where)
 end
 
--- Whether a duel is live: its Location card exists (Duels.lua drafts the rest first)
+-- Whether a duel is live: its Settlement card exists (Duels.lua drafts the rest first)
 local function DuelLive(enc)
     return enc.kind == "duel" and enc.reward and TTS.Cards[enc.reward] and true or false
 end
@@ -528,12 +528,12 @@ end
 --                      attempts = { [dungeonId] = server time its last game started or ended } }
 -- =========================================================================
 local MAX_REWARD_COPIES = 4
-local MAX_LOCATION_COPIES = 4   -- (as other cards; only one Location can be in play at a time)
+local MAX_SETTLEMENT_COPIES = 4   -- (as other cards; only one Settlement can be in play at a time)
 
 -- The most copies of a card a player can own, and so have in a deck
 function TTS:CardMaxCopies(card)
     if card and card.isBeta then return 1 end
-    if card and card.type == "Location" then return MAX_LOCATION_COPIES end
+    if card and card.type == "Settlement" then return MAX_SETTLEMENT_COPIES end
     return MAX_REWARD_COPIES
 end
 
@@ -616,10 +616,10 @@ end
 -- (Hearthstones + Gear + creature cards mastered (all 4) + 1). Hearthstones are the
 -- innkeepers' gift prayers, Gear the weapon merchants' gift spells.
 -- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total,
--- gear collected, gear mastered, gear total, foils owned, foil total, then Locations
+-- gear collected, gear mastered, gear total, foils owned, foil total, then Settlements
 -- collected, mastered (both copies) and total.
 -- Foils (BossTracker.lua) count with the mastered cards: the denizens that drop from kills
--- can each have one (fTotal), and every foil owned adds to the multiplier. Locations (the
+-- can each have one (fTotal), and every foil owned adds to the multiplier. Settlements (the
 -- NPC duels' rewards) count in both halves like the rest, under a counter of their own.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
@@ -631,7 +631,7 @@ function TTS:GetCollectionScore()
         if card.isBeta or card.isPrize then
             -- Beta players and prize winners only: not everyone can get them, so they never
             -- count towards a collection
-        elseif card.type == "Location" and card.isReward then
+        elseif card.type == "Settlement" and card.isReward then
             lTotal = lTotal + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then lCollected = lCollected + 1 end
@@ -695,11 +695,11 @@ end
 
 -- The collection breakdown, two lines (the Deckbuilder's and the Collection Guide's bottom
 -- strips): collected, then mastered, foils and the score, in the order of the score:
--- (Hearthstones + Gear + creatures + Locations collected) x (... mastered + foils + 1)
+-- (Hearthstones + Gear + creatures + Settlements collected) x (... mastered + foils + 1)
 function TTS:CollectionBreakdown()
     local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
         fCollected, fTotal, lCollected, lMastered, lTotal = self:GetCollectionScore()
-    return L("db.collectionLocations",
+    return L("db.collectionSettlements",
         self:ColoredCount(hCollected, hTotal), self:ColoredCount(gCollected, gTotal), self:ColoredCount(collected, total),
         self:ColoredCount(lCollected, lTotal),
         self:ColoredCount(hMastered, hTotal), self:ColoredCount(gMastered, gTotal), self:ColoredCount(mastered, total),
@@ -777,7 +777,7 @@ function TTS:RecordEncounterWin(enc)
 end
 
 -- Duels this character's faction can't reach (enc.faction, NPC DUELS above): once it has
--- beaten every duel it can reach, each of their Locations is granted in full. Checked after a
+-- beaten every duel it can reach, each of their Settlements is granted in full. Checked after a
 -- duel win and at login. The collection is account-wide, so a win on any character counts.
 function TTS:CheckDuelGrants()
     if not PlayerFaction() then return end
