@@ -15,9 +15,9 @@ TTS:AddCards({
     -- HUNTER
     ["HUN01"] = {
         id = "HUN01", name = "Arcane Shot", cost = "{U}", cmc = 1, color = "U", type = "Sorcery", class = "Hunter",
-        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
+        text = "Deal 2 damage to target enemy denizen or the opponent. Raze the opponent's Location.",
         art = "Interface\\Icons\\Ability_ImpalingBolt",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
+        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "raze" } } }
     },
     ["HUN02"] = {
         id = "HUN02", name = "Serpent Sting", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Hunter",

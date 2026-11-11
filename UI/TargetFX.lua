@@ -241,7 +241,7 @@ local function OverlappedRight(f)
     local l, r, b, t = ScreenRect(f)
     if not l then return end
     local right
-    for _, group in ipairs({ B.myHandFrames, B.oppHandFrames, B.myLandFrames, B.myNonLandFrames,
+    for _, group in ipairs({ B.myHandFrames, B.oppHandFrames, B.myLandFrames, B.myNonLandFrames, B.myLocFrames, B.oppLocFrames,
         B.oppLandFrames, B.oppNonLandFrames }) do
         for _, c in ipairs(group or {}) do
             if c:IsVisible() then
@@ -276,6 +276,8 @@ end
 -- A spell of yours waiting for its target (clicked in the hand, or dragged out and dropped
 -- on nothing: UI\CardDrag.lua) moves off to where it will be revealed, and the target arrow
 -- runs from it. Cast, it is revealed there; called off, it flies back to the hand.
+-- A creature with a targeted Arrival waits the same way; once cast it flies from there to
+-- its place on the battlefield (B.launchFrom, UI\Board.lua) instead of being revealed.
 -- B.stageFrom ({ x, y, at }, board coordinates): where a dropped card sets off from.
 -- =========================================================================
 local STAGE_TIME = 0.2      -- seconds to fly out, or back
@@ -323,7 +325,7 @@ local function UpdateStage(dt)
     local E = TTS.Engine
     local t = E and E.inMatch and E.targeting
     local card = t and t.targetMode == "SPELL" and t.handIndex and TTS.Cards[t.cardId]
-    if card and card.type ~= "Creature" and not (stage and stage.targeting == t) then StartStage(t) end
+    if card and not (stage and stage.targeting == t) then StartStage(t) end
     if not stage then return end
     local f = RevealFrame()
     if stage.targeting ~= t and not stage.back then
@@ -966,6 +968,27 @@ local function InstallHooks()
             function(state, self)
                 if state.targeting and self.targeting ~= state.targeting then PlayFX(SOUND_TARGET) end
             end)
+
+        -- A staged creature with a targeted Arrival (STAGED SPELLS): set to fly onto the
+        -- battlefield from where it waited, before the cast's redraw places it. Cast, the
+        -- staged card goes at once; refused, it keeps waiting.
+        E:HookDisplay("ResolveTarget", function(self)
+            local t = self.targeting
+            local card = t and t.targetMode == "SPELL" and TTS.Cards[t.cardId]
+            if not (card and card.type == "Creature" and stage and stage.targeting == t and not stage.back) then return nil end
+            local p = Pos(RevealFrame())
+            if p then B.launchFrom = { cardId = card.id, x = p.x, y = p.y } end
+            return { targeting = t, handCount = #self.localState.hand }
+        end, function(state, self)
+            if not state then return end
+            if self.targeting ~= state.targeting and #self.localState.hand < state.handCount then
+                local f = RevealFrame()
+                if f then f:Hide() end
+                if stage and stage.targeting == state.targeting then EndStage() end
+            elseif B.launchFrom and B.launchFrom.cardId == state.targeting.cardId then
+                B.launchFrom = nil   -- not cast: nothing to fly
+            end
+        end)
     end
 
     -- Every spell, from either side: the card shows for a moment with arrows to its targets

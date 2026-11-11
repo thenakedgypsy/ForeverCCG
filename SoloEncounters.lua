@@ -217,6 +217,87 @@ ENC.PRACTICE = {
     },
 }
 
+-- =========================================================================
+-- NPC DUELS
+-- A notable friendly NPC (a hermit or loner, somewhere out of the way) who plays a game of
+-- cards when asked: UI\NpcGossip.lua adds the option to their gossip. Winning grants their
+-- Location card (isReward: 1 copy per win, up to 2), and like a dungeon the duel then waits
+-- an hour, won or lost. The emote on the result popup names them (CoreEngine.lua).
+--   TTS:AddDuel({
+--       id         = "DUEL_<name>",
+--       npcs       = { npcId, ... },      -- every npc id they appear as (each faction's copy)
+--       name       = "<the NPC's name>",  -- also the opponent's name on the board
+--       zone       = "<zone>",            -- where they are (a zone term, for hints)
+--       life = 20, ai = "tactical",
+--       deck       = { 40 card ids },     -- their own deck, not built from zone cards
+--       reward     = "<Location card id>",
+--       background = { map = "<WorldMap folder>" },
+--       faction    = "Alliance" | "Horde" | nil,  -- only that faction can reach the NPC (nil: both)
+--   })
+-- Duels never appear on the solo map, which only places zones and dungeons.
+-- A duel only one faction can reach is granted to the other's characters instead, in full,
+-- once they have beaten every duel they can reach (TTS:CheckDuelGrants).
+-- =========================================================================
+local duelOrder = 0
+function TTS:AddDuel(def)
+    duelOrder = duelOrder + 1
+    local enc = {}
+    for k, v in pairs(def) do enc[k] = v end
+    enc.kind, enc.order = "duel", duelOrder
+    enc.opponent = def.opponent or def.name
+    ENC[def.id] = enc
+    return enc
+end
+
+local function PlayerFaction() return UnitFactionGroup and UnitFactionGroup("player") end
+
+-- Whether this character's faction can talk to the duel's NPC
+function TTS:CanReachDuel(enc)
+    return not (enc and enc.faction) or enc.faction == PlayerFaction()
+end
+
+-- How to earn a duel's Location (collection hints): "Beat <NPC> at cards (<zone>)", or for a
+-- duel out of the character's reach, that it comes with beating all the others
+function TTS:DuelHow(enc)
+    if not TTS:CanReachDuel(enc) then return L("link.duelGrant") end
+    local where = enc.zone and TTS.Locale and TTS.Locale:Term("zone", enc.zone) or ""
+    return L("link.winDuel", TTS:EncounterOpponent(enc) or enc.name or "?", where)
+end
+
+-- Whether a duel is live: its Location card exists (Duels.lua drafts the rest first)
+local function DuelLive(enc)
+    return enc.kind == "duel" and enc.reward and TTS.Cards[enc.reward] and true or false
+end
+
+-- The duel an NPC offers (npcId), or nil
+function TTS:DuelForNpc(npcId)
+    if not npcId then return nil end
+    for _, enc in pairs(ENC) do
+        if DuelLive(enc) then
+            for _, id in pairs(enc.npcs or {}) do
+                if id == npcId then return enc end
+            end
+        end
+    end
+    return nil
+end
+
+-- Why a solo encounter can't be started right now, or nil if it can (the solo map and NPC duels)
+function TTS:SoloStartBlocker(enc)
+    local E = TTS.Engine
+    if not enc then return L("solo.chooseEncounter") end
+    if E and E.inMatch then return L("solo.inProgress") end
+    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return L("solo.closeDeckbuilder") end
+    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return L("solo.leaveQueue") end
+    -- The deck is picked as the game starts (UI\DeckPicker.lua)
+    if E and not E:HasPlayableDeck() then return L("solo.deckSize") end
+    local unlocked, reason = TTS:IsEncounterUnlocked(enc)
+    if not unlocked then return reason end
+    local wait = TTS:EncounterCooldownLeft(enc)
+    if wait > 0 then return L("solo.cooldown", math.ceil(wait / 60)) end
+    return nil
+end
+
 -- Encounters of one kind in display order
 function TTS:GetSoloEncounters(kind)
     local list = {}
@@ -249,7 +330,7 @@ local PRAYER_IDS = { W = "W01", U = "U01", B = "B01", R = "R01", G = "G01" }
 
 -- Spell ops the AI knows how to use well
 local AI_SPELL_OPS = { damage = true, dot = true, destroy = true, freeze = true, tap = true, heal = true,
-    hot = true, buff = true, shield = true, draw = true, raise = true, tuck = true, shielded = true }
+    hot = true, buff = true, shield = true, draw = true, raise = true, tuck = true, shielded = true, raze = true }
 
 local function IsAIFriendlySpell(card)
     if card.type ~= "Sorcery" or not card.effect or not card.effect.ops then return false end
@@ -446,6 +527,14 @@ end
 --                      attempts = { [dungeonId] = server time its last game started or ended } }
 -- =========================================================================
 local MAX_REWARD_COPIES = 4
+local MAX_LOCATION_COPIES = 2   -- only one Location can be in play at a time
+
+-- The most copies of a card a player can own, and so have in a deck
+function TTS:CardMaxCopies(card)
+    if card and card.isBeta then return 1 end
+    if card and card.type == "Location" then return MAX_LOCATION_COPIES end
+    return MAX_REWARD_COPIES
+end
 
 local function Progress()
     TTS_SoloProgress = TTS_SoloProgress or {}
@@ -461,14 +550,17 @@ end
 local DUNGEON_COOLDOWN = 3600
 local function Now() return (GetServerTime and GetServerTime()) or time() end
 
+-- NPC duels wait the same hour
+local function HasCooldown(enc) return enc and (enc.kind == "dungeon" or enc.kind == "duel") end
+
 function TTS:RecordEncounterAttempt(enc)
-    if not (enc and enc.kind == "dungeon") then return end
+    if not HasCooldown(enc) then return end
     Progress().attempts[enc.id] = Now()
 end
 
 -- Seconds before the encounter can be attempted again (0 = it can now)
 function TTS:EncounterCooldownLeft(enc)
-    if not (enc and enc.kind == "dungeon") then return 0 end
+    if not HasCooldown(enc) then return 0 end
     local last = tonumber(Progress().attempts[enc.id])
     if not last then return 0 end
     -- More than an hour ahead: a bad saved time, not a real wait
@@ -496,7 +588,7 @@ function TTS:GetOwnedCopies(card)
         return (card.id == "HERO" and TTS.Hero) and TTS.Hero:Copies() or 1
     end
     if card.isReward then
-        return math.min(MAX_REWARD_COPIES, Progress().rewards[card.id] or 0)
+        return math.min(self:CardMaxCopies(card), Progress().rewards[card.id] or 0)
     end
     if card.isBoss then
         return KillCount(card.id)
@@ -535,11 +627,11 @@ function TTS:GetCollectionScore()
         if card.isBeta or card.isPrize then
             -- Beta players and prize winners only: not everyone can get them, so they never
             -- count towards a collection
-        elseif card.type == "Creature" and (card.isBoss or card.isReward) then
+        elseif (card.type == "Creature" and (card.isBoss or card.isReward)) or (card.type == "Location" and card.isReward) then
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end
-            if copies >= 4 then mastered = mastered + 1 end
+            if copies >= self:CardMaxCopies(card) then mastered = mastered + 1 end
             if card.isMob and not card.isReward then
                 fTotal = fTotal + 1
                 if self:HasFoil(card.id) then fCollected = fCollected + 1 end
@@ -624,15 +716,63 @@ function TTS:RecordEncounterWin(enc)
     local p = Progress()
     p.cleared[enc.id] = (p.cleared[enc.id] or 0) + 1
     if not enc.reward or not TTS.Cards[enc.reward] then return nil end
+    local max = TTS:CardMaxCopies(TTS.Cards[enc.reward])
     local before = p.rewards[enc.reward] or 0
-    if before < MAX_REWARD_COPIES then
+    if before < max then
         p.rewards[enc.reward] = before + 1
         if TTS.MarkCardNew then TTS:MarkCardNew(enc.reward) end
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()
     end
-    return enc.reward, p.rewards[enc.reward], before >= MAX_REWARD_COPIES
+    -- (after this win's own copy, so its chat line comes first)
+    if enc.kind == "duel" then TTS:SafeAfter(1, function() TTS:CheckDuelGrants() end) end
+    return enc.reward, p.rewards[enc.reward], before >= max
+end
+
+-- Duels this character's faction can't reach (enc.faction, NPC DUELS above): once it has
+-- beaten every duel it can reach, each of their Locations is granted in full. Checked after a
+-- duel win and at login. The collection is account-wide, so a win on any character counts.
+function TTS:CheckDuelGrants()
+    if not PlayerFaction() then return end
+    local p = Progress()
+    local locked, reachable = {}, 0
+    for _, enc in pairs(ENC) do
+        if DuelLive(enc) then
+            if TTS:CanReachDuel(enc) then
+                if (p.cleared[enc.id] or 0) == 0 then return end
+                reachable = reachable + 1
+            else
+                table.insert(locked, enc)
+            end
+        end
+    end
+    if reachable == 0 then return end
+    table.sort(locked, function(a, b) return a.order < b.order end)
+    local granted = false
+    for _, enc in ipairs(locked) do
+        local card = enc.reward and TTS.Cards[enc.reward]
+        local max = card and TTS:CardMaxCopies(card)
+        if card and (p.rewards[card.id] or 0) < max then
+            p.rewards[card.id] = max
+            if TTS.MarkCardNew then TTS:MarkCardNew(card.id) end
+            local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+            DEFAULT_CHAT_FRAME:AddMessage(L("solo.duelGranted", link, max))
+            granted = true
+        end
+    end
+    if granted and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
+        TTS.DeckBuilderFrame:RefreshAll()
+    end
+end
+
+do
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        TTS:SafeAfter(5, function() TTS:CheckDuelGrants() end)
+    end)
 end
 
 -- =========================================================================

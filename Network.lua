@@ -2563,6 +2563,20 @@ function TTS.Net:OnReceive(msg, sender)
             E:RunMirrored(function() E:PutCreatureOntoBattlefield(cardId, true, { tgt = tgt }) end)
             E:RefreshUI()
 
+        elseif actionType == "PLAY_LOCATION" then
+            -- PLAY_LOCATION:<cardId>: their new Location replaces their old one (CardLogic.lua)
+            local cardId = parts[3]
+            local card = TTS.Cards[cardId]
+            if card and card.type == "Location" then
+                E:OnRemotePlay()
+                E:NoteCardPlayed(cardId, true)
+                E.remoteState.handCount = math.max(0, (E.remoteState.handCount or 0) - 1)
+                E:Log(L("log.oppCast", sender, TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
+                E:CallDisplay("PlayNonCreatureCardSound")
+                E:RunMirrored(function() E:PutLocationOntoBattlefield(cardId, true) end)
+                E:RefreshUI()
+            end
+
         elseif actionType == "CAST_SPELL" then
             local cardId = parts[3]
             local card = TTS.Cards[cardId]

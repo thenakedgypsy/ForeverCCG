@@ -15,7 +15,8 @@ local L = TTS.L
 --  * A card from your hand dropped on the battlefield is played. A spell (or gear) that
 --    needs a target is dropped on the target; dropped on empty board it moves off to the
 --    side and waits for a target to be clicked (UI\TargetFX.lua's STAGED SPELLS). A
---    creature with a targeted Arrival is aimed with an arrow from the hand instead.
+--    creature with a targeted Arrival is dragged in the same way: dropped on the board it
+--    waits at the side, and the arrow to its target runs from it.
 --  * Your creature dragged at the opponent attacks (from Main 1 it moves to combat first).
 --  * Your creature dropped on an attacker blocks it; dragged off into empty board
 --    it stops blocking.
@@ -135,13 +136,9 @@ local function BeginHandDrag(f)
         B.dragTargeting = { targetMode = "SPELL", cardId = f.cardId, handIndex = f.handIndex,
             targetType = targetType, cardName = TTS:CardName(card) }
     end
-    if targetType and card.type == "Creature" then
-        SetAim(f, AIM_TARGET)   -- a creature's targeted Arrival: aimed from the hand
-    else
-        ShowGhost(card, f.baseScale or 1, f.isFoil)
-        MoveGhost()
-        f:SetAlpha(0.3)
-    end
+    ShowGhost(card, f.baseScale or 1, f.isFoil)
+    MoveGhost()
+    f:SetAlpha(0.3)
     E:RefreshUI()
 end
 
@@ -168,7 +165,7 @@ local function BeginFieldDrag(f)
         local ab = E:GetAbility(perm.id)
         if ab and ab.target and (E.phase == "MAIN1" or E.phase == "MAIN2") and E:CanActivateAbility(perm, false) then
             d.ability = { targetMode = "ABILITY", sourceIndex = idx, sourcePerm = perm, cardName = TTS:CardName(card),
-                targetType = (ab.target == "enemy_player") and "PLAYER" or "CREATURE" }
+                targetType = E:AbilityTargetType(ab) }
             B.dragTargeting = d.ability
         end
         if E.phase == "MAIN1" or E.phase == "COMBAT_ATTACK" then
@@ -206,11 +203,8 @@ end
 local function DropHandCard(E, d, target, x, y)
     if E.localState.hand[d.handIndex] ~= d.cardId then return end
     local onBoard = y > B.HAND_TOP
-    local card = TTS.Cards[d.cardId]
-    if d.kind == "spell" and target and card and card.type == "Creature" then
-        TargetWith(E, function() E:PlayCard(d.handIndex) end, target,
-            function(t) return t.handIndex == d.handIndex end)
-    elseif d.kind == "spell" then
+    -- (A creature with a targeted Arrival is "spell" too: played onto the board, then targeted)
+    if d.kind == "spell" then
         if target then
             -- Cast at it; a target it can't take (the reason floats up) leaves it waiting at
             -- the side for another, as if dropped on nothing

@@ -156,11 +156,13 @@ TT.EFFECTS = {
     mana       = { name = "Mana Gain",         tag = "Effect", text = "Adds mana straight to your pool. Unspent mana empties at the end of your turn." },
     token      = { name = "Add",               tag = "Effect", text = "A denizen made by an effect, not played from a card. It is never in a deck or a collection, and if it would leave the battlefield it disappears instead." },
     raise      = { name = "Raise Dead",        tag = "Effect", text = "Returns the most recent denizen card in a graveyard to the battlefield under your control." },
+    raze       = { name = "Raze",              tag = "Effect", text = "Destroys a Location: it goes to its owner's graveyard. Nothing happens if there is none." },
     targeting  = { name = "Targeting",         tag = "Effect", text = "After clicking the card, click a target. Right-click cancels. Warded enemy denizens can't be chosen." },
     gear       = { name = "Gear Card",         tag = "Effect", text = "Equips a denizen you control. Its bonus and keywords last for as long as the denizen stays on the battlefield. An enemy Dispel strips them. A humanoid wears its latest weapon, helm and shoulders. Weapon merchants and armorers hand out Gear Cards to travellers who ask." },
 
     -- Creature and Prayer abilities
     prayer     = { name = "Prayer",            tag = "Ability", text = "Click a ready Prayer to Exhaust it for one mana of its colour. You can play one Prayer per turn, during a main phase." },
+    location   = { name = "Location",          tag = "Ability", text = "A permanent that isn't a denizen: it can't attack, block or be damaged. You can have one Location at a time; playing another sends the old one to your graveyard. Only Raze destroys it. Win one by beating its keeper at cards." },
     anthem     = { name = "Aura",            tag = "Ability", text = "While this denizen is on the battlefield, your other denizens that share the tag get the bonus." },
     rally      = { name = "Rally",             tag = "Ability", text = "This denizen grows for each other denizen you control that shares the tag." },
     activated  = { name = "Activated Ability", tag = "Ability", text = "Click this card during your main phase to use it. If the cost includes {T}, the card must be ready and free of Rez Sickness." },
@@ -1029,6 +1031,13 @@ local function AbilityPanels(card)
 
     if card.type == "Land" and text:find("Arrival:", 1, true) then table.insert(specs, TT:EffectPanel("arrival")) end
 
+    if card.type == "Location" then
+        table.insert(specs, TT:EffectPanel("location"))
+        if card.ability then table.insert(specs, TT:EffectPanel("activated")) end
+        if card.etb then table.insert(specs, TT:EffectPanel("arrival")) end
+        if card.onTurnStart then table.insert(specs, TT:EffectPanel("triggered")) end
+    end
+
     -- Adds: what this card is, or the Adds its abilities spawn
     if card.isToken then table.insert(specs, TT:EffectPanel("token")) end
     for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
@@ -1057,7 +1066,7 @@ local function AbilityPanels(card)
         end
     end
     -- Terms the rules text uses that no effect above explained yet
-    for _, term in ipairs({ { "dot", "%f[%a]DoT%f[%A]" }, { "hot", "%f[%a]HoT%f[%A]" }, { "freeze", "%f[%a]Freeze" }, { "frozen", "%f[%a]Frozen" }, { "draw", "%f[%a]Draw %d" } }) do
+    for _, term in ipairs({ { "dot", "%f[%a]DoT%f[%A]" }, { "hot", "%f[%a]HoT%f[%A]" }, { "freeze", "%f[%a]Freeze" }, { "frozen", "%f[%a]Frozen" }, { "draw", "%f[%a]Draw %d" }, { "raze", "%f[%a]Raze" } }) do
         local key = term[1]
         if not seen[key] and not (key == "frozen" and seen.freeze) and text:find(term[2]) then
             seen[key] = true

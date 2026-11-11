@@ -107,6 +107,41 @@ local function GiftSource(npcId)
 end
 local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
 
+-- =========================================================================
+-- DUELS
+-- An NPC with a duel (TTS:AddDuel, SoloEncounters.lua) gets a "Fancy a hand of cards?"
+-- option too: it starts a solo game against their deck for their Location card.
+-- =========================================================================
+local function DuelOf(npcId) return TTS.DuelForNpc and TTS:DuelForNpc(npcId) or nil end
+
+-- Whether we add anything to this NPC's gossip
+local function HasOptions(npcId) return GiftCardOf(npcId) or DuelOf(npcId) ~= nil end
+
+local function StartDuel()
+    local enc = DuelOf(GossipNpcId())
+    if not enc then return end
+    local blocker = TTS:SoloStartBlocker(enc)
+    if blocker then
+        if UIErrorsFrame then UIErrorsFrame:AddMessage(blocker, 1, 0.2, 0.2) end
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r " .. blocker)
+        return
+    end
+    if C_GossipInfo and C_GossipInfo.CloseGossip then C_GossipInfo.CloseGossip() elseif CloseGossip then CloseGossip() end
+    if TTS.NpcGossipPanel then TTS.NpcGossipPanel:Hide() end
+    local E = TTS.Engine
+    -- The NPC actually asked (a duel can have one for each faction), else the duel's name
+    local npcName = UnitName("npc")
+    local opponent = (npcName and not IsSecret(npcName) and npcName ~= "") and npcName or TTS:EncounterOpponent(enc)
+    TTS.DeckPicker:Open({
+        opponent = opponent,
+        onPick = function()
+            if E.inMatch then return end
+            E:StartMatch(opponent, true, true, enc)
+            if E.inMatch then TTS:RecordEncounterAttempt(enc) end
+        end,
+    })
+end
+
 -- A profession trainer's pool, or nil
 local function TrainerPool(npcId)
     for _, def in pairs(TTS.GIFT_POOLS or {}) do
@@ -425,6 +460,11 @@ local ask = CreateFrame("Button", nil, G, "UIPanelButtonTemplate")
 ask:SetSize(150, 24)
 Loc:Bind(ask, "npc.ask")
 
+local duelBtn = CreateFrame("Button", nil, G, "UIPanelButtonTemplate")
+duelBtn:SetSize(150, 24)
+Loc:Bind(duelBtn, "npc.duel")
+duelBtn:SetScript("OnClick", StartDuel)
+
 local function ShowPanel(npcId)
     local gossip = GossipFrame and GossipFrame:IsShown() and GossipFrame
     -- A trainer with nothing else to say opens its training window instead, like a vendor
@@ -464,8 +504,19 @@ local function ShowPanel(npcId)
     else
         ask:SetPoint("LEFT", icon, "RIGHT", 10, 0)
     end
-    ask:SetShown(CanAsk(npcId))
-    local body = (said and text:GetStringHeight() or 0) + (ask:IsShown() and (said and 10 or 0) + ask:GetHeight() or 0)
+    ask:SetShown(GiftCardOf(npcId) and CanAsk(npcId))
+    -- The duel button: under the ask button, or where it would be
+    local hasDuel = DuelOf(npcId) ~= nil
+    duelBtn:ClearAllPoints()
+    if ask:IsShown() then
+        duelBtn:SetPoint("TOPLEFT", ask, "BOTTOMLEFT", 0, -6)
+    else
+        duelBtn:SetPoint(ask:GetPoint(1))
+    end
+    duelBtn:SetShown(hasDuel)
+    local buttons = (ask:IsShown() and ask:GetHeight() or 0) + (hasDuel and duelBtn:GetHeight() or 0)
+        + ((ask:IsShown() and hasDuel) and 6 or 0)
+    local body = (said and text:GetStringHeight() or 0) + (buttons > 0 and (said and 10 or 0) + buttons or 0)
     G:SetHeight(top + math.max(icon:GetHeight(), body) + 18)
     G:Show()
 end
@@ -493,15 +544,15 @@ local function Ask()
 end
 ask:SetScript("OnClick", Ask)
 
--- Our option is drawn by Blizzard's option button, but its click asks for a card
--- instead of choosing a gossip option. Buttons are reused, so others get theirs back.
+-- Our options are drawn by Blizzard's option button, but a click asks for a card (or starts
+-- a duel) instead of choosing a gossip option. Buttons are reused, so others get theirs back.
 local function FixClicks(box)
     box:ForEachFrame(function(frame, data)
         if data and data.foreverCCG then
-            if not frame.foreverOrigClick then
+            if frame.foreverOrigClick == nil then
                 frame.foreverOrigClick = frame:GetScript("OnClick") or false
-                frame:SetScript("OnClick", Ask)
             end
+            frame:SetScript("OnClick", data.foreverCCG == "duel" and StartDuel or Ask)
         elseif frame.foreverOrigClick ~= nil then
             frame:SetScript("OnClick", frame.foreverOrigClick or nil)
             frame.foreverOrigClick = nil
@@ -534,12 +585,20 @@ local function AddToGossip(npcId)
     end)
     if said and not greeted then return false end
 
-    if CanAsk(npcId) then
+    if GiftCardOf(npcId) and CanAsk(npcId) then
         new:Insert({
             buttonType = GOSSIP_BUTTON_TYPE_OPTION,
-            foreverCCG = true,
+            foreverCCG = "ask",
             orderIndex = 9999,
             info = { name = L("npc.ask"), icon = CARD_BACK_ICON, orderIndex = 9999, gossipOptionID = 0, flags = 0 },
+        })
+    end
+    if DuelOf(npcId) then
+        new:Insert({
+            buttonType = GOSSIP_BUTTON_TYPE_OPTION,
+            foreverCCG = "duel",
+            orderIndex = 10000,
+            info = { name = L("npc.duel"), icon = CARD_BACK_ICON, orderIndex = 10000, gossipOptionID = 0, flags = 0 },
         })
     end
     box:SetDataProvider(new, ScrollBoxConstants and ScrollBoxConstants.RetainScrollPosition)
@@ -549,7 +608,7 @@ end
 
 local function OnGossipUpdate()
     local npcId = GossipNpcId()
-    if not GiftCardOf(npcId) then
+    if not HasOptions(npcId) then
         local box = GreetingBox()
         if box then FixClicks(box) end   -- give reused buttons their clicks back
         G:Hide()
@@ -585,7 +644,7 @@ if GossipFrame then
                 OnGossipUpdate()
             elseif not GossipFrame:IsShown() then
                 local npcId = GossipNpcId()
-                if GiftCardOf(npcId) then ShowPanel(npcId) end
+                if HasOptions(npcId) then ShowPanel(npcId) end
             end
         end)
     end)
@@ -608,7 +667,7 @@ M:SetScript("OnEvent", function(_, event)
     if event ~= "MERCHANT_SHOW" and event ~= "TRAINER_SHOW" then return end
     C_Timer.After(0, function()
         local npcId = GossipNpcId()
-        if GiftCardOf(npcId) and not (GossipFrame and GossipFrame:IsShown()) then ShowPanel(npcId) end
+        if HasOptions(npcId) and not (GossipFrame and GossipFrame:IsShown()) then ShowPanel(npcId) end
     end)
 end)
 
@@ -626,6 +685,18 @@ local function AddGiftLine(tooltip)
     if not okGuid or not guid or IsSecret(guid) or type(guid) ~= "string" then return end
     local id = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
     local npcId = id and tonumber(id)
+
+    -- A duel NPC: ready to play, waiting out the hour, or their Location all collected
+    local duel = DuelOf(npcId)
+    if duel then
+        local card = duel.reward and TTS.Cards[duel.reward]
+        local done = card and (TTS:GetOwnedCopies(card) or 0) >= TTS:CardMaxCopies(card)
+        local dState = done and "done" or (TTS:EncounterCooldownLeft(duel) > 0 and "wait" or "ready")
+        local ready = dState == "ready"
+        tooltip:AddLine(string.format("|T%s:20:10|t %s", CARD_BACK_ICON, L("mobtip.duel." .. dState)),
+            ready and 0.1 or 0.6, ready and 1 or 0.6, ready and 0.1 or 0.6)
+        tooltip:Show()
+    end
     if not GiftCardOf(npcId) then return end
 
     local state, r, g, b

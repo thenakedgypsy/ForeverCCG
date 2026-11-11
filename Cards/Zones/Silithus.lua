@@ -59,7 +59,8 @@ TTS:AddCards({
         power = 3, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 8550,
         zone = "Silithus", creatureType = "Elemental", npcId = 11746,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        etb = { ops = { { op = "raze" } } },
+        text = "Support. Arrival: Raze the opponent's Location."
     },
     ["SLI08"] = {
         id = "SLI08", name = "Twilight Avenger", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

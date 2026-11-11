@@ -106,6 +106,7 @@ Engine\CardLogic.lua
 Engine\Undo.lua
 Engine\AI.lua
 SoloEncounters.lua
+Duels.lua
 UI\WaitingRoom.lua
 UI\Rules.lua
 UI\CollectionGuide.lua

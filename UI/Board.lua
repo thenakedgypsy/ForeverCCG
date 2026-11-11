@@ -72,6 +72,17 @@ local TEXT_BOX = {
     bottom       = 0.05,
     bottomWithPT = 0.20,
 }
+
+-- A Location on the battlefield is a landscape card (the frame art's <frame>_landscape.png,
+-- 512 x 376): its own size, art window and text box, as fractions measured from that art.
+-- (Fields of LAYOUT rather than locals: this file is near Lua's 200-local limit.)
+LAYOUT.LOC_W, LAYOUT.LOC_H = 84, 64   -- the battlefield card turned on its side
+LAYOUT.LOC_GAP = 14                   -- between it and the prayers in its row
+LAYOUT.LOC_LAYOUT = {
+    landscape = true,
+    art  = { left = 0.035, right = 0.035, top = 0.072, bottom = 0.497, shiftUp = 0 },
+    text = { left = 0.057, right = 0.055, top = 0.598, bottom = 0.074, bottomWithPT = 0.074 },
+}
 RULES.RULES_FONT_MAX = 8   -- tried first; shrinks toward MIN until the text fits
 RULES.RULES_FONT_MIN = 6
 -- Cards narrower than this on screen (pixels, board zoom included) show no
@@ -1377,6 +1388,9 @@ local myLandFrames     = {}
 local myNonLandFrames  = {}
 local oppLandFrames    = {}
 local oppNonLandFrames = {}
+-- Each side's Location once played (a landscape card, one frame), at the start of its prayer
+-- row; in the hand it keeps the usual frame. (Fields of B: this file is near the local limit.)
+B.myLocFrames, B.oppLocFrames = {}, {}
 
 -- =========================================================================
 -- CARD TOOLTIPS (UI\Tooltips.lua stacks keywords, effects and symbols on them)
@@ -1479,16 +1493,19 @@ end
 
 -- t.full (optional): the card's full-art frame texture (CreateCardFrame), set to the same
 -- frame's <name>_full.png, or cleared when there isn't one
+-- t.landscape (a Location's battlefield frame): the same frames' <name>_landscape.png instead
 local function ApplyFrameTexture(t, card)
-    local tex = GetCardFrameTexture(card)
+    local suffix = t.landscape and "_landscape.png" or ".png"
+    local function Shape(path) return path and (path:gsub("%.png$", suffix)) end
+    local tex = Shape(GetCardFrameTexture(card))
     t:SetTexture(tex)
     -- A missing dual frame falls back to the single-colour one, then the default
     if not t:GetTexture() and card then
-        tex = SingleFrameTexture(card)
+        tex = Shape(SingleFrameTexture(card))
         t:SetTexture(tex)
     end
     if not t:GetTexture() then
-        tex = CARD_FRAME_DEF
+        tex = Shape(CARD_FRAME_DEF)
         t:SetTexture(tex)
         if not t:GetTexture() then
             tex = nil
@@ -1663,8 +1680,12 @@ end
 -- =========================================================================
 -- CARD FRAME FACTORY
 -- =========================================================================
-local function CreateCardFrame(parent, sizeX, sizeY)
+-- layout (optional): { art = <ART_BOX-like>, text = <TEXT_BOX-like>, landscape = true } for a
+-- card of another shape (LAYOUT.LOC_LAYOUT, a Location on the battlefield)
+local function CreateCardFrame(parent, sizeX, sizeY, layout)
+    local ART_BOX = layout and layout.art or ART_BOX
     local f = CreateFrame("Button", nil, parent)
+    f.textBox = layout and layout.text or nil   -- (UpdateCardRules)
     f:SetSize(sizeX, sizeY)
     f:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     f.ttsSilent = true
@@ -1828,6 +1849,7 @@ local function CreateCardFrame(parent, sizeX, sizeY)
 
     f.border = f.overlay:CreateTexture(nil, "OVERLAY")
     f.border:SetAllPoints(f.overlay)
+    f.border.landscape = layout and layout.landscape or nil
     -- The full-art frame (SetModelInFront), kept in step with the usual one by ApplyFrameTexture
     f.borderFull = f.overlay:CreateTexture(nil, "OVERLAY")
     f.borderFull:SetAllPoints(f.overlay)
@@ -2000,7 +2022,7 @@ end
 -- scale) reloads every model on the board, hand included, not just the cards whose size
 -- changed: a model left at its old size drifts off its card
 QueueBoardModelReload = function()
-    for _, group in ipairs({ myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }) do
         for _, f in ipairs(group) do
             if f.model and f:IsShown() then QueueModelReload(f) end
         end
@@ -2053,6 +2075,7 @@ local function UpdateCardRules(f, opts)
         -- Fitting happens in the card's own (unscaled) size, so it only needs redoing for new text
         if f.rulesText ~= text or f.rulesPT ~= hasPT then
             f.rulesText, f.rulesPT = text, hasPT
+            local TEXT_BOX = f.textBox or TEXT_BOX   -- (a landscape Location's own box)
             f.rules:ClearAllPoints()
             f.rules:SetPoint("TOPLEFT", f.overlay, "TOPLEFT", w * TEXT_BOX.left + 1 + dx, -h * TEXT_BOX.top - 1 - dy)
             f.rules:SetPoint("BOTTOMRIGHT", f.overlay, "BOTTOMRIGHT", -w * TEXT_BOX.right + dx,
@@ -2552,8 +2575,10 @@ end
 
 local FieldFrame   -- (group, i): a battlefield row's i-th card frame, made if it doesn't exist yet
 do
-local function NewFieldFrame(isRemote, onClick)
-    local f = CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
+-- landscape: a Location's frame (LAYOUT.LOC_LAYOUT)
+local function NewFieldFrame(isRemote, onClick, landscape)
+    local f = landscape and CreateCardFrame(B, LAYOUT.LOC_W, LAYOUT.LOC_H, LAYOUT.LOC_LAYOUT)
+        or CreateCardFrame(B, LAYOUT.BF_CARD_W, LAYOUT.BF_CARD_H)
     f.isRemote = isRemote
     AttachSlot(f)
     f:SetScript("OnClick", onClick)
@@ -2599,6 +2624,9 @@ local FIELD_FRAME_MAKERS = {
     [myNonLandFrames]  = function() return NewFieldFrame(false, WithFieldSound(MyNonLand_OnClick)) end,
     [oppLandFrames]    = function() return NewFieldFrame(true, OppLand_OnClick) end,
     [oppNonLandFrames] = function() return NewFieldFrame(true, OppNonLand_OnClick) end,
+    -- A Location is clicked as a prayer is (E:TapCard uses its ability)
+    [B.myLocFrames]    = function() return NewFieldFrame(false, WithFieldSound(MyLand_OnClick), true) end,
+    [B.oppLocFrames]   = function() return NewFieldFrame(true, OppLand_OnClick, true) end,
 }
 B.fieldFrameHooks = {}
 
@@ -2616,6 +2644,8 @@ for i = 1, 12 do FieldFrame(myLandFrames, i) end
 for i = 1, LAYOUT.MAX_CREATURE_FRAMES do FieldFrame(myNonLandFrames, i) end
 for i = 1, 12 do FieldFrame(oppLandFrames, i) end
 for i = 1, LAYOUT.MAX_CREATURE_FRAMES do FieldFrame(oppNonLandFrames, i) end
+FieldFrame(B.myLocFrames, 1)
+FieldFrame(B.oppLocFrames, 1)
 
 local myDeckFrame = CreateFrame("Frame", nil, B)
 myDeckFrame:SetSize(LAYOUT.HAND_W, LAYOUT.HAND_H)
@@ -3045,7 +3075,7 @@ local function SetupCardVisual(f, card, foil)
 end
 
 RefreshAllModelCameras = function()
-    local groups = { myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }
+    local groups = { myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }
     for _, group in ipairs(groups) do
         for _, f in ipairs(group) do
             if f:IsShown() and f.currentCard and f.currentCard.displayId and f.model and f.model:IsShown() then
@@ -3060,7 +3090,7 @@ end
 
 -- Full camera again on every battlefield model that is showing
 local function ReapplyModelCameras()
-    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }) do
         for _, f in ipairs(group) do
             if f:IsShown() and f.currentCard and f.currentCard.displayId and f.model and f.model:IsShown() then
                 ApplyModelCamera(f, f.currentCard)
@@ -3084,7 +3114,7 @@ local function ScheduleModelCameraFix()
 end
 
 RefreshCardText = function()
-    local groups = { myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }
+    local groups = { myHandFrames, myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }
     for _, group in ipairs(groups) do
         for _, f in ipairs(group) do
             if f:IsShown() then UpdateCardRules(f) end
@@ -3598,7 +3628,7 @@ end
 -- their parent's alpha (as in MobTooltip.lua), so the model's own alpha fades with the card,
 -- on top of its tapped / summoning-sick shade (f.modelAlpha, set by the redraw).
 local function ApplySpawns()
-    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }) do
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }) do
         for _, f in ipairs(group) do
             local sp = f:IsShown() and f.perm and spawns[f.perm]
             if sp then
@@ -3644,7 +3674,7 @@ LAYOUT.SLIDE_ARC = 10            -- the hand arcs the other way (see StartSlides
 
 local slides = setmetatable({}, { __mode = "k" })   -- frame -> { x, y, t, dir }: start, in board coordinates
 local oldField = setmetatable({}, { __mode = "k" }) -- perm -> { x, y } where it was drawn before the redraw
-local FIELD_GROUPS = { myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames }
+local FIELD_GROUPS = { myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames }
 
 -- Before a redraw: where each permanent is drawn (mid-slide included, so a slide that is
 -- interrupted carries on from where the card is)
@@ -3734,7 +3764,7 @@ end
 -- Offsets each flying or sliding card from its slot by what is left of its move
 local function ApplyFlights()
     local left, bottom = B:GetLeft(), B:GetBottom()
-    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, myHandFrames }) do
+    for _, group in ipairs({ myLandFrames, myNonLandFrames, oppLandFrames, oppNonLandFrames, B.myLocFrames, B.oppLocFrames, myHandFrames }) do
         for _, f in ipairs(group) do
             local fl = f:IsShown() and f.perm and flights[f.perm]
             local sl = f:IsShown() and slides[f]
@@ -4148,6 +4178,20 @@ local function PaintLeaving(f, kind)
     if kind == "died" and f.tapIcon then f.tapIcon:Hide() end
 end
 
+-- Places a side's Location frame at the start of its prayer row (shown = it has one) and returns
+-- how much of the row it takes up (0 without one), for the prayers to start after it
+function B.PlaceLocation(frames, shown, centerY)
+    local f = frames[1]
+    if not (f and shown) then
+        if f then f:Hide(); f.fieldIndex = nil end
+        return 0
+    end
+    local s = LAYOUT.LAND_MAX_SCALE
+    PlaceCard(f, 1, s, LAYOUT.BF_START_X, centerY, LAYOUT.LOC_W, 0)
+    UpdateCardRules(f)
+    return LAYOUT.LOC_W * s + LAYOUT.LOC_GAP
+end
+
 function B:UpdateDisplay()
     local E = TTS.Engine
     if not E.inMatch then return end
@@ -4358,14 +4402,18 @@ function B:UpdateDisplay()
         end
     end
 
-    local myLandIdx, myNonLandIdx = 0, 0
+    local myLandIdx, myNonLandIdx, myLocShown = 0, 0, false
     for _, entry in ipairs(BattlefieldList(E, false)) do
         local perm, i, leavingKind = entry.perm, entry.index, entry.leaving
         local card = TTS.Cards[perm.id]
         if card then
             local isLand = (card.type == "Land")
             local f = nil
-            if isLand then
+            if card.type == "Location" then
+                -- Its own landscape frame, at the start of the prayer row (B.PlaceLocation)
+                myLocShown = true
+                f = FieldFrame(B.myLocFrames, 1)
+            elseif isLand then
                 myLandIdx = myLandIdx + 1
                 f = FieldFrame(myLandFrames, myLandIdx)
             else
@@ -4423,18 +4471,21 @@ function B:UpdateDisplay()
     end
 
     local boardResized = false
-    local function LayoutRow(frames, count, centerY, maxScale)
+    -- reserve: room kept at the row's left end (its side's Location, B.PlaceLocation)
+    local function LayoutRow(frames, count, centerY, maxScale, reserve)
         count = math.min(count, #frames)
-        local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, LAYOUT.BF_START_X, LAYOUT.BF_RIGHT, maxScale, LAYOUT.BF_MIN_SCALE)
+        local startX = LAYOUT.BF_START_X + (reserve or 0)
+        local s = FitScale(count, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X, startX, LAYOUT.BF_RIGHT, maxScale, LAYOUT.BF_MIN_SCALE)
         -- Centre the row so it grows outwards from the middle of the battlefield
         local rowW = ((count - 1) * LAYOUT.BF_STEP_X + LAYOUT.BF_CARD_W) * s
-        local left = math.max(LAYOUT.BF_START_X, (LAYOUT.BF_START_X + LAYOUT.BF_RIGHT - rowW) / 2)
+        local left = math.max(startX, (LAYOUT.BF_START_X + LAYOUT.BF_RIGHT - rowW) / 2)
         for k = 1, count do
             if PlaceCard(frames[k], k, s, left, centerY, LAYOUT.BF_CARD_W, LAYOUT.BF_STEP_X) then boardResized = true end
             UpdateCardRules(frames[k])
         end
     end
-    LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAYOUT.LAND_MAX_SCALE)
+    LayoutRow(myLandFrames, myLandIdx, ROW_Y.myLand, LAYOUT.LAND_MAX_SCALE,
+        B.PlaceLocation(B.myLocFrames, myLocShown, ROW_Y.myLand))
     LayoutRow(myNonLandFrames, myNonLandIdx, ROW_Y.myNonLand, LAYOUT.CREATURE_MAX_SCALE)
 
     for i = myLandIdx + 1, #myLandFrames do
@@ -4448,14 +4499,17 @@ function B:UpdateDisplay()
         if myNonLandFrames[i].tuckedFrames then for k = 1, #myNonLandFrames[i].tuckedFrames do myNonLandFrames[i].tuckedFrames[k]:Hide() end end
     end
 
-    local oppLandIdx, oppNonLandIdx = 0, 0
+    local oppLandIdx, oppNonLandIdx, oppLocShown = 0, 0, false
     for _, entry in ipairs(BattlefieldList(E, true)) do
         local perm, i, leavingKind = entry.perm, entry.index, entry.leaving
         local card = TTS.Cards[perm.id]
         if card then
             local isLand = (card.type == "Land")
             local f = nil
-            if isLand then
+            if card.type == "Location" then
+                oppLocShown = true
+                f = FieldFrame(B.oppLocFrames, 1)
+            elseif isLand then
                 oppLandIdx = oppLandIdx + 1
                 f = FieldFrame(oppLandFrames, oppLandIdx)
             else
@@ -4503,7 +4557,8 @@ function B:UpdateDisplay()
         end
     end
 
-    LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAYOUT.LAND_MAX_SCALE)
+    LayoutRow(oppLandFrames, oppLandIdx, ROW_Y.oppLand, LAYOUT.LAND_MAX_SCALE,
+        B.PlaceLocation(B.oppLocFrames, oppLocShown, ROW_Y.oppLand))
     LayoutRow(oppNonLandFrames, oppNonLandIdx, ROW_Y.oppNonLand, LAYOUT.CREATURE_MAX_SCALE)
     if boardResized then QueueBoardModelReload() end
 

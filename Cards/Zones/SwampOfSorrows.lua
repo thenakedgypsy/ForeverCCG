@@ -45,7 +45,8 @@ TTS:AddCards({
         power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 697,
         zone = "Swamp of Sorrows", creatureType = "Elemental", npcId = 766,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = ""
+        etb = { ops = { { op = "raze" } } },
+        text = "Arrival: Raze the opponent's Location."
     },
     ["SWA06"] = {
         id = "SWA06", name = "Silt Crawler", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",

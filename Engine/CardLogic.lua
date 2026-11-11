@@ -140,6 +140,16 @@ function E:HasKeyword(perm, isRemote, keyword)
     end)
     if granted then return true end
 
+    -- Keywords granted by a Location's aura (yours, or an enemy one's on your denizens)
+    if card.type == "Creature" then
+        self:LocationAuras(card, isRemote, function(a)
+            for _, kw in ipairs(a.kw or {}) do
+                if kw == keyword then granted = true end
+            end
+        end)
+        if granted then return true end
+    end
+
     -- Keywords granted by spells until end of turn, or for good (Gear)
     if perm.tempKw and perm.tempKw[keyword] then return true end
     if perm.permKw and perm.permKw[keyword] then return true end
@@ -182,6 +192,12 @@ function E:GetCreatureStats(perm, isRemote)
             p = p + (rally.p or 0)
             t = t + (rally.t or 0)
         end
+    end)
+
+    -- Location auras: its controller's (anthem) and the other side's (enemyAnthem)
+    self:LocationAuras(card, isRemote, function(a)
+        p = p + (a.p or 0)
+        t = t + (a.t or 0)
     end)
 
     -- Solo encounter rules (Enrage)
@@ -850,6 +866,14 @@ SPELL_GLOBAL_OPS.token = function(self, op, card, cr)
     self:Log(L(cr and "log.tokensOpp" or "log.tokensYou", TTS:CardName(card), op.n or 1, TTS:CardName(tok), self.opponent or L("side.opponent")), "ACTION")
 end
 
+-- Destroys Locations (Cards: Location section above): op.side = "enemy" (the default),
+-- "friendly" or "each". Nothing happens on a side without one.
+SPELL_GLOBAL_OPS.raze = function(self, op, card, cr)
+    local side = op.side or "enemy"
+    if side == "enemy" or side == "each" then self:RemoveLocation(not cr, "razed", card) end
+    if side == "friendly" or side == "each" then self:RemoveLocation(cr, "razed", card) end
+end
+
 function E:ApplySpellOp(op, tgt, card, casterIsRemote)
     local cr = casterIsRemote and true or false
     local global = SPELL_GLOBAL_OPS[op.op]
@@ -1042,6 +1066,103 @@ function E:TickOverTime(isRemoteTurn)
 end
 
 -- =========================================================================
+-- LOCATIONS
+-- A Location (type = "Location") is a permanent that isn't a denizen: it can't attack, block
+-- or be damaged, and nothing that targets or sweeps denizens touches it. Each player has at
+-- most one: playing another sends the current one to its owner's graveyard first. It sits in
+-- its side's field list like a prayer does (so field indices, undo and spectating need nothing
+-- of their own); the board draws it at the start of the prayer row (UI\Board.lua).
+-- Card fields, any mix of them:
+--   etb         = { ops }   Arrival: untargeted ops as it comes into play
+--   anthem      = { tag, value, p, t, kw }   your denizens with the tag get +p/+t (and keywords)
+--   enemyAnthem = { tag, value, p, t, kw }   the same on the opponent's denizens
+--   onTurnStart = { ops }   at the start of each of its controller's turns
+--   ability     = { tap, cost, target, tapped, ops }   used like a denizen's activated ability:
+--                 tap = Exhaust it (once a turn: it Recovers in your Recover step), cost = mana,
+--                 target = a spell target spec, tapped = the target must be Exhausted
+-- Removed by the "raze" spell op (SPELL_GLOBAL_OPS.raze).
+-- =========================================================================
+local function IsLocationPerm(perm)
+    local c = perm and TTS.Cards[perm.id]
+    return (c and c.type == "Location") and true or false
+end
+
+-- A side's Location and its field index, or nil
+function E:GetLocation(isRemote)
+    local st = isRemote and self.remoteState or self.localState
+    for i, p in ipairs(st and st.field or {}) do
+        if IsLocationPerm(p) then return p, i end
+    end
+    return nil
+end
+
+-- Calls fn(aura) for each Location aura that reaches a denizen card on side isRemote: its own
+-- side's Location's anthem and the other side's Location's enemyAnthem, if the tag matches
+function E:LocationAuras(card, isRemote, fn)
+    if not (self.localState and self.remoteState) then return end
+    local own = self:GetLocation(isRemote)
+    local oc = own and TTS.Cards[own.id]
+    if oc and oc.anthem and self:CardHasTag(card, oc.anthem.tag, oc.anthem.value) then fn(oc.anthem) end
+    local their = self:GetLocation(not isRemote)
+    local tc = their and TTS.Cards[their.id]
+    if tc and tc.enemyAnthem and self:CardHasTag(card, tc.enemyAnthem.tag, tc.enemyAnthem.value) then fn(tc.enemyAnthem) end
+end
+
+-- Takes a side's Location off the battlefield, to its owner's graveyard. how: "replaced" (by a
+-- new one; newId) or "razed" (by sourceCard's effect). Returns the card id, or nil if none.
+function E:RemoveLocation(isRemote, how, sourceCard, newId)
+    local perm, idx = self:GetLocation(isRemote)
+    if not perm then return nil end
+    local st = isRemote and self.remoteState or self.localState
+    table.remove(st.field, idx)
+    table.insert(st.graveyard, perm.id)
+    if how == "replaced" then
+        self:Log(L("log.locationReplaced", TTS:CardName(perm.id), newId and TTS:CardName(newId) or ""), "ACTION")
+    else
+        local source = sourceCard and TTS:CardName(sourceCard) or L("side.card")
+        if isRemote then
+            self:Log(L("log.locationRazedOpp", source, self.opponent or L("side.opponentCap"), TTS:CardName(perm.id)), "ACTION")
+        else
+            self:Log(L("log.locationRazedYou", source, TTS:CardName(perm.id)), "ACTION")
+        end
+    end
+    return perm.id
+end
+
+-- Puts a Location onto a side's battlefield (not cast: no mana, no network message), first
+-- sending away the one already there, then runs its Arrival. Returns the new permanent.
+function E:PutLocationOntoBattlefield(cardId, isRemote)
+    local card = TTS.Cards[cardId]
+    if not card then return nil end
+    self:RemoveLocation(isRemote, "replaced", nil, cardId)
+    local perm = {
+        id = cardId, tapped = false, sick = false,   -- an ability can be used the turn it arrives
+        damage = 0, tempPower = 0, tempToughness = 0,
+        uid = self:NewUid(),
+        foil = self:IsFoil(cardId, isRemote),
+    }
+    table.insert((isRemote and self.remoteState or self.localState).field, perm)
+    if card.etb and card.etb.ops and not card.etb.target and self.inMatch then
+        local cap = self:BeginEffectCapture(card.id, isRemote)
+        self:ResolveEffect(card.etb, card, isRemote)
+        self:EndEffectCapture(cap)
+    end
+    return perm
+end
+
+-- Runs a side's Location trigger (key: "onTurnStart"), if it has one. Both PvP clients run it
+-- for both sides at the same moment (E:BeginTurn), mirrored for the opponent's.
+function E:RunLocationTrigger(key, isRemote)
+    local perm = self:GetLocation(isRemote)
+    local card = perm and TTS.Cards[perm.id]
+    local eff = card and card[key]
+    if not (eff and eff.ops and self.inMatch) then return end
+    local cap = self:BeginEffectCapture(card.id, isRemote)
+    self:ResolveEffect(eff, card, isRemote)
+    self:EndEffectCapture(cap)
+end
+
+-- =========================================================================
 -- CREATURES ENTERING, CHANGING CONTROL, ATTACKING
 -- =========================================================================
 function E:NewUid()
@@ -1228,13 +1349,21 @@ local ABILITIES = {
     BOSS22 = { cost = "{2}{U}" },
 }
 
+-- A boss's ability above, or a Location's own (card.ability, with its ops: Location section)
 function E:GetAbility(cardId)
-    return ABILITIES[cardId]
+    if ABILITIES[cardId] then return ABILITIES[cardId] end
+    local card = TTS.Cards[cardId]
+    return card and card.type == "Location" and card.ability or nil
+end
+
+-- How the board asks for an ability's target: "PLAYER", "CREATURE" or "ANY"
+function E:AbilityTargetType(ab)
+    return SPELL_TARGET_UI[ab and ab.target] or "CREATURE"
 end
 
 -- True if the permanent's controller may use its ability right now (ignores mana for cost abilities)
 function E:CanActivateAbility(perm, isRemote)
-    local ab = perm and ABILITIES[perm.id]
+    local ab = perm and self:GetAbility(perm.id)
     if not ab then return false end
     if ab.tap then
         if perm.tapped then return false end
@@ -1245,7 +1374,7 @@ end
 
 -- Whether tgt ({ kind, isRemote, perm }) is a legal target for the ability
 function E:IsValidAbilityTarget(perm, isRemote, tgt)
-    local ab = ABILITIES[perm.id]
+    local ab = self:GetAbility(perm.id)
     if not ab or not ab.target then return tgt == nil end
     if not tgt then return false end
     if not self:IsValidSpellTarget(ab.target, tgt.kind, tgt.isRemote, isRemote) then return false end
@@ -1259,7 +1388,7 @@ end
 
 -- Uses a creature's activated ability for either side. Returns true if it resolved.
 function E:ActivateAbility(perm, isRemote, tgt)
-    local ab = ABILITIES[perm.id]
+    local ab = self:GetAbility(perm.id)
     if not ab or not self:CanActivateAbility(perm, isRemote) then return false end
     if not self:IsValidAbilityTarget(perm, isRemote, tgt) then return false end
     -- A mirrored PvP ability was paid for on their client (we don't track their mana pool)
@@ -1313,6 +1442,10 @@ function E:ActivateAbility(perm, isRemote, tgt)
         tgt.perm.tapped = true
         tgt.perm.freezeUntap = true
         self:Log(L("log.boss.charlga", TTS:CardName(id)), "ACTION")
+
+    elseif ab.ops then
+        -- A Location's ability: its ops, as a spell's effect
+        self:ResolveEffect({ target = ab.target, ops = ab.ops }, TTS.Cards[id], isRemote, tgt)
 
     elseif id == "BOSS21" then
         st.life = st.life + 4
@@ -1578,6 +1711,35 @@ function E:PlayCard(handIndex, bounceIndex)
             cardName = TTS:CardName(card)
         }
         self:Log(L("log.selectTarget", TTS:CardName(card)) .. " " .. L("log.cancelHint"), "SYSTEM")
+        self:RefreshUI()
+        return
+    end
+
+    if card.type == "Location" then
+        if self.phase ~= "MAIN1" and self.phase ~= "MAIN2" then
+            self:Log(L("err.permanentMainPhase"), "ERROR")
+            return
+        end
+        -- Replacing a Location with another copy of itself would only waste the card
+        local current = self:GetLocation(false)
+        if current and current.id == cardId then
+            self:Log(L("err.locationInPlay", TTS:CardName(card)), "ERROR")
+            return
+        end
+        self:AutoPayMana(card.cost)
+        local undoSnap = self:BeginUndoablePlay()
+        if not self:PayMana(card.cost) then
+            self:Log(L("err.manaPool"), "ERROR")
+            return
+        end
+
+        table.remove(self.localState.hand, handIndex)
+        self:Log(L("log.cast", TTS:CardTypeName(card), TTS:CardName(card)), "ACTION")
+        self:CallDisplay("PlayNonCreatureCardSound")
+        -- Sent before its Arrival runs, so the opponent has it on their board first
+        if not self.isSolo then TTS.Net:Send(self.opponent, "ACTION:PLAY_LOCATION:" .. cardId) end
+        self:PutLocationOntoBattlefield(cardId, false)
+        self:CommitUndoablePlay(undoSnap, cardId)
         self:RefreshUI()
         return
     end
@@ -2054,12 +2216,14 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
         end
 
         if ability.target then
+            local targetType = self:AbilityTargetType(ability)
             local prompt = (ability.target == "enemy_player" and L("prompt.targetOpponent"))
-                or (ability.tapped and L("prompt.targetTapped")) or L("prompt.targetCreature")
+                or (ability.tapped and L("prompt.targetTapped"))
+                or (targetType == "CREATURE" and L("prompt.targetCreature")) or L("prompt.targetAny")
             self.targeting = {
                 targetMode = "ABILITY",
                 sourceIndex = fieldIndex,
-                targetType = (ability.target == "enemy_player") and "PLAYER" or "CREATURE",
+                targetType = targetType,
                 cardName = TTS:CardName(card)
             }
             self:Log(L("log.selectFor", prompt, TTS:CardName(card)) .. " " .. L("log.cancelHint"), "SYSTEM")

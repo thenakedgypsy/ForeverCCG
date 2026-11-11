@@ -163,6 +163,13 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
             SendChatMessage(L("emote.dungeon", data.dungeon), "EMOTE")
             TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
         end
+        -- An NPC duel (SoloEncounters.lua), won or lost: "/e beat Old Man Heming at a hand of
+        -- Forever: CCG!" then a /cheer, or "/e lost a hand ..." then a /cry
+        if data and data.duel and RESULT_HEADLINES[data.outcome] then
+            SendChatMessage(L("emote.duel." .. data.outcome, data.duel), "EMOTE")
+            local followUp = (data.outcome == "won") and "CHEER" or "CRY"
+            TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
+        end
         -- Leave the final board (unless a new match has already started on it)
         if not E.inMatch then E:CloseMatchBoard() end
     end,
@@ -263,9 +270,11 @@ function E:EndMatch(outcome, reason)
             local dungeon = outcome == "won" and self.isSolo and self.encounter and self.encounter.kind == "dungeon"
                 and TTS:EncounterName(self.encounter) or nil
             local isSolo = self.isSolo
+            -- An NPC duel is announced with an emote either way (named after the NPC)
+            local duel = self.isSolo and self.encounter and self.encounter.kind == "duel" and opponentName or nil
             showResult = function()
                 local dialog = StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
-                    { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, rewardCard = rewardCard, rating = newRating })
+                    { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, duel = duel, rewardCard = rewardCard, rating = newRating })
                 -- In the middle of the board, not at the top of the screen with the other popups
                 if dialog and dialog.SetPoint then
                     local anchor = (B and B:IsShown()) and B or UIParent
@@ -1140,6 +1149,8 @@ function E:BeginTurn(isRemote)
     end
 
     self:TickOverTime(isRemote)
+    if not self.inMatch then return false end
+    self:RunLocationTrigger("onTurnStart", isRemote)
     if not self.inMatch then return false end
     self:RunEncounterRules(isRemote and "onAITurnStart" or "onPlayerTurnStart")
     if not self.inMatch then return false end

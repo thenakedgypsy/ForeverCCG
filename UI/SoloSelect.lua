@@ -112,20 +112,9 @@ end
 -- =========================================================================
 -- STATUS
 -- =========================================================================
--- Why a game can't start right now (nil = it can)
+-- Why a game can't start right now (nil = it can). Shared with NPC duels (SoloEncounters.lua).
 local function StartBlocker(enc)
-    local E = TTS.Engine
-    if not enc then return L("solo.chooseEncounter") end
-    if E and E.inMatch then return L("solo.inProgress") end
-    if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then return L("solo.closeDeckbuilder") end
-    if TTS.WaitingRoom and TTS.WaitingRoom.isQueued then return L("solo.leaveQueue") end
-    -- The deck is picked as the game starts (UI\DeckPicker.lua)
-    if E and not E:HasPlayableDeck() then return L("solo.deckSize") end
-    local unlocked, reason = TTS:IsEncounterUnlocked(enc)
-    if not unlocked then return reason end
-    local wait = TTS:EncounterCooldownLeft(enc)
-    if wait > 0 then return L("solo.cooldown", math.ceil(wait / 60)) end
-    return nil
+    return TTS:SoloStartBlocker(enc)
 end
 
 -- "locked", "open" or "cleared"

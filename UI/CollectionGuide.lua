@@ -55,7 +55,8 @@ local GREEN = "|cFF33DD33"
 -- DATA
 -- =========================================================================
 local function Collectible(card)
-    if not card.zone or card.isBeta or card.isToken then return false end
+    -- (Locations, 2 copies at most, aren't in the guide's 4-pip rows)
+    if not card.zone or card.isBeta or card.isToken or card.type == "Location" then return false end
     return TTS:GetOwnedCopies(card) ~= nil
 end
 
@@ -141,7 +142,7 @@ local cardSort = "ZONE"
 local places = {}
 local Refresh
 
-local TYPE_LABEL = { Creature = "db.creatures", Spell = "db.spells", Gear = "db.gear", Prayer = "db.prayers" }
+local TYPE_LABEL = { Creature = "db.creatures", Spell = "db.spells", Location = "db.locations", Gear = "db.gear", Prayer = "db.prayers" }
 
 -- The heading a card goes under in the current sort
 local function GroupLabel(card)

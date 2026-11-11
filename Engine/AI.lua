@@ -104,9 +104,50 @@ local function CreatureCardValue(self, c, isRemote)
             end
         end
     end
-    if c.etb then v = v + 1.5 end
+    if c.etb then
+        -- An Arrival that only razes is worth something only with a player Location to raze
+        local onlyRaze = true
+        for _, op in ipairs(c.etb.ops or {}) do
+            if op.op ~= "raze" then onlyRaze = false end
+        end
+        if not onlyRaze then
+            v = v + 1.5
+        elseif self:GetLocation(not isRemote) then
+            v = v + 4
+        end
+    end
     if c.onDeath then v = v + 1 end
     if self:GetAbility(c.id) then v = v + 2 end
+    return v
+end
+
+-- How much a Location card would add as the AI's Location, or nil if it shouldn't play it:
+-- never over the same one, and only over one that cost less
+local function LocationCardValue(self, c)
+    local cur = self:GetLocation(true)
+    if cur then
+        local cc = Card(cur.id)
+        if cur.id == c.id or (cc and (cc.cmc or 0) >= (c.cmc or 0)) then return nil end
+    end
+    local v = 1 + (c.cmc or 0) * 0.5
+    -- Its auras, counted on the denizens already out (half a point each with none yet)
+    local function Aura(a, field, sign)
+        if not a then return end
+        local hits = 0
+        for _, p in ipairs(field) do
+            local pc = Card(p.id)
+            if pc and pc.type == "Creature" and self:CardHasTag(pc, a.tag, a.value) then
+                hits = hits + 1
+                v = v + sign * ((a.p or 0) + (a.t or 0) + (a.kw and #a.kw * 0.5 or 0))
+            end
+        end
+        if hits == 0 then v = v + 0.5 end
+    end
+    Aura(c.anthem, self.remoteState.field, 1)
+    Aura(c.enemyAnthem, self.localState.field, -1)
+    if c.etb then v = v + 1.5 end
+    if c.onTurnStart then v = v + 2 end
+    if c.ability then v = v + 2 end
     return v
 end
 
@@ -905,6 +946,11 @@ function E:AIScoreEffect(eff, tgt, card, profile)
             total = total + best
         elseif op.op == "mana" then
             total = total + RitualValue(self, op, card)
+        elseif op.op == "raze" then
+            -- A Location gone: worth about a good denizen to its side
+            local side = op.side or "enemy"
+            if (side == "enemy" or side == "each") and self:GetLocation(false) then total = total + 4 end
+            if (side == "friendly" or side == "each") and self:GetLocation(true) then total = total - 4 end
         elseif op.op == "token" then
             local tok = Card(op.id)
             if tok then total = total + (op.n or 1) * CreatureCardValue(self, tok, true) end
@@ -1063,7 +1109,8 @@ local function ScoreAbility(self, perm, profile, phase)
     elseif perm.id == "BOSS22" then
         return false, (#self.remoteState.hand > 0) and 1.5 or 0
     end
-    local eff = ABILITY_EFFECTS[perm.id]
+    -- A Location's ability carries its own effect (target and ops)
+    local eff = ABILITY_EFFECTS[perm.id] or (ab.ops and ab)
     if not eff then return nil end
     local bestT, bestS
     for _, tgt in ipairs(self:AIEnumerateTargets(eff.target, function(p) return not ab.tapped or p.tapped end)) do
@@ -1092,6 +1139,9 @@ function E:AIChooseAction(profile, phase, skip)
                 -- Haste creatures go out before combat; others whenever there is mana for them
                 Consider({ kind = "creature", handIdx = i, card = c, cost = cost,
                     score = CreatureCardValue(self, c, true) + (c.haste and phase == 1 and 1 or 0) })
+            elseif c.type == "Location" then
+                local s = LocationCardValue(self, c)
+                if s then Consider({ kind = "location", handIdx = i, card = c, cost = cost, score = s }) end
             elseif c.effect and profile.spells then
                 local tgt, s = ScoreSpell(self, c, profile, phase)
                 if s and s > 0.5 then
@@ -1143,6 +1193,15 @@ function E:AIExecute(a)
             self:Log(L("log.aiCastCost", self.opponent, TTS:CardName(a.card), a.card.cost or "0"), "ACTION")
         end
         self:PutCreatureOntoBattlefield(cardId, true)
+        return true
+    elseif a.kind == "location" then
+        if self.remoteState.hand[a.handIdx] ~= a.card.id or not self:PayMana(a.cost, true) then return false end
+        local cardId = table.remove(self.remoteState.hand, a.handIdx)
+        self.remoteState.handCount = #self.remoteState.hand
+        self:NoteCardPlayed(cardId, true)
+        self:Log(L("log.aiCastCost", self.opponent, TTS:CardName(a.card), a.card.cost or "0"), "ACTION")
+        self:CallDisplay("PlayNonCreatureCardSound")
+        self:PutLocationOntoBattlefield(cardId, true)
         return true
     elseif a.kind == "spell" then
         if self.remoteState.hand[a.handIdx] ~= a.card.id then return false end

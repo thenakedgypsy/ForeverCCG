@@ -52,7 +52,8 @@ TTS:AddCards({
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 2742,
         zone = "Desolace", creatureType = "Beast", npcId = 4726,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        etb = { ops = { { op = "raze" } } },
+        text = "Brutish. Arrival: Raze the opponent's Location."
     },
     ["DES07"] = {
         id = "DES07", name = "Dread Flyer", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

@@ -65,7 +65,7 @@ local function Grantable(card)
 end
 
 local function MaxCopies(card)
-    return card.isBeta and 1 or MAX_COPIES
+    return TTS.CardMaxCopies and TTS:CardMaxCopies(card) or (card.isBeta and 1 or MAX_COPIES)
 end
 
 -- Same order as TTS:GetOwnedCopies (SoloEncounters.lua), so the copies land where it reads them

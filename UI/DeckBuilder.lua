@@ -459,6 +459,7 @@ end
 local function UnlockHint(card)
     if card.isReward then
         local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
+        if enc and enc.kind == "duel" then return TTS:DuelHow(enc) end
         return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
     if card.isGift or card.isProfession then return TTS:GiftHow(card) end
@@ -473,10 +474,12 @@ local function IsCardUnlocked(cardId, card)
     return TTS:IsSpellUnlocked(cardId)
 end
 
--- Land = Prayer, Creature = Creature, Gear Cards = Gear, everything else (Sorcery, ...) = Spell
+-- Land = Prayer, Creature = Creature, Location = Location, Gear Cards = Gear, everything else
+-- (Sorcery, ...) = Spell. Locations have no filter toggle of their own: the Spells one shows them.
 local function GetTypeGroup(card)
     if card.type == "Land" then return "Prayer" end
     if card.type == "Creature" then return "Creature" end
+    if card.type == "Location" then return "Location" end
     if card.subType == "Gear" then return "Gear" end
     return "Spell"
 end
@@ -487,7 +490,7 @@ local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear" }
 
 -- Copies of a card the deck may hold (nil = unlimited, used for Prayers)
 local function GetCopyLimit(cardId, card)
-    if IsCollectible(card) then return math.min(4, GetKillCount(cardId, card)) end
+    if IsCollectible(card) then return math.min(TTS:CardMaxCopies(card), GetKillCount(cardId, card)) end
     if card.type == "Land" then return nil end
     return 4
 end
@@ -497,7 +500,8 @@ local function CardPassesFilters(cardId, card)
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if card.isCritter and D.hideCritters then return false end   -- the Hide critters checkbox
     if D.onlyProfessions and not card.isProfession then return false end   -- the Professions checkbox
-    if not typeOn[GetTypeGroup(card)] then return false end
+    local group = GetTypeGroup(card)
+    if not typeOn[group == "Location" and "Spell" or group] then return false end
     if CardColor(card) and colorOn[CardColor(card)] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
@@ -529,7 +533,7 @@ local function IndexOf(list)
 end
 local CLASS_RANK  = IndexOf(CLASS_ORDER)
 local SPHERE_RANK = IndexOf(SPHERE_ORDER)
-local TYPE_RANK   = { Creature = 1, Spell = 2, Gear = 3, Prayer = 4 }
+local TYPE_RANK   = { Creature = 1, Spell = 2, Location = 2.5, Gear = 3, Prayer = 4 }
 
 local SORT_ORDER = { "COST", "COLOR", "TYPE", "CLASS", "FACTION", "ZONE", "CREATURETYPE" }
 -- Shown as db.sort.<mode>
@@ -737,13 +741,17 @@ local function CheckAdd(cardId, card, deck)
         if kills <= 0 then
             return L("db.toUnlock", UnlockHint(card))
         end
-        local maxAllowed = math.min(4, kills)
+        local cardMax = TTS:CardMaxCopies(card)
+        local maxAllowed = math.min(cardMax, kills)
         if current >= maxAllowed then
             if card.isHero then
                 return L(kills == 1 and "db.heroCopies.one" or "db.heroCopies.other", kills)
-            elseif maxAllowed >= 4 then
-                return L("db.max4", TTS:CardName(card))
+            elseif maxAllowed >= cardMax then
+                return cardMax == 4 and L("db.max4", TTS:CardName(card)) or L("db.maxN", cardMax, TTS:CardName(card))
             else
+                if cardMax ~= 4 then
+                    return L(kills == 1 and "db.ownCopiesMax.one" or "db.ownCopiesMax.other", kills, TTS:CardName(card), UnlockHint(card), cardMax)
+                end
                 if card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize then
                     return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
@@ -1076,7 +1084,7 @@ local function CardTooltip_OnEnter(self)
                         tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)
                     end
                 else
-                    local maxAllowed = math.min(4, kills)
+                    local maxAllowed = math.min(TTS:CardMaxCopies(card), kills)
                     tip:AddLine("|cFF00FF00" .. L("db.collected", kills, maxAllowed) .. "|r", 0.2, 1.0, 0.2)
                 end
             elseif not TTS:IsSpellUnlocked(cardId) then
@@ -1625,6 +1633,8 @@ local function UpdateTileState(t, deck)
         t.copyText:Show()
     else
         t.copyText:Hide()
+        -- A card with fewer than 4 copies at most (a Location: 2) shows only that many pips
+        local cardMax = TTS:CardMaxCopies(card)
         for p = 1, 4 do
             local pip = t.pips[p]
             if p <= inDeck then
@@ -1634,7 +1644,7 @@ local function UpdateTileState(t, deck)
             else
                 pip:SetColorTexture(0.18, 0.18, 0.20, 1)
             end
-            pip:Show()
+            pip:SetShown(p <= cardMax)
         end
     end
 
@@ -1980,7 +1990,7 @@ deckEmptyText:SetPoint("CENTER", 0, 20)
 deckEmptyText:SetWidth(LAYOUT.LIST_W - 40)
 Loc:Bind(deckEmptyText, "db.deckEmpty")
 
-local GROUP_ORDER = { "Creature", "Spell", "Gear", "Prayer" }
+local GROUP_ORDER = { "Creature", "Spell", "Location", "Gear", "Prayer" }
 -- Deck list group headers: db.group.<group>
 local GROUP_LABEL = setmetatable({}, { __index = function(_, group) return L("db.group." .. group) end })
 
@@ -2371,8 +2381,8 @@ end
 function D:RefreshDeck()
     local deck = GetActiveDeck()
 
-    local groups = { Creature = {}, Spell = {}, Gear = {}, Prayer = {} }
-    local groupTotals = { Creature = 0, Spell = 0, Gear = 0, Prayer = 0 }
+    local groups = { Creature = {}, Spell = {}, Location = {}, Gear = {}, Prayer = {} }
+    local groupTotals = { Creature = 0, Spell = 0, Location = 0, Gear = 0, Prayer = 0 }
     local totalCards = 0
     if deck and deck.cards then
         for id, count in pairs(deck.cards) do

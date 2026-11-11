@@ -179,15 +179,20 @@ local function CollectionStatus(card)
         if card.isBeta and copies > 0 then
             return "|cFF00FF00" .. L("link.ownedOf", copies, 1) .. "|r"
         end
-        if copies >= 4 then
-            return "|cFF00FF00" .. L("link.mastered") .. "|r"
+        local max = TTS:CardMaxCopies(card)
+        if copies >= max then
+            return "|cFF00FF00" .. (max == 4 and L("link.mastered") or L("link.masteredOf", max, max)) .. "|r"
         elseif copies > 0 then
-            return "|cFFFFFFFF" .. L("link.owned", copies) .. "|r"
+            return "|cFFFFFFFF" .. (max == 4 and L("link.owned", copies) or L("link.ownedOf", copies, max)) .. "|r"
         end
         local how
         if card.isReward then
             local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
-            how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
+            if enc and enc.kind == "duel" then
+                how = TTS:DuelHow(enc)
+            else
+                how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
+            end
         elseif card.isGift or card.isProfession then
             how = TTS:GiftHow(card)
         elseif card.isBeta then
