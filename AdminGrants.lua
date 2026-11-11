@@ -235,11 +235,72 @@ local function GivePrize()
     return card, copies
 end
 
+-- Where every prize came from, newest last: { card, at, source = "admin" | "event",
+-- by = who sent it / the organizer, event = "<organizer>:<event id>", name = the event's name }
+local PRIZE_LOG_MAX = 200
+
+local function LogPrize(entry)
+    TTS_NpcGifts = TTS_NpcGifts or {}
+    TTS_NpcGifts.prizeLog = TTS_NpcGifts.prizeLog or {}
+    local log = TTS_NpcGifts.prizeLog
+    entry.at = time()
+    log[#log + 1] = entry
+    while #log > PRIZE_LOG_MAX do table.remove(log, 1) end
+end
+
+-- =========================================================================
+-- TOURNAMENT PRIZES
+-- Won by finishing first in a ForeverCCG_Events tournament: that addon calls
+-- TTS:AwardTournamentPrize on the winner's own client when the event ends. Nobody hands these out,
+-- so no organizer needs any power over anyone's collection. The organizer's client still
+-- reports the standings, so the rules below are what keep a made-up event from paying out:
+--   * at least PRIZE_MIN_PLAYERS in the final standings
+--   * this client itself saw the player win games against PRIZE_MIN_BEATEN different opponents
+--     during the event (real games, through the engine, not the organizer's word)
+--   * one prize per event, and one tournament prize per account every PRIZE_COOLDOWN
+-- The collection is saved per account, so alts share the cooldown.
+-- =========================================================================
+TTS.PRIZE_MIN_PLAYERS = 4
+TTS.PRIZE_MIN_BEATEN = 2
+TTS.PRIZE_COOLDOWN = 7 * 86400
+
+-- info: { organizer, event (the event id), name, players (in the standings), beaten (opponents
+-- beaten) }. Returns the card and its copies, or nil and a reason:
+--   "invalid", "players", "beaten", "claimed", "cooldown" (and the seconds left), "full"
+function TTS:AwardTournamentPrize(info)
+    if type(info) ~= "table" or type(info.organizer) ~= "string" or type(info.event) ~= "string"
+        or info.organizer == "" or info.event == "" then
+        return nil, "invalid"
+    end
+    if (tonumber(info.players) or 0) < TTS.PRIZE_MIN_PLAYERS then return nil, "players" end
+    if (tonumber(info.beaten) or 0) < TTS.PRIZE_MIN_BEATEN then return nil, "beaten" end
+
+    local key = info.organizer:lower() .. ":" .. info.event
+    local now = time()
+    local lastWin
+    for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
+        if entry.source == "event" then
+            if entry.event == key then return nil, "claimed" end
+            if not lastWin or (entry.at or 0) > lastWin then lastWin = entry.at or 0 end
+        end
+    end
+    if lastWin and now - lastWin < TTS.PRIZE_COOLDOWN then
+        return nil, "cooldown", TTS.PRIZE_COOLDOWN - (now - lastWin)
+    end
+
+    local card, copies = GivePrize()
+    if not card then return nil, "full" end
+    LogPrize({ card = card.id, source = "event", by = info.organizer, event = key,
+        name = type(info.name) == "string" and info.name:sub(1, 60) or nil })
+    return card, copies
+end
+
 local function OnAdminMessage(msg, sender)
     local cmd, cardId, count = strsplit(":", msg)
     if cmd == "PRIZE" then
         local card, copies = GivePrize()
         if card then
+            LogPrize({ card = card.id, source = "admin", by = sender })
             Reply(sender, "PRIZED:" .. card.id .. ":" .. copies .. ":" .. MaxCopies(card))
         else
             Reply(sender, "ERR:NO_PRIZES_LEFT")

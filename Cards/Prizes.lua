@@ -8,8 +8,9 @@
 ]]
 -- =========================================================================
 -- PRIZE CARDS
--- Tournament prizes: the leaders of Azeroth, two to a sphere. Handed out by the developer
--- through the admin addon (AdminGrants.lua PRIZE / GRANT); nothing in the game drops them.
+-- Tournament prizes: the leaders of Azeroth, two to a sphere. Won by finishing first in a
+-- ForeverCCG_Events tournament (AdminGrants.lua TTS:AwardTournamentPrize has the rules), or handed
+-- out by the developer through the admin addon (AdminGrants.lua PRIZE / GRANT).
 -- Leaders who are already zone denizens (Jaina, Vol'jin, Baine) aren't repeated here.
 --   isPrize = true: copies live in TTS_NpcGifts.prizes[cardId] (SoloEncounters.lua
 --                   GetOwnedCopies), up to 4. Like the beta card they never count towards the
