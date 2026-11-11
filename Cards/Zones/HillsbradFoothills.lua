@@ -21,10 +21,10 @@ TTS:AddCards({
     },
     ["HIL02"] = {
         id = "HIL02", name = "Rot Hide Plague Weaver", cost = "{B}", cmc = 1, color = "B", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10855,
+        power = 1, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 10855,
         zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1940,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["HIL03"] = {
         id = "HIL03", name = "Raging Rot Hide", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",

@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["BLA08"] = {
         id = "BLA08", name = "Shadowsworn Enforcer", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 7841,
+        power = 6, toughness = 4, bulwark = 2, haste = true, isMob = true, isBoss = true, displayId = 7841,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 6007,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Bulwark 2."
     },
     ["BLA09"] = {
         id = "BLA09", name = "Dreadmaul Mauler", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",

@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["ROL05"] = {
         id = "ROL05", name = "Skeletal Mage", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 7550,
+        power = 5, toughness = 3, blink = true, firstStrike = true, isMob = true, isBoss = true, displayId = 7550,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250624,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Blink."
     },
     ["ROL06"] = {
         id = "ROL06", name = "Wailing Banshee", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -64,10 +64,10 @@ TTS:AddCards({
     },
     ["ROL08"] = {
         id = "ROL08", name = "Fallen Berserker", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 9784,
+        power = 6, toughness = 4, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 9784,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250656,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage."
     },
     ["ROL09"] = {
         id = "ROL09", name = "Fallen Necromancer", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

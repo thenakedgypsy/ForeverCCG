@@ -85,18 +85,18 @@ TTS:AddCards({
     },
     ["STR11"] = {
         id = "STR11", name = "The Unforgiven", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 6, toughness = 8, isMob = true, isBoss = true, displayId = 10771,
+        power = 5, toughness = 8, unblockable = true, isMob = true, isBoss = true, displayId = 10771,
         zone = "Stratholme", creatureType = "Undead", npcId = 10516,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Invisible."
     },
     ["STR12"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "STR12", name = "Skul", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 2606,
+        power = 6, toughness = 7, shielded = true, firstStrike = true, isMob = true, isBoss = true, displayId = 2606,
         zone = "Stratholme", creatureType = "Undead", npcId = 10393,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Shielded."
     },
     ["STR13"] = {
         id = "STR13", name = "Cannon Master Willey", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

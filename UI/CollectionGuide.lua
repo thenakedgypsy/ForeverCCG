@@ -37,6 +37,7 @@ local ROW_H = 20
 local VISIBLE_ROWS = 24               -- rows of the list on screen, group headers included
 local LIST_TOP = 76                   -- where the list starts in its panel
 local PANEL_H = LIST_TOP + VISIBLE_ROWS * ROW_H + 8
+local BREAKDOWN_H = 30                -- the collection breakdown's two lines, over the footer
 local TABS = { "zones", "dungeons", "hearths" }
 local ALL = "_all"                    -- the place key of a tab's "All" row
 
@@ -440,7 +441,7 @@ local function Build()
 
     F = CreateFrame("Frame", "TTS_CollectionGuideFrame", UIParent)
     G.frame = F
-    F:SetSize(PAD * 3 + NAV_W + LIST_PANEL_W, -PANEL_TOP + PANEL_H + 34)
+    F:SetSize(PAD * 3 + NAV_W + LIST_PANEL_W, -PANEL_TOP + PANEL_H + 34 + BREAKDOWN_H)
     F:SetPoint("CENTER")
     F:SetClampedToScreen(true)
     UI.Skin(F, UI.STYLE.windowBg, UI.STYLE.windowBorder, "dialog")
@@ -478,6 +479,12 @@ local function Build()
     local footer = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     footer:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -26, 13)
     footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
+
+    -- The Deckbuilder's collection breakdown (TTS:CollectionBreakdown), two lines over the footer
+    F.breakdown = F:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    F.breakdown:SetPoint("BOTTOMLEFT", F, "BOTTOMLEFT", 16, 28)
+    F.breakdown:SetJustifyH("LEFT")
+    F.breakdown:SetSpacing(2)
 
     -- Left: the tabs, how the places are sorted, then the places of the chosen tab
     local nav = CreateFrame("Frame", nil, F)
@@ -689,6 +696,7 @@ Refresh = function(resetScroll)
     end
     ShowListRows()
     F.countText:SetText(#cards == 1 and L("db.oneCard") or L("db.nCards", #cards))
+    if TTS.CollectionBreakdown then F.breakdown:SetText(TTS:CollectionBreakdown()) end
 
     if resetScroll then F.navScroll:SetVerticalScroll(0) end
 end

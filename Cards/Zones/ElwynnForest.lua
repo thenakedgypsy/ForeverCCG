@@ -58,10 +58,10 @@ TTS:AddCards({
     },
     ["ELW07"] = {
         id = "ELW07", name = "Defias Rogue Wizard", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 2359,
+        power = 4, toughness = 4, blink = true, shielded = true, firstStrike = true, isMob = true, isBoss = true, displayId = 2359,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 474,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Blink. Shielded."
     },
     ["ELW08"] = {
         id = "ELW08", name = "Murloc Forager", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",

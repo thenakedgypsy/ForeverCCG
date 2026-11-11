@@ -149,6 +149,7 @@ Events\Comm.lua
 Events\Host.lua
 Events\Player.lua
 Events\UI\Common.lua
+Events\UI\BanPicker.lua
 Events\UI\Organizer.lua
 Events\UI\Player.lua
 Events\UI\Choose.lua

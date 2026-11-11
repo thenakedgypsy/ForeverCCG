@@ -206,6 +206,11 @@ function E:GetCreatureStats(perm, isRemote)
         p, t = p + bp, t + bt
     end
 
+    -- Enrage (the keyword): +1/+0 for each damage marked on it, the health it's missing
+    if (perm.damage or 0) > 0 and self:HasKeyword(perm, isRemote, "enrage") then
+        p = p + perm.damage
+    end
+
     return math.max(0, p), t
 end
 
@@ -660,6 +665,59 @@ SPELL_OPS.tuck = function(self, op, d, card, cr)
     table.remove(st.field, idx)
     self:PutInZone(st.deck, d.perm.id, true)
     self:Log(L("log.tucked", TTS:CardName(card), CreatureName(d.perm)), "ACTION")
+end
+
+-- =========================================================================
+-- RETURN TO HAND (Blink, and the "bounce" spell op)
+-- A denizen on the battlefield goes back to its owner's hand. Gear on it falls off (onto
+-- its controller's battlefield, E:DetachAttachments); an Add disappears instead; one
+-- borrowed until end of turn goes back to the side it was taken from. A full hand sends it
+-- to its owner's graveyard. In PvP the other client puts its own card in its hand, and we
+-- only count it. Returns true if the denizen left the battlefield.
+-- =========================================================================
+local HAND_LIMIT = 10   -- (CoreEngine.lua's MAX_HAND_SIZE)
+
+function E:ReturnToHand(perm, reason)
+    local isRemote, idx = self:FindPerm(perm)
+    if not idx then return false end
+    local card = TTS.Cards[perm.id]
+    local ownerRemote = isRemote
+    for i = #self.stolenCreatures, 1, -1 do
+        local entry = self.stolenCreatures[i]
+        if entry.perm == perm then
+            ownerRemote = entry.isRemoteOwner
+            table.remove(self.stolenCreatures, i)
+        end
+    end
+    self:DetachAttachments(perm, isRemote)
+    isRemote, idx = self:FindPerm(perm)   -- (dropped Gear may have joined the field)
+    if not idx then return false end
+    table.remove((isRemote and self.remoteState or self.localState).field, idx)
+    perm.isAttacking = nil
+
+    local name = CreatureName(perm)
+    if card and card.isToken then
+        self:Log(L("log.returnedToken", name), "ACTION")
+        return true
+    end
+    local owner = ownerRemote and self.remoteState or self.localState
+    if ownerRemote and not self.isSolo then
+        owner.handCount = (owner.handCount or 0) + 1
+    elseif #owner.hand >= HAND_LIMIT then
+        self:PutInZone(owner.graveyard, perm.id)
+        self:Log(L("log.returnedHandFull", name), "ACTION")
+        return true
+    else
+        table.insert(owner.hand, perm.id)
+        if ownerRemote then owner.handCount = #owner.hand end
+    end
+    self:Log(L(reason == "blink" and "log.blinked" or "log.returned", name), "ACTION")
+    return true
+end
+
+SPELL_OPS.bounce = function(self, op, d, card, cr)
+    if d.kind ~= "CREATURE" then return end
+    self:ReturnToHand(d.perm)
 end
 
 -- Takes an enemy creature for the caster (until end of turn with untilEnd)
@@ -2421,7 +2479,8 @@ function E:PlanCombatDamage(bs)
         local p, t = self:GetCreatureStats(perm, isRemote)
         info[perm] = { p = p, t = t, isRemote = isRemote,
             first = self:HasKeyword(perm, isRemote, "firstStrike") and true or false,
-            fatal = self:HasKeyword(perm, isRemote, "deathtouch") and true or false }
+            fatal = self:HasKeyword(perm, isRemote, "deathtouch") and true or false,
+            enrage = self:HasKeyword(perm, isRemote, "enrage") and true or false }
     end
     for _, atkIdx in ipairs(bs.attackers or {}) do
         local atk = atkField[atkIdx]
@@ -2442,9 +2501,15 @@ function E:PlanCombatDamage(bs)
     -- hits = every blow in order, { src, dst, n } (for the damage numbers)
     local taken, dealt, popped, trample, hits = {}, {}, {}, {}, {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
+    -- Its power as it strikes: Enrage adds what Strikes-First blows have just taken off it
+    -- (damage from before this combat is in info.p already, E:GetCreatureStats)
+    local function Power(perm)
+        local src = info[perm]
+        return src.p + ((src.enrage and taken[perm] and taken[perm] < 999) and taken[perm] or 0)
+    end
     local function Strikes(perm, firstStep)
         local src = info[perm]
-        return src.first == firstStep and src.p > 0 and (firstStep or not Down(perm))
+        return src.first == firstStep and Power(perm) > 0 and (firstStep or not Down(perm))
     end
     local function Hit(src, dst, n)
         if dst.shielded and not popped[dst] then
@@ -2467,7 +2532,7 @@ function E:PlanCombatDamage(bs)
         for _, g in ipairs(attackers) do
             local src = info[g.atk]
             local tramples = self:HasKeyword(g.atk, atkRemote, "trample")
-            local left = src.p
+            local left = Power(g.atk)
             for i, blk in ipairs(g.blks) do
                 -- Enough to kill it: what its toughness has left (1 is enough with Fatal)
                 local lethal = math.max(0, info[blk].t - (blk.damage or 0) - (taken[blk] or 0))
@@ -2478,7 +2543,7 @@ function E:PlanCombatDamage(bs)
             end
             if left > 0 then trample[g.atk] = left end
         end
-        for _, f in ipairs(blockers) do Hit(f.blk, f.atk, info[f.blk].p) end
+        for _, f in ipairs(blockers) do Hit(f.blk, f.atk, Power(f.blk)) end
     end
 
     return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped, hits = hits }
@@ -2685,11 +2750,15 @@ function E:ResolveCombatDamage()
         return TTS.FormatStats and TTS.FormatStats(p, t, 0, "|cFFFFFFFF", 12) or string.format("%d/%d", p, t)
     end
 
+    -- Blink: attackers that go back to their owner's hand once combat is over (survivors only)
+    local blinkers = {}
+
     for _, atkIdx in ipairs(bs.attackers) do
         local atkPerm = atkField[atkIdx]
         if atkPerm then
             local atkCard = TTS.Cards[atkPerm.id]
             local atkPower = self:GetCreatureStats(atkPerm, isRemoteAttacking)
+            if self:HasKeyword(atkPerm, isRemoteAttacking, "blink") then table.insert(blinkers, atkPerm) end
 
             local blocked = false
             for _, f in ipairs(plan.fights) do
@@ -2744,6 +2813,9 @@ function E:ResolveCombatDamage()
     self.blockingState = nil
     self:CheckStateBasedActions()
     self:KeepLastCombat(lastCombat)
+    -- After the record of this combat, which counts any denizen gone from the field as dead;
+    -- one that did die is gone already, and ReturnToHand passes it by
+    for _, perm in ipairs(blinkers) do self:ReturnToHand(perm, "blink") end
 
     if isRemoteAttacking then
         if self.isSolo then

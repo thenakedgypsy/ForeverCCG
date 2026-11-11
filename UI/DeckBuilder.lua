@@ -429,7 +429,7 @@ Skin(deckPanel, STYLE.panelBg, STYLE.panelBorder)
 -- =========================================================================
 local onlyUnlocked = true   -- locked cards are never shown in the card pool
 local colorOn = { W = true, U = true, B = true, R = true, G = true }
-local typeOn  = { Prayer = true, Creature = true, Spell = true, Gear = true }
+local typeOn  = { Prayer = true, Creature = true, Spell = true, Gear = true, Location = true }
 local classFilter = nil      -- nil = all classes; otherwise only spells of this class are shown
 local zoneFilter = nil       -- nil = all zones; otherwise only creatures from this zone are shown
 local factionFilter = nil    -- nil = all factions; otherwise only creatures of this faction are shown
@@ -477,7 +477,7 @@ local function IsCardUnlocked(cardId, card)
 end
 
 -- Land = Prayer, Creature = Creature, Location = Location, Gear Cards = Gear, everything else
--- (Sorcery, ...) = Spell. Locations have no filter toggle of their own: the Spells one shows them.
+-- (Sorcery, ...) = Spell. Each has a filter toggle (TYPE_DEFS).
 local function GetTypeGroup(card)
     if card.type == "Land" then return "Prayer" end
     if card.type == "Creature" then return "Creature" end
@@ -502,9 +502,8 @@ local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if card.isCritter and D.hideCritters then return false end   -- the Hide critters checkbox
-    if D.onlyProfessions and not card.isProfession then return false end   -- the Professions checkbox
     local group = GetTypeGroup(card)
-    if not typeOn[group == "Location" and "Spell" or group] then return false end
+    if not typeOn[group] then return false end
     if CardColor(card) and colorOn[CardColor(card)] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
     if classFilter and GetTypeGroup(card) == "Spell" and card.class ~= classFilter then return false end
@@ -657,17 +656,26 @@ end
 
 -- Keywords at least one collectable card has, by their shown name, plus the card
 -- abilities listed with them (filter value -> TT.EFFECTS id)
-Keyword.ABILITIES = { aura = "anthem", spawn = "spawn" }
+Keyword.ABILITIES = { aura = "anthem", spawn = "spawn", raze = "raze" }
 function Keyword.Name(k)
     local effect = Keyword.ABILITIES[k]
     if effect then return TT:Def("effect", effect, "name") end
     return TT:Def("keyword", k, "name")
 end
 -- Kinsmanship is the card's rally, not a keyword field; Aura its anthem; Spawn an Arrival,
--- Martyrdom or Aggro that puts Adds onto the battlefield
+-- Martyrdom or Aggro that puts Adds onto the battlefield; Raze a spell, Arrival, Martyrdom,
+-- Aggro or ability that destroys a Location
 function Keyword.Has(card, k)
     if k == "kinsmanship" then return card.rally ~= nil end
     if k == "aura" then return card.anthem ~= nil end
+    if k == "raze" then
+        for _, key in ipairs({ "effect", "etb", "onDeath", "onAttack", "ability" }) do
+            for _, op in ipairs((card[key] and card[key].ops) or {}) do
+                if op.op == "raze" then return true end
+            end
+        end
+        return false
+    end
     if k == "spawn" then
         for _, key in ipairs({ "etb", "onDeath", "onAttack" }) do
             for _, op in ipairs((card[key] and card[key].ops) or {}) do
@@ -1280,7 +1288,7 @@ end
 
 -- Search box
 local searchBox = CreateFrame("EditBox", nil, poolPanel)
-searchBox:SetSize(160, 24)
+searchBox:SetSize(136, 24)   -- (narrowed so the five type toggles fit beside it)
 searchBox:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 10, -10)
 Skin(searchBox, STYLE.controlBg, STYLE.controlBorder, "control")
 searchBox:SetFontObject(ChatFontNormal)
@@ -1333,18 +1341,19 @@ searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
 -- Card type toggles
--- (four of them fit between the search box and the sphere toggles at x = 434)
+-- (five of them fit between the search box, ending at x = 146, and the sphere toggles at x = 434)
 local TYPE_DEFS = {
     { key = "Creature", label = "db.creatures" },
     { key = "Spell",    label = "db.spells" },
+    { key = "Location", label = "db.locations" },
     { key = "Gear",     label = "db.gear" },
     { key = "Prayer",   label = "db.prayers" },
 }
 for n, def in ipairs(TYPE_DEFS) do
-    local b = CreateToggle(poolPanel, 60, def.label, STYLE.accent,
+    local b = CreateToggle(poolPanel, 53, def.label, STYLE.accent,
         function() return typeOn[def.key] end,
         function(v) typeOn[def.key] = v end)
-    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 176 + (n - 1) * 64, -10)
+    b:SetPoint("TOPLEFT", poolPanel, "TOPLEFT", 152 + (n - 1) * 56, -10)
 end
 
 -- Sphere toggles (icons filled in on show, once Board.lua's symbols exist)
@@ -1758,26 +1767,6 @@ critterCheck:SetScript("OnEnter", function(self)
 end)
 critterCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
--- Shows only the profession cards (not saved: the pool opens as usual next time)
-local profCheck = CreateFrame("CheckButton", nil, poolPanel, "UICheckButtonTemplate")
-profCheck:SetSize(22, 22)
-profCheck:SetPoint("LEFT", critterLabel, "RIGHT", 12, -1)
-
-local profLabel = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-profLabel:SetPoint("LEFT", profCheck, "RIGHT", 0, 1)
-Loc:Bind(profLabel, "db.onlyProfessions")
-profCheck:SetHitRectInsets(0, -(profLabel:GetStringWidth() + 4), 0, 0)
-
-profCheck:SetScript("OnClick", function(self)
-    D.onlyProfessions = self:GetChecked() and true or false
-    poolPage = 1
-    D:RefreshPool()
-end)
-profCheck:SetScript("OnEnter", function(self)
-    TT:ShowText(self, "ANCHOR_TOP", L("db.onlyProfessions"), L("db.onlyProfessionsDesc"))
-end)
-profCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
-
 local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
 nextBtn.label:SetJustifyH("CENTER")
@@ -1797,8 +1786,9 @@ prevBtn:SetScript("OnClick", function() ChangePoolPage(-1) end)
 -- COLLECTION PROGRESS (bottom-left)
 -- Collected = at least 1 copy of a creature card, Mastered = all 4 copies,
 -- and the same for Hearthstones (the innkeepers' gift prayers) and Gear Cards (the weapon
--- merchants' gift spells, all 38 whichever faction gives them). Two lines: collected,
--- then mastered, foils (the denizens' foils owned, BossTracker.lua) and the score.
+-- merchants' gift spells, all 38 whichever faction gives them) and Locations (the NPC
+-- duels' rewards, both copies to master). Two lines: collected, then mastered, foils (the
+-- denizens' foils owned, BossTracker.lua) and the score.
 -- =========================================================================
 local collectionLabel = D:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 collectionLabel:SetPoint("BOTTOMLEFT", D, "BOTTOMLEFT", 16, 13)
@@ -1806,13 +1796,7 @@ collectionLabel:SetJustifyH("LEFT")
 collectionLabel:SetSpacing(2)
 
 local function UpdateCollectionProgress()
-    local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
-        fCollected, fTotal = TTS:GetCollectionScore()
-    -- In the order of the score: (Hearthstones + Gear + creatures collected) x (... mastered + foils + 1)
-    collectionLabel:SetText(L("db.collectionFoils",
-        TTS:ColoredCount(hCollected, hTotal), TTS:ColoredCount(gCollected, gTotal), TTS:ColoredCount(collected, total),
-        TTS:ColoredCount(hMastered, hTotal), TTS:ColoredCount(gMastered, gTotal), TTS:ColoredCount(mastered, total),
-        TTS:ColoredCount(fCollected, fTotal), TTS:ColoredScore(score)))
+    collectionLabel:SetText(TTS:CollectionBreakdown())   -- (SoloEncounters.lua; the Collection Guide's too)
 end
 
 -- =========================================================================

@@ -172,10 +172,10 @@ TTS:AddCards({
     -- Solo reward
     ["DAL22"] = {
         id = "DAL22", name = "Archmage Modera", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 3, toughness = 4, hexproof = true, isReward = true, displayId = 130165,
+        power = 4, toughness = 4, blink = true, hexproof = true, isReward = true, displayId = 130165,
         zone = "City of Dalaran", creatureType = "Humanoid", npcEntry = 246748,
         anthem = { tag = "zone", value = "City of Dalaran", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded. Other City of Dalaran denizens you control get +1/+1."
+        text = "Warded. Blink. Other City of Dalaran denizens you control get +1/+1."
     },
 })

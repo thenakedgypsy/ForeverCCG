@@ -615,19 +615,27 @@ end
 -- (Hearthstones + Gear + creature cards mastered (all 4) + 1). Hearthstones are the
 -- innkeepers' gift prayers, Gear the weapon merchants' gift spells.
 -- Returns score, collected, mastered, total, hearths collected, hearths mastered, hearth total,
--- gear collected, gear mastered, gear total.
+-- gear collected, gear mastered, gear total, foils owned, foil total, then Locations
+-- collected, mastered (both copies) and total.
 -- Foils (BossTracker.lua) count with the mastered cards: the denizens that drop from kills
--- can each have one (fTotal), and every foil owned adds to the multiplier.
+-- can each have one (fTotal), and every foil owned adds to the multiplier. Locations (the
+-- NPC duels' rewards) count in both halves like the rest, under a counter of their own.
 function TTS:GetCollectionScore()
     local total, collected, mastered = 0, 0, 0
     local hTotal, hCollected, hMastered = 0, 0, 0
     local gTotal, gCollected, gMastered = 0, 0, 0
     local fTotal, fCollected = 0, 0
+    local lTotal, lCollected, lMastered = 0, 0, 0
     for _, card in pairs(TTS.Cards or {}) do
         if card.isBeta or card.isPrize then
             -- Beta players and prize winners only: not everyone can get them, so they never
             -- count towards a collection
-        elseif (card.type == "Creature" and (card.isBoss or card.isReward)) or (card.type == "Location" and card.isReward) then
+        elseif card.type == "Location" and card.isReward then
+            lTotal = lTotal + 1
+            local copies = self:GetOwnedCopies(card) or 0
+            if copies >= 1 then lCollected = lCollected + 1 end
+            if copies >= self:CardMaxCopies(card) then lMastered = lMastered + 1 end
+        elseif card.type == "Creature" and (card.isBoss or card.isReward) then
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end
@@ -648,9 +656,19 @@ function TTS:GetCollectionScore()
             if copies >= MAX_REWARD_COPIES then gMastered = gMastered + 1 end
         end
     end
-    local score = (hCollected + gCollected + collected) * (hMastered + gMastered + mastered + fCollected + 1)
+    local score = (hCollected + gCollected + collected + lCollected)
+        * (hMastered + gMastered + mastered + lMastered + fCollected + 1)
     return score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
-        fCollected, fTotal
+        fCollected, fTotal, lCollected, lMastered, lTotal
+end
+
+-- A wait as "2d 5h", "5h 12m" or "12m" (the minimap button's tooltip, the main window)
+function TTS:FormatWait(seconds)
+    local m = math.ceil(seconds / 60)
+    local d, h = math.floor(m / 1440), math.floor(m % 1440 / 60)
+    if d > 0 then return L("minimap.dh", d, h) end
+    if h > 0 then return L("minimap.hm", h, m % 60) end
+    return L("minimap.m", m)
 end
 
 -- "1,234,567" (falls back to plain digits if the client lacks BreakUpLargeNumbers)
@@ -674,12 +692,39 @@ function TTS:TierColored(f, text)
     end
 end
 
+-- The collection breakdown, two lines (the Deckbuilder's and the Collection Guide's bottom
+-- strips): collected, then mastered, foils and the score, in the order of the score:
+-- (Hearthstones + Gear + creatures + Locations collected) x (... mastered + foils + 1)
+function TTS:CollectionBreakdown()
+    local score, collected, mastered, total, hCollected, hMastered, hTotal, gCollected, gMastered, gTotal,
+        fCollected, fTotal, lCollected, lMastered, lTotal = self:GetCollectionScore()
+    return L("db.collectionLocations",
+        self:ColoredCount(hCollected, hTotal), self:ColoredCount(gCollected, gTotal), self:ColoredCount(collected, total),
+        self:ColoredCount(lCollected, lTotal),
+        self:ColoredCount(hMastered, hTotal), self:ColoredCount(gMastered, gTotal), self:ColoredCount(mastered, total),
+        self:ColoredCount(lMastered, lTotal),
+        self:ColoredCount(fCollected, fTotal), self:ColoredScore(score))
+end
+
+-- PvE progress: copies of the solo rewards won (zone, dungeon and duel rewards, isReward),
+-- out of every copy there is to win. Returns gained, total.
+function TTS:PvERewards()
+    local gained, total = 0, 0
+    for _, card in pairs(TTS.Cards or {}) do
+        if card.isReward and not card.isBeta and not card.isPrize then
+            total = total + self:CardMaxCopies(card)
+            gained = gained + (self:GetOwnedCopies(card) or 0)
+        end
+    end
+    return gained, total
+end
+
 local maxScore
 function TTS:ColoredScore(n)
     if not n then return "|cFF888888?|r" end
     if not maxScore then
-        local _, _, _, total, _, _, hTotal, _, _, gTotal, _, fTotal = self:GetCollectionScore()
-        local all = hTotal + gTotal + total
+        local _, _, _, total, _, _, hTotal, _, _, gTotal, _, fTotal, _, _, lTotal = self:GetCollectionScore()
+        local all = hTotal + gTotal + total + lTotal
         maxScore = all * (all + fTotal + 1)
     end
     return self:TierColored(maxScore > 0 and math.sqrt(n / maxScore) or 0, self:FormatScore(n))

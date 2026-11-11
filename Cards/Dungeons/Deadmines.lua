@@ -22,17 +22,17 @@ TTS:AddCards({
     },
     ["DMS02"] = {
         id = "DMS02", name = "Defias Watchman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 2, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 184,
+        power = 2, toughness = 4, reach = true, support = true, isMob = true, isBoss = true, displayId = 184,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1725,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Anti-Air."
     },
     ["DMS03"] = {
         id = "DMS03", name = "Goblin Engineer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 7109,
+        power = 3, toughness = 3, reach = true, isMob = true, isBoss = true, displayId = 7109,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 622,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["DMS04"] = {
         id = "DMS04", name = "Defias Blackguard", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["DMS05"] = {
         id = "DMS05", name = "Defias Evoker", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2318,
+        power = 4, toughness = 4, shielded = true, isMob = true, isBoss = true, displayId = 2318,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 1729,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["DMS06"] = {
         id = "DMS06", name = "Gilnid", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -80,11 +80,11 @@ TTS:AddCards({
     },
     ["DMS10"] = {
         id = "DMS10", name = "Captain Greenskin", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 7113,
+        power = 5, toughness = 6, bulwark = 2, support = true, isMob = true, isBoss = true, displayId = 7113,
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 647,
         anthem = { tag = "faction", value = "Defias", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Other Defias you control get +1/+1."
+        text = "Support. Bulwark 2. Other Defias you control get +1/+1."
     },
     ["DMS11"] = {
         id = "DMS11", name = "Mr. Smite", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

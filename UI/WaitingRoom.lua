@@ -293,9 +293,15 @@ gamesEmpty:SetPoint("CENTER")
 gamesEmpty:SetWidth(380)
 Loc:Bind(gamesEmpty, "spec.wrNoGames")
 
+-- After a Watch click every Watch button stays greyed out for WATCH_COOLDOWN seconds, so a
+-- player can't send request after request
+local WATCH_COOLDOWN = 60
+local watchClickedAt
+
 local function UpdateGamesList()
     local Spec = TTS.Spectate
     local list = Spec and Spec:GetGames() or {}
+    local cooling = watchClickedAt and (GetTime() - watchClickedAt) < WATCH_COOLDOWN
     gamesDesc:SetText(L("spec.wrGames", #list))
     gamesEmpty:SetShown(#list == 0)
     for i, row in ipairs(gameRows) do
@@ -305,8 +311,14 @@ local function UpdateGamesList()
             row.turnText:SetText(L("spec.wrTurn", game.turn))
             local asked = Spec:IsAsking()
             row.watchBtn:SetText(L(asked == game.host and "spec.requested" or "spec.watch"))
-            row.watchBtn:SetEnabled(not asked)
-            row.watchBtn:SetScript("OnClick", function() Spec:Watch(game.host) end)
+            row.watchBtn:SetEnabled(not asked and not cooling)
+            row.watchBtn:SetScript("OnClick", function()
+                watchClickedAt = GetTime()
+                Spec:Watch(game.host)
+                UpdateGamesList()
+                -- Lit again once the minute is up (if the list is still there to show it)
+                C_Timer.After(WATCH_COOLDOWN, function() if F:IsShown() then UpdateGamesList() end end)
+            end)
             row:Show()
         else
             row:Hide()

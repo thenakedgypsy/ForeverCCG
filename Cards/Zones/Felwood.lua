@@ -21,10 +21,10 @@ TTS:AddCards({
     },
     ["FEL02"] = {
         id = "FEL02", name = "Angerclaw Bear", cost = "{G}", cmc = 1, color = "G", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 9276,
+        power = 1, toughness = 2, enrage = true, isMob = true, isBoss = true, displayId = 9276,
         zone = "Felwood", creatureType = "Beast", npcId = 8956,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Enrage."
     },
     ["FEL03"] = {
         id = "FEL03", name = "Deadwood Warrior", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -49,10 +49,10 @@ TTS:AddCards({
     },
     ["FEL06"] = {
         id = "FEL06", name = "Angerclaw Mauler", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 1083,
+        power = 2, toughness = 3, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 1083,
         zone = "Felwood", creatureType = "Beast", npcId = 8958,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage."
     },
     ["FEL07"] = {
         id = "FEL07", name = "Irontree Stomper", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",

@@ -86,10 +86,10 @@ TTS:AddCards({
     },
     ["HYJ12"] = {
         id = "HYJ12", name = "Wildbreath Chimaerok", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 4, toughness = 4, flying = true, isMob = true, isBoss = true, displayId = 4269,
+        power = 4, toughness = 4, bulwark = 2, flying = true, isMob = true, isBoss = true, displayId = 4269,
         zone = "Mount Hyjal", creatureType = "Beast", npcId = 249490,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne."
+        text = "Airborne. Bulwark 2."
     },
     ["HYJ13"] = {
         id = "HYJ13", name = "Felguard Sentinel", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

@@ -166,9 +166,11 @@ local SIDE, BTN_H, BTN_GAP, FIRST_Y = 10, 24, 4, -32
 local GRID_BTN_W = (SECTION_W - 2 * SIDE - 12) / 2     -- two to a row, 12 apart
 local COLUMN_LABEL_H = 14                               -- Battle's PvE / PvP labels
 local STATUS_Y = FIRST_Y - BTN_H - 8                    -- under Build's buttons
-local COLLECT_H = -FIRST_Y + BTN_H + 10
+local CAMPFIRE_LINE_H = 16                             -- the campfire bonus line under Collect's button
+local COLLECT_H = -FIRST_Y + BTN_H + CAMPFIRE_LINE_H + 10
 local BUILD_H = -STATUS_Y + 34                          -- room for two lines of status
-local BATTLE_H = -FIRST_Y + COLUMN_LABEL_H + 3 * BTN_H + 2 * BTN_GAP + 10   -- three buttons (PvP's)
+local PRIZE_LINE_H = 16                                -- the tournament prize line under PvP's buttons
+local BATTLE_H = -FIRST_Y + COLUMN_LABEL_H + 3 * BTN_H + 2 * BTN_GAP + PRIZE_LINE_H + 10   -- three buttons (PvP's)
 
 -- The window fits them: under the title strip, the sections, then room for the footer
 M:SetHeight(93 + COLLECT_H + BUILD_H + BATTLE_H + 2 * SECTION_GAP + 34)
@@ -176,13 +178,12 @@ M:SetHeight(93 + COLLECT_H + BUILD_H + BATTLE_H + 2 * SECTION_GAP + 34)
 -- The y offset of button row `row` (1 = first) in a section, below `top` (default FIRST_Y)
 local function RowY(row, top) return (top or FIRST_Y) - (row - 1) * (BTN_H + BTN_GAP) end
 
--- A small grey label (locale key) over one of Battle's columns
-local function ColumnLabel(section, key, anchor, x)
-    local fs = section:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+-- A small label over one of Battle's columns, its text and colour set by UpdatePlayState
+local function ColumnLabel(section, anchor, x)
+    local fs = section:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint(anchor, section, anchor, x, FIRST_Y)
     fs:SetWidth(GRID_BTN_W)
     fs:SetJustifyH("CENTER")
-    Loc:Bind(fs, key)
     return fs
 end
 
@@ -195,6 +196,13 @@ collectSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
 -- Which cards each zone and dungeon holds, and how many of each you have (CollectionGuide.lua)
 local guideBtn = CreatePanelButton("TTS_CollectionGuideBtn", collectSection, GRID_BTN_W, BTN_H, "main.collectionGuide")
 guideBtn:SetPoint("TOP", collectSection, "TOP", 0, RowY(1))
+
+-- Under it: the campfire bonus (more card drops), running or how long until the next
+-- (UpdateTimers, below)
+local campfireLabel = collectSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+campfireLabel:SetPoint("TOP", guideBtn, "BOTTOM", 0, -4)
+campfireLabel:SetWidth(SECTION_W - 2 * SIDE)
+campfireLabel:SetJustifyH("CENTER")
 guideBtn:SetScript("OnClick", function()
     if TTS.CollectionGuide then OpenFromMain(TTS.CollectionGuide:Open()) end
 end)
@@ -242,8 +250,9 @@ statusLabel:SetWordWrap(true)
 local battleSection = CreateSection("main.battle", SECTION_W, BATTLE_H)
 battleSection:SetPoint("TOPLEFT", buildSection, "BOTTOMLEFT", 0, -SECTION_GAP)
 local BATTLE_TOP = FIRST_Y - COLUMN_LABEL_H   -- the first row, under the column labels
-ColumnLabel(battleSection, "main.pve", "TOPLEFT", SIDE)
-ColumnLabel(battleSection, "main.playOthers", "TOPRIGHT", -SIDE)
+-- PvE coloured by the solo rewards won, PvP by the rating's tier (UpdatePlayState)
+local pveLabel = ColumnLabel(battleSection, "TOPLEFT", SIDE)
+local pvpLabel = ColumnLabel(battleSection, "TOPRIGHT", -SIDE)
 
 local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", battleSection, GRID_BTN_W, BTN_H, "main.campaign")
 encountersBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(1, BATTLE_TOP))
@@ -256,6 +265,7 @@ end)
 
 local soloBtn = CreatePanelButton("TTS_SoloBtn", battleSection, GRID_BTN_W, BTN_H, "main.practice")
 soloBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(2, BATTLE_TOP))
+
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         DEFAULT_CHAT_FRAME:AddMessage(L("main.closeDeckbuilderFirst"))
@@ -303,6 +313,12 @@ end)
 -- Tournaments (Events\): join one with a code, or host one
 local tournamentBtn = CreatePanelButton("TTS_TournamentsBtn", battleSection, GRID_BTN_W, BTN_H, "main.tournaments")
 tournamentBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(3, BATTLE_TOP))
+
+-- Under it (a minimap tooltip line too): the weekly tournament prize cooldown (UpdateTimers)
+local timersLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+timersLabel:SetPoint("TOP", tournamentBtn, "BOTTOM", 0, -4)
+timersLabel:SetWidth(GRID_BTN_W)
+timersLabel:SetJustifyH("CENTER")
 tournamentBtn:SetScript("OnClick", function()
     local win = TTS.OpenTournaments and TTS:OpenTournaments()
     if win then OpenFromMain(win) end
@@ -324,6 +340,14 @@ function M:UpdatePlayState()
     if TTS.PvP then
         ratingLabel:SetText(L("pvp.rating", TTS.PvP.ColoredRating((TTS.PvP:Get()))))
     end
+    -- PvE in the score's colours by the share of solo reward copies won; PvP in the colour
+    -- its rating number has (PvPRecord.lua's tiers)
+    local gained, total = 0, 0
+    if TTS.PvERewards then gained, total = TTS:PvERewards() end
+    pveLabel:SetText(TTS.TierColored and TTS:TierColored(total > 0 and gained / total or 0, L("main.pve")) or L("main.pve"))
+    local rated = TTS.PvP and TTS.PvP.ColoredRating((TTS.PvP:Get()))
+    local colour = rated and rated:match("^|c(%x%x%x%x%x%x%x%x)")
+    pvpLabel:SetText(colour and ("|c" .. colour .. L("main.playOthers") .. "|r") or L("main.playOthers"))
 
     local inMatch = TTS.Engine and TTS.Engine.inMatch
     local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
@@ -351,8 +375,36 @@ function M:UpdatePlayState()
     end
 end
 
+-- The campfire and tournament prize lines: ready (green), or the time left (grey); while
+-- the bonus runs, its minutes left (orange)
+local GREEN, GREY, ORANGE = "|cFF1AFF1A", "|cFF999999", "|cFFFF9933"
+local function UpdateTimers()
+    local C = TTS.Campfire
+    if C then
+        local warmth = C:Remaining()
+        local wait = C.CooldownLeft and C:CooldownLeft()
+        local value = warmth and (ORANGE .. TTS:FormatWait(warmth) .. "|r")
+            or wait and (GREY .. TTS:FormatWait(wait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r")
+        campfireLabel:SetText(L(warmth and "minimap.campfire" or "minimap.campfireNext") .. " " .. value)
+
+    end
+    if TTS.TournamentPrizeCooldown then
+        local wait = TTS:TournamentPrizeCooldown()
+        timersLabel:SetText(L("minimap.prize") .. " "
+            .. (wait > 0 and (GREY .. TTS:FormatWait(wait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r")))
+    end
+end
+
+-- Counted down while the window is open
+local timersTicker
 M:SetScript("OnShow", function()
     M:UpdatePlayState()
+    UpdateTimers()
+    if timersTicker then timersTicker:Cancel() end
+    timersTicker = C_Timer.NewTicker(30, UpdateTimers)
+end)
+M:HookScript("OnHide", function()
+    if timersTicker then timersTicker:Cancel(); timersTicker = nil end
 end)
 
 -- =========================================================================

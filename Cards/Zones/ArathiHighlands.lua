@@ -28,10 +28,10 @@ TTS:AddCards({
     },
     ["ARA03"] = {
         id = "ARA03", name = "Cresting Exile", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
-        power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 5561,
+        power = 1, toughness = 2, shielded = true, reach = true, isMob = true, isBoss = true, displayId = 5561,
         zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Anti-Air. Shielded."
     },
     ["ARA04"] = {
         id = "ARA04", name = "Thundering Exile", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -49,10 +49,10 @@ TTS:AddCards({
     },
     ["ARA06"] = {
         id = "ARA06", name = "Syndicate Prowler", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 4016,
+        power = 2, toughness = 4, unblockable = true, haste = true, isMob = true, isBoss = true, displayId = 4016,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2588,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Invisible."
     },
     ["ARA07"] = {
         id = "ARA07", name = "Stromgarde Troll Hunter", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",

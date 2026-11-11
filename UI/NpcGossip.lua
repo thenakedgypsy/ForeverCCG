@@ -546,6 +546,8 @@ local function GreetingBox()
     if box and box.GetDataProvider and box.SetDataProvider and box.ForEachFrame then return box end
 end
 
+local AddToQuestGreeting   -- (IN THE QUEST WINDOW, below)
+
 -- Asks for a card, then shows the NPC's answer where its line was
 local function Ask()
     local npcId = GossipNpcId()
@@ -554,7 +556,7 @@ local function Ask()
     replyNpc = npcId
     if GossipFrame:IsShown() and type(GossipFrame.Update) == "function" and GreetingBox() then
         GossipFrame:Update()
-    else
+    elseif not AddToQuestGreeting(npcId) then
         ShowPanel(npcId)
     end
 end
@@ -690,22 +692,117 @@ M:SetScript("OnEvent", function(_, event)
     end)
 end)
 
--- A quest giver with no gossip (many of the duel NPCs) opens the quest window
--- instead: its greeting with the quest list, or a single quest straight away. The panel
--- goes beside it, and goes when it closes.
+-- =========================================================================
+-- IN THE QUEST WINDOW
+-- A quest giver with no gossip (many of the duel NPCs) opens the quest window instead.
+-- On its greeting (the quest list), the NPC's line (npc.<npcId>.greet, then any answer)
+-- goes under its greeting text and our options under the quests, as lines like theirs.
+-- A single quest opened straight away has no greeting: the panel goes beside the window.
+-- Either goes when the window closes.
+-- =========================================================================
+local questButtons = {}
+
+local function HideQuestButtons()
+    for _, b in ipairs(questButtons) do b:Hide() end
+end
+
+local function QuestGreetingShown()
+    return QuestFrame and QuestFrame:IsShown() and QuestFrameGreetingPanel and QuestFrameGreetingPanel:IsShown()
+        and GreetingText and QuestGreetingScrollChildFrame and true or false
+end
+
+-- An option line under the quests: our icon and the option's text, highlighted on mouseover
+local function QuestButton(i)
+    local b = questButtons[i]
+    if b then return b end
+    local parent = QuestGreetingScrollChildFrame
+    b = CreateFrame("Button", nil, parent)
+    b:SetHeight(18)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetSize(16, 16)
+    b.icon:SetPoint("LEFT", 0, 0)
+    b.icon:SetTexture(CARD_BACK_ICON)
+    b.text = b:CreateFontString(nil, "OVERLAY", _G.QuestFontNormalSmall and "QuestFontNormalSmall" or "GameFontBlack")
+    b.text:SetPoint("LEFT", b.icon, "RIGHT", 4, 0)
+    b.text:SetPoint("RIGHT", 0, 0)
+    b.text:SetJustifyH("LEFT")
+    b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    questButtons[i] = b
+    return b
+end
+
+local OPTION_H = 20   -- each option line, top to top
+
+-- Puts the NPC's line and our options into the quest window's greeting; returns true once
+-- they're in (false: no greeting showing). The options go straight under the greeting
+-- text, in blank lines added to its end: the quest list hangs under the text, so it moves
+-- down to make room.
+AddToQuestGreeting = function(npcId)
+    if not (QuestGreetingShown() and HasOptions(npcId)) then return false end
+    -- The NPC's own greeting, then our line (and any answer) under it
+    local text = (GetGreetingText and GetGreetingText()) or ""
+    local lines = {}
+    local greet = DuelOf(npcId) and Loc:Get("npc." .. tostring(npcId) .. ".greet")
+    if greet then lines[#lines + 1] = greet end
+    local said = Said(npcId)
+    if said then lines[#lines + 1] = said end
+    if #lines > 0 then
+        local extra = table.concat(lines, "\n\n")
+        text = (text ~= "") and (text .. "\n\n" .. extra) or extra
+    end
+
+    local options = {}
+    if GiftCardOf(npcId) and CanAsk(npcId) then options[#options + 1] = { "npc.ask", Ask } end
+    if DuelOf(npcId) then options[#options + 1] = { "npc.duel", StartDuel } end
+
+    -- Blank lines (" " so they count) until there's room for the options under the text
+    GreetingText:SetText(text)
+    local textH = GreetingText:GetStringHeight() or 0
+    local need = #options * OPTION_H + 6
+    local reserved, room = text, 0
+    for _ = 1, 20 do
+        if #options == 0 or room >= need then break end
+        reserved = reserved .. "\n "
+        GreetingText:SetText(reserved)
+        room = (GreetingText:GetStringHeight() or 0) - textH
+    end
+
+    -- The option lines, in that room: the first just under the text
+    local child = QuestGreetingScrollChildFrame
+    for i, opt in ipairs(options) do
+        local b = QuestButton(i)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", GreetingText, "BOTTOMLEFT", 0, room - 6 - (i - 1) * OPTION_H)
+        b:SetPoint("RIGHT", child, "RIGHT", -5, 0)
+        b.text:SetText(L(opt[1]))
+        b:SetScript("OnClick", opt[2])
+        b:Show()
+    end
+    for i = #options + 1, #questButtons do questButtons[i]:Hide() end
+    G:Hide()
+    return true
+end
+
 local Q = CreateFrame("Frame")
 for _, event in ipairs({ "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE" }) do
     pcall(Q.RegisterEvent, Q, event)
 end
-Q:SetScript("OnEvent", function()
+Q:SetScript("OnEvent", function(_, event)
     C_Timer.After(0, function()
         if GossipFrame and GossipFrame:IsShown() then return end   -- a quest picked from gossip
         local npcId = GossipNpcId()
-        if HasOptions(npcId) and QuestFrame and QuestFrame:IsShown() then ShowPanel(npcId) end
+        if not (HasOptions(npcId) and QuestFrame and QuestFrame:IsShown()) then return end
+        if event == "QUEST_GREETING" and AddToQuestGreeting(npcId) then return end
+        HideQuestButtons()
+        ShowPanel(npcId)
     end)
 end)
+if QuestFrameGreetingPanel then
+    QuestFrameGreetingPanel:HookScript("OnHide", HideQuestButtons)
+end
 if QuestFrame then
     QuestFrame:HookScript("OnHide", function()
+        HideQuestButtons()
         if not (GossipFrame and GossipFrame:IsShown()) then
             G:Hide()
             reply = nil

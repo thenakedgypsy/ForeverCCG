@@ -127,11 +127,9 @@ local function Build()
     F.organizerBox:SetPoint("TOPLEFT", 110, -80)
     local join = UI.Button(J, "Join Event", 130, 24, DoJoin)
     join:SetPoint("TOPLEFT", 110, -114)
-    local host = UI.Button(J, "Host an Event", 130, 24, function()
-        F:Hide()
-        UI.OpenOrganizer()
-    end)
-    host:SetPoint("BOTTOMLEFT", 12, 8)
+    -- Back to Join or Host (UI\Choose.lua), which hosting is picked from
+    local back = UI.Button(J, "Back", 100, 24, function() UI.BackToTournaments(F) end)
+    back:SetPoint("BOTTOMLEFT", 12, 8)
 
     -- In an event
     local V = CreateFrame("Frame", nil, F)

@@ -35,10 +35,10 @@ TTS:AddCards({
     },
     ["WET04"] = {
         id = "WET04", name = "Crimson Whelp", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 505,
+        power = 2, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 505,
         zone = "Wetlands", creatureType = "Dragonkin", faction = "Scarlet Crusade", npcId = 1069,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["WET05"] = {
         id = "WET05", name = "Dragonmaw Raider", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -56,10 +56,10 @@ TTS:AddCards({
     },
     ["WET07"] = {
         id = "WET07", name = "Syndicate Highwayman", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 3984,
+        power = 3, toughness = 4, unblockable = true, firstStrike = true, isMob = true, isBoss = true, displayId = 3984,
         zone = "Wetlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2586,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Invisible."
     },
     ["WET08"] = {
         id = "WET08", name = "Rumbling Exile", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",

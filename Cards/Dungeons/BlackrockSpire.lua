@@ -15,10 +15,10 @@ TTS:AddCards({
     -- BLACKROCK SPIRE
     ["BRS01"] = {
         id = "BRS01", name = "Scarshield Legionnaire", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 9629,
+        power = 3, toughness = 3, bulwark = 2, isMob = true, isBoss = true, displayId = 9629,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9097,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Bulwark 2."
     },
     ["BRS02"] = {
         id = "BRS02", name = "Spirestone Enforcer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["BRS03"] = {
         id = "BRS03", name = "Smolderthorn Headhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 9682,
+        power = 4, toughness = 3, reach = true, haste = true, isMob = true, isBoss = true, displayId = 9682,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9241,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Anti-Air."
     },
     ["BRS04"] = {
         id = "BRS04", name = "Smolderthorn Shadow Priest", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -64,17 +64,17 @@ TTS:AddCards({
     },
     ["BRS08"] = {
         id = "BRS08", name = "Rage Talon Dragonspawn", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 6, isMob = true, isBoss = true, displayId = 2554,
+        power = 7, toughness = 6, enrage = true, isMob = true, isBoss = true, displayId = 2554,
         zone = "Blackrock Spire", creatureType = "Dragonkin", npcId = 9096,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = ""
+        text = "Enrage."
     },
     ["BRS09"] = {
         id = "BRS09", name = "Quartermaster Zigris", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 9738,
+        power = 6, toughness = 6, reach = true, support = true, isMob = true, isBoss = true, displayId = 9738,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Blackrock", npcId = 9736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Anti-Air."
     },
     ["BRS10"] = {
         id = "BRS10", name = "Halycon", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -92,10 +92,10 @@ TTS:AddCards({
     },
     ["BRS12"] = {
         id = "BRS12", name = "War Master Voone", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 8, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 9733,
+        power = 8, toughness = 7, bulwark = 2, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 9733,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Troll", npcId = 9237,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Bulwark 2. Anti-Air."
     },
     ["BRS13"] = {
         id = "BRS13", name = "Mother Smolderweb", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -123,11 +123,11 @@ TTS:AddCards({
     },
     ["BRS16"] = {
         id = "BRS16", name = "Highlord Omokk", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 11565,
+        power = 7, toughness = 8, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 11565,
         zone = "Blackrock Spire", creatureType = "Humanoid", faction = "Ogre", npcId = 9196,
         rally = { tag = "faction", value = "Ogre", p = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Gets +1/+0 for each other Ogre you control."
+        text = "Brutish. Enrage. Gets +1/+0 for each other Ogre you control."
     },
     ["BRS17"] = {
         id = "BRS17", name = "Goraluk Anvilcrack", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -146,10 +146,10 @@ TTS:AddCards({
     },
     ["BRS19"] = {
         id = "BRS19", name = "The Beast", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 10, haste = true, trample = true, isMob = true, isBoss = true, displayId = 10193,
+        power = 10, toughness = 10, enrage = true, haste = true, trample = true, isMob = true, isBoss = true, displayId = 10193,
         zone = "Blackrock Spire", creatureType = "Beast", npcId = 10430,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Quick. Brutish."
+        text = "Quick. Brutish. Enrage."
     },
     -- Solo reward
     ["BRS20"] = {

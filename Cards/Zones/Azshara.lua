@@ -56,10 +56,10 @@ TTS:AddCards({
     },
     ["AZS07"] = {
         id = "AZS07", name = "Mosshoof Courser", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 10957,
+        power = 3, toughness = 4, enrage = true, haste = true, isMob = true, isBoss = true, displayId = 10957,
         zone = "Azshara", creatureType = "Beast", npcId = 8761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Enrage."
     },
     ["AZS08"] = {
         id = "AZS08", name = "Legashi Rogue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",

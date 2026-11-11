@@ -31,6 +31,13 @@ end
 
 local function Minutes(v) return v == 0 and "None" or (v .. " min") end
 
+-- The cards banned in the event being set up (ids), and the button's count of them
+local bannedIds = {}
+local function ShowBannedCount()
+    local n = #bannedIds
+    form.banned:SetText(n == 0 and "Choose cards (none banned)" or ("Choose cards (" .. n .. " banned)"))
+end
+
 local function BuildSetup(P)
     local rowY = -8
     local function Row(left, leftWidget, right, rightWidget)
@@ -61,7 +68,7 @@ local function BuildSetup(P)
     Row("Swiss rounds", form.rounds, "Round time", form.roundMinutes)
     form.roundMinutes:SetValue(T.DEFAULTS.roundMinutes)
 
-    form.maxPlayers = UI.Dropdown(P, 150, Options({ 4, 8, 16, 32, 64 }, function(v) return v .. " players" end))
+    form.maxPlayers = UI.Dropdown(P, 150, Options({ 4, 6, 8, 16, 32, 64 }, function(v) return v .. " players" end))
     form.maxPlayers:SetValue(T.DEFAULTS.maxPlayers)
     form.deckLock = UI.Dropdown(P, 150, { { false, "Off" }, { true, "On" } })
     Row("Player limit", form.maxPlayers, "Deck lock", form.deckLock)
@@ -84,21 +91,28 @@ local function BuildSetup(P)
     -- everyone who plays starts the week's prize cooldown
     form.prizes = UI.Dropdown(P, 150, { { false, "Off" }, { true, "On" } })
     Row("Prizes", form.prizes)
-    local prizeHint = UI.Label(P, "GameFontDisableSmall", 290, rowY + 30 - 5, 330)
+    -- Two lines beside the dropdown, inside the panel's right edge
+    local prizeHint = UI.Label(P, "GameFontDisableSmall", 290, rowY + 30 + 1, 310)
+    prizeHint:SetWordWrap(true)
     prizeHint:SetText("Champion wins a prize card; all players start a week's cooldown.")
 
-    form.banned = UI.Edit(P, 450)
+    -- Banned cards: picked in their own window (UI\BanPicker.lua); the button says how many
+    bannedIds = {}
+    form.banned = UI.Button(P, "", 200, 22, function()
+        UI.OpenBanPicker(bannedIds, function(ids)
+            bannedIds = ids
+            ShowBannedCount()
+        end)
+    end)
+    ShowBannedCount()
     Row("Banned cards", form.banned)
     local hint = UI.Label(P, "GameFontDisableSmall", 130, rowY + 6)
-    hint:SetText("Card names or ids, separated by commas. Leave number boxes empty for no limit.")
+    hint:SetText("Leave number boxes empty for no limit.")
     rowY = rowY - 12
 
     P.create = UI.Button(P, "Create Event", 130, 24, function()
-        local ids, unknown = B.ResolveCards(form.banned:GetText())
-        if #unknown > 0 then
-            ns.Print("Unknown card: " .. unknown[1])
-            return
-        end
+        local ids = {}
+        for i, id in ipairs(bannedIds) do ids[i] = id end
         H:Create(form.name:GetText(), {
             format = form.format:GetValue(), bestOf = form.bestOf:GetValue(), rounds = form.rounds:GetValue(),
             roundMinutes = form.roundMinutes:GetValue(), maxPlayers = form.maxPlayers:GetValue(),
@@ -163,7 +177,9 @@ local function RefreshSetup(P)
     form.minRating:SetText(s.minRating > 0 and s.minRating or "")
     form.maxRating:SetText(s.maxRating > 0 and s.maxRating or "")
     form.maxScore:SetText(s.maxScore > 0 and s.maxScore or "")
-    form.banned:SetText(table.concat(s.banned, ", "))
+    bannedIds = {}
+    for i, id in ipairs(s.banned) do bannedIds[i] = id end
+    ShowBannedCount()
 end
 
 -- =========================================================================

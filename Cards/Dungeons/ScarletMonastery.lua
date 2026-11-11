@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["SMO06"] = {
         id = "SMO06", name = "Scarlet Myrmidon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 2515,
+        power = 6, toughness = 4, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 2515,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4295,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage."
     },
     ["SMO07"] = {
         id = "SMO07", name = "Scarlet Champion", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
@@ -81,10 +81,10 @@ TTS:AddCards({
     ["SMO10"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "SMO10", name = "Fallen Champion", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 5230,
+        power = 7, toughness = 7, bulwark = 2, lifelink = true, isMob = true, isBoss = true, displayId = 5230,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6488,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Bulwark 2."
     },
     ["SMO11"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
@@ -96,10 +96,10 @@ TTS:AddCards({
     },
     ["SMO12"] = {
         id = "SMO12", name = "High Inquisitor Fairbanks", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 6, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 2605,
+        power = 6, toughness = 8, shielded = true, lifelink = true, isMob = true, isBoss = true, displayId = 2605,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade", npcId = 4542,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Shielded."
     },
     ["SMO13"] = {
         id = "SMO13", name = "Scarlet Commander Mograine", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

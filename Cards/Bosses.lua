@@ -41,10 +41,10 @@ TTS:AddCards({
     -- Shadowfang Keep: Archmage Arugal
     ["BOSS04"] = {
         id = "BOSS04", name = "Archmage Arugal", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 2353,
+        power = 4, toughness = 5, blink = true, isMob = true, isBoss = true, displayId = 2353,
         zone = "Shadowfang Keep", creatureType = "Humanoid", npcId = 4275,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "{2}{U}, {T}: Put target Exhausted denizen on top of its owner's deck."
+        text = "Blink. {2}{U}, {T}: Put target Exhausted denizen on top of its owner's deck."
     },
 
     -- Blackfathom Deeps: Aku'mai
@@ -105,10 +105,10 @@ TTS:AddCards({
     -- SM Armory: Herod
     ["BOSS11"] = {
         id = "BOSS11", name = "Herod", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 2041,
+        power = 6, toughness = 5, enrage = true, bulwark = 2, haste = true, isMob = true, isBoss = true, displayId = 2041,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3975,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Quick. Attacks each combat if able. Aggro: Gets +2/+0 until end of turn."
+        text = "Quick. Enrage. Bulwark 2. Attacks each combat if able. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- SM Cathedral: High Inquisitor Whitemane
@@ -142,10 +142,10 @@ TTS:AddCards({
     -- Zul'Farrak: Chief Ukorz Sandscalp
     ["BOSS15"] = {
         id = "BOSS15", name = "Chief Ukorz Sandscalp", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 7, haste = true, trample = true, isMob = true, isBoss = true, displayId = 6439,
+        power = 7, toughness = 7, enrage = true, bulwark = 2, haste = true, trample = true, isMob = true, isBoss = true, displayId = 6439,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7267,
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Quick. Gets +3/+0 while your life is 10 or less."
+        text = "Brutish. Quick. Enrage. Bulwark 2. Gets +3/+0 while your life is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -187,10 +187,10 @@ TTS:AddCards({
     -- UBRS: General Drakkisath
     ["BOSS20"] = {
         id = "BOSS20", name = "General Drakkisath", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 10, toughness = 9, hexproof = true, trample = true, isMob = true, isBoss = true, displayId = 10115,
+        power = 10, toughness = 9, bulwark = 2, hexproof = true, trample = true, isMob = true, isBoss = true, displayId = 10115,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock", npcId = 10363,
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
-        text = "Brutish. Warded. All other denizens lose and cannot gain Quick."
+        text = "Brutish. Warded. Bulwark 2. All other denizens lose and cannot gain Quick."
     },
 
     -- Dire Maul East: Alzzin the Wildshaper
@@ -205,19 +205,19 @@ TTS:AddCards({
     -- Dire Maul West: Prince Tortheldrin
     ["BOSS22"] = {
         id = "BOSS22", name = "Prince Tortheldrin", cost = "{2}{U}{B}", cmc = 4, color = "U", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 11256,
+        power = 5, toughness = 5, bulwark = 2, isMob = true, isBoss = true, displayId = 11256,
         zone = "Dire Maul", creatureType = "Humanoid", npcId = 11486,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "{2}{U}: Draw 1, then discard a card. Gets +1/+1 until end of turn."
+        text = "Bulwark 2. {2}{U}: Draw 1, then discard a card. Gets +1/+1 until end of turn."
     },
 
     -- Dire Maul North: King Gordok
     ["BOSS23"] = {
         id = "BOSS23", name = "King Gordok", cost = "{4}{G}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 10, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 11583,
+        power = 10, toughness = 8, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 11583,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11501,
         modelCam = { zoom = 0.45, camScale = 1.45, z = -0.22, rotation = 0.15 },
-        text = "Brutish. Aggro: Gets +2/+0 until end of turn."
+        text = "Brutish. Enrage. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- Scholomance: Darkmaster Gandling
@@ -279,10 +279,10 @@ TTS:AddCards({
     -- City of Dalaran: Shade of the Archmage
     ["BOSS30"] = {
         id = "BOSS30", name = "Shade of the Archmage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 6, toughness = 7, flying = true, isMob = true, isBoss = true, displayId = 130061,
+        power = 6, toughness = 7, blink = true, flying = true, isMob = true, isBoss = true, displayId = 130061,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246020,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. Arrival: Exhaust each enemy denizen."
+        text = "Airborne. Blink. Arrival: Exhaust each enemy denizen."
     },
 })

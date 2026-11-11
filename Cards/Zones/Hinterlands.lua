@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["HIN08"] = {
         id = "HIN08", name = "Vilebranch Shadow Hunter", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6538,
+        power = 6, toughness = 6, reach = true, isMob = true, isBoss = true, displayId = 6538,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2645,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["HIN09"] = {
         id = "HIN09", name = "Vilebranch Blood Drinker", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -77,11 +77,11 @@ TTS:AddCards({
     },
     ["HIN10"] = {
         id = "HIN10", name = "Mith'rethis the Enchanter", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
-        power = 10, toughness = 10, isMob = true, isNamed = true, isBoss = true, displayId = 6512,
+        power = 11, toughness = 10, blink = true, isMob = true, isNamed = true, isBoss = true, displayId = 6512,
         dropChance = { 100, 50, 25, 12 },   -- long respawn (about 26h)
         zone = "The Hinterlands", creatureType = "Humanoid", npcId = 8217,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Blink."
     },
     -- Solo reward
     ["HIN11"] = {

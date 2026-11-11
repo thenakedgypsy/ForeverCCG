@@ -107,6 +107,17 @@ function C:Remaining()
     return nil
 end
 
+-- Seconds until today's bonus can be earned again (local midnight) once it has been earned
+-- today and has run out; nil while it can be earned, or while it's running (the minimap
+-- button's tooltip)
+function C:CooldownLeft()
+    if DB().day ~= Today() or self:Remaining() then return nil end
+    local now = Now()
+    local t = date("*t", now)
+    t.day, t.hour, t.min, t.sec = t.day + 1, 0, 0, 0
+    return math.max(0, time(t) - now)
+end
+
 -- What copy-drop chances are multiplied by (BossTracker.lua)
 function C:DropMultiplier()
     if not self:Remaining() then return 1 end

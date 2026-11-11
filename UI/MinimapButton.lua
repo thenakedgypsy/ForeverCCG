@@ -149,6 +149,8 @@ btn:SetScript("OnClick", function()
     end
 end)
 
+local function Duration(seconds) return TTS:FormatWait(seconds) end
+
 local function BuildMinimapTooltip(tip)
     tip:AddLine("Forever: CCG", 1, 0.82, 0)
     tip:AddLine(" ")
@@ -159,11 +161,28 @@ local function BuildMinimapTooltip(tip)
     if TTS.PvP then
         tip:AddDoubleLine(L("minimap.rating"), TTS.PvP.ColoredRating((TTS.PvP:Get())), 1, 1, 1, 1, 0.82, 0)
     end
-    -- Campfire warmth running (Campfire.lua): the time left, never the size
+    -- Campfire warmth running (Campfire.lua): the time left, never the size; once today's has
+    -- been had, how long until the next can be (midnight); otherwise that it's ready
     local warmth = TTS.Campfire and TTS.Campfire:Remaining()
     if warmth then
         local m = math.ceil(warmth / 60)
         tip:AddDoubleLine(L("minimap.campfire"), L(m == 1 and "campfire.minute" or "campfire.minutes", m), 1, 0.6, 0.2, 1, 1, 1)
+    elseif TTS.Campfire and TTS.Campfire.CooldownLeft then
+        local wait = TTS.Campfire:CooldownLeft()
+        if wait then
+            tip:AddDoubleLine(L("minimap.campfireNext"), Duration(wait), 1, 1, 1, 0.6, 0.6, 0.6)
+        else
+            tip:AddDoubleLine(L("minimap.campfireNext"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
+        end
+    end
+    -- The weekly tournament prize cooldown (AdminGrants.lua)
+    if TTS.TournamentPrizeCooldown then
+        local wait = TTS:TournamentPrizeCooldown()
+        if wait > 0 then
+            tip:AddDoubleLine(L("minimap.prize"), Duration(wait), 1, 1, 1, 0.6, 0.6, 0.6)
+        else
+            tip:AddDoubleLine(L("minimap.prize"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
+        end
     end
 
     if TTS.Engine and TTS.Engine.inMatch then

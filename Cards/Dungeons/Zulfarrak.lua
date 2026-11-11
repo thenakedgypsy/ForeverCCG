@@ -22,17 +22,17 @@ TTS:AddCards({
     },
     ["ZFK02"] = {
         id = "ZFK02", name = "Sandfury Shadowhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 6425,
+        power = 4, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 6425,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["ZFK03"] = {
         id = "ZFK03", name = "Sandfury Executioner", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6440,
+        power = 4, toughness = 3, enrage = true, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 6440,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7274,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Enrage. Bulwark 2."
     },
     ["ZFK04"] = {
         id = "ZFK04", name = "Sul'lithuz Sandcrawler", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -65,10 +65,10 @@ TTS:AddCards({
     },
     ["ZFK08"] = {
         id = "ZFK08", name = "Ruuzlu", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 6687,
+        power = 7, toughness = 6, enrage = true, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 6687,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7797,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Enrage. Bulwark 2."
     },
     ["ZFK09"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates

@@ -14,10 +14,10 @@ TTS:AddCards({
     -- THE BARRENS
     ["BRN01"] = {
         id = "BRN01", name = "Kolkar Wrangler", cost = "{R}", cmc = 1, color = "R", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 9442,
+        power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 9442,
         zone = "The Barrens", creatureType = "Humanoid", npcId = 3272,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["BRN02"] = {
         id = "BRN02", name = "Sunscale Screecher", cost = "{G}", cmc = 1, color = "G", type = "Creature",

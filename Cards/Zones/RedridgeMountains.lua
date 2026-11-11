@@ -28,10 +28,10 @@ TTS:AddCards({
     },
     ["RED03"] = {
         id = "RED03", name = "Redridge Poacher", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 551,
+        power = 2, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 551,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Gnoll", npcId = 424,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["RED04"] = {
         id = "RED04", name = "Redridge Mystic", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
@@ -57,17 +57,17 @@ TTS:AddCards({
     },
     ["RED07"] = {
         id = "RED07", name = "Murloc Scout", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 3, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 391,
+        power = 3, toughness = 4, reach = true, haste = true, isMob = true, isBoss = true, displayId = 391,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Murloc", npcId = 578,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Anti-Air."
     },
     ["RED08"] = {
         id = "RED08", name = "Blackrock Champion", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 6, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 6044,
+        power = 6, toughness = 5, enrage = true, support = true, isMob = true, isBoss = true, displayId = 6044,
         zone = "Redridge Mountains", creatureType = "Humanoid", faction = "Blackrock", npcId = 435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Enrage."
     },
     ["RED09"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates

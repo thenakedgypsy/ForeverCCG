@@ -28,10 +28,10 @@ TTS:AddCards({
     },
     ["DES03"] = {
         id = "DES03", name = "Burning Blade Reaver", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 4703,
+        power = 2, toughness = 1, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 4703,
         zone = "Desolace", creatureType = "Humanoid", faction = "Burning Blade", npcId = 4664,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Bulwark 2."
     },
     ["DES04"] = {
         id = "DES04", name = "Gritjaw Basilisk", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
@@ -49,11 +49,11 @@ TTS:AddCards({
     },
     ["DES06"] = {
         id = "DES06", name = "Raging Thunder Lizard", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 2742,
+        power = 2, toughness = 3, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 2742,
         zone = "Desolace", creatureType = "Beast", npcId = 4726,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
         etb = { ops = { { op = "raze" } } },
-        text = "Brutish. Arrival: Raze the opponent's Location."
+        text = "Brutish. Enrage. Arrival: Raze the opponent's Location."
     },
     ["DES07"] = {
         id = "DES07", name = "Dread Flyer", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

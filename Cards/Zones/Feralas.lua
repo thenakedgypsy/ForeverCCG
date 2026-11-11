@@ -21,10 +21,10 @@ TTS:AddCards({
     },
     ["FER02"] = {
         id = "FER02", name = "Woodpaw Reaver", cost = "{R}", cmc = 1, color = "R", type = "Creature",
-        power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 10795,
+        power = 1, toughness = 1, enrage = true, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 10795,
         zone = "Feralas", creatureType = "Humanoid", faction = "Gnoll", npcId = 5255,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Enrage. Bulwark 2."
     },
     ["FER03"] = {
         id = "FER03", name = "Groddoc Ape", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -35,10 +35,10 @@ TTS:AddCards({
     },
     ["FER04"] = {
         id = "FER04", name = "Hatecrest Sorceress", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 11260,
+        power = 3, toughness = 2, blink = true, isMob = true, isBoss = true, displayId = 11260,
         zone = "Feralas", creatureType = "Humanoid", faction = "Naga", npcId = 5336,
         modelCam = { zoom = 0.80, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = ""
+        text = "Blink."
     },
     ["FER05"] = {
         id = "FER05", name = "Longtooth Howler", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",

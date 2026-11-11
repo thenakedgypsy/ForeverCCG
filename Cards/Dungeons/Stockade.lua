@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["STK03"] = {
         id = "STK03", name = "Targorr the Dread", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 517,
+        power = 6, toughness = 5, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 517,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1696,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage."
     },
     ["STK04"] = {
         id = "STK04", name = "Dextren Ward", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

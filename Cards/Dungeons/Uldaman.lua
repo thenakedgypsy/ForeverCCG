@@ -15,10 +15,10 @@ TTS:AddCards({
     -- ULDAMAN
     ["ULD01"] = {
         id = "ULD01", name = "Stonevault Rockchewer", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 721,
+        power = 3, toughness = 3, enrage = true, isMob = true, isBoss = true, displayId = 721,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 4851,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Enrage."
     },
     ["ULD02"] = {
         id = "ULD02", name = "Shadowforge Relic Hunter", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["ULD06"] = {
         id = "ULD06", name = "Baelog", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 5710,
+        power = 5, toughness = 6, reach = true, support = true, isMob = true, isBoss = true, displayId = 5710,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 6906,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Anti-Air."
     },
     ["ULD07"] = {
         id = "ULD07", name = "Olaf", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",

@@ -63,10 +63,10 @@ TTS:AddCards({
     },
     ["BAD08"] = {
         id = "BAD08", name = "Shadowforge Surveyor", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6051,
+        power = 6, toughness = 6, shielded = true, isMob = true, isBoss = true, displayId = 6051,
         zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4844,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["BAD09"] = {
         id = "BAD09", name = "Shadowforge Digger", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",

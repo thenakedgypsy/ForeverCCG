@@ -35,10 +35,10 @@ TTS:AddCards({
     },
     ["WIN04"] = {
         id = "WIN04", name = "Chillwind Chimaera", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
-        power = 1, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 10810,
+        power = 1, toughness = 2, bulwark = 2, flying = true, isMob = true, isBoss = true, displayId = 10810,
         zone = "Winterspring", creatureType = "Beast", npcId = 7448,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = "Airborne."
+        text = "Airborne. Bulwark 2."
     },
     ["WIN05"] = {
         id = "WIN05", name = "Moontouched Owlbeast", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -56,10 +56,10 @@ TTS:AddCards({
     },
     ["WIN07"] = {
         id = "WIN07", name = "Chillwind Ravager", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 10809,
+        power = 4, toughness = 4, enrage = true, isMob = true, isBoss = true, displayId = 10809,
         zone = "Winterspring", creatureType = "Beast", npcId = 7449,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = ""
+        text = "Enrage."
     },
     ["WIN08"] = {
         id = "WIN08", name = "Winterspring Screecher", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -70,10 +70,10 @@ TTS:AddCards({
     },
     ["WIN09"] = {
         id = "WIN09", name = "Frostsaber Huntress", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
+        power = 7, toughness = 6, enrage = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
         zone = "Winterspring", creatureType = "Beast", npcId = 7433,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Enrage."
     },
     ["WIN10"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates

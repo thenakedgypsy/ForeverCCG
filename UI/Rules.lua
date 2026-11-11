@@ -743,6 +743,7 @@ local PAGES = {
         { "glossary", "keyword", {
             { "haste", "WES01" }, { "flying", "WES04" }, { "unblockable", "AZS01" }, { "trample", "WES05" },
             { "firstStrike", "WES02" }, { "deathtouch", "BRN08" }, { "lifelink", "BRD04" }, { "vigilance", "BRN05" },
+            { "enrage", "FEL06" }, { "blink", "FER04" },
         } },
         { "h", "rules.keywords.h.defend" },
         { "glossary", "keyword", {

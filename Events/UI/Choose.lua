@@ -14,12 +14,14 @@ local UI, H, P = ns.UI, ns.Host, ns.Player
 -- one brings the main window back (UI\MainFrame.lua's ttsOpenedFromMain).
 -- =========================================================================
 local F
+local Build
 
--- Hides this window and opens `target` (a frame) in its place
-local function Pick(open, target)
-    local fromMain = F.ttsOpenedFromMain
-    F.ttsOpenedFromMain = nil   -- (so hiding this doesn't bring the main window back)
-    F:Hide()
+-- Hides window `from` and opens the window named `target` in its place (open: shows it).
+-- If `from` was opened from the main window, `target` takes that over.
+local function Swap(from, open, target)
+    local fromMain = from.ttsOpenedFromMain
+    from.ttsOpenedFromMain = nil   -- (so hiding it doesn't bring the main window back)
+    from:Hide()
     open()
     local win = _G[target]
     if fromMain and win and win:IsShown() and TTS.MainFrame and TTS.MainFrame.OpenChild then
@@ -27,10 +29,21 @@ local function Pick(open, target)
     end
 end
 
-local function Build()
+local function Pick(open, target) Swap(F, open, target) end
+
+-- Back to this window from the one picked (the player's window's Back button)
+function UI.BackToTournaments(from)
+    Swap(from, function()
+        if not F then Build() end
+        F:Show()
+    end, "FCCGE_ChooseFrame")
+end
+
+Build = function()
     F = UI.Window("FCCGE_ChooseFrame", 300, 168, "Tournaments")
 
-    local intro = UI.Label(F, "GameFontHighlightSmall", 20, -48, 260)
+    local intro = UI.Label(F, "GameFontHighlightSmall", 20, -46, 260)
+    intro:SetWordWrap(true)   -- (two lines, above the buttons)
     intro:SetJustifyH("CENTER")
     intro:SetText("Join an event with the organizer's code, or run one of your own.")
 

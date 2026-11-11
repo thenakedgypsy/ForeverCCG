@@ -86,11 +86,11 @@ TTS:AddCards({
     },
     ["DUR12"] = {
         id = "DUR12", name = "Gazz'uz", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isNamed = true, isBoss = true, displayId = 240,
+        power = 3, toughness = 3, shielded = true, isMob = true, isNamed = true, isBoss = true, displayId = 240,
         zone = "Durotar", creatureType = "Humanoid", faction = "Burning Blade", npcId = 3204,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         etb = { ops = { { op = "token", id = "TOK06", n = 1 } } },
-        text = "Arrival: Spawn: 1 Voidwalker Add (1/5, Blocker)."
+        text = "Shielded. Arrival: Spawn: 1 Voidwalker Add (1/5, Blocker)."
     },
     -- Solo reward
     ["DUR11"] = {

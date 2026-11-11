@@ -36,10 +36,10 @@ TTS:AddCards({
     },
     ["MAR04"] = {
         id = "MAR04", name = "Celebrian Dryad", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 11714,
+        power = 3, toughness = 4, reach = true, lifelink = true, isMob = true, isBoss = true, displayId = 11714,
         zone = "Maraudon", creatureType = "Humanoid", npcId = 11793,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Anti-Air."
     },
     ["MAR05"] = {
         id = "MAR05", name = "Theradrim Guardian", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["MAR06"] = {
         id = "MAR06", name = "Razorlash", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 12389,
+        power = 6, toughness = 6, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 12389,
         zone = "Maraudon", creatureType = "Elemental", npcId = 12258,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Bulwark 2."
     },
     ["MAR07"] = {
         id = "MAR07", name = "Noxxion", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -64,17 +64,17 @@ TTS:AddCards({
     },
     ["MAR08"] = {
         id = "MAR08", name = "Lord Vyletongue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 12334,
+        power = 8, toughness = 7, blink = true, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 12334,
         zone = "Maraudon", creatureType = "Demon", npcId = 12236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Blink. Anti-Air."
     },
     ["MAR09"] = {
         id = "MAR09", name = "Tinkerer Gizlock", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 7125,
+        power = 7, toughness = 7, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 7125,
         zone = "Maraudon", creatureType = "Humanoid", npcId = 13601,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Anti-Air."
     },
     ["MAR10"] = {
         id = "MAR10", name = "Celebras the Cursed", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",

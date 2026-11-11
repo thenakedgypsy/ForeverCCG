@@ -28,10 +28,10 @@ TTS:AddCards({
     },
     ["THO03"] = {
         id = "THO03", name = "Galak Wrangler", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 9414,
+        power = 2, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 9414,
         zone = "Thousand Needles", creatureType = "Humanoid", npcId = 4093,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Anti-Air."
     },
     ["THO04"] = {
         id = "THO04", name = "Pesterhide Hyena", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",

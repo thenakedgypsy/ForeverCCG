@@ -22,10 +22,10 @@ TTS:AddCards({
     },
     ["GNO02"] = {
         id = "GNO02", name = "Leprous Defender", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 5, support = true, isMob = true, isBoss = true, displayId = 6982,
+        power = 3, toughness = 5, reach = true, support = true, isMob = true, isBoss = true, displayId = 6982,
         zone = "Gnomeregan", creatureType = "Humanoid", npcId = 6223,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Anti-Air."
     },
     ["GNO03"] = {
         id = "GNO03", name = "Mechano-Flamewalker", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -51,10 +51,10 @@ TTS:AddCards({
     ["GNO06"] = {
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "GNO06", name = "Dark Iron Ambassador", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 6669,
+        power = 6, toughness = 6, shielded = true, isMob = true, isBoss = true, displayId = 6669,
         zone = "Gnomeregan", creatureType = "Humanoid", faction = "Dark Iron", npcId = 6228,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["GNO07"] = {
         id = "GNO07", name = "Electrocutioner 6000", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -65,11 +65,11 @@ TTS:AddCards({
     },
     ["GNO08"] = {
         id = "GNO08", name = "Crowd Pummeler 9-60", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 6774,
+        power = 6, toughness = 7, bulwark = 2, trample = true, isMob = true, isBoss = true, displayId = 6774,
         zone = "Gnomeregan", creatureType = "Mechanical", npcId = 6229,
         anthem = { tag = "type", value = "Mechanical", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Mechanicals you control get +1/+1."
+        text = "Brutish. Bulwark 2. Other Mechanicals you control get +1/+1."
     },
     -- Solo reward
     ["GNO09"] = {

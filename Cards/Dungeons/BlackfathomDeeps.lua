@@ -36,25 +36,25 @@ TTS:AddCards({
     },
     ["BFD04"] = {
         id = "BFD04", name = "Twilight Reaver", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 2901,
+        power = 4, toughness = 4, bulwark = 2, isMob = true, isBoss = true, displayId = 2901,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4810,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Bulwark 2."
     },
     ["BFD05"] = {
         id = "BFD05", name = "Blackfathom Sea Witch", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 4982,
+        power = 3, toughness = 5, shielded = true, isMob = true, isBoss = true, displayId = 4982,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4805,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["BFD06"] = {
         id = "BFD06", name = "Lady Sarevess", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 4, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 4979,
+        power = 4, toughness = 5, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4979,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4831,
         anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Naga you control get +1/+1."
+        text = "Strikes-First. Anti-Air. Other Naga you control get +1/+1."
     },
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -65,10 +65,10 @@ TTS:AddCards({
     },
     ["BFD08"] = {
         id = "BFD08", name = "Lorgus Jett", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
-        power = 5, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 12822,
+        power = 5, toughness = 5, shielded = true, haste = true, isMob = true, isBoss = true, displayId = 12822,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 12902,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Shielded."
     },
     ["BFD09"] = {
         id = "BFD09", name = "Gelihast", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",

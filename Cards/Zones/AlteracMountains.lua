@@ -42,10 +42,10 @@ TTS:AddCards({
     },
     ["ALT05"] = {
         id = "ALT05", name = "Syndicate Wizard", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 2, toughness = 4, isMob = true, isBoss = true, displayId = 3712,
+        power = 3, toughness = 4, blink = true, shielded = true, isMob = true, isBoss = true, displayId = 3712,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2319,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Blink. Shielded."
     },
     ["ALT06"] = {
         id = "ALT06", name = "Crushridge Ogre", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -63,33 +63,33 @@ TTS:AddCards({
     },
     ["ALT08"] = {
         id = "ALT08", name = "Syndicate Assassin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
+        power = 5, toughness = 5, unblockable = true, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Invisible."
     },
     ["ALT09"] = {
         id = "ALT09", name = "Crushridge Mage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
-        power = 6, toughness = 8, isMob = true, isBoss = true, displayId = 6705,
+        power = 7, toughness = 8, blink = true, isMob = true, isBoss = true, displayId = 6705,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2255,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Blink."
     },
     ["ALT10"] = {
         id = "ALT10", name = "Crushridge Warmonger", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 536,
+        power = 9, toughness = 9, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 536,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2287,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage."
     },
     -- Solo reward
     ["ALT11"] = {
         id = "ALT11", name = "Archmage Ansirem Runeweaver", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 3, toughness = 5, isReward = true, displayId = 1595,
+        power = 3, toughness = 5, blink = true, isReward = true, displayId = 1595,
         zone = "Alterac Mountains", creatureType = "Humanoid", npcEntry = 2543,
         anthem = { tag = "zone", value = "Alterac Mountains", t = 2 },
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Arrival: Exhaust each enemy denizen. Other Alterac Mountains denizens you control get +0/+2."
+        text = "Blink. Arrival: Exhaust each enemy denizen. Other Alterac Mountains denizens you control get +0/+2."
     },
 })

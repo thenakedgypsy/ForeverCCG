@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["SEA07"] = {
         id = "SEA07", name = "Greater Lava Spider", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 7510,
+        power = 3, toughness = 3, reach = true, deathtouch = true, isMob = true, isBoss = true, displayId = 7510,
         zone = "Searing Gorge", creatureType = "Beast", npcId = 5858,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Fatal. Anti-Air."
     },
     ["SEA08"] = {
         id = "SEA08", name = "Heavy War Golem", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",

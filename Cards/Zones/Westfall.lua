@@ -21,10 +21,10 @@ TTS:AddCards({
     },
     ["WES02"] = {
         id = "WES02", name = "Defias Smuggler", cost = "{B}", cmc = 1, color = "B", type = "Creature",
-        power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 4418,
+        power = 1, toughness = 1, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4418,
         zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 95,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Anti-Air."
     },
     ["WES03"] = {
         id = "WES03", name = "Harvest Golem", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",

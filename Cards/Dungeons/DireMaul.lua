@@ -29,17 +29,17 @@ TTS:AddCards({
     },
     ["DMA03"] = {
         id = "DMA03", name = "Gordok Brute", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 5, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 12473,
+        power = 5, toughness = 3, enrage = true, bulwark = 2, trample = true, isMob = true, isBoss = true, displayId = 12473,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11441,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage. Bulwark 2."
     },
     ["DMA04"] = {
         id = "DMA04", name = "Eldreth Sorcerer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 11205,
+        power = 5, toughness = 4, blink = true, isMob = true, isBoss = true, displayId = 11205,
         zone = "Dire Maul", creatureType = "Undead", npcId = 11470,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Blink."
     },
     ["DMA05"] = {
         id = "DMA05", name = "Pusillin", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -57,10 +57,10 @@ TTS:AddCards({
     },
     ["DMA07"] = {
         id = "DMA07", name = "Gordok Mage-Lord", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 6, toughness = 6, isMob = true, isBoss = true, displayId = 11537,
+        power = 7, toughness = 6, blink = true, isMob = true, isBoss = true, displayId = 11537,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11444,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = ""
+        text = "Blink."
     },
     ["DMA08"] = {
         id = "DMA08", name = "Zevrim Thornhoof", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -86,10 +86,10 @@ TTS:AddCards({
     },
     ["DMA11"] = {
         id = "DMA11", name = "Illyanna Ravenoak", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 11270,
+        power = 7, toughness = 7, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11270,
         zone = "Dire Maul", creatureType = "Undead", npcId = 11488,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Strikes-First. Anti-Air."
     },
     ["DMA12"] = {
         id = "DMA12", name = "Magister Kalendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -100,24 +100,24 @@ TTS:AddCards({
     },
     ["DMA13"] = {
         id = "DMA13", name = "Cho'Rush the Observer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
-        power = 7, toughness = 8, isMob = true, isBoss = true, displayId = 11537,
+        power = 6, toughness = 8, shielded = true, isMob = true, isBoss = true, displayId = 11537,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14324,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["DMA14"] = {
         id = "DMA14", name = "Guard Mol'dar", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 11561,
+        power = 7, toughness = 8, enrage = true, bulwark = 2, support = true, isMob = true, isBoss = true, displayId = 11561,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14326,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Enrage. Bulwark 2."
     },
     ["DMA15"] = {
         id = "DMA15", name = "Stomper Kreeg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
-        power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 11545,
+        power = 8, toughness = 7, enrage = true, bulwark = 2, trample = true, isMob = true, isBoss = true, displayId = 11545,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14322,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Brutish. Enrage. Bulwark 2."
     },
     ["DMA16"] = {
         id = "DMA16", name = "Tendris Warpwood", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -129,19 +129,19 @@ TTS:AddCards({
     },
     ["DMA17"] = {
         id = "DMA17", name = "Captain Kromcrush", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
-        power = 8, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 11564,
+        power = 8, toughness = 8, enrage = true, bulwark = 2, support = true, isMob = true, isBoss = true, displayId = 11564,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14325,
         anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support. Other Ogres you control get +1/+1."
+        text = "Support. Enrage. Bulwark 2. Other Ogres you control get +1/+1."
     },
     ["DMA18"] = {
         id = "DMA18", name = "Immol'thar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
-        power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 14173,
+        power = 9, toughness = 9, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 14173,
         zone = "Dire Maul", creatureType = "Demon", npcId = 11496,
         anthem = { tag = "type", value = "Demon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Demons you control get +1/+1."
+        text = "Brutish. Enrage. Other Demons you control get +1/+1."
     },
     -- Solo reward
     ["DMA19"] = {

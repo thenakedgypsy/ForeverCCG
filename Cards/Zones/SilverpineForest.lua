@@ -14,10 +14,10 @@ TTS:AddCards({
     -- SILVERPINE FOREST
     ["SIL01"] = {
         id = "SIL01", name = "Moonrage Whitescalp", cost = "{B}", cmc = 1, color = "B", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 11180,
+        power = 1, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 11180,
         zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Worgen", npcId = 1769,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Shielded."
     },
     ["SIL02"] = {
         id = "SIL02", name = "Mottled Worg", cost = "{G}", cmc = 1, color = "G", type = "Creature",

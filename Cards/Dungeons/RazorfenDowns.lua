@@ -15,10 +15,10 @@ TTS:AddCards({
     -- RAZORFEN DOWNS
     ["RFD01"] = {
         id = "RFD01", name = "Withered Warrior", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 11386,
+        power = 3, toughness = 3, enrage = true, isMob = true, isBoss = true, displayId = 11386,
         zone = "Razorfen Downs", creatureType = "Undead", npcId = 7327,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Enrage."
     },
     ["RFD02"] = {
         id = "RFD02", name = "Skeletal Frostweaver", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -29,10 +29,10 @@ TTS:AddCards({
     },
     ["RFD03"] = {
         id = "RFD03", name = "Boneflayer Ghoul", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 1065,
+        power = 4, toughness = 3, bulwark = 2, haste = true, isMob = true, isBoss = true, displayId = 1065,
         zone = "Razorfen Downs", creatureType = "Undead", npcId = 7347,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Quick. Bulwark 2."
     },
     ["RFD04"] = {
         id = "RFD04", name = "Death's Head Necromancer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -50,10 +50,10 @@ TTS:AddCards({
     },
     ["RFD06"] = {
         id = "RFD06", name = "Glutton", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
-        power = 6, toughness = 9, lifelink = true, isMob = true, isBoss = true, displayId = 7864,
+        power = 6, toughness = 9, enrage = true, lifelink = true, isMob = true, isBoss = true, displayId = 7864,
         zone = "Razorfen Downs", creatureType = "Undead", faction = "Quilboar", npcId = 8567,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Drain."
+        text = "Drain. Enrage."
     },
     ["RFD07"] = {
         id = "RFD07", name = "Ragglesnout", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
