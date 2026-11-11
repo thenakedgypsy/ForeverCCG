@@ -362,9 +362,9 @@ TTS:AddDuel({
     },
 })
 
--- Stonetalon Mountains: Ziz Fizziks (A goblin in a hut at Windshear Crag: Venture Co. machines and stone)
+-- Stonetalon Mountains: Jixo Madrocket (An amateur daredevil at Windshear Crag, next door to Ziz Fizziks: Venture Co. machines and stone)
 TTS:AddDuel({
-    id = "DUEL_STO", npcs = { 4201 }, name = "Ziz Fizziks", zone = "Stonetalon Mountains",
+    id = "DUEL_STO", npcs = { 210845 }, name = "Jixo Madrocket", zone = "Stonetalon Mountains",
     life = 20, ai = "tactical", background = { map = "StonetalonMountains" },
     reward = "LCN_STO",   -- their Location (a placeholder for now: CardsLocations.lua)
     deck = {   -- 38 cards, and 2 copies of their Location

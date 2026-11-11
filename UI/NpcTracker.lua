@@ -45,13 +45,31 @@ local function MyFaction()
     return (f == "Alliance" and "A") or (f == "Horde" and "H") or nil
 end
 
--- Whether this character has business with the NPC (s: its NpcSpots.lua row)
+-- The profession a trainer teaches (TTS.GIFT_POOLS), or nil
+local function TrainerProfession(npcId)
+    for _, def in pairs(TTS.GIFT_POOLS or {}) do
+        if def.profession then
+            for _, id in pairs(def.npcs or {}) do
+                if id == npcId then return def.profession end
+            end
+        end
+    end
+end
+
+-- Whether this character has business with the NPC (s: its NpcSpots.lua row). A trainer
+-- while learning their profession still gives a starter card (the account's first 2
+-- primaries); once both are picked up, not again until they're done, and then only those
+-- that hand out cards: professions the character doesn't know (Professions.lua).
 local function Wanted(npcId, s)
     local fac, me = s[5], MyFaction()
     if fac ~= "" and me and fac ~= me then return false end
     if s[4] == "duel" then
         local enc = TTS.DuelForNpc and TTS:DuelForNpc(npcId)
         if not enc or (TTS.CanReachDuel and not TTS:CanReachDuel(enc)) then return false end
+    elseif s[4] == "trainer" then
+        local prof = TrainerProfession(npcId)
+        local P = TTS.Professions
+        if not (prof and P and (P:StarterOpen(prof) or P:TrainerCards(prof))) then return false end
     end
     return true
 end
@@ -65,9 +83,30 @@ local function ShowTip(owner, npcId, s)
     GameTooltip:Show()
 end
 
--- icon: ICON or ICON_SMALL (the maps')
-local function Paint(tex, kind, icon)
+-- Whether an NPC has nothing for the player right now (TTS:NpcWaiting, UI\NpcGossip.lua),
+-- asked again at most every WAIT_RECHECK seconds (the minimap redraws ten times a second)
+local WAIT_RECHECK = 2
+local waitCache = {}   -- npcId -> { time, waiting }
+local function Waiting(npcId)
+    if not (npcId and TTS.NpcWaiting) then return false end
+    local now, c = GetTime(), waitCache[npcId]
+    if c and now - c[1] < WAIT_RECHECK then return c[2] end
+    local ok, waiting = pcall(TTS.NpcWaiting, TTS, npcId)
+    waiting = ok and waiting or false
+    waitCache[npcId] = { now, waiting }
+    return waiting
+end
+
+-- icon: ICON or ICON_SMALL (the maps'). Greyed out while the NPC is on a cooldown (or has
+-- given everything it has).
+local function Paint(tex, kind, icon, npcId)
     tex:SetTexture(icon or ICON)
+    local grey = Waiting(npcId)
+    tex:SetDesaturated(grey)
+    if grey then
+        tex:SetVertexColor(0.65, 0.65, 0.65)
+        return
+    end
     local c = kind == "duel" and DUEL_TINT or nil   -- (none at present)
     if c then tex:SetVertexColor(c[1], c[2], c[3]) else tex:SetVertexColor(1, 1, 1) end
 end
@@ -184,7 +223,7 @@ local function UpdateMinimap()
                 n = n + 1
                 local p = MiniPin(n)
                 p.npcId, p.row = e[1], e[4]
-                Paint(p.icon, e[4][4], ICON_SMALL)
+                Paint(p.icon, e[4][4], ICON_SMALL, e[1])
                 p:ClearAllPoints()
                 p:SetPoint("CENTER", Minimap, "CENTER", east / radius * half, north / radius * half)
                 p:Show()
@@ -244,7 +283,7 @@ local function UpdateWorldMap()
             n = n + 1
             local p = WorldPin(n, canvas)
             p.npcId, p.row = e[1], e[4]
-            Paint(p.icon, e[4][4], ICON_SMALL)
+            Paint(p.icon, e[4][4], ICON_SMALL, e[1])
             p:SetFrameLevel(canvas:GetFrameLevel() + 2000)
             p:SetScale(k)
             p:ClearAllPoints()
@@ -298,7 +337,7 @@ local function UpdatePlate(unit)
     local s = npcId and TTS.NPC_SPOTS and TTS.NPC_SPOTS[npcId]
     if s and Wanted(npcId, s) then
         local t = PlateIcon(plate)
-        Paint(t, s[4])
+        Paint(t, s[4], nil, npcId)
         t:Show()
     elseif plate.fccgIcon then
         plate.fccgIcon:Hide()
@@ -315,6 +354,21 @@ plates:SetScript("OnEvent", function(_, event, unit)
     else
         local plate = C_NamePlate.GetNamePlateForUnit(unit)
         if plate and plate.fccgIcon then plate.fccgIcon:Hide() end
+    end
+end)
+
+-- Icons already over heads are repainted every WAIT_RECHECK seconds, so they grey out (or
+-- light up) as a cooldown starts or ends while the NPC is in view
+plates.t = 0
+plates:SetScript("OnUpdate", function(self, elapsed)
+    self.t = self.t + elapsed
+    if self.t < WAIT_RECHECK then return end
+    self.t = 0
+    if not (On("npcPlates") and C_NamePlate and C_NamePlate.GetNamePlates) then return end
+    for _, plate in ipairs(C_NamePlate.GetNamePlates() or {}) do
+        local unit = plate.fccgIcon and plate.fccgIcon:IsShown()
+            and (plate.namePlateUnitToken or (plate.UnitFrame and plate.UnitFrame.unit))
+        if unit and not IsSecret(unit) then pcall(UpdatePlate, unit) end
     end
 end)
 

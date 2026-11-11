@@ -131,6 +131,7 @@ UI\SoloSelect.lua
 UI\CardLinks.lua
 UI\NpcGossip.lua
 NpcSpots.lua
+MobZones.lua
 UI\NpcTracker.lua
 Professions.lua
 AdminGrants.lua
@@ -150,4 +151,5 @@ Events\Player.lua
 Events\UI\Common.lua
 Events\UI\Organizer.lua
 Events\UI\Player.lua
+Events\UI\Choose.lua
 Events\Init.lua

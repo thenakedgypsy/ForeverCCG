@@ -897,6 +897,12 @@ function B:CloseAfterMatch()
     if self.ClearBackground then self:ClearBackground() end
     self:Hide()
     restoreBar:Hide()
+    -- An NPC duel was started out in the world, so it closes back to the world
+    local enc = TTS.Engine and TTS.Engine.isSolo and TTS.Engine.encounter
+    if enc and enc.kind == "duel" then
+        if TTS.MainFrame and TTS.MainFrame.UpdatePlayState then TTS.MainFrame:UpdatePlayState() end
+        return
+    end
     if TTS.MainFrame then
         TTS.MainFrame:Show()
         if TTS.MainFrame.UpdatePlayState then
@@ -904,7 +910,6 @@ function B:CloseAfterMatch()
         end
         -- A solo zone or dungeon goes back to the solo map, which closes to the main window
         -- (practice, the tutorial and PvP stay on the main window)
-        local enc = TTS.Engine and TTS.Engine.isSolo and TTS.Engine.encounter
         if enc and enc.kind ~= "practice" and TTS.SoloSelectFrame and TTS.MainFrame.OpenChild then
             TTS.MainFrame:OpenChild(TTS.SoloSelectFrame)
         end

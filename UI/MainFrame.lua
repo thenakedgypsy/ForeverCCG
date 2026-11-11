@@ -156,13 +156,62 @@ optionsBtn:SetScript("OnClick", function()
 end)
 
 -- =========================================================================
--- SECTION 1: DECK MANAGEMENT, RULES & STATUS BANNER
+-- LAYOUT: three sections, one under another, full width: Collect, Build and Battle.
+-- Every button sits SIDE in from its section's edges, BTN_GAP apart, the first row under
+-- the header; two to a row (GRID_BTN_W). Battle's two columns (PvE, PvP) have a small
+-- label each above their buttons.
 -- =========================================================================
-local deckSection = CreateSection("main.collection", 372, 132)
-deckSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
+local SECTION_W, SECTION_GAP = 372, 8
+local SIDE, BTN_H, BTN_GAP, FIRST_Y = 10, 24, 4, -32
+local GRID_BTN_W = (SECTION_W - 2 * SIDE - 12) / 2     -- two to a row, 12 apart
+local COLUMN_LABEL_H = 14                               -- Battle's PvE / PvP labels
+local STATUS_Y = FIRST_Y - BTN_H - 8                    -- under Build's buttons
+local COLLECT_H = -FIRST_Y + BTN_H + 10
+local BUILD_H = -STATUS_Y + 34                          -- room for two lines of status
+local BATTLE_H = -FIRST_Y + COLUMN_LABEL_H + 3 * BTN_H + 2 * BTN_GAP + 10   -- three buttons (PvP's)
 
-local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", deckSection, 170, 24, "main.openDeckbuilder")
-deckBtn:SetPoint("TOPLEFT", deckSection, "TOPLEFT", 10, -32)
+-- The window fits them: under the title strip, the sections, then room for the footer
+M:SetHeight(93 + COLLECT_H + BUILD_H + BATTLE_H + 2 * SECTION_GAP + 34)
+
+-- The y offset of button row `row` (1 = first) in a section, below `top` (default FIRST_Y)
+local function RowY(row, top) return (top or FIRST_Y) - (row - 1) * (BTN_H + BTN_GAP) end
+
+-- A small grey label (locale key) over one of Battle's columns
+local function ColumnLabel(section, key, anchor, x)
+    local fs = section:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    fs:SetPoint(anchor, section, anchor, x, FIRST_Y)
+    fs:SetWidth(GRID_BTN_W)
+    fs:SetJustifyH("CENTER")
+    Loc:Bind(fs, key)
+    return fs
+end
+
+-- =========================================================================
+-- COLLECT: the Collection Guide, and the collection score in the header
+-- =========================================================================
+local collectSection = CreateSection("main.collect", SECTION_W, COLLECT_H)
+collectSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
+
+-- Which cards each zone and dungeon holds, and how many of each you have (CollectionGuide.lua)
+local guideBtn = CreatePanelButton("TTS_CollectionGuideBtn", collectSection, GRID_BTN_W, BTN_H, "main.collectionGuide")
+guideBtn:SetPoint("TOP", collectSection, "TOP", 0, RowY(1))
+guideBtn:SetScript("OnClick", function()
+    if TTS.CollectionGuide then OpenFromMain(TTS.CollectionGuide:Open()) end
+end)
+
+-- Collection score, right side of the section header
+local scoreLabel = collectSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+scoreLabel:SetPoint("TOPRIGHT", collectSection, "TOPRIGHT", -SIDE, -9)
+scoreLabel:SetJustifyH("RIGHT")
+
+-- =========================================================================
+-- BUILD: the Deckbuilder, the rules, and whether a deck is ready to play
+-- =========================================================================
+local buildSection = CreateSection("main.build", SECTION_W, BUILD_H)
+buildSection:SetPoint("TOPLEFT", collectSection, "BOTTOMLEFT", 0, -SECTION_GAP)
+
+local deckBtn = CreatePanelButton("TTS_DeckBuilderBtn", buildSection, GRID_BTN_W, BTN_H, "main.openDeckbuilder")
+deckBtn:SetPoint("TOPLEFT", buildSection, "TOPLEFT", SIDE, RowY(1))
 deckBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame.TryOpen then
         TTS.DeckBuilderFrame:TryOpen()
@@ -170,15 +219,8 @@ deckBtn:SetScript("OnClick", function()
     end
 end)
 
--- Which cards each zone and dungeon holds, and how many of each you have (CollectionGuide.lua)
-local guideBtn = CreatePanelButton("TTS_CollectionGuideBtn", deckSection, 170, 24, "main.collectionGuide")
-guideBtn:SetPoint("TOP", deckBtn, "BOTTOM", 0, -4)
-guideBtn:SetScript("OnClick", function()
-    if TTS.CollectionGuide then OpenFromMain(TTS.CollectionGuide:Open()) end
-end)
-
-local rulesBtn = CreatePanelButton("TTS_RulesBtn", deckSection, 170, 24, "main.rules")
-rulesBtn:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -32)
+local rulesBtn = CreatePanelButton("TTS_RulesBtn", buildSection, GRID_BTN_W, BTN_H, "main.rules")
+rulesBtn:SetPoint("TOPRIGHT", buildSection, "TOPRIGHT", -SIDE, RowY(1))
 rulesBtn:SetScript("OnClick", function()
     if TTS.RulesFrame then
         TTS.RulesFrame:Show()
@@ -186,25 +228,25 @@ rulesBtn:SetScript("OnClick", function()
     end
 end)
 
--- Collection score, right side of the section header
-local scoreLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-scoreLabel:SetPoint("TOPRIGHT", deckSection, "TOPRIGHT", -10, -9)
-scoreLabel:SetJustifyH("RIGHT")
-
-local statusLabel = deckSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-statusLabel:SetPoint("TOP", deckSection, "TOP", 0, -94)
-statusLabel:SetWidth(340)
+local statusLabel = buildSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+statusLabel:SetPoint("TOP", buildSection, "TOP", 0, STATUS_Y)
+statusLabel:SetWidth(SECTION_W - 4 * SIDE)
 statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
 
 -- =========================================================================
--- SECTION 2: SOLO (encounters and the practice dummy)
+-- BATTLE: PvE on the left (the campaign and the practice dummy), PvP on the right (the
+-- waiting room, the only way to challenge other players; the record; tournaments), and
+-- the PvP rating in the header
 -- =========================================================================
-local practiceSection = CreateSection("main.pve", 180, 124)   -- (as tall as the PvP section beside it)
-practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
+local battleSection = CreateSection("main.battle", SECTION_W, BATTLE_H)
+battleSection:SetPoint("TOPLEFT", buildSection, "BOTTOMLEFT", 0, -SECTION_GAP)
+local BATTLE_TOP = FIRST_Y - COLUMN_LABEL_H   -- the first row, under the column labels
+ColumnLabel(battleSection, "main.pve", "TOPLEFT", SIDE)
+ColumnLabel(battleSection, "main.playOthers", "TOPRIGHT", -SIDE)
 
-local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "main.campaign")
-encountersBtn:SetPoint("TOP", practiceSection, "TOP", 0, -32)
+local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", battleSection, GRID_BTN_W, BTN_H, "main.campaign")
+encountersBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(1, BATTLE_TOP))
 encountersBtn:SetScript("OnClick", function()
     if TTS.SoloSelectFrame then
         TTS.SoloSelectFrame:Show()
@@ -212,8 +254,8 @@ encountersBtn:SetScript("OnClick", function()
     end
 end)
 
-local soloBtn = CreatePanelButton("TTS_SoloBtn", practiceSection, 160, 24, "main.practice")
-soloBtn:SetPoint("TOP", encountersBtn, "BOTTOM", 0, -4)
+local soloBtn = CreatePanelButton("TTS_SoloBtn", battleSection, GRID_BTN_W, BTN_H, "main.practice")
+soloBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(2, BATTLE_TOP))
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         DEFAULT_CHAT_FRAME:AddMessage(L("main.closeDeckbuilderFirst"))
@@ -242,14 +284,8 @@ soloBtn:SetScript("OnClick", function()
     OpenFromMain(TTS.DeckPicker)
 end)
 
--- =========================================================================
--- SECTION 3: PVP WAITING ROOM (the only way to challenge other players)
--- =========================================================================
-local pvpSection = CreateSection("main.playOthers", 180, 124)
-pvpSection:SetPoint("TOPRIGHT", deckSection, "BOTTOMRIGHT", 0, -8)
-
-local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "main.openWaitingRoom")
-waitingRoomBtn:SetPoint("TOP", pvpSection, "TOP", 0, -34)
+local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", battleSection, GRID_BTN_W, BTN_H, "main.openWaitingRoom")
+waitingRoomBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(1, BATTLE_TOP))
 waitingRoomBtn:SetScript("OnClick", function()
     if TTS.WaitingRoom and TTS.WaitingRoom.frame then
         TTS.WaitingRoom.frame:Show()
@@ -258,26 +294,25 @@ waitingRoomBtn:SetScript("OnClick", function()
 end)
 
 -- The PvP rating, wins and losses, and the latest games (PvPRecord.lua)
-local recordBtn = CreatePanelButton("TTS_PvPRecordBtn", pvpSection, 160, 24, "main.pvpRecord")
-recordBtn:SetPoint("TOP", waitingRoomBtn, "BOTTOM", 0, -4)
+local recordBtn = CreatePanelButton("TTS_PvPRecordBtn", battleSection, GRID_BTN_W, BTN_H, "main.pvpRecord")
+recordBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(2, BATTLE_TOP))
 recordBtn:SetScript("OnClick", function()
     if TTS.PvP then OpenFromMain(TTS.PvP:Open()) end
 end)
 
 -- Tournaments (Events\): join one with a code, or host one
-local tournamentBtn = CreatePanelButton("TTS_TournamentsBtn", pvpSection, 160, 24, "main.tournaments")
-tournamentBtn:SetPoint("TOP", recordBtn, "BOTTOM", 0, -4)
+local tournamentBtn = CreatePanelButton("TTS_TournamentsBtn", battleSection, GRID_BTN_W, BTN_H, "main.tournaments")
+tournamentBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(3, BATTLE_TOP))
 tournamentBtn:SetScript("OnClick", function()
-    if not TTS.ToggleTournaments then return end
-    TTS:ToggleTournaments()
-    local win = TTS.TournamentWindow and TTS:TournamentWindow()
+    local win = TTS.OpenTournaments and TTS:OpenTournaments()
     if win then OpenFromMain(win) end
 end)
 
--- PvP rating, right side of the section header (as the collection score is on the deck section's)
-local ratingLabel = pvpSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-ratingLabel:SetPoint("TOPRIGHT", pvpSection, "TOPRIGHT", -10, -9)
+-- PvP rating, right side of the section header (as the collection score is on Collect's)
+local ratingLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+ratingLabel:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, -9)
 ratingLabel:SetJustifyH("RIGHT")
+
 
 -- =========================================================================
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)

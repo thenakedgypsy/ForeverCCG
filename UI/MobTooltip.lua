@@ -14,7 +14,7 @@ TTS = TTS or {}
 -- icon and how many copies you have unlocked, e.g. "Forever: CCG card: 2/4",
 -- and shows the card itself docked to the left of the tooltip.
 -- =========================================================================
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- (the tracker emblem, in the tooltip line)
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"   -- (the tracker emblem, in the tooltip line)
 local MAX_COPIES = 4
 
 -- Card shown beside the tooltip: same proportions and rules text as the Board / Deckbuilder preview

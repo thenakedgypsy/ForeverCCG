@@ -37,8 +37,7 @@ local Loc = TTS.Locale
 local HOUR = 60 * 60
 local MIN_WAIT_HOURS, MAX_WAIT_HOURS = 24, 168
 local MAX_GIFT_COPIES = 4
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"         -- (the tracker emblem, not the card back)
-local TRACKER_SMALL = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- in tooltip lines
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"         -- (the tracker emblem, not the card back; also in tooltip lines)
 
 -- How long is left, as the hint the NPC gives (npc.wait.<key>)
 local WAIT_HINTS = {
@@ -466,11 +465,25 @@ duelBtn:SetSize(150, 24)
 Loc:Bind(duelBtn, "npc.duel")
 duelBtn:SetScript("OnClick", StartDuel)
 
+-- A button's text wraps onto a second line when it doesn't fit (the gossip list's option
+-- text is longer than the button), and the button grows to hold it
+local BUTTON_W, BUTTON_H = 150, 24
+local function FitButton(b)
+    local fs = b:GetFontString()
+    if not fs then return end
+    fs:SetWidth(BUTTON_W - 16)
+    fs:SetWordWrap(true)
+    fs:SetText(b:GetText())   -- re-measure at the new width
+    b:SetHeight(math.max(BUTTON_H, fs:GetStringHeight() + 12))
+end
+
 local function ShowPanel(npcId)
     local gossip = GossipFrame and GossipFrame:IsShown() and GossipFrame
     -- A trainer with nothing else to say opens its training window instead, like a vendor
+    -- and a quest giver with nothing else to say its quest window
     local merchant = not gossip and ((MerchantFrame and MerchantFrame:IsShown() and MerchantFrame)
-        or (ClassTrainerFrame and ClassTrainerFrame:IsShown() and ClassTrainerFrame))
+        or (ClassTrainerFrame and ClassTrainerFrame:IsShown() and ClassTrainerFrame)
+        or (QuestFrame and QuestFrame:IsShown() and QuestFrame))
     G:ClearAllPoints()
     if gossip then
         G:SetPoint("TOPLEFT", gossip, "BOTTOMLEFT", 0, 2)
@@ -505,6 +518,8 @@ local function ShowPanel(npcId)
     else
         ask:SetPoint("LEFT", icon, "RIGHT", 10, 0)
     end
+    FitButton(ask)
+    FitButton(duelBtn)
     ask:SetShown(GiftCardOf(npcId) and CanAsk(npcId))
     -- The duel button: under the ask button, or where it would be
     local hasDuel = DuelOf(npcId) ~= nil
@@ -572,13 +587,16 @@ local function AddToGossip(npcId)
     -- A copy in the same order (no sorting), so our option can go last. Once the player
     -- has asked, the NPC's answer goes under its greeting.
     local said = Said(npcId)
+    -- A duel NPC's own line (npc.<npcId>.greet) goes under their gossip text too, before any answer
+    local greet = DuelOf(npcId) and Loc:Get("npc." .. tostring(npcId) .. ".greet") or nil
+    local added = (greet and said) and (greet .. "\n\n" .. said) or greet or said
     local new, greeted = CreateDataProvider(), false
     old:ForEach(function(e)
-        if said and not greeted and e.buttonType == GOSSIP_BUTTON_TYPE_TITLE then
+        if added and not greeted and e.buttonType == GOSSIP_BUTTON_TYPE_TITLE then
             greeted = true
             local copy = {}
             for k, v in pairs(e) do copy[k] = v end
-            copy.text = (e.text and e.text ~= "") and (e.text .. "\n\n" .. said) or said
+            copy.text = (e.text and e.text ~= "") and (e.text .. "\n\n" .. added) or added
             new:Insert(copy)
         else
             new:Insert(e)
@@ -672,12 +690,55 @@ M:SetScript("OnEvent", function(_, event)
     end)
 end)
 
+-- A quest giver with no gossip (many of the duel NPCs) opens the quest window
+-- instead: its greeting with the quest list, or a single quest straight away. The panel
+-- goes beside it, and goes when it closes.
+local Q = CreateFrame("Frame")
+for _, event in ipairs({ "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE" }) do
+    pcall(Q.RegisterEvent, Q, event)
+end
+Q:SetScript("OnEvent", function()
+    C_Timer.After(0, function()
+        if GossipFrame and GossipFrame:IsShown() then return end   -- a quest picked from gossip
+        local npcId = GossipNpcId()
+        if HasOptions(npcId) and QuestFrame and QuestFrame:IsShown() then ShowPanel(npcId) end
+    end)
+end)
+if QuestFrame then
+    QuestFrame:HookScript("OnHide", function()
+        if not (GossipFrame and GossipFrame:IsShown()) then
+            G:Hide()
+            reply = nil
+        end
+    end)
+end
+
 -- =========================================================================
 -- TOOLTIP ICON
 -- Hovering an NPC that hands out gift cards adds a card-back icon line to its tooltip:
 -- green while it has a card ready for the player, grey while they wait or have them all
 -- (mobtip.gift.ready / .wait / .done).
 -- =========================================================================
+-- Whether an NPC has nothing for the player right now: a duel on its cooldown (or its
+-- Location all collected), cards on their wait (or all given), and nothing else ready.
+-- An NPC with neither (a trainer before it hands out cards) isn't waiting. For the card
+-- NPC tracker's greyed-out icons (UI\NpcTracker.lua).
+function TTS:NpcWaiting(npcId)
+    local waiting = false
+    local duel = DuelOf(npcId)
+    if duel then
+        local card = duel.reward and TTS.Cards[duel.reward]
+        local done = card and (TTS:GetOwnedCopies(card) or 0) >= TTS:CardMaxCopies(card)
+        if not done and TTS:EncounterCooldownLeft(duel) <= 0 then return false end
+        waiting = true
+    end
+    if GiftCardOf(npcId) then
+        if HasMoreToGive(npcId, true) then return false end
+        waiting = true
+    end
+    return waiting
+end
+
 local function AddGiftLine(tooltip)
     if tooltip ~= GameTooltip then return end
     local ok, _, unit = pcall(tooltip.GetUnit, tooltip)
@@ -694,7 +755,7 @@ local function AddGiftLine(tooltip)
         local done = card and (TTS:GetOwnedCopies(card) or 0) >= TTS:CardMaxCopies(card)
         local dState = done and "done" or (TTS:EncounterCooldownLeft(duel) > 0 and "wait" or "ready")
         local ready = dState == "ready"
-        tooltip:AddLine(string.format("|T%s:16:16|t %s", TRACKER_SMALL, L("mobtip.duel." .. dState)),
+        tooltip:AddLine(string.format("|T%s:16:16|t %s", CARD_BACK_ICON, L("mobtip.duel." .. dState)),
             ready and 0.1 or 0.6, ready and 1 or 0.6, ready and 0.1 or 0.6)
         tooltip:Show()
     end
@@ -708,7 +769,7 @@ local function AddGiftLine(tooltip)
     else
         state, r, g, b = "done", 0.6, 0.6, 0.6
     end
-    tooltip:AddLine(string.format("|T%s:16:16|t %s", TRACKER_SMALL, L("mobtip.gift." .. state)), r, g, b)
+    tooltip:AddLine(string.format("|T%s:16:16|t %s", CARD_BACK_ICON, L("mobtip.gift." .. state)), r, g, b)
     tooltip:Show()
 end
 

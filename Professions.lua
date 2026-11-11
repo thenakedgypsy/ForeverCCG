@@ -41,7 +41,7 @@ local CREDIT_STEP = 75         -- install credit: one copy per this much skill a
 local TRAINER_UNLOCK = 2       -- finished primary professions that open the trainers
 local LOOT_WINDOW = 5          -- seconds a gather or cast can wait for its loot window
 
-local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker_small.png"   -- (the tracker emblem, in tooltip lines)
+local CARD_BACK_ICON = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\tracker.png"   -- (the tracker emblem, in tooltip lines)
 
 -- Gathering nodes: the skill they need, their name (English clients, when the loot source
 -- can't be read) and their game object ids. A node not listed counts as yellow.
@@ -428,6 +428,24 @@ function Prof:FinishedPrimaries()
 end
 
 function Prof:TrainersUnlocked() return self:FinishedPrimaries() >= TRAINER_UNLOCK end
+
+-- Whether learning a profession would still give its starter card: it hasn't been picked
+-- up on this account, and (a primary) the 2 primary starter slots aren't both used
+function Prof:StarterOpen(key)
+    Build()
+    local def = defs[key]
+    if not def then return false end
+    local picked = Picked()
+    if picked[key] then return false end
+    if def.primary then
+        local used = 0
+        for k in pairs(picked) do
+            if defs[k] and defs[k].primary then used = used + 1 end
+        end
+        if used >= STARTER_PRIMARIES then return false end
+    end
+    return true
+end
 
 -- A trainer's cards for this character, lowest tier first, or nil if it hands out none
 function Prof:TrainerCards(key)

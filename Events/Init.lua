@@ -35,16 +35,12 @@ local function Toggle()
     end
 end
 
--- The main window's Tournaments button (UI\MainFrame.lua): the player's window, which also
--- has Host an Event
+-- The main window's Tournaments button (UI\MainFrame.lua): Join or Host first (UI\Choose.lua),
+-- or straight to the event's window when there is one. Returns the window opened, for the
+-- main window to come back to when it closes.
 TTS = TTS or {}
-function TTS:ToggleTournaments()
-    Toggle()
-end
-
--- The player's window (UI\Player.lua), for the main window to come back to when it closes
-function TTS:TournamentWindow()
-    return _G.FCCGE_PlayerFrame
+function TTS:OpenTournaments()
+    return UI.OpenTournaments()
 end
 
 SLASH_FCCGEVENTS1 = "/fccgevents"

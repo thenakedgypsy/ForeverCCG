@@ -18,7 +18,9 @@ local Loc = TTS.Locale
 -- Hearthstones); down the left the places of the tab with how many of their cards are
 -- still short of 4/4, on the right the chosen place's cards as a scrolling list, sorted and
 -- grouped by zone, faction or card type. An "All" row heads each tab's places.
--- A card belongs to its card.zone (denizens, solo rewards and Gear); dungeons are the
+-- A card belongs to its card.zone (denizens, solo rewards and Gear), and a creature also
+-- to every other zone it's found in (TTS.MOB_ZONES, MobZones.lua), listed there under
+-- "Also found here"; the All rows count it once. Dungeons are the
 -- instances BossTracker knows (TTS.BossTracker:IsDungeonZone). The innkeepers' gift
 -- prayers have no zone: the Hearthstones tab lists them by set (HEARTH_SETS).
 -- Opened from the main window's Collection Guide button (MainFrame.lua).
@@ -64,10 +66,20 @@ local function IsDungeon(zone)
     return TTS.BossTracker and TTS.BossTracker.IsDungeonZone and TTS.BossTracker:IsDungeonZone(zone) or false
 end
 
--- Which place of a tab a card is in (a card.zone, or a hearth set), or nil
-local function PlaceOf(card, tab)
-    if tab == "hearths" then return HearthSet(card) end
-    if Collectible(card) and (IsDungeon(card.zone) == (tab == "dungeons")) then return card.zone end
+-- Which places of a tab a card is in: its card.zone and any other zones its creature is
+-- also found in (TTS.MOB_ZONES, MobZones.lua), or its hearth set. Fills `into`, returns it.
+local function PlacesOf(card, tab, into)
+    if tab == "hearths" then
+        into[#into + 1] = HearthSet(card)
+        return into
+    end
+    if not Collectible(card) then return into end
+    local wantDungeon = (tab == "dungeons")
+    if IsDungeon(card.zone) == wantDungeon then into[#into + 1] = card.zone end
+    for _, zone in ipairs(TTS.MOB_ZONES and TTS.MOB_ZONES[card.id] or {}) do
+        if zone ~= card.zone and IsDungeon(zone) == wantDungeon then into[#into + 1] = zone end
+    end
+    return into
 end
 
 -- The places of a tab ("zones", "dungeons" or "hearths"): A-Z by their shown name, the
@@ -77,8 +89,7 @@ end
 local function Places(tab)
     local byZone = {}
     for _, card in pairs(TTS.Cards or {}) do
-        local zone = PlaceOf(card, tab)
-        if zone then
+        for _, zone in ipairs(PlacesOf(card, tab, {})) do
             local p = byZone[zone]
             if not p then
                 local name = (tab == "hearths") and L("guide.hearth." .. zone) or Loc:Term("zone", zone)
@@ -104,14 +115,22 @@ local function Places(tab)
     return list
 end
 
--- The "All" row: every card of the tab's places, added up
+-- The "All" row: every card of the tab's places, added up (a creature found in several
+-- zones counted once)
 local function AllPlace(list, tab)
     local all = { zone = ALL, name = L("guide.all." .. tab), cards = {}, remaining = 0, copiesLeft = 0, collected = 0 }
+    local seen = {}
     for _, p in ipairs(list) do
-        for _, card in ipairs(p.cards) do table.insert(all.cards, card) end
-        all.remaining = all.remaining + p.remaining
-        all.copiesLeft = all.copiesLeft + p.copiesLeft
-        all.collected = all.collected + p.collected
+        for _, card in ipairs(p.cards) do
+            if not seen[card] then
+                seen[card] = true
+                table.insert(all.cards, card)
+                local owned = math.min(MAX_COPIES, TTS:GetOwnedCopies(card) or 0)
+                if owned < MAX_COPIES then all.remaining = all.remaining + 1 end
+                all.copiesLeft = all.copiesLeft + (MAX_COPIES - owned)
+                all.collected = all.collected + owned
+            end
+        end
     end
     return all
 end
@@ -141,12 +160,19 @@ local CARD_SORTS = { "ZONE", "FACTION", "TYPE" }
 local cardSort = "ZONE"
 local places = {}
 local Refresh
+local shownZone                        -- the zone whose cards are listed (nil for All and the hearth sets)
 
 local TYPE_LABEL = { Creature = "db.creatures", Spell = "db.spells", Location = "db.locations", Gear = "db.gear", Prayer = "db.prayers" }
+
+-- Whether a card is listed in a zone other than its own (its creature is also found there)
+local function Visiting(card)
+    return shownZone ~= nil and card.zone ~= shownZone
+end
 
 -- The heading a card goes under in the current sort
 local function GroupLabel(card)
     if cardSort == "ZONE" then
+        if Visiting(card) then return L("guide.alsoHere") end
         return card.zone and Loc:Term("zone", card.zone) or L("guide.other")
     elseif cardSort == "FACTION" then
         return card.faction and Loc:Term("faction", card.faction) or L("guide.other")
@@ -615,8 +641,17 @@ Refresh = function(resetScroll)
     F.navChild:SetHeight(math.max(10, #places * (ROW_H + 1)))
 
     local cards = current and current.cards or {}
+    shownZone = current and current.zone ~= ALL and tab ~= "hearths" and current.zone or nil
     local CompareBy = TTS.DeckBuilderFrame.CompareCardsBy
-    table.sort(cards, function(a, b) return CompareBy(cardSort, a.id, b.id) end)
+    -- Sorted by zone, a zone's own cards come first and the creatures also found there after
+    local visitorsLast = (cardSort == "ZONE")
+    table.sort(cards, function(a, b)
+        if visitorsLast then
+            local va, vb = Visiting(a), Visiting(b)
+            if va ~= vb then return vb end
+        end
+        return CompareBy(cardSort, a.id, b.id)
+    end)
 
     -- The place's name, copies left, then cards short of 4/4 and foils
     F.placeName:SetText(current and (current.copiesLeft == 0 and (GREEN .. current.name .. "|r") or current.name) or "")
