@@ -494,6 +494,13 @@ S["decline.REFUSED"] = "REFUSED"
 S["decline.NOT_INVITED"] = "NOT_INVITED"
 S["end.setupCancelled"] = "Opponent cancelled match setup."
 S["end.oppConceded"] = "%s conceded the match."
+S["end.oppLeft"] = "%s left the game."
+S["end.claimed"] = "You claimed the game: %s had stopped responding."
+S["end.oppClaimed"] = "%s claimed the game: your client had stopped responding."
+S["pvp.leftGame"] = "Your game against %s was left unfinished (a reload, crash or disconnect), so it counts as a loss."
+S["pvp.claimAsk"] = "%s hasn't responded for a minute. They may have disconnected.\n\nClaim the win, or keep waiting?"
+S["pvp.claimWin"] = "Claim Win"
+S["pvp.keepWaiting"] = "Keep Waiting"
 S["end.oppWasDefeated"] = "%s was defeated."
 
 -- WORDS USED INSIDE OTHER STRINGS

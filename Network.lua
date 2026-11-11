@@ -2473,6 +2473,23 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "CONCEDE" then
             E:WinMatch(L("end.oppConceded", sender))
 
+        elseif actionType == "ALIVE" then
+            -- Their heartbeat (PvPRecord.lua): heard above; a claim can now be offered if it stops
+            E.opponentHeartbeat = true
+
+        elseif actionType == "LEFT" then
+            -- They reloaded or logged out mid-game and took the loss at login (PvPRecord.lua).
+            -- Sent unnumbered, so it carries the game's id: an older game's doesn't count.
+            if E.inMatch and not E.isSolo and parts[3] and parts[3] == tostring(TTS.Net.matchId) then
+                E:WinMatch(L("end.oppLeft", sender))
+            end
+
+        elseif actionType == "CLAIMED" then
+            -- They thought we'd gone and claimed the game (PvPRecord.lua)
+            if E.inMatch and not E.isSolo and parts[3] == tostring(TTS.Net.matchId) then
+                E:EndMatch("lost", L("end.oppClaimed", sender))
+            end
+
         elseif actionType == "DEFEATED" then
             E:WinMatch(L("end.oppWasDefeated", sender))
 

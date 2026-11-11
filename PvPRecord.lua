@@ -267,3 +267,130 @@ function P:Open()
     self.frame:Show()
     return self.frame
 end
+
+-- =========================================================================
+-- LEAVING A GAME (a /reload, a crash, a disconnect)
+-- A PvP game lives only in memory, so one left by a reload can't come back. db.live marks
+-- the game in progress { opponent, matchId, theirs, at } and is cleared as it ends, however
+-- it ends. Still there at login, the game was left: it counts as a loss, and the opponent is
+-- told (ACTION:LEFT:<match id>), which ends theirs as a win (Network.lua).
+-- While a game is on each client sends ACTION:ALIVE every HEARTBEAT seconds. An opponent who
+-- has sent one and then goes silent for CLAIM_AFTER seconds (they crashed or lost their
+-- connection) can be claimed against: the claim wins the game here and tells them
+-- (ACTION:CLAIMED), and they take the loss at their next login if they never got it.
+-- Opponents on older versions send no heartbeat, so no claim is ever offered against them.
+-- =========================================================================
+local HEARTBEAT = 20
+local CLAIM_AFTER = 60
+
+local function PvPGameOn(E)
+    return E and E.inMatch and not E.isSolo and not E.viewing and E.opponent and true or false
+end
+
+function P:GameLeftMarker()
+    return DB().live
+end
+
+local claimOffered   -- GetTime() the claim was last offered (or waved away)
+
+local function OfferClaim(E)
+    claimOffered = GetTime()
+    StaticPopup_Show("TTS_CLAIM_WIN", E.opponent)
+end
+
+StaticPopupDialogs["TTS_CLAIM_WIN"] = {
+    text = L("pvp.claimAsk"),
+    button1 = L("pvp.claimWin"),
+    button2 = L("pvp.keepWaiting"),
+    OnAccept = function()
+        local E = TTS.Engine
+        if not PvPGameOn(E) then return end
+        TTS.Net:Send(E.opponent, "ACTION:CLAIMED:" .. tostring(TTS.Net.matchId or ""))
+        -- A rated win here; a tournament sees a disconnect (Events\Bridge.lua reads the
+        -- silence), so the organizer's rule for those still decides it
+        E.opponentHeardAt = -math.huge
+        E:WinMatch(L("end.claimed", E.opponent))
+    end,
+    OnCancel = function() claimOffered = GetTime() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+-- Every few seconds while a PvP game is on: the heartbeat, the marker's opponent rating, and
+-- the claim once they've been silent long enough
+local ticker = CreateFrame("Frame")
+ticker.sinceBeat, ticker.sinceCheck = 0, 0
+ticker:SetScript("OnUpdate", function(self, elapsed)
+    local E = TTS.Engine
+    if not PvPGameOn(E) then
+        if StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN") then StaticPopup_Hide("TTS_CLAIM_WIN") end
+        return
+    end
+    self.sinceBeat = self.sinceBeat + elapsed
+    self.sinceCheck = self.sinceCheck + elapsed
+    if self.sinceBeat >= HEARTBEAT then
+        self.sinceBeat = 0
+        TTS.Net:Send(E.opponent, "ACTION:ALIVE")
+        local live = DB().live
+        if live then
+            if E.opponentPvP then live.theirs = E.opponentPvP end
+            live.matchId = TTS.Net.matchId or live.matchId
+        end
+    end
+    if self.sinceCheck < 5 then return end
+    self.sinceCheck = 0
+    local silent = GetTime() - (E.opponentHeardAt or GetTime())
+    local shown = StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN")
+    if not E.opponentHeartbeat or silent < CLAIM_AFTER then
+        if shown then StaticPopup_Hide("TTS_CLAIM_WIN") end   -- heard from them again
+    elseif not shown and (not claimOffered or GetTime() - claimOffered >= CLAIM_AFTER) then
+        OfferClaim(E)
+    end
+end)
+
+local function OnGameStart(_, E)
+    if not PvPGameOn(E) then return end
+    claimOffered = nil
+    E.opponentHeartbeat = nil
+    DB().live = { opponent = E.opponent, matchId = TTS.Net and TTS.Net.matchId, at = time() }
+    -- Their rating comes just after the game starts (Network.lua): picked up on the next frame
+    C_Timer.After(0, function()
+        local live = DB().live
+        if live and E.opponentPvP then live.theirs = E.opponentPvP end
+    end)
+end
+
+local function OnGameEnd()
+    DB().live = nil
+    if StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN") then StaticPopup_Hide("TTS_CLAIM_WIN") end
+end
+
+-- At login: a game still marked live was left. It's a loss, and the opponent hears of it.
+local function SettleLeftGame()
+    local db = DB()
+    local live = db.live
+    if type(live) ~= "table" or not live.opponent then db.live = nil; return end
+    db.live = nil
+    local delta, why = P:RecordResult(live.opponent, live.theirs, "lost", false)
+    local line = (delta or why) and P:ResultText(delta, why)
+    DEFAULT_CHAT_FRAME:AddMessage("|cFFFF4444[TTSE]|r " .. L("pvp.leftGame", live.opponent) .. (line and ("  " .. line) or ""))
+    -- Once the network is up: whispered plainly (this client no longer knows the game)
+    C_Timer.After(5, function()
+        if TTS.Net and TTS.Net.Send then TTS.Net:Send(live.opponent, "ACTION:LEFT:" .. tostring(live.matchId or "")) end
+    end)
+end
+
+local login = CreateFrame("Frame")
+login:RegisterEvent("PLAYER_LOGIN")
+login:SetScript("OnEvent", function()
+    local E = TTS.Engine
+    if E and E.HookDisplay then
+        E:HookDisplay("StartMatch", nil, OnGameStart)
+        E:HookDisplay("EndMatch", function(eng) return eng.inMatch and not eng.isSolo end, function(wasPvP)
+            if wasPvP then OnGameEnd() end
+        end)
+    end
+    SettleLeftGame()
+end)
