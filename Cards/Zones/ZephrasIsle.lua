@@ -98,4 +98,13 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant. Other Zephras Isle denizens you control get +1/+1."
     },
+    -- Solo reward (ZEP13, not the usual ZEP11: that id is already Malevolent Storm)
+    ["ZEP13"] = {
+        id = "ZEP13", name = "Talaanis Shadowsong", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 4, toughness = 4, flying = true, isReward = true, displayId = 137873,
+        zone = "Zephras Isle", creatureType = "Humanoid", faction = "High Order", npcEntry = 252476,
+        anthem = { tag = "zone", value = "Zephras Isle", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Airborne. Other Zephras Isle denizens you control get +1/+0."
+    },
 })

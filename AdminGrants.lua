@@ -78,7 +78,7 @@ local function SetCopies(card, n)
     elseif card.isBoss then
         TTS_KilledBosses = TTS_KilledBosses or {}
         TTS_KilledBosses[id] = n
-    elseif card.isGift then
+    elseif card.isGift or card.isProfession then
         TTS_NpcGifts = TTS_NpcGifts or {}
         TTS_NpcGifts.copies = TTS_NpcGifts.copies or {}
         TTS_NpcGifts.copies[id] = n > 0 and n or nil

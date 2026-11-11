@@ -170,10 +170,10 @@ local previewCard
 
 -- How the player stands with this card: owned copies, or how to get it
 local function CollectionStatus(card)
-    if card.type == "Land" and not card.isGift then
+    if card.type == "Land" and not card.isGift and not card.isProfession then
         return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
-    if card.isBoss or card.isReward or card.isGift or card.isBeta or card.isPrize then
+    if card.isBoss or card.isReward or card.isGift or card.isProfession or card.isBeta then
         local copies = TTS:GetOwnedCopies(card) or 0
         -- A beta card is one copy at most (DataStamp.lua)
         if card.isBeta and copies > 0 then
@@ -188,7 +188,7 @@ local function CollectionStatus(card)
         if card.isReward then
             local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
             how = enc and L("link.winEncounter", TTS:EncounterName(enc)) or L("link.winItsEncounter")
-        elseif card.isGift then
+        elseif card.isGift or card.isProfession then
             how = TTS:GiftHow(card)
         elseif card.isBeta then
             how = L("link.betaOnly")
@@ -196,10 +196,14 @@ local function CollectionStatus(card)
             how = L("link.prizeOnly")
         elseif card.unlockOnDeath then
             how = L("link.dieToUnlock")
-        elseif card.zone then
-            how = L("link.defeatIn", TTS:CardName(card), TTS.Locale:Term("zone", card.zone))
         else
-            how = L("link.defeat", TTS:CardName(card))
+            -- dropsFrom: copies come from killing another NPC (Sneed's Shredder from Sneed)
+            local victim = TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card)
+            if card.zone then
+                how = L("link.defeatIn", victim, TTS.Locale:Term("zone", card.zone))
+            else
+                how = L("link.defeat", victim)
+            end
         end
         return "|cFFFF4444" .. L("link.notCollected") .. "|r\n|cFFBBBBBB" .. how .. "|r"
     end

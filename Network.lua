@@ -2537,6 +2537,7 @@ function TTS.Net:OnReceive(msg, sender)
             E:Log(L("log.oppPlayedPrayer", sender, card and TTS:CardName(card) or cardId), "ACTION")
             if bounced then E:Log(L("log.oppBouncedPrayer", sender, TTS:CardName(bounced.id)), "ACTION") end
             E:CallDisplay("PlayNonCreatureCardSound")
+            E:OnPrayerArrive(card, true)   -- (mirrored: E:ResolveEffect runs it as their play)
             E:RefreshUI()
 
         elseif actionType == "PLAY_PERM" then
@@ -2659,10 +2660,12 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "TAP_PERM" then
             local idx = tonumber(parts[3])
             if idx and E.remoteState.field[idx] then
-                E.remoteState.field[idx].tapped = true
-                local card = TTS.Cards[E.remoteState.field[idx].id]
+                local tappedPerm = E.remoteState.field[idx]
+                tappedPerm.tapped = true
+                local card = TTS.Cards[tappedPerm.id]
                 E:Log(L("log.oppTapped", sender, card and TTS:CardName(card) or L("type.Permanent")), "MANA")
                 E:CallSound("PlayUI", "tap")
+                E:AfterPrayerTap(tappedPerm, true)   -- Deplete / Black Lotus, as on their client
                 E:RefreshUI()
             end
 

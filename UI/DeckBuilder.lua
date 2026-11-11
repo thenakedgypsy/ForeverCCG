@@ -447,7 +447,7 @@ local cardPoolKeys = {}
 -- (TTS:GetOwnedCopies).
 -- =========================================================================
 local function IsCollectible(card)
-    return card and (card.isBoss or card.isReward or card.isGift or card.isHero or card.isBeta or card.isPrize) and true or false
+    return card and (card.isBoss or card.isReward or card.isGift or card.isProfession or card.isHero or card.isBeta) and true or false
 end
 
 local function GetKillCount(cardId, card)
@@ -461,11 +461,11 @@ local function UnlockHint(card)
         local enc = TTS.GetRewardEncounter and TTS:GetRewardEncounter(card.id)
         return enc and L("db.unlockWin", TTS:EncounterName(enc)) or L("link.winItsEncounter")
     end
-    if card.isGift then return TTS:GiftHow(card) end
+    if card.isGift or card.isProfession then return TTS:GiftHow(card) end
     if card.isBeta then return L("link.betaOnly") end
     if card.isPrize then return L("link.prizeOnly") end
     if card.unlockOnDeath then return L("link.dieToUnlock") end
-    return L("link.defeat", TTS:CardName(card))
+    return L("link.defeat", TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card))
 end
 
 local function IsCardUnlocked(cardId, card)
@@ -496,6 +496,7 @@ local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if card.isCritter and D.hideCritters then return false end   -- the Hide critters checkbox
+    if D.onlyProfessions and not card.isProfession then return false end   -- the Professions checkbox
     if not typeOn[GetTypeGroup(card)] then return false end
     if CardColor(card) and colorOn[CardColor(card)] == false then return false end
     if onlyUnlocked and not IsCardUnlocked(cardId, card) then return false end
@@ -743,7 +744,7 @@ local function CheckAdd(cardId, card, deck)
             elseif maxAllowed >= 4 then
                 return L("db.max4", TTS:CardName(card))
             else
-                if card.isReward or card.isGift or card.isBeta or card.isPrize then
+                if card.isReward or card.isGift or card.isProfession or card.isBeta then
                     return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
                 return L("db.kills", kills, TTS:CardName(card))
@@ -1069,7 +1070,7 @@ local function CardTooltip_OnEnter(self)
             if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
-                    if card.isReward or card.isGift or card.isBeta or card.isPrize then
+                    if card.isReward or card.isGift or card.isProfession or card.isBeta then
                         tip:AddLine("|cFFFF2222" .. L("db.lockedHow", UnlockHint(card)) .. "|r", 1, 0.2, 0.2, true)
                     else
                         tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)
@@ -1743,6 +1744,26 @@ critterCheck:SetScript("OnEnter", function(self)
     TT:ShowText(self, "ANCHOR_TOP", L("db.hideCritters"), L("db.hideCrittersDesc"))
 end)
 critterCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
+-- Shows only the profession cards (not saved: the pool opens as usual next time)
+local profCheck = CreateFrame("CheckButton", nil, poolPanel, "UICheckButtonTemplate")
+profCheck:SetSize(22, 22)
+profCheck:SetPoint("LEFT", critterLabel, "RIGHT", 12, -1)
+
+local profLabel = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+profLabel:SetPoint("LEFT", profCheck, "RIGHT", 0, 1)
+Loc:Bind(profLabel, "db.onlyProfessions")
+profCheck:SetHitRectInsets(0, -(profLabel:GetStringWidth() + 4), 0, 0)
+
+profCheck:SetScript("OnClick", function(self)
+    D.onlyProfessions = self:GetChecked() and true or false
+    poolPage = 1
+    D:RefreshPool()
+end)
+profCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("db.onlyProfessions"), L("db.onlyProfessionsDesc"))
+end)
+profCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
 local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
