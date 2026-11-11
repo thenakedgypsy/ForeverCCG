@@ -236,7 +236,9 @@ local function GivePrize()
 end
 
 -- Where every prize came from, newest last: { card, at, source = "admin" | "event",
--- by = who sent it / the organizer, event = "<organizer>:<event id>", name = the event's name }
+-- by = who sent it / the organizer, event = "<organizer>:<event id>", name = the event's name }.
+-- Also source = "entered" (no card): this account played in a prize event, which starts the
+-- prize cooldown as a win does (TTS:EnterPrizeEvent).
 local PRIZE_LOG_MAX = 200
 
 local function LogPrize(entry)
@@ -258,11 +260,47 @@ end
 --   * this client itself saw the player win games against PRIZE_MIN_BEATEN different opponents
 --     during the event (real games, through the engine, not the organizer's word)
 --   * one prize per event, and one tournament prize per account every PRIZE_COOLDOWN
+--   * the cooldown starts for everyone who plays in a prize event, not only its winner, as the
+--     event begins (TTS:EnterPrizeEvent): entering several at once, or on alts, wins nothing more
 -- The collection is saved per account, so alts share the cooldown.
 -- =========================================================================
 TTS.PRIZE_MIN_PLAYERS = 4
 TTS.PRIZE_MIN_BEATEN = 2
 TTS.PRIZE_COOLDOWN = 7 * 86400
+
+local function EventKey(organizer, event) return organizer:lower() .. ":" .. event end
+
+-- Seconds until this account can win a tournament prize again (0 = it can now). except: an
+-- event key whose own entry doesn't count (the event being decided).
+local function PrizeCooldownLeft(except)
+    local last
+    for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
+        if (entry.source == "event" or entry.source == "entered") and entry.event ~= except then
+            if not last or (entry.at or 0) > last then last = entry.at or 0 end
+        end
+    end
+    if not last then return 0 end
+    return math.max(0, TTS.PRIZE_COOLDOWN - (time() - last))
+end
+
+function TTS:TournamentPrizeCooldown()
+    return PrizeCooldownLeft(nil)
+end
+
+-- This account is playing in a prize event (info: { organizer, event, name }): its prize
+-- cooldown starts now. Once per event.
+function TTS:EnterPrizeEvent(info)
+    if type(info) ~= "table" or type(info.organizer) ~= "string" or type(info.event) ~= "string"
+        or info.organizer == "" or info.event == "" then
+        return
+    end
+    local key = EventKey(info.organizer, info.event)
+    for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
+        if entry.source == "entered" and entry.event == key then return end
+    end
+    LogPrize({ source = "entered", by = info.organizer, event = key,
+        name = type(info.name) == "string" and info.name:sub(1, 60) or nil })
+end
 
 -- info: { organizer, event (the event id), name, players (in the standings), beaten (opponents
 -- beaten) }. Returns the card and its copies, or nil and a reason:
@@ -275,18 +313,13 @@ function TTS:AwardTournamentPrize(info)
     if (tonumber(info.players) or 0) < TTS.PRIZE_MIN_PLAYERS then return nil, "players" end
     if (tonumber(info.beaten) or 0) < TTS.PRIZE_MIN_BEATEN then return nil, "beaten" end
 
-    local key = info.organizer:lower() .. ":" .. info.event
-    local now = time()
-    local lastWin
+    local key = EventKey(info.organizer, info.event)
     for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
-        if entry.source == "event" then
-            if entry.event == key then return nil, "claimed" end
-            if not lastWin or (entry.at or 0) > lastWin then lastWin = entry.at or 0 end
-        end
+        if entry.source == "event" and entry.event == key then return nil, "claimed" end
     end
-    if lastWin and now - lastWin < TTS.PRIZE_COOLDOWN then
-        return nil, "cooldown", TTS.PRIZE_COOLDOWN - (now - lastWin)
-    end
+    -- (entering this event started a cooldown of its own: that one doesn't count against it)
+    local left = PrizeCooldownLeft(key)
+    if left > 0 then return nil, "cooldown", left end
 
     local card, copies = GivePrize()
     if not card then return nil, "full" end

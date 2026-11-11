@@ -46,6 +46,9 @@ local DEFAULTS = {
     actNudge = true,         -- "It's you to act" flashes after a wait on us (Board.lua)
     actNudgeWait = 10,       -- seconds of that wait
     windowOpacity = 1,       -- factor on every window's background opacity (WINDOWS SECTION)
+    npcMinimap = false,      -- card NPCs on the minimap (UI\NpcTracker.lua)
+    npcWorldMap = false,     -- card NPCs on the world map
+    npcPlates = false,       -- a card icon over card NPCs' heads (on their nameplates)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -525,8 +528,25 @@ end
 -- applies the factor, so colours painted later (hover, highlights) keep it. Windows are
 -- walked when they show and every OPACITY_WALK seconds while shown, for panels made since.
 -- =========================================================================
+-- =========================================================================
+-- CARD NPCS SECTION
+-- Where the card game's NPCs are (UI\NpcTracker.lua), each way off until switched on.
+-- (Kept on O rather than in locals: the file's main chunk has many already.)
+-- =========================================================================
+O.npcSection = CreateSection("options.npcs", 106)
+O.npcSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
+O.npcChecks = {}
+for i, key in ipairs({ "npcMinimap", "npcWorldMap", "npcPlates" }) do
+    local cb = CreateCheck(O.npcSection, 10, -30 - (i - 1) * 24, "options." .. key)
+    cb:SetScript("OnClick", function(self)
+        O:Set(key, self:GetChecked() and true or false)
+        if TTS.NpcTracker then TTS.NpcTracker:Refresh(key) end
+    end)
+    O.npcChecks[key] = cb
+end
+
 local windowSection = CreateSection("options.windows", 66)
-windowSection:SetPoint("TOPLEFT", boardSection, "BOTTOMLEFT", 0, -8)
+windowSection:SetPoint("TOPLEFT", O.npcSection, "BOTTOMLEFT", 0, -8)
 
 local OPACITY_ROOTS = { "TTS_MainDialog", "TTS_BoardFrame", "TTS_BoardRestoreFrame", "TTS_OptionsFrame",
     "TTS_DeckBuilderFrame", "TTS_DeckPicker", "TTS_RulesFrame", "TTS_SoloSelectFrame", "TTS_DungeonEntryFrame",
@@ -692,7 +712,7 @@ end)
 -- The scrolled content: every section, the gaps between them, and a little room at each end
 local function UpdateContentHeight()
     local h = 8
-    for _, section in ipairs({ soundSection, tipSection, boardSection, windowSection, langSection, devSection }) do
+    for _, section in ipairs({ soundSection, tipSection, boardSection, O.npcSection, windowSection, langSection, devSection }) do
         h = h + section:GetHeight() + 8
     end
     content:SetHeight(h)
@@ -763,6 +783,7 @@ function O:SyncControls()
     animateCheck:SetChecked(db.animateCards ~= false)
     effectsCheck:SetChecked(db.cardEffects ~= false)
     zoneArtCheck:SetChecked(db.cardZoneArt ~= false)
+    for key, cb in pairs(O.npcChecks) do cb:SetChecked(db[key] == true) end
     nudgeCheck:SetChecked(db.actNudge ~= false)
     nudgeSlider:SetValue(db.actNudgeWait or 10)
     nudgeSlider:ShowValue(db.actNudgeWait or 10)

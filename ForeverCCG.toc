@@ -2,7 +2,7 @@
 ## Title: ForeverCCG
 ## Notes: Collect. Build. Battle. 
 ## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord, TTS_Campfire
-## SavedVariablesPerCharacter: TTS_Hero
+## SavedVariablesPerCharacter: TTS_Hero, FCCGE_DB
 ## Version: 1.0.19
 ## Author: the_naked_gypsy
 ## X-Engine: Tragic: The Saddening Engine
@@ -89,6 +89,7 @@ Cards\Dungeons\CityOfDalaran.lua
 Cards\Bosses.lua
 Cards\Special.lua
 Cards\Prizes.lua
+Cards\Locations.lua
 Cards\Tokens.lua
 Cards\Critters.lua
 Cards\Gear.lua
@@ -129,6 +130,8 @@ UI\SoloMapData.lua
 UI\SoloSelect.lua
 UI\CardLinks.lua
 UI\NpcGossip.lua
+NpcSpots.lua
+UI\NpcTracker.lua
 Professions.lua
 AdminGrants.lua
 UI\QuickStart.lua
@@ -137,3 +140,14 @@ UI\ModelGuard.lua
 MatchRecorder.lua
 Spectate.lua
 CollectionCode.lua
+Events\Tournament.lua
+Events\Formats\Swiss.lua
+Events\Formats\SingleElim.lua
+Events\Bridge.lua
+Events\Comm.lua
+Events\Host.lua
+Events\Player.lua
+Events\UI\Common.lua
+Events\UI\Organizer.lua
+Events\UI\Player.lua
+Events\Init.lua

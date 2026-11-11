@@ -21,7 +21,7 @@ local M = TTS.MainFrame
 local PANEL_BG     = { 0.04, 0.04, 0.04, 0.70 }
 local PANEL_BORDER = { 0.60, 0.56, 0.48, 1 }
 
-M:SetSize(400, 363)
+M:SetSize(400, 391)
 M:SetPoint("CENTER")
 M:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -200,7 +200,7 @@ statusLabel:SetWordWrap(true)
 -- =========================================================================
 -- SECTION 2: SOLO (encounters and the practice dummy)
 -- =========================================================================
-local practiceSection = CreateSection("main.pve", 180, 96)
+local practiceSection = CreateSection("main.pve", 180, 124)   -- (as tall as the PvP section beside it)
 practiceSection:SetPoint("TOPLEFT", deckSection, "BOTTOMLEFT", 0, -8)
 
 local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", practiceSection, 160, 24, "main.campaign")
@@ -245,7 +245,7 @@ end)
 -- =========================================================================
 -- SECTION 3: PVP WAITING ROOM (the only way to challenge other players)
 -- =========================================================================
-local pvpSection = CreateSection("main.playOthers", 180, 96)
+local pvpSection = CreateSection("main.playOthers", 180, 124)
 pvpSection:SetPoint("TOPRIGHT", deckSection, "BOTTOMRIGHT", 0, -8)
 
 local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", pvpSection, 160, 24, "main.openWaitingRoom")
@@ -262,6 +262,16 @@ local recordBtn = CreatePanelButton("TTS_PvPRecordBtn", pvpSection, 160, 24, "ma
 recordBtn:SetPoint("TOP", waitingRoomBtn, "BOTTOM", 0, -4)
 recordBtn:SetScript("OnClick", function()
     if TTS.PvP then OpenFromMain(TTS.PvP:Open()) end
+end)
+
+-- Tournaments (Events\): join one with a code, or host one
+local tournamentBtn = CreatePanelButton("TTS_TournamentsBtn", pvpSection, 160, 24, "main.tournaments")
+tournamentBtn:SetPoint("TOP", recordBtn, "BOTTOM", 0, -4)
+tournamentBtn:SetScript("OnClick", function()
+    if not TTS.ToggleTournaments then return end
+    TTS:ToggleTournaments()
+    local win = TTS.TournamentWindow and TTS:TournamentWindow()
+    if win then OpenFromMain(win) end
 end)
 
 -- PvP rating, right side of the section header (as the collection score is on the deck section's)

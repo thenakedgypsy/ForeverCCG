@@ -163,8 +163,8 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
             SendChatMessage(L("emote.dungeon", data.dungeon), "EMOTE")
             TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
         end
-        -- An NPC duel (SoloEncounters.lua), won or lost: "/e beat Old Man Heming at a hand of
-        -- Forever: CCG!" then a /cheer, or "/e lost a hand ..." then a /cry
+        -- An NPC duel (SoloEncounters.lua), won or lost: "/e beat Old Man Heming at a game of
+        -- Forever: CCG!" then a /cheer, or "/e lost a game ..." then a /cry
         if data and data.duel and RESULT_HEADLINES[data.outcome] then
             SendChatMessage(L("emote.duel." .. data.outcome, data.duel), "EMOTE")
             local followUp = (data.outcome == "won") and "CHEER" or "CRY"

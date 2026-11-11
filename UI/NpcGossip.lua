@@ -109,7 +109,7 @@ local function GiftCardOf(npcId) return GiftSource(npcId) ~= nil end
 
 -- =========================================================================
 -- DUELS
--- An NPC with a duel (TTS:AddDuel, SoloEncounters.lua) gets a "Fancy a hand of cards?"
+-- An NPC with a duel (TTS:AddDuel, SoloEncounters.lua) gets a "Fancy a game of Forever: CCG?"
 -- option too: it starts a solo game against their deck for their Location card.
 -- =========================================================================
 local function DuelOf(npcId) return TTS.DuelForNpc and TTS:DuelForNpc(npcId) or nil end

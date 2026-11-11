@@ -24,6 +24,8 @@ TTS.MAX_DECK_SLOTS = 3
 TTS.MAX_DECK_SPELLS = 12
 -- Maximum number of Gear Cards (Cards\Gear.lua) allowed in a deck
 TTS.MAX_DECK_GEAR = 8
+-- Location cards (Cards\Locations.lua) a deck may hold in all, of any Locations
+TTS.MAX_DECK_LOCATIONS = 4
 
 -- =========================================================================
 -- CLASS SPELL UNLOCKS (by character level)
@@ -485,8 +487,9 @@ local function GetTypeGroup(card)
 end
 
 -- The most cards of a type group a deck may hold (nil = no cap of its own)
-local GROUP_CAP = { Spell = function() return TTS.MAX_DECK_SPELLS end, Gear = function() return TTS.MAX_DECK_GEAR end }
-local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear" }
+local GROUP_CAP = { Spell = function() return TTS.MAX_DECK_SPELLS end, Gear = function() return TTS.MAX_DECK_GEAR end,
+    Location = function() return TTS.MAX_DECK_LOCATIONS end }
+local GROUP_CAP_MSG = { Spell = "db.maxSpells", Gear = "db.maxGear", Location = "db.maxLocations" }
 
 -- Copies of a card the deck may hold (nil = unlimited, used for Prayers)
 local function GetCopyLimit(cardId, card)
@@ -718,7 +721,7 @@ local function CheckAdd(cardId, card, deck)
         return L("db.maxDeck")
     end
 
-    -- Spell cap (TTS.MAX_DECK_SPELLS) and Gear cap (TTS.MAX_DECK_GEAR)
+    -- Spell cap (TTS.MAX_DECK_SPELLS), Gear cap (TTS.MAX_DECK_GEAR) and Location cap (TTS.MAX_DECK_LOCATIONS)
     local group = GetTypeGroup(card)
     if GROUP_CAP[group] then
         local inGroup = 0

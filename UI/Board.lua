@@ -2366,59 +2366,81 @@ end
 -- The f.zoneArt texture n (made as needed): on the model's frame, just over its full-art
 -- backing (fxBack) and under the model itself, so it shows in either window and fades with
 -- a tapped or summoning-sick model
-local function Piece(f, n)
-    f.zoneArt = f.zoneArt or {}
-    local t = f.zoneArt[n]
+-- flat: the f.zoneArtFlat texture n instead, on the card itself over its art icon: a Location's
+-- own art (no model, so the map is the picture, in full colour)
+local function Piece(f, n, flat)
+    local key = flat and "zoneArtFlat" or "zoneArt"
+    f[key] = f[key] or {}
+    local t = f[key][n]
     if not t then
-        t = f.model:CreateTexture(nil, "BACKGROUND", nil, 1)
-        f.zoneArt[n] = t
+        if flat then
+            t = f:CreateTexture(nil, "ARTWORK", nil, 2)
+        else
+            t = f.model:CreateTexture(nil, "BACKGROUND", nil, 1)
+        end
+        f[key][n] = t
     end
     return t
 end
 
 -- One map piece (px0, py0, pw x ph map pixels of a file fw x fh) cut to the crop
 -- (cx0, cy0, cw x ch map pixels), drawn s screen pixels per map pixel from the window box
--- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint)
+-- (its top raised by ZONE_ART_RAISE), in the card's colours (ArtTint); tint = nil: a Location's
+-- own art, in the map's full colour (Piece's flat)
 local function Place(f, box, n, file, px0, py0, pw, ph, fw, fh, cx0, cy0, cw, ch, s, tint)
     local ix0, ix1 = math.max(px0, cx0), math.min(px0 + pw, cx0 + cw, BG.MAP_W)
     local iy0, iy1 = math.max(py0, cy0), math.min(py0 + ph, cy0 + ch, BG.MAP_H)
     if ix1 <= ix0 or iy1 <= iy0 then return n end
-    local t = Piece(f, n + 1)
+    local t = Piece(f, n + 1, tint == nil)
     local loaded = t:SetTexture(file)
     if loaded == false or not t:GetTexture() then t:Hide(); return n end
+    local raise = tint and ZONE_ART_RAISE or 0
     t:ClearAllPoints()
-    t:SetPoint("TOPLEFT", f, "TOPLEFT", box.left + (ix0 - cx0) * s, -(box.top - ZONE_ART_RAISE + (iy0 - cy0) * s))
+    t:SetPoint("TOPLEFT", f, "TOPLEFT", box.left + (ix0 - cx0) * s, -(box.top - raise + (iy0 - cy0) * s))
     t:SetSize((ix1 - ix0) * s, (iy1 - iy0) * s)
     t:SetTexCoord((ix0 - px0) / fw, (ix1 - px0) / fw, (iy0 - py0) / fh, (iy1 - py0) / fh)
-    if t.SetDesaturated then t:SetDesaturated(true) end   -- in grey, so the model's colours lead
-    TintPiece(t, tint, (ix0 - cx0) / cw, (ix1 - cx0) / cw)
+    if tint then
+        if t.SetDesaturated then t:SetDesaturated(true) end   -- in grey, so the model's colours lead
+        TintPiece(t, tint, (ix0 - cx0) / cw, (ix1 - cx0) / cw)
+    else
+        if t.SetDesaturated then t:SetDesaturated(false) end
+        t:SetVertexColor(1, 1, 1)
+    end
     t:Show()
     return n + 1
 end
 
 -- card: what f shows (nil, or a card without a model or zone map: none). Fills the art
 -- window, or the full-art one while the model is in front (SetModelInFront calls again).
+-- A Location with a zone (and no art of its own: card.art wins) shows its zone's map as its
+-- picture instead, in full colour, whatever the cardZoneArt option says (it's the card's art).
 function PaintZoneArt(f, card)
     local on = TTS.Options and TTS.Options:Get("cardZoneArt") ~= false
+    local flat = f.artBox and card and card.type == "Location" and card.zone and not card.art and true or false
     local zone, maker
-    if on and f.artBox and f.model and card and card.displayId and not card.isHero then zone, maker = ArtZone(f, card) end
+    if flat then
+        zone = card.zone
+    elseif on and f.artBox and f.model and card and card.displayId and not card.isHero then
+        zone, maker = ArtZone(f, card)
+    end
     local map = ZoneMap(zone)
-    local box = f.modelInFront and f.artBoxFull or f.artBox
-    local key = map and (card.id .. "@" .. (maker or "") .. "@" .. map .. (f.modelInFront and "@full" or "")) or nil
+    local box = (f.modelInFront and not flat) and f.artBoxFull or f.artBox
+    local key = map and (card.id .. "@" .. (maker or "") .. "@" .. map .. ((f.modelInFront and not flat) and "@full" or "")
+        .. (flat and "@flat" or "")) or nil
     if f.zoneArtKey == key then return end
     f.zoneArtKey = key
     local used = 0
     if map then
-        -- This card's spot: near the map's middle, moved by its id
+        -- This card's spot: near the map's middle, moved by its id (a Location sees more of it)
         local h = 0
         for i = 1, #card.id do h = (h * 31 + card.id:byte(i)) % 100003 end
-        local cw = ZONE_ART_W
-        local ch = cw * (box.h + ZONE_ART_RAISE) / box.w
+        local cw = flat and ZONE_ART_W * 1.6 or ZONE_ART_W
+        local ch = cw * (box.h + (flat and 0 or ZONE_ART_RAISE)) / box.w
         local cx0 = BG.MAP_W / 2 - cw / 2 + ((h % 201) / 100 - 1) * ZONE_ART_SPREAD_X
         local cy0 = BG.MAP_H / 2 - ch / 2 + ((math.floor(h / 201) % 201) / 100 - 1) * ZONE_ART_SPREAD_Y
         local s = box.w / cw
         local tile = BG.MAP_TILE
-        local tint = ArtTint(card)
+        local tint = (not flat) and ArtTint(card) or nil
         for row = 0, 2 do
             for col = 0, 3 do
                 local i = row * 4 + col + 1
@@ -2442,7 +2464,10 @@ function PaintZoneArt(f, card)
             end
         end
     end
-    for i = used + 1, #(f.zoneArt or {}) do f.zoneArt[i]:Hide() end
+    -- (the pieces this card didn't use, and all of the other kind)
+    local list, other = f[flat and "zoneArtFlat" or "zoneArt"], f[flat and "zoneArt" or "zoneArtFlat"]
+    for i = used + 1, #(list or {}) do list[i]:Hide() end
+    for i = 1, #(other or {}) do other[i]:Hide() end
 end
 TTS.PaintZoneArt = PaintZoneArt   -- (SetModelInFront, made before this, repaints through it)
 end
@@ -3068,10 +3093,16 @@ local function SetupCardVisual(f, card, foil)
         if f.perm and f.perm.id == card.id and B.DressGear then B.DressGear(f, f.perm) end
     else
         if f.model then f.model:Hide() end
-        f.art:Show()
         f.art:SetTexture((card and card.art) or "Interface\\Icons\\INV_Misc_QuestionMark")
         TintArt(f.art, card)
+        -- A Location without art of its own shows its zone's map instead (PaintZoneArt)
+        f.art:SetShown(not (card and card.type == "Location" and card.zone and not card.art))
     end
+end
+
+-- A Location's map art (PaintZoneArt's flat pieces) dimmed with its card while it's Exhausted
+function B.ShadeFlatArt(f, shade)
+    for _, t in ipairs(f.zoneArtFlat or {}) do t:SetVertexColor(shade, shade, shade) end
 end
 
 RefreshAllModelCameras = function()
@@ -4457,6 +4488,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 TintArt(f.art, card, shade)
+                B.ShadeFlatArt(f, shade)
                 SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
@@ -4544,6 +4576,7 @@ function B:UpdateDisplay()
                     f.border:SetVertexColor(shade, shade, shade)
                 end
                 TintArt(f.art, card, shade)
+                B.ShadeFlatArt(f, shade)
                 SetCardFoil(f, f.isFoil, card, shade)
                 f.modelAlpha = ModelAlpha(shade)   -- kept for the token fade-in (ApplySpawns)
                 f.model:SetAlpha(f.modelInFront and 1 or f.modelAlpha)   -- (an effect playing shows it unshaded)
