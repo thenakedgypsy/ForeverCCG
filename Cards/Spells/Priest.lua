@@ -51,9 +51,9 @@ TTS:AddCards({
     },
     ["PRI07"] = {
         id = "PRI07", name = "Shadow Word: Pain", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Priest",
-        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 1 for 4 turns.",
+        text = "Deal 1 damage to target denizen (yours too) or the opponent, then DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordPain",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "creature_or_enemy", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
     ["PRI08"] = {
         id = "PRI08", name = "Mind Blast", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Priest",

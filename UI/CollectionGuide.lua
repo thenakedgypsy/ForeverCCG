@@ -58,8 +58,7 @@ local GREEN = "|cFF33DD33"
 -- DATA
 -- =========================================================================
 local function Collectible(card)
-    -- (Locations, 2 copies at most, aren't in the guide's 4-pip rows)
-    if not card.zone or card.isBeta or card.isToken or card.type == "Location" then return false end
+    if not card.zone or card.isBeta or card.isToken then return false end
     return TTS:GetOwnedCopies(card) ~= nil
 end
 

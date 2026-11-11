@@ -27,9 +27,9 @@ TTS:AddCards({
     },
     ["WAR03"] = {
         id = "WAR03", name = "Rend", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Deal 3 damage to target enemy denizen, then DoT 1 for 3 turns.",
+        text = "Deal 3 damage to target denizen (yours too), then DoT 1 for 3 turns.",
         art = "Interface\\Icons\\Ability_Gouge",
-        effect = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
+        effect = { target = "creature", ops = { { op = "damage", to = "target", n = 3 }, { op = "dot", to = "target", n = 1, turns = 3 } } }
     },
     ["WAR04"] = {
         id = "WAR04", name = "Bloodrage", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",

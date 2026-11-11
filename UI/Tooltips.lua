@@ -95,7 +95,7 @@ TT.KEYWORDS = {
     unblockable = { name = "Invisible",     text = "Can't be blocked." },
     bulwark     = { name = "Bulwark",       text = "Bulwark X: can block up to X attackers each combat, dealing its full combat damage to each of them." },
     enrage      = { name = "Enrage",        text = "Gets +1/+0 for each damage marked on it: the more hurt it is, the harder it hits. Damage wears off at the end of the turn, and so does the bonus." },
-    blink       = { name = "Blink",         text = "After combat in which it attacked, if it survived, it returns to its owner's hand. Gear on it falls off; an Add disappears instead." },
+    blink       = { name = "Blink",         text = "After combat in which it attacked, if it survived, it returns to its owner's hand, and the Gear on it returns to its controller's hand too. An Add disappears instead." },
     support     = { name = "Support",       text = "Can block an attacker alongside other blockers. Each blocker deals its full combat damage to the attacker, while the attacker picks the order it hits them in: each takes enough to kill it before the next takes any." },
     -- Shown for cards with a rally (card.rally); on the card it reads "Defias Kinsmanship:" over "+1/+1"
     kinsmanship = { name = "Kinsmanship",   text = "Gets the bonus once for each other denizen you control that shares its tag." },

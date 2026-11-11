@@ -193,7 +193,8 @@ end
 ENC.TUTORIAL = {
     id = "TUTORIAL", kind = "practice", name = "Tutorial", opponent = "Training Partner",
     life = 4, ai = "dummy", fixedOrder = true, isTutorial = true,
-    playerDeck = { "W01", "DES01", "W01", "HIN04", "R01", "MAG02", "W01",
+    -- (the 7th card, in the opening hand, is the tutorial's own Location, Cards\Locations.lua)
+    playerDeck = { "W01", "DES01", "W01", "HIN04", "R01", "MAG02", "LCN_TUT",
                    "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01", "W01" },
     deck = { "G01", "DUN01", "G01", "FER03", "G01", "G01", "G01",
              "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01", "G01" },
@@ -527,7 +528,7 @@ end
 --                      attempts = { [dungeonId] = server time its last game started or ended } }
 -- =========================================================================
 local MAX_REWARD_COPIES = 4
-local MAX_LOCATION_COPIES = 2   -- only one Location can be in play at a time
+local MAX_LOCATION_COPIES = 4   -- (as other cards; only one Location can be in play at a time)
 
 -- The most copies of a card a player can own, and so have in a deck
 function TTS:CardMaxCopies(card)

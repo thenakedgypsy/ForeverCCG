@@ -9,7 +9,7 @@
 -- =========================================================================
 -- LOCATION CARDS
 -- Won by beating a zone's notable NPC at cards (Duels.lua). How a Location plays: Engine\
--- CardLogic.lua's LOCATIONS section. Up to 2 copies (SoloEncounters.lua TTS:CardMaxCopies).
+-- CardLogic.lua's LOCATIONS section. Up to 4 copies (SoloEncounters.lua TTS:CardMaxCopies).
 -- In the hand it's an ordinary card; on the battlefield it turns into a landscape card
 -- (UI\Board.lua, the frames' <frame>_landscape.png).
 -- A Location with a zone and no art of its own shows that zone's map as its picture
@@ -292,5 +292,15 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Zephras Isle", p = 1, t = 0 },
         ability = { tap = true, cost = "{2}", ops = { { op = "heal", to = "self_player", n = 2 } } },
         text = "Your Zephras Isle denizens get +1/+0. {2}, {T}: You regain 2 health."
+    },
+
+    -- The tutorial's (UI\Tutorial.lua; Systems\SoloEncounters.lua TUTORIAL): cheap enough to
+    -- play on its last turn, and never collected (notCollectible: not in the Deckbuilder,
+    -- the collection or a ban list). Shows Elwynn Forest's map as its picture.
+    ["LCN_TUT"] = {
+        id = "LCN_TUT", name = "Training Grounds", cost = "{W}", cmc = 1, color = "W", type = "Location",
+        notCollectible = true, zone = "Elwynn Forest",
+        anthem = { tag = "any", p = 1, t = 0 },
+        text = "Your denizens get +1/+0."
     },
 })

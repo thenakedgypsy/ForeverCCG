@@ -21,15 +21,15 @@ TTS:AddCards({
     },
     ["WLK02"] = {
         id = "WLK02", name = "Corruption", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Deal 1 damage to target enemy denizen or the opponent, then DoT 2 for 3 turns.",
+        text = "Deal 1 damage to target denizen (yours too) or the opponent, then DoT 2 for 3 turns.",
         art = "Interface\\Icons\\Spell_Shadow_AbominationExplosion",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 2, turns = 3 } } }
+        effect = { target = "creature_or_enemy", ops = { { op = "damage", to = "target", n = 1 }, { op = "dot", to = "target", n = 2, turns = 3 } } }
     },
     ["WLK03"] = {
         id = "WLK03", name = "Curse of Agony", cost = "{B}", cmc = 1, color = "B", type = "Sorcery", class = "Warlock",
-        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 4 turns.",
+        text = "Deal 2 damage to target denizen (yours too) or the opponent, then DoT 1 for 4 turns.",
         art = "Interface\\Icons\\Spell_Shadow_CurseOfSargeras",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
+        effect = { target = "creature_or_enemy", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 4 } } }
     },
     ["WLK04"] = {
         id = "WLK04", name = "Drain Life", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Warlock",
@@ -51,9 +51,9 @@ TTS:AddCards({
     },
     ["WLK07"] = {
         id = "WLK07", name = "Immolate", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warlock",
-        text = "Deal 2 damage to target enemy denizen or the opponent, then DoT 1 for 2 turns.",
+        text = "Deal 2 damage to target denizen (yours too) or the opponent, then DoT 1 for 2 turns.",
         art = "Interface\\Icons\\Spell_Fire_Immolation",
-        effect = { target = "enemy_any", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
+        effect = { target = "creature_or_enemy", ops = { { op = "damage", to = "target", n = 2 }, { op = "dot", to = "target", n = 1, turns = 2 } } }
     },
     ["WLK08"] = {
         id = "WLK08", name = "Soul Fire", cost = "{3}{R}", cmc = 4, color = "R", type = "Sorcery", class = "Warlock",

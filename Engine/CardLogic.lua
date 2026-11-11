@@ -453,6 +453,8 @@ function E:IsValidSpellTarget(spec, kind, isRemote, casterIsRemote)
     if spec == "friendly_creature" then return kind == "CREATURE" and not isEnemy end
     if spec == "creature" then return kind == "CREATURE" end
     if spec == "enemy_any" then return isEnemy end
+    -- Any denizen (yours too: an Enrage one hits harder hurt) or the opponent, not yourself
+    if spec == "creature_or_enemy" then return kind == "CREATURE" or isEnemy end
     if spec == "friendly_any" then return not isEnemy end
     if spec == "any" then return true end
     if spec == "enemy_player" then return kind == "PLAYER" and isEnemy end
@@ -669,18 +671,66 @@ end
 
 -- =========================================================================
 -- RETURN TO HAND (Blink, and the "bounce" spell op)
--- A denizen on the battlefield goes back to its owner's hand. Gear on it falls off (onto
--- its controller's battlefield, E:DetachAttachments); an Add disappears instead; one
--- borrowed until end of turn goes back to the side it was taken from. A full hand sends it
--- to its owner's graveyard. In PvP the other client puts its own card in its hand, and we
--- only count it. Returns true if the denizen left the battlefield.
+-- A denizen on the battlefield goes back to its owner's hand. The Gear Cards on it go back
+-- to the hand of whoever controls it (they cast them), out of that graveyard; anything else
+-- attached falls off (E:DetachAttachments). An Add disappears instead; one borrowed until end
+-- of turn goes back to the side it was taken from. A full hand sends a card to the graveyard
+-- (its Gear stays there). In PvP the other client puts its own cards in its hand, and we only
+-- count them. Returns true if the denizen left the battlefield.
 -- =========================================================================
 local HAND_LIMIT = 10   -- (CoreEngine.lua's MAX_HAND_SIZE)
+
+-- The Gear Cards on a denizen, one id per copy: each records one lasting effect per lasting
+-- buff it has (E:GetPermEffectCards' perm.spellEffects), so its entries are counted in those
+local function GearOn(perm)
+    local entries, out = {}, {}
+    for _, e in ipairs(perm.spellEffects or {}) do
+        local c = TTS.Cards[e.id]
+        if c and c.subType == "Gear" and e.kind == "perm" then entries[e.id] = (entries[e.id] or 0) + 1 end
+    end
+    for id, n in pairs(entries) do
+        local per = 0
+        for _, op in ipairs((TTS.Cards[id].effect and TTS.Cards[id].effect.ops) or {}) do
+            if op.op == "buff" and op.perm then per = per + 1 end
+        end
+        for _ = 1, math.max(1, math.floor(n / math.max(1, per))) do out[#out + 1] = id end
+    end
+    table.sort(out)
+    return out
+end
+
+-- Takes one copy of cardId out of a side's graveyard into its hand (the latest copy put there).
+-- Returns true if it went to the hand.
+function E:GraveyardToHand(isRemote, cardId)
+    local st = isRemote and self.remoteState or self.localState
+    local at
+    for i = #st.graveyard, 1, -1 do
+        if st.graveyard[i] == cardId then at = i; break end
+    end
+    if not at then return false end
+    if isRemote and not self.isSolo then
+        table.remove(st.graveyard, at)
+        st.handCount = (st.handCount or 0) + 1
+        return true
+    end
+    if #st.hand >= HAND_LIMIT then return false end
+    table.remove(st.graveyard, at)
+    table.insert(st.hand, cardId)
+    if isRemote then st.handCount = #st.hand end
+    return true
+end
 
 function E:ReturnToHand(perm, reason)
     local isRemote, idx = self:FindPerm(perm)
     if not idx then return false end
     local card = TTS.Cards[perm.id]
+    -- Its Gear goes back to its controller's hand with it
+    for _, gearId in ipairs(GearOn(perm)) do
+        if self:GraveyardToHand(isRemote, gearId) then
+            self:Log(L("log.gearReturned", TTS:CardName(gearId), CreatureName(perm)), "ACTION")
+        end
+    end
+    perm.spellEffects = nil
     local ownerRemote = isRemote
     for i = #self.stolenCreatures, 1, -1 do
         local entry = self.stolenCreatures[i]
