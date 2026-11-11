@@ -274,13 +274,15 @@ end
 -- the game in progress { opponent, matchId, theirs, at } and is cleared as it ends, however
 -- it ends. Still there at login, the game was left: it counts as a loss, and the opponent is
 -- told (ACTION:LEFT:<match id>), which ends theirs as a win (Network.lua).
--- While a game is on each client sends ACTION:ALIVE every HEARTBEAT seconds. An opponent who
--- has sent one and then goes silent for CLAIM_AFTER seconds (they crashed or lost their
--- connection) can be claimed against: the claim wins the game here and tells them
--- (ACTION:CLAIMED), and they take the loss at their next login if they never got it.
--- Opponents on older versions send no heartbeat, so no claim is ever offered against them.
+-- Nothing extra is sent while the game is moving: any message from the opponent shows
+-- they're there. Unheard from for ASK_AFTER seconds, we ask "are you still there?"
+-- (ACTION:ALIVE?, again every ASK_AFTER seconds while it lasts) and their client answers
+-- (ACTION:ALIVE). Unheard from for CLAIM_AFTER seconds, they've crashed or lost their
+-- connection: the game can be claimed. The claim wins the game here and tells them
+-- (ACTION:CLAIMED); they take the loss at their next login if they never got it. Only an
+-- opponent whose version answers (TTS.Net:OpponentAnswersAlive) can be claimed against.
 -- =========================================================================
-local HEARTBEAT = 20
+local ASK_AFTER = 30
 local CLAIM_AFTER = 60
 
 local function PvPGameOn(E)
@@ -318,32 +320,34 @@ StaticPopupDialogs["TTS_CLAIM_WIN"] = {
     preferredIndex = 3,
 }
 
--- Every few seconds while a PvP game is on: the heartbeat, the marker's opponent rating, and
--- the claim once they've been silent long enough
+-- Every few seconds while a PvP game is on: the marker's opponent rating, the "are you still
+-- there?" once they've been quiet a while, and the claim once they've been silent long enough
+local lastAsk   -- GetTime() of our last "are you still there?"
 local ticker = CreateFrame("Frame")
-ticker.sinceBeat, ticker.sinceCheck = 0, 0
+ticker.sinceCheck = 0
 ticker:SetScript("OnUpdate", function(self, elapsed)
     local E = TTS.Engine
     if not PvPGameOn(E) then
         if StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN") then StaticPopup_Hide("TTS_CLAIM_WIN") end
         return
     end
-    self.sinceBeat = self.sinceBeat + elapsed
     self.sinceCheck = self.sinceCheck + elapsed
-    if self.sinceBeat >= HEARTBEAT then
-        self.sinceBeat = 0
-        TTS.Net:Send(E.opponent, "ACTION:ALIVE")
-        local live = DB().live
-        if live then
-            if E.opponentPvP then live.theirs = E.opponentPvP end
-            live.matchId = TTS.Net.matchId or live.matchId
-        end
-    end
     if self.sinceCheck < 5 then return end
     self.sinceCheck = 0
-    local silent = GetTime() - (E.opponentHeardAt or GetTime())
+    local live = DB().live
+    if live then
+        if E.opponentPvP then live.theirs = E.opponentPvP end
+        live.matchId = TTS.Net.matchId or live.matchId
+    end
+    local now = GetTime()
+    local answers = TTS.Net.OpponentAnswersAlive and TTS.Net:OpponentAnswersAlive()
+    local silent = now - (E.opponentHeardAt or now)
+    if answers and silent >= ASK_AFTER and (not lastAsk or now - lastAsk >= ASK_AFTER) then
+        lastAsk = now
+        TTS.Net:Send(E.opponent, "ACTION:ALIVE?")
+    end
     local shown = StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN")
-    if not E.opponentHeartbeat or silent < CLAIM_AFTER then
+    if not answers or silent < CLAIM_AFTER then
         if shown then StaticPopup_Hide("TTS_CLAIM_WIN") end   -- heard from them again
     elseif not shown and (not claimOffered or GetTime() - claimOffered >= CLAIM_AFTER) then
         OfferClaim(E)
@@ -352,8 +356,7 @@ end)
 
 local function OnGameStart(_, E)
     if not PvPGameOn(E) then return end
-    claimOffered = nil
-    E.opponentHeartbeat = nil
+    claimOffered, lastAsk = nil, nil
     DB().live = { opponent = E.opponent, matchId = TTS.Net and TTS.Net.matchId, at = time() }
     -- Their rating comes just after the game starts (Network.lua): picked up on the next frame
     C_Timer.After(0, function()

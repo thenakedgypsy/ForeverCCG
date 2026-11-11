@@ -1207,11 +1207,18 @@ end
 -- A match is set up with theirVersion (from their INVITE or ACCEPT): numbering starts over,
 -- on only if they understand it (SEQUENCED MATCH MESSAGES)
 function TTS.Net:BeginMatchSequence(theirVersion)
+    self.theirVersion = theirVersion
     self.seqOn = VersionAtLeast(theirVersion, SEQ_MIN_VERSION) and VersionAtLeast(TTS.VERSION, SEQ_MIN_VERSION)
     self.sendSeq = 0
     self.recvSeq = 0
     self.recvBuffer = {}
     self.seqGapFor = nil
+end
+
+-- Whether the current opponent answers "are you still there?" (PvPRecord.lua): 1.1.0 on
+local ALIVE_MIN_VERSION = { 1, 1, 0 }
+function TTS.Net:OpponentAnswersAlive()
+    return VersionAtLeast(self.theirVersion, ALIVE_MIN_VERSION)
 end
 
 -- Hands the waiting messages to OnReceive in order, as far as there is no gap
@@ -2473,9 +2480,12 @@ function TTS.Net:OnReceive(msg, sender)
         elseif actionType == "CONCEDE" then
             E:WinMatch(L("end.oppConceded", sender))
 
+        elseif actionType == "ALIVE?" then
+            -- They haven't heard from us for a while (PvPRecord.lua): we're still here
+            TTS.Net:Send(sender, "ACTION:ALIVE")
+
         elseif actionType == "ALIVE" then
-            -- Their heartbeat (PvPRecord.lua): heard above; a claim can now be offered if it stops
-            E.opponentHeartbeat = true
+            -- Our "are you still there?" answered: hearing it (above) is all it's for
 
         elseif actionType == "LEFT" then
             -- They reloaded or logged out mid-game and took the loss at login (PvPRecord.lua).
