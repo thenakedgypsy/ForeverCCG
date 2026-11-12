@@ -733,14 +733,14 @@ end
 
 local OPTION_H = 20   -- each option line, top to top
 
--- Puts the NPC's line and our options into the quest window's greeting; returns true once
--- they're in (false: no greeting showing). The options go straight under the greeting
--- text, in blank lines added to its end: the quest list hangs under the text, so it moves
--- down to make room.
-AddToQuestGreeting = function(npcId)
-    if not (QuestGreetingShown() and HasOptions(npcId)) then return false end
-    -- The NPC's own greeting, then our line (and any answer) under it
-    local text = (GetGreetingText and GetGreetingText()) or ""
+-- The NPC whose quest greeting has our lines in it, while it's up (nil otherwise), and
+-- whether we're the ones setting GreetingText's text right now
+local questGreetNpc, settingGreeting
+
+-- Fills the greeting: base (the NPC's own text), our lines under it, then blank lines with
+-- our options over them. The quest list hangs under the text, so it moves down to make room.
+local function ApplyQuestGreeting(npcId, base)
+    local text = base or ""
     local lines = {}
     local greet = DuelOf(npcId) and Loc:Get("npc." .. tostring(npcId) .. ".greet")
     if greet then lines[#lines + 1] = greet end
@@ -756,6 +756,7 @@ AddToQuestGreeting = function(npcId)
     if DuelOf(npcId) then options[#options + 1] = { "npc.duel", StartDuel } end
 
     -- Blank lines (" " so they count) until there's room for the options under the text
+    settingGreeting = true
     GreetingText:SetText(text)
     local textH = GreetingText:GetStringHeight() or 0
     local need = #options * OPTION_H + 6
@@ -766,21 +767,47 @@ AddToQuestGreeting = function(npcId)
         GreetingText:SetText(reserved)
         room = (GreetingText:GetStringHeight() or 0) - textH
     end
+    settingGreeting = false
 
-    -- The option lines, in that room: the first just under the text
+    -- The option lines, in that room: the first just under the text, measured down from its
+    -- top (so they can't land on the text whatever its height turns out to be)
     local child = QuestGreetingScrollChildFrame
     for i, opt in ipairs(options) do
         local b = QuestButton(i)
         b:ClearAllPoints()
-        b:SetPoint("TOPLEFT", GreetingText, "BOTTOMLEFT", 0, room - 6 - (i - 1) * OPTION_H)
+        b:SetPoint("TOPLEFT", GreetingText, "TOPLEFT", 0, -(textH + 6 + (i - 1) * OPTION_H))
         b:SetPoint("RIGHT", child, "RIGHT", -5, 0)
         b.text:SetText(L(opt[1]))
         b:SetScript("OnClick", opt[2])
         b:Show()
     end
     for i = #options + 1, #questButtons do questButtons[i]:Hide() end
+end
+
+-- Puts the NPC's line and our options into the quest window's greeting; returns true once
+-- they're in (false: no greeting showing)
+AddToQuestGreeting = function(npcId)
+    if not (QuestGreetingShown() and HasOptions(npcId)) then return false end
+    questGreetNpc = npcId
+    ApplyQuestGreeting(npcId, (GetGreetingText and GetGreetingText()) or "")
     G:Hide()
     return true
+end
+
+-- The game sets the greeting text again after we've filled it (the panel shows or lays
+-- itself out again a frame later), which wiped our lines and left the options over the
+-- text. Whenever it does, ours go straight back in, before the quest list is laid out
+-- under it.
+if GreetingText then
+    hooksecurefunc(GreetingText, "SetText", function(_, base)
+        if settingGreeting or not questGreetNpc then return end
+        if GossipNpcId() ~= questGreetNpc or not HasOptions(questGreetNpc) then
+            questGreetNpc = nil
+            HideQuestButtons()
+            return
+        end
+        ApplyQuestGreeting(questGreetNpc, base)
+    end)
 end
 
 local Q = CreateFrame("Frame")
@@ -802,6 +829,7 @@ if QuestFrameGreetingPanel then
 end
 if QuestFrame then
     QuestFrame:HookScript("OnHide", function()
+        questGreetNpc = nil
         HideQuestButtons()
         if not (GossipFrame and GossipFrame:IsShown()) then
             G:Hide()

@@ -249,7 +249,8 @@ local function BonusLine(bonus, name)
     for _, kw in ipairs(bonus.kw or {}) do
         if TT.KEYWORDS[kw] then parts[#parts + 1] = TT:Def("keyword", kw, "name") end
     end
-    local prefix = TagValue(bonus.tag, bonus.value)
+    -- tag "any" (a Settlement's "Denizens you control get ...") has no tag name to put first
+    local prefix = (bonus.tag ~= "any" and bonus.value ~= nil) and TagValue(bonus.tag, bonus.value) or ""
     -- keywords are never separated by commas: "+1{PT}+1. Quick"
     return (prefix ~= "" and (prefix .. " ") or "") .. name .. ":\n" .. table.concat(parts, Loc.code == "zhCN" and "。" or ". ")
 end

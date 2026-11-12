@@ -1,3 +1,28 @@
+## 1.1.0
+*   new: Settlements - a new kind of card that stays on the board all game. About half strengthen your denizens or weaken your opponent's just by being there; the rest have an ability you use by Exhausting them, once a turn. You can have one in play at a time (playing another replaces it) and up to 4 in a deck, and only Raze destroys one. 39 to collect, one per zone
+*   new: duels in the world - a notable character in each zone plays cards for their Settlement. Talk to them and choose "Fancy a game of Forever: CCG?": each win gives a copy, up to 4, and win or lose each can be challenged once an hour. The Elwynn Forest, Teldrassil and Darkshore duels are Alliance only; Horde characters get those cards once they've beaten every duel they can reach
+*   new: Raze - Wrath and Arcane Shot now also raze the opponent's Settlement, and so do Raging Thunder Lizard, Desert Rumbler, Tangled Horror and Defias Digger when they arrive (Raging Thunder Lizard also gains Enrage)
+*   new: profession cards - 48 cards, 4 for each of the nine primary professions and Cooking, First Aid and Fishing, opened as your skill reaches 1, 75, 150 and 225. Crafting, gathering, skinning and fishing can each turn one up: the higher your skill compared with what you're doing, the better the chance. Your first 2 primary professions and every secondary one give a starter card the first time you learn them, and the skill you already have earns copies straight away. Collect every card of 2 primary professions and the trainers of the others hand theirs out to you. The deckbuilder has a Professions filter
+*   new on profession Prayers: Deplete (a set number of uses, two mana each, then it's gone), Workshop (Recovers when you cast Gear, once a turn) and mana of any colour
+*   new keyword: Blink - after combat in which it attacked, a Blink denizen that survived returns to its owner's hand, and its Gear to yours (an Add disappears instead). Archmages, sorcerers and wizards across the world have it, 13 in all
+*   new: Tournaments button in the main window - host an event (Swiss or single elimination, up to 64 players, with banned cards if you like) or join one with its code and the organizer's name, or by clicking the join link the organizer posts in chat. The players' addons report results as they play, and tournament games are rated as usual
+*   new: prize cards - 10 Unique faction leaders and notable characters, two per sphere, won only by the champion of a tournament run with prizes on (4 or more players). Playing in a prize tournament starts a 7-day wait before you can win another; the main window and the minimap button's tooltip show it. Prize cards don't count towards your collection score
+*   new: card NPC tracker - Options > Card NPCs can show innkeepers, Gear merchants, profession trainers and duel opponents on the minimap, on the world map and as an icon over their heads (which turns on friendly nameplates). All off by default
+*   new class spells: every class has 2 more, removal and board wipes, at levels 55 and 60 (108 in all). Spells now unlock every 5 levels from level 5 instead of every 6, so nobody loses one they already had
+*   new: Zephras Isle Campaign zone, reached from Feralas, against the Zephras Zealots. Its reward is Talaanis Shadowsong
+*   Deadmines: Sneed's Shredder is now a {3}{R} 4/4 that leaves Sneed (a 2/2 Defias Add that strengthens your Defias) behind when it dies, and its copies drop from killing Sneed. The Deadmines reward is now Defias Taskmaster (Strikes-First, your other Deadmines denizens get +1/+1)
+*   Shadowfang Keep: Shadowfang Whitescalp is now Shadowfang Moonwalker, a {2}{B} 3/3 with Warded
+*   the tutorial now has you play a Settlement
+*   main window redesigned into Collect, Build and Battle sections, with your PvE progress, PvP rating, the campfire bonus and the prize wait on show
+*   Collection Guide: creatures found in more than one zone are listed in each of them, under "Also found here"
+*   options: Preview height limit - how tall the creature card preview can grow beside tooltips
+*   leaving a PvP game: reloading, logging out or crashing mid-game now counts as a loss at your next login, and your opponent wins straight away. If your opponent stops responding for a minute, you can Claim Win or keep waiting
+*   PvP: a lost game message is now spotted and sent again even when nothing else is sent after it, so games no longer get stuck with each side waiting on the other. The same goes for a lost answer to an undo request
+*   spectating: board updates lost on the way are asked for again rather than the whole board, and updates left over from an earlier time watching the same player no longer get mixed into the new one
+*   combat: a blocked Brutish attacker must now get through what's left of its blocker's toughness after a Fatal attacker hits it too. Before, the Fatal hit counted as all of it, so the whole Brutish attack went through to the player
+*   combat: a Bulwark blocking several attackers takes their damage in the order its player assigned the blocks, so it can soak a Brutish attacker before the rest wear it down. The block arrows are numbered with that order (to change it, take the Bulwark's blocks back and assign them again), and the AI puts Brutish attackers first
+*   blocked attackers now show a shield while blocks are assigned (a skull instead if the block kills them)
+
 ## 1.0.19
 *   Rules & Guide: Collecting Cards now explains the new drop rates for rare spawns, in the world and in dungeons
 
