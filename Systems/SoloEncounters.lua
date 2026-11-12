@@ -38,7 +38,7 @@ TTS.SoloEncounters = {}
 local ENC = TTS.SoloEncounters
 
 -- Zones that are open from the start
-local START_ZONES = { ELW = true, TIR = true, DUR = true, MUL = true, TEL = true }
+local START_ZONES = { ELW = true, TIR = true, DUR = true, MUL = true, TEL = true, ZEP = true }
 
 -- id, zone, opponent, world map folder, AI profile, reward card (nil = <id>11)
 local ZONES = {
