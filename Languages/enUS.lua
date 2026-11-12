@@ -1881,8 +1881,7 @@ S["choice.raise"] = "%s: choose a denizen card to return"
 S["choice.theirs"] = "%s (opponent's)"
 S["choice.damageOrder"] = "%s deals %d damage: choose the blocker it hits first"
 S["choice.damageOrderNext"] = "%s deals %d damage: choose the blocker it hits next"
-S["choice.damageOrderOption"] = "%s\n|cFFAAAAAA%d to kill|r"
-S["undo.choice"] = "Make your choice first."
+S["choice.damageOrderOption"] = "%s\n|cFFAAAAAA%d to kill|r"S["undo.choice"] = "Make your choice first."
 
 -- MINIMAP BUTTON
 S["minimap.wrInMatch"] = "|cFFFF2222[TTSE]|r The waiting room can't be opened during a game."

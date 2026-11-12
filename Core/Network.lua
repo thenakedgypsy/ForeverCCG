@@ -425,6 +425,18 @@ function TTS.Net:SendSpectator(target, inner, onSent)
     SendDirect("T:" .. target .. ":" .. TTS.GetPlayerFullName() .. ":" .. inner, "WHISPER", target, true, onSent)
 end
 
+-- Drops the board parts still waiting to go to a spectator (Spectate.lua SPEC_F): their
+-- session has ended, and a new one numbers its parts from 1 again, so an old part arriving
+-- late would be taken for one of the new session's
+function TTS.Net:DropQueuedSpectatorParts(target)
+    local prefix = "T:" .. CharName(target) .. ":" .. TTS.GetPlayerFullName() .. ":SPEC_F:"
+    for _, q in pairs(sendQueues) do
+        for i = #q, 1, -1 do
+            if q[i].msg and q[i].msg:sub(1, #prefix) == prefix then table.remove(q, i) end
+        end
+    end
+end
+
 -- =========================================================================
 -- SEQUENCED MATCH MESSAGES (1.0.8+)
 -- Two messages sent one after the other can reach the opponent the other way round (seen:
@@ -440,14 +452,14 @@ end
 -- up to SEQ_RESEND_TRIES times, SEQ_RESEND_WAIT seconds apart; only then does the game
 -- carry on without it. Builds before this ignore the request, so against them that's the
 -- old skip, just later. A lost message with nothing after it shows up as a gap once the
--- next one arrives: at the latest the "are you still there?" (PvPRecord.lua), itself
--- numbered. With an older opponent nothing changes: plain "M:" envelopes, which they
+-- next one arrives, or when an "are you still there?" (PvPRecord.lua) or its answer brings
+-- the number of the last one sent (TTS.Net:SendPing). With an older opponent nothing changes: plain "M:" envelopes, which they
 -- understand. Background traffic (CONTACT_*) leaves after game messages (the "low" queue),
 -- so it stays unnumbered rather than hold the game up.
 -- =========================================================================
 local SEQ_MIN_VERSION = { 1, 0, 8 }
 local SEQ_GAP_WAIT = 4
-local SEQ_RESEND_TRIES = 5
+local SEQ_RESEND_TRIES = 10   -- (each try needs the request and the copy both to get through)
 local SEQ_RESEND_WAIT = 6
 local SEQ_RESEND_BATCH = 10   -- most messages one request asks for: the rest follow once these land
 local SENT_LOG_SIZE = 200
@@ -1227,6 +1239,32 @@ function TTS.Net:BeginMatchSequence(theirVersion)
     self.recvSeq = 0
     self.recvBuffer = {}
     self.seqGapFor = nil
+    self.theirLastSeq = 0
+end
+
+-- The first message after a gap: the lowest one waiting, or with none waiting, the one after
+-- the last they say they've sent (NoteTheirLastSeq) if we're short of it. nil: no gap.
+local function FirstAfterGap(self)
+    local first
+    for s in pairs(self.recvBuffer or {}) do
+        if not first or s < first then first = s end
+    end
+    if not first and (self.theirLastSeq or 0) > (self.recvSeq or 0) then first = self.theirLastSeq + 1 end
+    return first
+end
+
+-- "Are you still there?" and its answer go unnumbered and carry the last numbered message
+-- the sender has sent (ACTION:ALIVE?:<seq> / ACTION:ALIVE:<seq>). Numbered, a lost one would
+-- itself be a lost last message; this way any one that arrives shows us the gap at the end.
+function TTS.Net:SendPing(target, kind)
+    return self:Send(target, "ACTION:" .. kind .. ":" .. tostring(self.sendSeq or 0))
+end
+
+function TTS.Net:NoteTheirLastSeq(n)
+    n = tonumber(n)
+    if not (n and self.seqOn and self.recvBuffer) then return end
+    if n > (self.theirLastSeq or 0) then self.theirLastSeq = n end
+    self:ArmSeqGapWait()
 end
 
 -- Whether the current opponent answers "are you still there?" (PvPRecord.lua): 1.1.0 on
@@ -1249,26 +1287,24 @@ function TTS.Net:DrainSequenced()
     end
 end
 
--- A message is missing with later ones waiting: give it SEQ_GAP_WAIT seconds (it may only be
--- late), then ask for it again a few times; failing that, carry on from the next one that
--- did arrive
+-- A message is missing with later ones waiting (or after the last one they say they sent):
+-- give it SEQ_GAP_WAIT seconds (it may only be late), then ask for it again a few times;
+-- failing that, carry on from the next one that did arrive
 function TTS.Net:ArmSeqGapWait()
     local buf, waitingFor = self.recvBuffer, (self.recvSeq or 0) + 1
-    if not (buf and next(buf)) or self.seqGapFor == waitingFor then return end
+    if not buf or not FirstAfterGap(self) or self.seqGapFor == waitingFor then return end
     self.seqGapFor = waitingFor
     local asked = 0
     local function Check()
         if self.recvBuffer ~= buf or (self.recvSeq or 0) + 1 ~= waitingFor then return end
-        local first
-        for s in pairs(buf) do
-            if not first or s < first then first = s end
-        end
+        local first = FirstAfterGap(self)
         if not first then self.seqGapFor = nil; return end
         local E = TTS.Engine
-        if asked < SEQ_RESEND_TRIES and E and E.inMatch then
+        local from = (buf[first] and buf[first][2]) or (E and E.opponent)
+        if asked < SEQ_RESEND_TRIES and E and E.inMatch and from then
             asked = asked + 1
             local last = math.min(first - 1, waitingFor + SEQ_RESEND_BATCH - 1)
-            self:Send(buf[first][2], SEQ_RESEND_PREFIX .. waitingFor .. ":" .. last)
+            self:Send(from, SEQ_RESEND_PREFIX .. waitingFor .. ":" .. last)
             TTS:SafeAfter(SEQ_RESEND_WAIT, Check)
             return
         end
@@ -1299,8 +1335,11 @@ end
 
 -- They're missing our numbered messages first..last: the very same envelopes go again (the
 -- ones still kept). Sending is slow (SEND_RATE), so nothing goes twice that may still be on
--- its way: one still queued, or resent less than SEQ_RESEND_WAIT ago. Any copy that does
--- arrive twice is dropped there as a repeat.
+-- its way: one still queued, or resent less than SEQ_RESEND_COOLDOWN ago. Any copy that does
+-- arrive twice is dropped there as a repeat. The cool-down is shorter than the asker's
+-- SEQ_RESEND_WAIT: as long as that, and each next request (SEQ_RESEND_WAIT after the last)
+-- could land just inside it and be ignored, so a lost copy went again on every other try.
+local SEQ_RESEND_COOLDOWN = SEQ_RESEND_WAIT / 2
 function TTS.Net:ResendSequenced(target, first, last)
     local log = self.sentLog
     if not (log and first and last) or first < 1 or last < first then return end
@@ -1311,7 +1350,7 @@ function TTS.Net:ResendSequenced(target, first, last)
     for seq = first, last do
         local envelope = log[seq]
         local at = self.resentAt[envelope]
-        if envelope and not StillQueued(envelope) and not (at and now - at < SEQ_RESEND_WAIT) then
+        if envelope and not StillQueued(envelope) and not (at and now - at < SEQ_RESEND_COOLDOWN) then
             self.resentAt[envelope] = now
             local resentAt = self.resentAt
             -- The cool-down runs from when it actually leaves, not from when it was queued
@@ -1447,8 +1486,10 @@ function TTS.Net:Send(target, msg)
     -- Contact upkeep is background traffic; challenges and matches go first. It's never
     -- numbered (see SEQUENCED MATCH MESSAGES): it leaves after game messages sent later.
     local low = msg:match("^CONTACT_") and true or false
-    -- A resend request goes unnumbered too, but with the game messages
+    -- A resend request goes unnumbered too, but with the game messages, and so do "are you
+    -- still there?" and its answer (TTS.Net:SendPing)
     local unnumbered = low or msg:sub(1, #SEQ_RESEND_PREFIX) == SEQ_RESEND_PREFIX
+        or msg:match("^ACTION:ALIVE%??:") ~= nil
     local seqArg   -- nil: sized for a number; false: unnumbered ("x and false or nil" is always nil)
     if unnumbered then seqArg = false end
     local envelope = WrapMessage(target, msg, seqArg)
@@ -2523,6 +2564,25 @@ function TTS.Net:OnReceive(msg, sender)
             return
         end
 
+        -- SEQ_RESEND:<first>:<last>: our numbered messages they never got (SEQUENCED MATCH
+        -- MESSAGES). Answered after our game has ended too: the winning blow can be the one
+        -- lost, and they'd wait for it for good. Its envelope carried this game's id, so it
+        -- is from this game's opponent (OnChannelMessage).
+        if actionType == "SEQ_RESEND" then
+            if not E.isSolo and SameName(E.opponent, sender) then
+                TTS.Net:ResendSequenced(sender, tonumber(parts[3]), tonumber(parts[4]))
+            end
+            return
+        end
+        -- "Are you still there?" after our game has ended: they're still in it, so the end of
+        -- it never reached them, and with nothing sent after it they can't see the gap. Our
+        -- last messages go again (any they did get are dropped there as repeats).
+        if actionType == "ALIVE?" and not E.inMatch and not E.isSolo and SameName(E.opponent, sender) then
+            local last = TTS.Net.sendSeq or 0
+            TTS.Net:ResendSequenced(sender, math.max(1, last - SEQ_RESEND_BATCH + 1), last)
+            return
+        end
+
         -- Only the current opponent can change the board
         if not IsMatchOpponent(sender) then return end
         -- Heard from them: a concede now isn't a disconnect (PvPRecord.lua, QUIET_SECONDS)
@@ -2550,16 +2610,15 @@ function TTS.Net:OnReceive(msg, sender)
             E:WinMatch(L("end.oppConceded", sender))
 
         elseif actionType == "ALIVE?" then
-            -- They haven't heard from us for a while (PvPRecord.lua): we're still here
-            TTS.Net:Send(sender, "ACTION:ALIVE")
+            -- ALIVE?[:<their last numbered message>]: they haven't heard from us for a while
+            -- (PvPRecord.lua): we're still here. The number shows us any of theirs we missed.
+            TTS.Net:NoteTheirLastSeq(parts[3])
+            TTS.Net:SendPing(sender, "ALIVE")
 
         elseif actionType == "ALIVE" then
-            -- Our "are you still there?" answered: hearing it (above) is all it's for
-
-        elseif actionType == "SEQ_RESEND" then
-            -- SEQ_RESEND:<first>:<last>: our numbered messages they never got (SEQUENCED
-            -- MATCH MESSAGES)
-            TTS.Net:ResendSequenced(sender, tonumber(parts[3]), tonumber(parts[4]))
+            -- ALIVE[:<their last numbered message>]: our "are you still there?" answered.
+            -- Hearing it (above) is most of what it's for; the number shows any we missed.
+            TTS.Net:NoteTheirLastSeq(parts[3])
 
         elseif actionType == "LEFT" then
             -- They reloaded or logged out mid-game and took the loss at login (PvPRecord.lua).

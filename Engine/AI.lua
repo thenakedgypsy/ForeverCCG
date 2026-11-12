@@ -604,12 +604,39 @@ function E:AIOrderDamage(bs)
     end
 end
 
+-- Our Bulwarks blocking several attackers: Brutish ones hit first, while there is the most
+-- toughness left to soak them (anything else's extra damage is lost on the Bulwark anyway)
+function E:AIOrderBulwarks(bs)
+    for b in pairs(bs.blocks) do
+        local order = self:BulwarkOrder(bs, b)
+        if #order > 1 then
+            local place, brutish = {}, {}
+            for i, a in ipairs(order) do
+                place[a] = i
+                local atk = self.localState.field[a]
+                brutish[a] = atk and self:HasKeyword(atk, false, "trample") and true or false
+            end
+            table.sort(order, function(x, y)
+                if brutish[x] ~= brutish[y] then return brutish[x] end
+                return place[x] < place[y]
+            end)
+            self:SetBulwarkOrder(bs, b, order)
+        end
+    end
+end
+
 -- =========================================================================
 -- BLOCKING
 -- For each attacker, in order: a block that kills it and survives, a trade when the
 -- attacker is worth more, and a chump block only when the damage would be lethal.
 -- =========================================================================
 function E:AIAssignBlocks()
+    self:AIAssignBlocksInner()
+    local bs = self.blockingState
+    if bs and not bs.isRemoteAttacking then self:AIOrderBulwarks(bs) end
+end
+
+function E:AIAssignBlocksInner()
     if not self.blockingState or self.blockingState.isRemoteAttacking then return end
     if self.cantBlockThisTurn then return end
     if not self:AIPracticeAllows("blocks") then return end

@@ -28,6 +28,8 @@ local L = TTS.L
 local UNDO_POPUP_TIMEOUT = 30
 -- Seconds the asking player waits before giving up on an answer that never comes
 local UNDO_REPLY_TIMEOUT = 60
+-- Seconds between "are you still there?" nudges while we wait (a lost answer shows up)
+local UNDO_NUDGE = 10
 
 -- Engine fields that a card play can change, saved along with both sides' state
 local ENGINE_KEYS = { "landPlayedThisTurn", "preventCombatDamage", "cantBlockThisTurn",
@@ -214,11 +216,24 @@ function E:RequestUndo()
     self:Log(L("undo.asked", self.opponent, CardName(u.cardId)), "SYSTEM")
     self:RefreshUI()
 
+    -- Their answer may be lost on the way, and with our board frozen nothing else they send
+    -- would show the gap (Network.lua SEQUENCED MATCH MESSAGES): every UNDO_NUDGE seconds
+    -- without one we ask "are you still there?", whose numbered reply shows it
+    local function Nudge()
+        if not (E.undo == u and u.pending and E.inMatch) then return end
+        if TTS.Net.OpponentAnswersAlive and TTS.Net:OpponentAnswersAlive() then
+            TTS.Net:SendPing(E.opponent, "ALIVE?")
+        end
+        TTS:SafeAfter(UNDO_NUDGE, Nudge)
+    end
+    TTS:SafeAfter(UNDO_NUDGE, Nudge)
+
     -- No answer at all (e.g. the opponent went offline): count it as denied
     TTS:SafeAfter(UNDO_REPLY_TIMEOUT, function()
         if E.undo == u and u.pending then
             u.pending = false
             u.denied = true
+            u.timedOut = true
             E:Log(L("undo.noAnswer", E.opponent or L("undo.yourOpponentCap")), "SYSTEM")
             E:RefreshUI()
         end
@@ -228,6 +243,16 @@ end
 -- The opponent's answer to our request
 function E:OnUndoAnswer(seq, accepted)
     local u = self.undo
+    -- A yes that comes after we gave up waiting: they have already put their board back, so
+    -- ours follows if nothing has happened since (still this play, in its phase, mid-nothing)
+    if accepted and u and u.timedOut and u.seq == seq and self.inMatch and self.isMyTurn
+        and self.phase == u.phase and not self.blockingState and not self.targeting
+        and not self.pendingDiscard and not self:HasPendingChoice() then
+        u.timedOut, u.denied = nil, nil
+        self:Log(L("undo.accepted", self.opponent), "SYSTEM")
+        ApplyLocalUndo(self)
+        return
+    end
     if not (u and u.pending and u.seq == seq) then return end
     u.pending = false
     if accepted and self.inMatch then

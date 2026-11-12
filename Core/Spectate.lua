@@ -27,6 +27,9 @@ TTS = TTS or {}
 --   SPEC_REQ:<format>                 I'm watching: answered SPEC_OK or SPEC_NO:<reason>
 --   SPEC_F:<batch>:<i>:<n>:<data>     part i of n of a delta
 --   SPEC_SYNC / SPEC_PING / SPEC_LEAVE     spectator to player: resend all / still here / gone
+--   SPEC_MISS:<batch>:<i,j,...|*>     spectator to player: those parts of a delta never came
+--                                     (the player keeps its last KEPT_BATCHES deltas' parts);
+--                                     a player before this ignores it, and SPEC_SYNC follows
 --   SPEC_END:<outcome>                the game finished
 -- Nobody is asked: a game can be watched while its player's Spectatable box is ticked (the
 -- Spectators tab). The box locks once someone is watching, so it can't be used to drop them.
@@ -52,7 +55,7 @@ local MAX_QUEUED_EVENTS = 60  -- waiting for a slow spectator; the oldest go fir
 local RECENT_LOG = 12         -- log lines a new spectator starts with
 local KEEPALIVE = 20          -- seconds of silence before an empty delta / a ping
 local SPECTATOR_TIMEOUT = 75  -- unheard for this long: gone
-local CHAIN_TIMEOUT = 45      -- a delta's parts not all sent by then: send everything again
+local CHAIN_TIMEOUT = 45      -- no part of a delta has gone for this long: send everything again
 local GAP_WAIT = 8            -- a later delta came but this one hasn't by then: ask for everything
 local PART_STALL = 30         -- a delta's next part not here by then (it's low priority, so it can wait)
 local SYNC_COOLDOWN = 15
@@ -60,6 +63,11 @@ local REQUEST_TIMEOUT = 30    -- seconds to wait for a player's client to answer
 local GAME_EXPIRY = 120       -- a game on the waiting-room list not heard of for this long
 local HELLO_COOLDOWN = 30     -- seconds between telling the same player about our game
 local MAX_PARTS = 200
+local KEPT_BATCHES = 8        -- deltas whose parts the player keeps, for SPEC_MISS
+local MISS_WAIT = 3           -- a part known lost (a later one is here) is asked for this long after
+local MISS_STALL = 15         -- the newest delta's last parts not here this long after its last: lost
+local MISS_AGAIN = 6          -- seconds between asks for the same delta's parts
+local MISS_TRIES = 3          -- asks for a delta's parts before asking for everything (SPEC_SYNC)
 
 local function Print(msg) DEFAULT_CHAT_FRAME:AddMessage(msg) end
 local function Key(name) return Net.CharName(name or ""):lower() end
@@ -336,9 +344,17 @@ local function SendDelta(s, chunks, andThen)
     end
     s.lastSend = GetTime()
     s.chain = GetTime()
+    -- Kept a while, so parts lost on the way can be sent again (SPEC_MISS)
+    s.kept = s.kept or {}
+    s.kept[batch] = parts
+    s.kept[batch - KEPT_BATCHES] = nil
     local function SendPart(i)
         local msg = string.format("SPEC_F:%d:%d:%d:%s", batch, i, #parts, parts[i])
         Net:SendSpectator(s.name, msg, function()
+            -- CHAIN_TIMEOUT counts from the last part to leave: a big delta on spare
+            -- bandwidth can take longer than that in all, and starting again alongside the
+            -- one still going would only slow both
+            if s.chain then s.chain = GetTime() end
             if i < #parts then
                 SendPart(i + 1)
             else
@@ -375,6 +391,7 @@ local function Look(final, outcome)
             SendDelta(s, chunks, function() Net:SendSpectator(s.name, "SPEC_END:" .. tostring(outcome)) end)
         elseif now - s.heard > SPECTATOR_TIMEOUT then
             spectators[key] = nil
+            Net:DropQueuedSpectatorParts(s.name)
             E:Log(L("spec.leftLog", s.name), "SYSTEM")
             S:UpdateTab()
         else
@@ -494,6 +511,8 @@ local function OnRequest(sender, format)
     end
     local queued = {}
     for i, ev in ipairs(recentLog) do queued[i] = ev end
+    -- A new session numbers its batches from 1: nothing of an old one may still go out
+    Net:DropQueuedSpectatorParts(sender)
     spectators[key] = { name = sender, sent = {}, fresh = true, batch = 0, events = queued,
         heard = GetTime(), lastSend = 0 }
     Net:SendSpectator(sender, "SPEC_OK")
@@ -505,6 +524,7 @@ end
 -- THE VIEWER
 -- =========================================================================
 local V = { perms = {}, data = {}, parts = {}, ready = {} }
+S._viewer, S._spectators = V, spectators   -- (read only, by the headless tests' reports)
 local games = {}   -- [pair key] = { a, b, turn, seen, seats = { [name] = true } }
 
 local bar = CreateFrame("Frame", nil, B, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -788,6 +808,48 @@ local function RequestSync(now)
     Net:SendSpectator(V.host, "SPEC_SYNC")
 end
 
+-- Parts lost on the way, asked for again by number (SPEC_MISS). A spectator's parts come in
+-- order, slowly (spare bandwidth only), so a part is lost once a later one is here: a hole
+-- below the highest part of its delta, the rest of a delta once a later delta has begun, a
+-- whole delta nothing of which came. Only the last parts of the newest delta need time to
+-- tell (MISS_STALL without any). Returns true while an ask is still worth waiting on, so the
+-- board isn't asked for whole (SPEC_SYNC) meanwhile.
+local function AskMissing(now)
+    if not (V.expected and V.newest and V.host) then return false end
+    if V.newest - V.expected >= KEPT_BATCHES then return false end   -- too far behind: everything
+    V.miss = V.miss or {}
+    local waiting = false
+    for batch = V.expected, V.newest do
+        if not V.ready[batch] then
+            local b = V.parts[batch]
+            local later = batch < V.newest
+            local list = {}
+            if b then
+                local upTo = (later or now - (b.last or now) >= MISS_STALL) and b.n or (b.top or 0)
+                for i = 1, upTo do
+                    if not b[i] then list[#list + 1] = i end
+                    if #list >= 40 then break end   -- (the rest on the next ask)
+                end
+            end
+            if (b and #list > 0) or (not b and later) then
+                local m = V.miss[batch]
+                if not m then m = { asked = 0, at = now - MISS_AGAIN + MISS_WAIT }; V.miss[batch] = m end
+                if m.asked < MISS_TRIES then
+                    waiting = true
+                    if now - m.at >= MISS_AGAIN then
+                        m.asked, m.at = m.asked + 1, now
+                        Net:SendSpectator(V.host, "SPEC_MISS:" .. batch .. ":" .. (b and table.concat(list, ",") or "*"))
+                    end
+                end
+            end
+        end
+    end
+    for batch in pairs(V.miss) do
+        if batch < V.expected then V.miss[batch] = nil end
+    end
+    return waiting
+end
+
 local function Drain()
     while V.expected and V.ready[V.expected] do
         local d = V.ready[V.expected]
@@ -807,10 +869,16 @@ local function OnPart(msg)
     local batch, i, n, data = msg:match("^SPEC_F:(%d+):(%d+):(%d+):(.*)$")
     batch, i, n = tonumber(batch), tonumber(i), tonumber(n)
     if not (batch and i and n) or n < 1 or n > MAX_PARTS or i < 1 or i > n then return end
+    -- Not let in yet: these are left over from an earlier time watching this player (their
+    -- SPEC_OK comes after them, in the same queue), numbered as the new parts will be
+    if V.asking then return end
     V.heard = GetTime()
+    if not V.newest or batch > V.newest then V.newest = batch end
     if V.expected and batch < V.expected then return end
     local b = V.parts[batch]
     if not b then b = { n = n, got = 0 }; V.parts[batch] = b end
+    b.last = V.heard
+    if i > (b.top or 0) then b.top = i end
     if not b[i] then b[i] = data; b.got = b.got + 1 end
     if b.got >= b.n then
         V.parts[batch] = nil
@@ -822,6 +890,7 @@ local function OnPart(msg)
         if d.f then
             V.expected = batch
             wipe(V.ready)
+            if V.miss then wipe(V.miss) end
             for other in pairs(V.parts) do
                 if other < batch then V.parts[other] = nil end
             end
@@ -893,8 +962,10 @@ function S:ViewerTick()
         V.lastPing = now
         Net:SendSpectator(V.host, "SPEC_PING")
     end
-    if (V.gapSince and now - V.gapSince > GAP_WAIT)
-        or (next(V.parts) and now - (V.heard or now) > PART_STALL) then
+    -- Lost parts asked for by number first; the whole board only if that doesn't work
+    local mending = AskMissing(now)
+    if not mending and ((V.gapSince and now - V.gapSince > GAP_WAIT)
+        or (next(V.parts) and now - (V.heard or now) > PART_STALL)) then
         RequestSync(now)
     end
     if E.viewing and now - (V.heard or now) > SPECTATOR_TIMEOUT then
@@ -947,7 +1018,7 @@ function S:StopViewing()
     if host and not wasTest then Net:SendSpectator(host, "SPEC_LEAVE") end
     V.host, V.asking, V.test, V.over, V.expected, V.gapSince, V.heard, V.lastPing, V.lastSync = nil, nil, nil, nil, nil, nil, nil, nil, nil
     wipe(V.parts); wipe(V.ready); wipe(V.data); wipe(V.perms)
-    V.meta, V.bsFrom = nil, nil
+    V.meta, V.bsFrom, V.newest, V.miss = nil, nil, nil, nil
     if V.endShown then
         V.endShown = nil
         StaticPopup_Hide("TTS_SPECTATE_OVER")   -- (left with the bar's button instead)
@@ -971,6 +1042,7 @@ function S:OnMessage(cmd, msg, parts, sender)
         local s = spectators[key]
         if s then
             spectators[key] = nil
+            Net:DropQueuedSpectatorParts(s.name)
             E:Log(L("spec.leftLog", s.name), "SYSTEM")
             self:UpdateTab()
         end
@@ -979,6 +1051,27 @@ function S:OnMessage(cmd, msg, parts, sender)
     elseif cmd == "SPEC_SYNC" then
         local s = spectators[key]
         if s then s.heard, s.sent, s.fresh = GetTime(), {}, true end
+    elseif cmd == "SPEC_MISS" then
+        -- SPEC_MISS:<batch>:<i,j,...|*>: those parts again, if we still have them (otherwise
+        -- the spectator asks for everything soon after)
+        local s = spectators[key]
+        local batch, list = msg:match("^SPEC_MISS:(%d+):([%d,%*]+)$")
+        local parts = s and s.kept and s.kept[tonumber(batch)]
+        if parts then
+            s.heard = GetTime()
+            local want = {}
+            if list == "*" then
+                for i = 1, #parts do want[#want + 1] = i end
+            else
+                for i in list:gmatch("%d+") do
+                    i = tonumber(i)
+                    if i and parts[i] then want[#want + 1] = i end
+                end
+            end
+            for _, i in ipairs(want) do
+                Net:SendSpectator(s.name, string.format("SPEC_F:%d:%d:%d:%s", tonumber(batch), i, #parts, parts[i]))
+            end
+        end
     -- Anyone's game
     elseif cmd == "SPEC_GAME" then
         local turn, opp = msg:match("^SPEC_GAME:(%d+):(.+)$")

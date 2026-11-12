@@ -276,13 +276,18 @@ end
 -- told (ACTION:LEFT:<match id>), which ends theirs as a win (Network.lua).
 -- Nothing extra is sent while the game is moving: any message from the opponent shows
 -- they're there. Unheard from for ASK_AFTER seconds, we ask "are you still there?"
--- (ACTION:ALIVE?, again every ASK_AFTER seconds while it lasts) and their client answers
--- (ACTION:ALIVE). Unheard from for CLAIM_AFTER seconds, they've crashed or lost their
+-- (ACTION:ALIVE?, again every ASK_AGAIN seconds while it lasts) and their client answers
+-- (ACTION:ALIVE). Both carry the last numbered message their sender sent (TTS.Net:SendPing),
+-- so they also show a message that was lost with nothing sent after it (Network.lua
+-- SEQUENCED MATCH MESSAGES): a game where each side waits on the other is often just that,
+-- so the question is repeated fairly soon.
+-- Unheard from for CLAIM_AFTER seconds, they've crashed or lost their
 -- connection: the game can be claimed. The claim wins the game here and tells them
 -- (ACTION:CLAIMED); they take the loss at their next login if they never got it. Only an
 -- opponent whose version answers (TTS.Net:OpponentAnswersAlive) can be claimed against.
 -- =========================================================================
 local ASK_AFTER = 30
+local ASK_AGAIN = 10
 local CLAIM_AFTER = 60
 
 local function PvPGameOn(E)
@@ -342,9 +347,9 @@ ticker:SetScript("OnUpdate", function(self, elapsed)
     local now = GetTime()
     local answers = TTS.Net.OpponentAnswersAlive and TTS.Net:OpponentAnswersAlive()
     local silent = now - (E.opponentHeardAt or now)
-    if answers and silent >= ASK_AFTER and (not lastAsk or now - lastAsk >= ASK_AFTER) then
+    if answers and silent >= ASK_AFTER and (not lastAsk or now - lastAsk >= ASK_AGAIN) then
         lastAsk = now
-        TTS.Net:Send(E.opponent, "ACTION:ALIVE?")
+        TTS.Net:SendPing(E.opponent, "ALIVE?")
     end
     local shown = StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN")
     if not answers or silent < CLAIM_AFTER then

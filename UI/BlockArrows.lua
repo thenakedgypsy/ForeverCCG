@@ -11,8 +11,10 @@ TTS = TTS or {}
 -- =========================================================================
 -- BLOCK ARROWS & DEATH PREVIEW
 -- While blocks are assigned, an arrow runs from each blocker to the attacker
--- it blocks, and a skull marks every creature that will die if the blocks
--- are accepted (a faded one: it might, depending on the damage order). Reads E.blockingState.blocks ([blockerIdx] = attackerIdx) and
+-- it blocks, a skull marks every creature that will die if the blocks
+-- are accepted (a faded one: it might, depending on the damage order), a shield
+-- every blocked attacker that lives, and a Bulwark's arrows are numbered in the
+-- order their attackers' damage reaches it. Reads E.blockingState.blocks ([blockerIdx] = attackerIdx) and
 -- redraws every time the board refreshes. Load after UI\Board.lua.
 -- =========================================================================
 local B = TTS.BoardFrame
@@ -28,6 +30,8 @@ local SKULL_SIZE = 40
 -- Dies only in some damage orders (Support): its own icon, faded
 local SKULL_MAYBE_TEX   = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\Skull_maybe.png"
 local SKULL_MAYBE_ALPHA = 0.6
+-- A blocked attacker that lives through the fight: a shield where the skull would go
+local BLOCKED_TEX = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\blocked.png"
 
 -- Drawn above the cards so arrows and skulls are never hidden behind one
 local layer = CreateFrame("Frame", nil, B)
@@ -38,9 +42,17 @@ layer:EnableMouse(false)
 -- Clients without line textures simply get no arrows (skulls still show)
 local canDrawLines = layer.CreateLine ~= nil
 
+-- A Bulwark blocking several attackers takes their damage in the order its blocks were
+-- assigned (E:BulwarkOrder): each of its arrows carries that attacker's number, a little
+-- way back from the head (so arrows meeting at one attacker keep their numbers apart)
+local ORDER_NUMBER_SIZE  = 22
+local ORDER_NUMBER_COLOR = { 1.0, 0.82, 0.0 }
+local ORDER_NUMBER_AT    = 0.3   -- fraction of the arrow back from its head
+
 local atan2 = math.atan2 or math.atan
 local pool = {}
 local skullPool = {}
+local orderPool = {}
 
 local function NewLine()
     local line = layer:CreateLine(nil, "OVERLAY")
@@ -113,7 +125,22 @@ local function DrawArrow(n, fromFrame, toFrame)
     SetLine(a[3], ex, ey,
         ex - ARROW_HEAD_LEN * math.cos(ang + ARROW_HEAD_ANG),
         ey - ARROW_HEAD_LEN * math.sin(ang + ARROW_HEAD_ANG))
-    return true
+    -- Where an order number on this arrow goes: on the shaft, short of the head
+    local t = ORDER_NUMBER_AT
+    return true, ex - (ex - sx) * t, ey - (ey - sy) * t
+end
+
+-- A Bulwark's place-in-line number for one of its attackers (E:BulwarkOrder)
+local function GetOrderNumber(n)
+    if not orderPool[n] then
+        local fs = layer:CreateFontString(nil, "OVERLAY")
+        local font = GameFontNormalLarge and GameFontNormalLarge:GetFont() or "Fonts\\FRIZQT__.TTF"
+        fs:SetFont(font, ORDER_NUMBER_SIZE, "THICKOUTLINE")
+        fs:SetTextColor(ORDER_NUMBER_COLOR[1], ORDER_NUMBER_COLOR[2], ORDER_NUMBER_COLOR[3])
+        fs:Hide()
+        orderPool[n] = fs
+    end
+    return orderPool[n]
 end
 
 -- =========================================================================
@@ -204,39 +231,76 @@ end
 
 local function UpdateBlockArrows()
     local E = TTS.Engine
-    local n, s = 0, 0
+    local n, s, o = 0, 0, 0
     local bs = E and E.inMatch and E.blockingState
     B.predictedDeaths = nil   -- read by the card tooltips (skull symbol)
 
     if bs and bs.blocks then
         -- Defending: blockers are ours, attackers theirs. Attacking: the reverse.
         local blockerRemote = not bs.isRemoteAttacking
-        if canDrawLines then
-            for _, p in ipairs(E:BlockPairs(bs)) do
-                local fromFrame = FindFieldFrame(blockerRemote, p[1])
-                local toFrame = FindFieldFrame(not blockerRemote, p[2])
-                if fromFrame and toFrame and DrawArrow(n + 1, fromFrame, toFrame) then
-                    n = n + 1
-                end
+        -- place[blockerIdx][atkIdx] = the attacker's place in a Bulwark's line (2+ only)
+        local place = {}
+        for b in pairs(bs.blocks) do
+            local order = E:BulwarkOrder(bs, b)
+            if #order > 1 then
+                place[b] = {}
+                for i, a in ipairs(order) do place[b][a] = i end
+            end
+        end
+        local onCard = {}
+        local function ShowNumber(num, anchor, x, y)
+            o = o + 1
+            local fs = GetOrderNumber(o)
+            fs:ClearAllPoints()
+            if x then
+                fs:SetPoint("CENTER", layer, "BOTTOMLEFT", x, y)
+            else
+                -- No arrow drawn: at the top of the attacker's card, one under another
+                local k = onCard[anchor] or 0
+                onCard[anchor] = k + 1
+                fs:SetPoint("TOP", anchor, "TOP", 0, -4 - k * ORDER_NUMBER_SIZE)
+            end
+            fs:SetText(num)
+            fs:Show()
+        end
+        for _, p in ipairs(E:BlockPairs(bs)) do
+            local fromFrame = FindFieldFrame(blockerRemote, p[1])
+            local toFrame = FindFieldFrame(not blockerRemote, p[2])
+            local num = place[p[1]] and place[p[1]][p[2]]
+            if fromFrame and toFrame then
+                local drawn, x, y = false
+                if canDrawLines then drawn, x, y = DrawArrow(n + 1, fromFrame, toFrame) end
+                if drawn then n = n + 1 end
+                if num then ShowNumber(num, toFrame, drawn and x, drawn and y) end
             end
         end
 
-        -- Skull over every creature that dies if these blocks are accepted
+        -- Skull over every creature that dies if these blocks are accepted, and a shield
+        -- over every blocked attacker that lives (one that dies gets the skull instead)
         local dies = PredictDeaths(E, bs)
         B.predictedDeaths = dies
+        local blocked = {}
+        for _, p in ipairs(E:BlockPairs(bs)) do blocked[p[2]] = true end
         for _, isRemote in ipairs({ false, true }) do
             local field = isRemote and E.remoteState.field or E.localState.field
+            local attackerSide = isRemote ~= blockerRemote
             for i, perm in ipairs(field) do
-                if dies[perm] then
+                local isBlocked = attackerSide and blocked[i]
+                if dies[perm] or isBlocked then
                     local f = FindFieldFrame(isRemote, i)
                     if f then
                         s = s + 1
                         local skull = GetSkull(s)
                         skull:ClearAllPoints()
                         skull:SetPoint("CENTER", f, "CENTER", 0, 0)
-                        local maybe = dies[perm] == "maybe"
-                        skull:SetTexture(maybe and SKULL_MAYBE_TEX or SKULL_TEX)
-                        skull:SetAlpha(maybe and SKULL_MAYBE_ALPHA or 1)
+                        if dies[perm] then
+                            local maybe = dies[perm] == "maybe"
+                            skull:SetTexture(maybe and SKULL_MAYBE_TEX or SKULL_TEX)
+                            skull:SetAlpha(maybe and SKULL_MAYBE_ALPHA or 1)
+                        else
+                            skull:SetTexture(BLOCKED_TEX)
+                            skull:SetAlpha(1)
+                        end
                         skull:Show()
                     end
                 end
@@ -249,6 +313,9 @@ local function UpdateBlockArrows()
     end
     for i = s + 1, #skullPool do
         skullPool[i]:Hide()
+    end
+    for i = o + 1, #orderPool do
+        orderPool[i]:Hide()
     end
 end
 

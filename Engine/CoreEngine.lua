@@ -907,8 +907,10 @@ function E:NextPhase()
         self:Log(L("log.combatPhase"), "SYSTEM")
 
     elseif self.phase == "COMBAT_ATTACK" then
+        -- Herod attacks each combat if able. Not if he already is: a Vigilant one attacks
+        -- untapped, and clicking him again would take his attack back.
         for i, perm in ipairs(self.localState.field) do
-            if not perm.tapped and not perm.sick and perm.id == "BOSS11" then
+            if not perm.tapped and not perm.sick and not perm.isAttacking and perm.id == "BOSS11" then
                 self:TapCard(i)
             end
         end
@@ -935,6 +937,8 @@ function E:NextPhase()
             self.blockingState = nil
             self:SetPhase("MAIN2")
             self:Log(L("log.noAttackers"), "SYSTEM")
+            -- Commit & End Turn with every attacker gone meanwhile: the turn still ends
+            self:TryEndAfterCombat()
         end
 
     elseif self.phase == "MAIN2" then

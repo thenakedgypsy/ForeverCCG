@@ -731,6 +731,8 @@ function E:GraveyardToHand(isRemote, cardId)
     end
     if not at then return false end
     if isRemote and not self.isSolo then
+        -- (their hand is a count here: full, it stays put on their client too)
+        if (st.handCount or 0) >= HAND_LIMIT then return false end
         table.remove(st.graveyard, at)
         st.handCount = (st.handCount or 0) + 1
         return true
@@ -773,12 +775,16 @@ function E:ReturnToHand(perm, reason)
         return true
     end
     local owner = ownerRemote and self.remoteState or self.localState
-    if ownerRemote and not self.isSolo then
-        owner.handCount = (owner.handCount or 0) + 1
-    elseif #owner.hand >= HAND_LIMIT then
+    -- The opponent's hand is only a count here; a full one sends the card to their
+    -- graveyard, as their own client does
+    local counted = ownerRemote and not self.isSolo
+    local inHand = counted and (owner.handCount or 0) or #owner.hand
+    if inHand >= HAND_LIMIT then
         self:PutInZone(owner.graveyard, perm.id)
         self:Log(L("log.returnedHandFull", name), "ACTION")
         return true
+    elseif counted then
+        owner.handCount = (owner.handCount or 0) + 1
     else
         table.insert(owner.hand, perm.id)
         if ownerRemote then owner.handCount = #owner.hand end
@@ -1317,6 +1323,9 @@ function E:PutSettlementOntoBattlefield(cardId, isRemote)
         self:ResolveEffect(card.etb, card, isRemote)
         self:EndEffectCapture(cap)
     end
+    -- An aura that takes toughness away (enemyAnthem) can leave a denizen at 0 or less;
+    -- so can losing the one it replaced
+    if self.inMatch then self:CheckStateBasedActions() end
     return perm
 end
 
@@ -2067,6 +2076,12 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
 
     self.targeting = nil
     table.remove(self.localState.hand, handIndex)
+    -- Paying can move the target along its field (a Deplete prayer used up leaves it): the
+    -- index the opponent is sent is where it is now
+    if tgt.kind == "CREATURE" then
+        local _, now = self:FindPerm(tgt.perm)
+        tgt.idx = now or tgt.idx
+    end
 
     -- A creature with a targeted Arrival: cast it, and its Arrival takes the target
     if card.type == "Creature" then
@@ -2175,6 +2190,29 @@ function E:ClearBlock(bs, blockerIdx, atkIdx)
         end
     end
     if more and #more == 0 then bs.moreBlocks[blockerIdx] = nil end
+end
+
+-- The attackers a creature blocks, in the order their damage reaches it: bs.blocks first,
+-- then bs.moreBlocks. That's the order its player assigned the blocks in (numbered on the
+-- block arrows, UI/BlockArrows.lua; taking the Bulwark's blocks back and assigning them
+-- again reorders them). It travels as the order of the block pairs (E:BlockPairs), so both
+-- clients agree on it.
+function E:BulwarkOrder(bs, blockerIdx)
+    local list = {}
+    if not (bs and bs.blocks[blockerIdx]) then return list end
+    list[1] = bs.blocks[blockerIdx]
+    for _, a in ipairs((bs.moreBlocks and bs.moreBlocks[blockerIdx]) or {}) do list[#list + 1] = a end
+    return list
+end
+
+-- Puts a Bulwark's blocks in this order (order holds the same attackers it already blocks)
+function E:SetBulwarkOrder(bs, blockerIdx, order)
+    if not order[1] then return end
+    bs.blocks[blockerIdx] = order[1]
+    local more = {}
+    for i = 2, #order do more[#more + 1] = order[i] end
+    bs.moreBlocks = bs.moreBlocks or {}
+    bs.moreBlocks[blockerIdx] = #more > 0 and more or nil
 end
 
 -- Whether a creature that already blocks can take on another attacker
@@ -2386,7 +2424,9 @@ function E:TapCard(fieldIndex, manaColor, partnerIndex)
                 self:Log(L("err.summoningSick", TTS:CardName(card)), "ERROR")
                 return
             end
-        elseif ability.cost and not self:CanPayManaAuto(ability.cost) then
+        end
+        -- (a {T} ability's mana too, before it asks for a target: a Settlement's "{T}, {3}:")
+        if ability.cost and not self:CanPayManaAuto(ability.cost) then
             self:Log(L("err.manaActivate", TTS:CardName(card), ability.cost), "ERROR")
             return
         end
@@ -2576,7 +2616,8 @@ end
 
 -- Works out the combat damage of the current blocks without dealing it. Strikes-First
 -- creatures strike first, and a creature they kill never strikes back. A Bulwark deals its
--- full damage to each attacker it blocks. An attacker blocked by several creatures (Support)
+-- full damage to each attacker it blocks, and takes theirs in the order its player picked
+-- (E:BulwarkOrder; what the first ones use up isn't there to soak the next). An attacker blocked by several creatures (Support)
 -- splits its damage between them in its damage order (E:DamageOrder): each one takes enough
 -- to kill it before the next takes any, and the last takes what is left (Brutish: what is
 -- left carries over to the defending player instead). Each blocker deals its full damage
@@ -2602,7 +2643,7 @@ function E:PlanCombatDamage(bs)
     end
     for _, atkIdx in ipairs(bs.attackers or {}) do
         local atk = atkField[atkIdx]
-        local group = { atk = atk, blks = {} }
+        local group = { atk = atk, atkIdx = atkIdx, blks = {}, blkIdxs = {} }
         for _, blkIdx in ipairs(atk and self:DamageOrder(bs, atkIdx) or {}) do
             local blk = defField[blkIdx]
             if blk then
@@ -2610,6 +2651,7 @@ function E:PlanCombatDamage(bs)
                 Info(blk, defRemote)
                 table.insert(fights, { atkIdx = atkIdx, blkIdx = blkIdx, atk = atk, blk = blk })
                 table.insert(group.blks, blk)
+                table.insert(group.blkIdxs, blkIdx)
             end
         end
         if #group.blks > 0 then table.insert(groups, group) end
@@ -2618,6 +2660,10 @@ function E:PlanCombatDamage(bs)
     -- Shielded: the first hit a creature takes is negated (popped[perm] = it loses Shielded)
     -- hits = every blow in order, { src, dst, n } (for the damage numbers)
     local taken, dealt, popped, trample, hits = {}, {}, {}, {}, {}
+    -- marked[perm] = the real damage it has taken this combat (taken[] holds 999 for a Fatal
+    -- hit so it dies; Brutish carry-over from another attacker still has to get through the
+    -- toughness the Fatal blow didn't actually use)
+    local marked = {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
     -- Its power as it strikes: Enrage adds what Strikes-First blows have just taken off it
     -- (damage from before this combat is in info.p already, E:GetCreatureStats)
@@ -2634,16 +2680,45 @@ function E:PlanCombatDamage(bs)
             popped[dst] = true
         else
             taken[dst] = (taken[dst] or 0) + (info[src].fatal and 999 or n)
+            marked[dst] = (marked[dst] or 0) + n
             dealt[src] = (dealt[src] or 0) + n
             table.insert(hits, { src = src, dst = dst, n = n })
         end
     end
+    -- A Bulwark blocking several attackers takes their damage in the order its player picked
+    -- (E:BulwarkOrder): an attacker strikes once every attacker ahead of it at each of its
+    -- blockers has (if two Bulwarks' orders disagree, attack order breaks the tie)
+    local function InBulwarkOrder(list)
+        local inList, done, out, pending = {}, {}, {}, {}
+        for _, g in ipairs(list) do inList[g.atkIdx] = true; pending[#pending + 1] = g end
+        local function Ready(g)
+            for _, b in ipairs(g.blkIdxs) do
+                for _, a in ipairs(self:BulwarkOrder(bs, b)) do
+                    if a == g.atkIdx then break end
+                    if inList[a] and not done[a] then return false end
+                end
+            end
+            return true
+        end
+        while #pending > 0 do
+            local pick = 1
+            for i, g in ipairs(pending) do
+                if Ready(g) then pick = i; break end
+            end
+            local g = table.remove(pending, pick)
+            done[g.atkIdx] = true
+            out[#out + 1] = g
+        end
+        return out
+    end
+
     -- Strikes-First damage lands first, then everyone still standing strikes
     for _, firstStep in ipairs({ true, false }) do
         local attackers, blockers = {}, {}
         for _, g in ipairs(groups) do
             if Strikes(g.atk, firstStep) then table.insert(attackers, g) end
         end
+        attackers = InBulwarkOrder(attackers)
         for _, f in ipairs(fights) do
             if Strikes(f.blk, firstStep) then table.insert(blockers, f) end
         end
@@ -2652,8 +2727,9 @@ function E:PlanCombatDamage(bs)
             local tramples = self:HasKeyword(g.atk, atkRemote, "trample")
             local left = Power(g.atk)
             for i, blk in ipairs(g.blks) do
-                -- Enough to kill it: what its toughness has left (1 is enough with Fatal)
-                local lethal = math.max(0, info[blk].t - (blk.damage or 0) - (taken[blk] or 0))
+                -- Enough to kill it: what its toughness has left (1 is enough with Fatal). A
+                -- Fatal hit from someone else counts as the damage it really dealt, not 999
+                local lethal = math.max(0, info[blk].t - (blk.damage or 0) - (marked[blk] or 0))
                 if src.fatal and lethal > 0 then lethal = 1 end
                 local n = (i == #g.blks and not tramples) and left or math.min(left, lethal)
                 if n > 0 then Hit(g.atk, blk, n) end
