@@ -34,16 +34,16 @@ local LOG_MAX = 300
 local MIN_PERCENT = 1 / 3  -- the usual floor on match and game win percentages
 
 T.DEFAULTS = {
-    format = "swiss",
+    format = "single",
     bestOf = 1,
     rounds = 0,             -- Swiss: 0 = worked out from the player count
-    roundMinutes = 30,      -- 0 = no limit
-    maxPlayers = 32,
+    roundMinutes = 0,       -- 0 = no limit
+    maxPlayers = 4,
     minRating = 0,          -- 0 = no limit, the same for the two below
     maxRating = 0,
     maxScore = 0,           -- highest collection score allowed
     deckLock = false,
-    noShowMinutes = 10,     -- 0 = never forfeit a no-show
+    noShowMinutes = 0,      -- 0 = never forfeit a no-show
     disconnect = "rematch", -- or "award": the connected player wins the game
     disconnectMinutes = 5,  -- "award" waits this long
     prizes = false,         -- the champion wins a prize card; everyone who plays starts the prize cooldown

@@ -235,7 +235,7 @@ Comm:On("YOU", function(parts, from)
         P:RequestUpdate(true)
     end
     -- A prize event under way with us playing in it: our prize cooldown starts now, win or not
-    -- (ForeverCCG AdminGrants.lua TTS:EnterPrizeEvent). Not for the organizer, who isn't playing.
+    -- (ForeverCCG AdminGrants.lua TTS:EnterPrizeEvent), the organizer included if they're playing.
     if j.prizes and not j.prizeEntered and j.status ~= "open" and j.status ~= "checkin" and j.myStatus == "active" then
         j.prizeEntered = true
         B.EnterPrizeEvent({ organizer = B.NormalizeName(j.organizer), event = j.id, name = j.name })
@@ -326,7 +326,8 @@ function P:CheckPrize()
     local j = self:Joined()
     if not j or not j.prizes or j.status ~= "finished" or j.prizeDone or not j.standings then return end
     if not (j.champion and j.champion ~= "" and B.SameName(j.champion, B.MyName())) then return end
-    if B.SameName(j.organizer, B.MyName()) then return end
+    -- (an organizer playing in their own event can win it too: the player count and the wins this
+    -- client saw itself are what stop a made-up event paying out, AdminGrants.lua)
 
     local beaten = 0
     for _ in pairs(j.beaten or {}) do beaten = beaten + 1 end

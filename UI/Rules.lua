@@ -822,6 +822,28 @@ local PAGES = {
         { "tip", "rules.pvp.tip" },
         { "cards", { { "WES10" } } },
     },
+    {
+        key = "rules.tab.events", icon = "Achievement_BG_winWSG",
+        { "tldr", "rules.events.tldr" },
+        { "button", "rules.events.open", function()
+            if TTS.OpenTournaments then OpenOther(TTS:OpenTournaments()) end
+        end },
+        { "h", "rules.events.h.join" },
+        { "p", "rules.events.join" },
+        { "h", "rules.events.h.checkin" },
+        { "p", "rules.events.checkin" },
+        { "h", "rules.events.h.play" },
+        { "p", "rules.events.play" },
+        { "h", "rules.events.h.formats" },
+        { "p", "rules.events.formats" },
+        { "h", "rules.events.h.host" },
+        { "p", "rules.events.host" },
+        { "h", "rules.events.h.settings" },
+        { "p", "rules.events.settings" },
+        { "h", "rules.events.h.run" },
+        { "p", "rules.events.run" },
+        { "tip", "rules.events.tip" },
+    },
 }
 
 -- =========================================================================

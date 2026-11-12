@@ -126,9 +126,9 @@ TTS:AddDuel({
     },
 })
 
--- Wetlands: Rethiel the Greenwarden (The Green Belt's warden: bog elementals, raptors and growing things)
+-- Wetlands: Kixxle (A goblin herb and potion seller out in the bog: elementals, raptors and growing things)
 TTS:AddDuel({
-    id = "DUEL_WET", npcs = { 1244 }, name = "Rethiel the Greenwarden", zone = "Wetlands",
+    id = "DUEL_WET", npcs = { 8305 }, name = "Kixxle", zone = "Wetlands",
     life = 20, ai = "tactical", background = { map = "Wetlands" },
     reward = "STL_WET",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement

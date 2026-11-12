@@ -57,6 +57,8 @@ local function BuildSetup(P)
 
     form.format = UI.Dropdown(P, 150, { { "swiss", "Swiss" }, { "single", "Single elimination" } })
     form.bestOf = UI.Dropdown(P, 150, { { 1, "Best of 1" }, { 3, "Best of 3" }, { 5, "Best of 5" } })
+    form.format:SetValue(T.DEFAULTS.format)
+    form.bestOf:SetValue(T.DEFAULTS.bestOf)
     Row("Format", form.format, "Games", form.bestOf)
 
     local roundChoices = { { 0, "Automatic" } }
@@ -71,6 +73,7 @@ local function BuildSetup(P)
     form.maxPlayers = UI.Dropdown(P, 150, Options({ 4, 6, 8, 16, 32, 64 }, function(v) return v .. " players" end))
     form.maxPlayers:SetValue(T.DEFAULTS.maxPlayers)
     form.deckLock = UI.Dropdown(P, 150, { { false, "Off" }, { true, "On" } })
+    form.deckLock:SetValue(T.DEFAULTS.deckLock)
     Row("Player limit", form.maxPlayers, "Deck lock", form.deckLock)
 
     form.minRating = UI.Edit(P, 140)
@@ -90,6 +93,7 @@ local function BuildSetup(P)
     -- Prizes: the champion's own client claims a prize card (ForeverCCG AdminGrants.lua), and
     -- everyone who plays starts the week's prize cooldown
     form.prizes = UI.Dropdown(P, 150, { { false, "Off" }, { true, "On" } })
+    form.prizes:SetValue(T.DEFAULTS.prizes)
     Row("Prizes", form.prizes)
     -- Two lines beside the dropdown, inside the panel's right edge
     local prizeHint = UI.Label(P, "GameFontDisableSmall", 290, rowY + 30 + 1, 310)
@@ -188,7 +192,7 @@ end
 local function BuildPlayers(P)
     P.count = UI.Label(P, "GameFontNormal", 12, -8)
     -- The organizer can play in their own event: joined like anyone else, with the code
-    -- (the player's window opens as the organizer's addon answers; they can't win its prize)
+    -- (the player's window opens as the organizer's addon answers; they can win its prize)
     P.joinSelf = UI.Button(P, "Join as a Player", 130, 22, function()
         local ev = H:Event()
         if ev and ns.Player then ns.Player:Join(ev.code, B.MyName()) end
