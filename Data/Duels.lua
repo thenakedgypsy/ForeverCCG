@@ -19,6 +19,9 @@ TTS = TTS or {}
 -- faction = "Alliance": only Alliance can reach the NPC; Horde characters are granted the
 -- Settlement once they have beaten every duel they can reach (TTS:CheckDuelGrants).
 -- Still to pick in game: Riverglades and Mount Hyjal.
+-- Only pick NPCs sure to open a window: a gossip menu (checked in server data) or a vendor. A quest
+-- giver without gossip opens nothing once its quests are done, leaving only the panel shown while
+-- the NPC is targeted (UI\NpcGossip.lua).
 -- =========================================================================
 
 -- Elwynn Forest: Remy "Two Times" (Goldshire's smooth talker: Defias rogues and kobold rabble, cheap tricks)
@@ -152,9 +155,9 @@ TTS:AddDuel({
     },
 })
 
--- Alterac Mountains: Lord Jorach Ravenholdt (Lord of the assassins' manor: the Syndicate's knives and dirty fighting)
+-- Alterac Mountains: Myrokos Silentform (At Ravenholdt Manor, in place of Lord Jorach, who has no gossip: the Syndicate's knives and dirty fighting)
 TTS:AddDuel({
-    id = "DUEL_ALT", npcs = { 6768 }, name = "Lord Jorach Ravenholdt", zone = "Alterac Mountains",
+    id = "DUEL_ALT", npcs = { 13085 }, name = "Myrokos Silentform", zone = "Alterac Mountains",
     life = 20, ai = "tactical", background = { map = "Alterac" },
     reward = "STL_ALT",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement
@@ -191,9 +194,9 @@ TTS:AddDuel({
     },
 })
 
--- Badlands: Lotwil Veriatus (A gnome binding elementals in the desert: fire, stone and arcane)
+-- Badlands: Lucien Tosselwrench (Lotwil Veriatus's assistant, in place of Lotwil, who has no gossip: binding elementals in the desert: fire, stone and arcane)
 TTS:AddDuel({
-    id = "DUEL_BAD", npcs = { 2921 }, name = "Lotwil Veriatus", zone = "Badlands",
+    id = "DUEL_BAD", npcs = { 2920 }, name = "Lucien Tosselwrench", zone = "Badlands",
     life = 25, ai = "expert", background = { map = "Badlands" },
     reward = "STL_BAD",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement
@@ -308,10 +311,10 @@ TTS:AddDuel({
     },
 })
 
--- Mulgore: Ahab Wheathoof (The old rancher: plainstriders, kodos and a lost dog)
+-- Mulgore: Harn Longcast (Bloodhoof Village's fishing supplier, in place of the old rancher Ahab Wheathoof, who has no gossip: plainstriders, kodos and a lost dog)
 TTS:AddDuel({
-    id = "DUEL_MUL", npcs = { 277182 }, name = "Ahab Wheathoof", zone = "Mulgore",
-    life = 20, ai = "basic", background = { map = "Mulgore" },
+    id = "DUEL_MUL", npcs = { 5940 }, name = "Harn Longcast", zone = "Mulgore",
+    life = 20, ai = "basic", background = { map = "Mulgore" }, faction = "Horde",
     reward = "STL_MUL",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement
         "MUL01", "MUL01", "BRN03", "BRN03", "BRN04", "MUL03", "MUL03", "BRN06",
@@ -362,9 +365,9 @@ TTS:AddDuel({
     },
 })
 
--- Stonetalon Mountains: Jixo Madrocket (An amateur daredevil at Windshear Crag, next door to Ziz Fizziks: Venture Co. machines and stone)
+-- Stonetalon Mountains: Veenix (The Venture Co. merchant at Windshear Crag, in place of Jixo Madrocket, who may have no gossip: Venture Co. machines and stone)
 TTS:AddDuel({
-    id = "DUEL_STO", npcs = { 210845 }, name = "Jixo Madrocket", zone = "Stonetalon Mountains",
+    id = "DUEL_STO", npcs = { 4086 }, name = "Veenix", zone = "Stonetalon Mountains",
     life = 20, ai = "tactical", background = { map = "StonetalonMountains" },
     reward = "STL_STO",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement
@@ -388,9 +391,9 @@ TTS:AddDuel({
     },
 })
 
--- Thousand Needles: Pozzik (A Mirage Raceway racer: everything fast)
+-- Thousand Needles: Race Master Kronkrider (Runs the Mirage Raceway, in place of the racer Pozzik, who has no gossip: everything fast)
 TTS:AddDuel({
-    id = "DUEL_THO", npcs = { 4630 }, name = "Pozzik", zone = "Thousand Needles",
+    id = "DUEL_THO", npcs = { 4419 }, name = "Race Master Kronkrider", zone = "Thousand Needles",
     life = 20, ai = "tactical", background = { map = "ThousandNeedles" },
     reward = "STL_THO",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement
@@ -523,9 +526,9 @@ TTS:AddDuel({
     },
 })
 
--- Zephras Isle: Aetheen of the Gales (An elder of the isle: its winds and its people)
+-- Zephras Isle: Veena Vericloud (A general goods seller in the isle's town, in place of the elder Aetheen of the Gales, who may have no gossip: its winds and its people)
 TTS:AddDuel({
-    id = "DUEL_ZEP", npcs = { 251366 }, name = "Aetheen of the Gales", zone = "Zephras Isle",
+    id = "DUEL_ZEP", npcs = { 254358 }, name = "Veena Vericloud", zone = "Zephras Isle",
     life = 25, ai = "expert", background = { map = "ZephrasIsle" },
     reward = "STL_ZEP",   -- their Settlement (Cards\Settlements.lua)
     deck = {   -- 38 cards, and 2 copies of their Settlement

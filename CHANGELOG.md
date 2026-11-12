@@ -1,3 +1,9 @@
+## 1.1.1
+*   Campaign: Zephras Isle is now open from the start
+*   duels: some opponents had nothing to say once you'd done their quests, so you couldn't challenge them. Stand next to a duel opponent with them targeted and their duel button now shows on its own
+*   duels: Lotwil Veriatus, Pozzik and Lord Jorach Ravenholdt have handed their decks to Lucien Tosselwrench (beside Lotwil), Race Master Kronkrider (at the Mirage Raceway) and Myrokos Silentform (in Ravenholdt Manor)
+*   duels: Jixo Madrocket, Aetheen of the Gales and Ahab Wheathoof have handed theirs to Veenix (Windshear Crag, Stonetalon Mountains), Veena Vericloud (Zephras Isle) and Harn Longcast (Bloodhoof Village). The Mulgore duel is now Horde only; Alliance get its card after beating every duel they can reach
+
 ## 1.1.0
 *   new: Settlements - cards that stay on the board all game, either boosting your side (or weakening theirs) or with an ability you use by Exhausting them. One in play at a time, up to 4 per deck. 39 to collect, one per zone
 *   new: duels in the world - a notable character in each zone plays you for their Settlement: each win gives a copy (up to 4), once an hour. The Elwynn Forest, Teldrassil and Darkshore duels are Alliance only; Horde get those cards after beating every duel they can reach

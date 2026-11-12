@@ -117,8 +117,14 @@ local function DuelOf(npcId) return TTS.DuelForNpc and TTS:DuelForNpc(npcId) or 
 -- Whether we add anything to this NPC's gossip
 local function HasOptions(npcId) return GiftCardOf(npcId) or DuelOf(npcId) ~= nil end
 
+-- The duel NPC whose panel is showing because they're targeted (TARGETED DUEL NPCS, below),
+-- or nil while it's showing for a window they opened (unit "npc")
+local targetNpc
+local DismissTarget   -- (TARGETED DUEL NPCS, below)
+
 local function StartDuel()
-    local enc = DuelOf(GossipNpcId())
+    local fromTarget = targetNpc ~= nil and not GossipNpcId()
+    local enc = DuelOf(GossipNpcId() or targetNpc)
     if not enc then return end
     local blocker = TTS:SoloStartBlocker(enc)
     if blocker then
@@ -126,11 +132,12 @@ local function StartDuel()
         DEFAULT_CHAT_FRAME:AddMessage("|cFFFF2222[TTSE]|r " .. blocker)
         return
     end
+    if fromTarget then DismissTarget() end   -- (back next time they're targeted)
     if C_GossipInfo and C_GossipInfo.CloseGossip then C_GossipInfo.CloseGossip() elseif CloseGossip then CloseGossip() end
     if TTS.NpcGossipPanel then TTS.NpcGossipPanel:Hide() end
     local E = TTS.Engine
     -- The NPC actually asked (a duel can have one for each faction), else the duel's name
-    local npcName = UnitName("npc")
+    local npcName = UnitName(fromTarget and "target" or "npc")
     local opponent = (npcName and not IsSecret(npcName) and npcName ~= "") and npcName or TTS:EncounterOpponent(enc)
     TTS.DeckPicker:Open({
         opponent = opponent,
@@ -465,6 +472,12 @@ duelBtn:SetSize(150, 24)
 Loc:Bind(duelBtn, "npc.duel")
 duelBtn:SetScript("OnClick", StartDuel)
 
+-- Only on the panel shown for a targeted duel NPC (there's no NPC window to close it with)
+local closeBtn = CreateFrame("Button", nil, G, "UIPanelCloseButton")
+closeBtn:SetPoint("TOPRIGHT", -6, -6)
+closeBtn:SetScript("OnClick", function() DismissTarget() end)
+closeBtn:Hide()
+
 -- A button's text wraps onto a second line when it doesn't fit (the gossip list's option
 -- text is longer than the button), and the button grows to hold it
 local BUTTON_W, BUTTON_H = 150, 24
@@ -477,7 +490,12 @@ local function FitButton(b)
     b:SetHeight(math.max(BUTTON_H, fs:GetStringHeight() + 12))
 end
 
-local function ShowPanel(npcId)
+-- fromTarget: for a duel NPC the player has targeted, with no window of theirs open (just
+-- the duel button, and a close button)
+local function ShowPanel(npcId, fromTarget)
+    targetNpc = fromTarget and npcId or nil
+    closeBtn:SetShown(fromTarget and true or false)
+    title:SetPoint("RIGHT", G, "RIGHT", fromTarget and -36 or -20, 0)   -- clear of the close button
     local gossip = GossipFrame and GossipFrame:IsShown() and GossipFrame
     -- A trainer with nothing else to say opens its training window instead, like a vendor
     -- and a quest giver with nothing else to say its quest window
@@ -501,7 +519,7 @@ local function ShowPanel(npcId)
     end
     -- Away from the gossip window the panel is the NPC's own: its name, then its greeting
     -- (npc.<npcId>.greet, the weapon merchants') until it has answered
-    local name = not gossip and UnitName("npc")
+    local name = not gossip and UnitName(fromTarget and "target" or "npc")
     if name and (IsSecret(name) or name == "") then name = nil end
     title:SetText(name or "")
     title:SetShown(name ~= nil)
@@ -520,7 +538,7 @@ local function ShowPanel(npcId)
     end
     FitButton(ask)
     FitButton(duelBtn)
-    ask:SetShown(GiftCardOf(npcId) and CanAsk(npcId))
+    ask:SetShown(not fromTarget and GiftCardOf(npcId) and CanAsk(npcId))
     -- The duel button: under the ask button, or where it would be
     local hasDuel = DuelOf(npcId) ~= nil
     duelBtn:ClearAllPoints()
@@ -837,6 +855,88 @@ if QuestFrame then
         end
     end)
 end
+
+-- =========================================================================
+-- TARGETED DUEL NPCS
+-- A quest giver with no gossip of its own opens no window at all once its quests are done
+-- (several duel NPCs), leaving nowhere to offer the duel. So while a duel NPC is targeted and
+-- close enough to talk to, with none of their windows open, the panel shows their greeting and
+-- the duel button on its own. Once the player closes it, starts the duel or opens one of the
+-- NPC's windows (which offer the duel themselves), it stays away until they target someone else.
+-- =========================================================================
+local dismissedGuid   -- the targeted NPC the panel stays away from
+local targetTicker
+
+local function TargetGuid()
+    local guid = UnitGUID("target")
+    if not guid or IsSecret(guid) or type(guid) ~= "string" then return nil end
+    return guid
+end
+
+local function TargetNpcId()
+    local guid = TargetGuid()
+    local id = guid and guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
+    return id and tonumber(id)
+end
+
+DismissTarget = function()
+    dismissedGuid = TargetGuid()
+    if targetNpc then
+        targetNpc = nil
+        G:Hide()
+    end
+end
+
+-- Whether a window an NPC opens is up (gossip, quests, a vendor, a trainer)
+local function NpcWindowOpen()
+    for _, name in ipairs({ "GossipFrame", "QuestFrame", "MerchantFrame", "ClassTrainerFrame" }) do
+        local f = _G[name]
+        if f and f:IsShown() then return true end
+    end
+    return false
+end
+
+-- Close enough to talk to (CheckInteractDistance can be off limits in combat: not then)
+local function InTalkRange()
+    if InCombatLockdown and InCombatLockdown() then return false end
+    local ok, near = pcall(CheckInteractDistance, "target", 3)
+    return ok and near and true or false
+end
+
+local function UpdateTargetPanel()
+    local npcId, guid = TargetNpcId(), TargetGuid()
+    local show = npcId and DuelOf(npcId) and guid ~= dismissedGuid and not UnitIsDead("target")
+        and not NpcWindowOpen() and not (TTS.Engine and TTS.Engine.inMatch) and InTalkRange()
+    if show then
+        if targetNpc ~= npcId or not G:IsShown() then ShowPanel(npcId, true) end
+    elseif targetNpc then
+        targetNpc = nil
+        G:Hide()
+    end
+end
+
+local T = CreateFrame("Frame")
+T:RegisterEvent("PLAYER_TARGET_CHANGED")
+for _, event in ipairs({ "GOSSIP_SHOW", "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS",
+        "QUEST_COMPLETE", "MERCHANT_SHOW", "TRAINER_SHOW" }) do
+    pcall(T.RegisterEvent, T, event)
+end
+T:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_TARGET_CHANGED" then
+        dismissedGuid = nil
+        if targetTicker then targetTicker:Cancel(); targetTicker = nil end
+        -- Checked twice a second while a duel NPC is targeted, for walking in and out of range
+        if DuelOf(TargetNpcId()) then targetTicker = C_Timer.NewTicker(0.5, UpdateTargetPanel) end
+        UpdateTargetPanel()
+        return
+    end
+    -- One of the targeted NPC's own windows opened: the duel is offered there
+    local guid, npcGuid = TargetGuid(), UnitGUID("npc")
+    if guid and npcGuid and not IsSecret(npcGuid) and npcGuid == guid then
+        dismissedGuid = guid
+        targetNpc = nil
+    end
+end)
 
 -- =========================================================================
 -- TOOLTIP ICON
