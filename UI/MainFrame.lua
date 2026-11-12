@@ -479,6 +479,9 @@ SlashCmdList["TRAGIC"] = function(msg)
     elseif cmd == "welcome" or cmd == "intro" or cmd == "quickstart" then
         -- The Quick Start walkthrough new players see first (QuickStart.lua)
         if TTS.ShowQuickStart then TTS:ShowQuickStart(1) end
+    elseif cmd == "whatsnew" or cmd == "new" or cmd == "news" then
+        -- What's new in this version (QuickStart.lua)
+        if TTS.ShowWhatsNew then TTS:ShowWhatsNew(1) end
     elseif cmd == "campaign" or cmd == "solo" or cmd == "encounters" then
         if TTS.SoloSelectFrame then
             if TTS.SoloSelectFrame:IsShown() then

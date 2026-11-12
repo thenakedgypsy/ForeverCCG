@@ -3099,6 +3099,19 @@ local function SetupCardVisual(f, card, foil)
     else
         if f.model then f.model:Hide() end
         f.art:SetTexture((card and card.art) or "Interface\\Icons\\INV_Misc_QuestionMark")
+        -- A Settlement's art is square: cropped to its art window (wide on the battlefield's
+        -- landscape frame) rather than squashed
+        local box = f.artBox
+        if card and card.type == "Settlement" and card.art and box and box.w > 0 and box.h > 0 then
+            local r = box.h / box.w
+            if r < 1 then
+                f.art:SetTexCoord(0, 1, (1 - r) / 2, (1 + r) / 2)
+            else
+                f.art:SetTexCoord((1 - 1 / r) / 2, (1 + 1 / r) / 2, 0, 1)
+            end
+        else
+            f.art:SetTexCoord(0, 1, 0, 1)
+        end
         TintArt(f.art, card)
         -- A Settlement without art of its own shows its zone's map instead (PaintZoneArt)
         f.art:SetShown(not (card and card.type == "Settlement" and card.zone and not card.art))

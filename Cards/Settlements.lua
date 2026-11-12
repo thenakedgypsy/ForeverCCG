@@ -37,9 +37,20 @@ local function Settlement(code, name, sphere, zone, effect, text)
     return id, card
 end
 
+-- Their art: Textures\Settlements\<nn>_<name>.png, numbered in the order they're added below,
+-- with spaces and apostrophes as underscores. Cards in NO_ART have no picture yet and show
+-- their zone's map instead (UI\Board.lua PaintZoneArt).
+local ART_DIR = "Interface\\AddOns\\ForeverCCG\\Textures\\Settlements\\"
+local NO_ART = { STL_ZEP = true }
+
 local CARDS = {}
+local added = 0
 local function Add(...)
     local id, card = Settlement(...)
+    added = added + 1
+    if not NO_ART[id] then
+        card.art = string.format("%s%02d_%s.png", ART_DIR, added, (card.name:gsub("[ ']", "_")))
+    end
     CARDS[id] = card
 end
 

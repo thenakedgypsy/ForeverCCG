@@ -18,8 +18,12 @@ local Loc = TTS.Locale
 -- game (UI\Tutorial.lua). It opens by itself the first time the main window is opened
 -- (TTS_Options.quickStartSeen), and with /tragic welcome any time; the main window closes
 -- while it's up and comes back when it's done.
+-- The same window shows WHAT'S NEW (wn.<n>.title / wn.<n>.text): players who've seen the
+-- Quick Start before get it once, the first time they open the main window after an update
+-- (TTS_Options.whatsNewSeen holds the version they last saw), and with /tragic whatsnew any
+-- time. A brand-new player gets the Quick Start instead, which already covers what's new.
 -- =========================================================================
-local PAGES = 8
+local WHATS_NEW_VERSION = "1.1"
 local W, H = 620, 410
 local CARD_Y = -12         -- the card sits this far below the showcase's centre: its name and cost go above it
 local HEADER_H = 40
@@ -30,7 +34,7 @@ local SLIDE = 14           -- and the card sliding in from the right by this muc
 local GLOW_PULSE = 2.5     -- radians per second
 
 -- The card shown with each page: an id (foil = shown as a foil), or nil for the card back
-local PAGE_CARDS = {
+local QS_CARDS = {
     [2] = { id = "DES01" },               -- Burning Blade Augur: a deck's denizens
     [3] = { id = "W01" },                 -- Prayer of Light
     [4] = { id = "MAG02" },               -- Fire Blast: a spell to cast
@@ -38,6 +42,23 @@ local PAGE_CARDS = {
     [6] = { id = "FER03" },               -- Groddoc Ape: a blocker
     [7] = { id = "BOSS01", foil = true }, -- Bazzalan, as a foil: something to collect
 }
+local WN_CARDS = {
+    [2] = { id = "STL_ELW" },             -- Goldshire: a Settlement
+    [3] = { id = "STL_DUN" },             -- Kharanos: won in a duel
+    [4] = { id = "DES06" },               -- Raging Thunder Lizard: Raze
+    [5] = { id = "BSM01" },               -- Copper Claymore: a profession card
+    [6] = { id = "ELW07" },               -- Defias Rogue Wizard: Blink
+    [7] = { id = "PRZ01", foil = true },  -- Highlord Bolvar Fordragon: a prize card
+}
+
+-- The page sets: key prefix, page count, heading, showcase cards, and whether the last page
+-- offers the tutorial game
+local SETS = {
+    quickstart = { prefix = "qs", pages = 8, heading = "qs.heading", cards = QS_CARDS, tutorial = true },
+    whatsnew   = { prefix = "wn", pages = 8, heading = "wn.heading", cards = WN_CARDS },
+}
+local MAX_PAGES = 8
+local set = SETS.quickstart
 local CARD_BACK = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
 
 local backdropTemplate = BackdropTemplateMixin and "BackdropTemplate" or nil
@@ -191,10 +212,9 @@ end
 
 local Show   -- (below)
 local dots = {}
-for i = 1, PAGES do
+for i = 1, MAX_PAGES do
     local d = CreateFrame("Button", nil, Q)
     d:SetSize(12, 12)
-    d:SetPoint("BOTTOM", Q, "BOTTOM", (i - (PAGES + 1) / 2) * 18, 26)
     d.tex = d:CreateTexture(nil, "ARTWORK")
     d.tex:SetPoint("CENTER")
     d.tex:SetSize(8, 8)
@@ -209,7 +229,7 @@ end
 local page, shownAt = 1, 0
 
 local function PaintShowcase(n)
-    local spec = PAGE_CARDS[n]
+    local spec = set.cards[n]
     local c = spec and TTS.Cards and TTS.Cards[spec.id]
     if c and card and TTS.PaintPreviewCard then
         back:Hide()
@@ -223,19 +243,21 @@ end
 
 -- n: the page; turned: a page turned by the player (plays its sound)
 Show = function(n, turned)
-    n = math.max(1, math.min(PAGES, n))
+    local pages = set.pages
+    n = math.max(1, math.min(pages, n))
     if turned and n ~= page then PlaySoundFor("page") end
     page = n
-    step:SetText(L("qs.step", page, PAGES))
-    title:SetText(L("qs." .. page .. ".title"))
-    local body = L("qs." .. page .. ".text")
+    step:SetText(L("qs.step", page, pages))
+    title:SetText(L(set.prefix .. "." .. page .. ".title"))
+    local body = L(set.prefix .. "." .. page .. ".text")
     text:SetText(TTS.FormatSymbols and TTS:FormatSymbols(body, 16) or body)
     for i, d in ipairs(dots) do
+        d:SetShown(i <= pages)
         if i == page then d.tex:SetVertexColor(1, 0.82, 0, 1) else d.tex:SetVertexColor(0.4, 0.4, 0.4, 0.8) end
     end
     backBtn:SetEnabled(page > 1)
-    nextBtn:SetText(L(page < PAGES and "qs.next" or "qs.done"))
-    tutorialBtn:SetShown(page == PAGES and TTS.StartTutorial ~= nil)
+    nextBtn:SetText(L(page < pages and "qs.next" or (set.prefix .. ".done")))
+    tutorialBtn:SetShown(set.tutorial and page == pages and TTS.StartTutorial ~= nil)
     PaintShowcase(page)
     shownAt = GetTime()
 end
@@ -265,7 +287,7 @@ backBtn:SetScript("OnClick", function() Show(page - 1, true) end)
 
 -- Done: back to the main window
 nextBtn:SetScript("OnClick", function()
-    if page < PAGES then
+    if page < set.pages then
         Show(page + 1, true)
     else
         Q:Hide()
@@ -278,8 +300,15 @@ tutorialBtn:SetScript("OnClick", function()
     if TTS.StartTutorial then TTS:StartTutorial() end
 end)
 
--- Opens the walkthrough (at page n, default the first), closing the main window meanwhile
-function TTS:ShowQuickStart(n)
+-- Opens a page set (a SETS key) at page n (default the first), closing the main window meanwhile
+local function Open(which, n)
+    set = SETS[which]
+    Loc:Bind(heading, set.heading)
+    for i, d in ipairs(dots) do
+        d:ClearAllPoints()
+        d:SetPoint("BOTTOM", Q, "BOTTOM", (i - (set.pages + 1) / 2) * 18, 26)
+    end
+    page = 0
     Show(n or 1)
     Q:Show()
     PlaySoundFor("deckCard")
@@ -289,11 +318,29 @@ function TTS:ShowQuickStart(n)
     end
 end
 
--- The first time the main window opens, the walkthrough comes up by itself
+-- The Quick Start walkthrough
+function TTS:ShowQuickStart(n)
+    Open("quickstart", n)
+end
+
+-- What's new in this version
+function TTS:ShowWhatsNew(n)
+    Open("whatsnew", n)
+end
+
+-- The first time the main window opens, the walkthrough comes up by itself; after that, the
+-- first time it opens after an update, what's new does
 if TTS.MainFrame then
     TTS.MainFrame:HookScript("OnShow", function()
-        if not (TTS.Options and TTS.Options.Get) or TTS.Options:Get("quickStartSeen") then return end
-        TTS.Options:Set("quickStartSeen", true)
-        TTS:ShowQuickStart(1)
+        local O = TTS.Options
+        if not (O and O.Get) or Q:IsShown() then return end
+        if not O:Get("quickStartSeen") then
+            O:Set("quickStartSeen", true)
+            O:Set("whatsNewSeen", WHATS_NEW_VERSION)   -- (the Quick Start covers it)
+            TTS:ShowQuickStart(1)
+        elseif O:Get("whatsNewSeen") ~= WHATS_NEW_VERSION then
+            O:Set("whatsNewSeen", WHATS_NEW_VERSION)
+            TTS:ShowWhatsNew(1)
+        end
     end)
 end
