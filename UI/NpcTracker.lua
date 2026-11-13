@@ -245,7 +245,7 @@ end)
 -- map shown or its zoom changes.
 -- =========================================================================
 local worldPins = {}
-local shownMap, shownScale
+local shownMap, shownScale, shownStitched
 
 local function HideWorld(from)
     for i = from or 1, #worldPins do worldPins[i]:Hide() end
@@ -264,15 +264,50 @@ local function WorldPin(i, canvas)
     return p
 end
 
+-- OpenMap (a seamless world map): while its stitched map shows, the canvas belongs to one map
+-- (the one under the view) but shows every zone around it, its art drawn high on the canvas.
+-- Then every NPC is placed, its zone's point carried onto the canvas's map through OpenMap's
+-- stitched world (OpenMapAPI, its docs/api.md), and the pins lifted over the art.
+local function OpenMapStitched()
+    local API = OpenMapAPI
+    return API and API.IsStitched and API.WorldFromMap and API.MapFromWorld and API.IsStitched() and API or nil
+end
+
+-- The pins for the map shown: { npcId, x, y, row } on the canvas's map (x, y 0-1, or past it on
+-- OpenMap's stitched map)
+local stitchedList = {}
+local function PinsFor(uiMapID, API)
+    if not API then return OnMap(uiMapID) end
+    if not byMap then BuildMaps() end
+    wipe(stitchedList)
+    for mapId, list in pairs(byMap) do
+        for _, e in ipairs(list) do
+            local x, y = e[2], e[3]
+            if mapId ~= uiMapID then
+                local u, v = API.WorldFromMap(mapId, x, y)
+                if u then x, y = API.MapFromWorld(uiMapID, u, v) else x = nil end
+            end
+            if x and y then table.insert(stitchedList, { e[1], x, y, e[4] }) end
+        end
+    end
+    return stitchedList
+end
+
 local function UpdateWorldMap()
     local WM = WorldMapFrame
     if not (On("npcWorldMap") and WM and WM:IsShown() and WM.GetMapID and WM.GetCanvas) then return HideWorld() end
     local canvas = WM:GetCanvas()
-    local list = canvas and OnMap(WM:GetMapID())
+    local API = OpenMapStitched()
+    local list = canvas and PinsFor(WM:GetMapID(), API)
     if not list then return HideWorld() end
     local cw, ch = canvas:GetSize()
     local scale = (WM.ScrollContainer and WM.ScrollContainer.GetCanvasScale and WM.ScrollContainer:GetCanvasScale()) or 1
     local k = 1 / math.max(0.01, scale)   -- pin scale against the canvas's, so it stays one size
+    local level = canvas:GetFrameLevel() + 2000
+    local artTop = API and API.ArtTopLevel and API.ArtTopLevel()
+    if artTop and level <= artTop then level = artTop + 2 end
+    -- (a frame level change on the map is restricted in combat: done again once it ends)
+    local canLevel = not (InCombatLockdown and InCombatLockdown())
     local n = 0
     for _, e in ipairs(list) do
         if Wanted(e[1], e[4]) then
@@ -280,7 +315,7 @@ local function UpdateWorldMap()
             local p = WorldPin(n, canvas)
             p.npcId, p.row = e[1], e[4]
             Paint(p.icon, e[4][4], ICON_SMALL, e[1])
-            p:SetFrameLevel(canvas:GetFrameLevel() + 2000)
+            if canLevel and p:GetFrameLevel() ~= level then p:SetFrameLevel(level) end
             p:SetScale(k)
             p:ClearAllPoints()
             p:SetPoint("CENTER", canvas, "TOPLEFT", e[2] * cw / k, -e[3] * ch / k)
@@ -299,11 +334,15 @@ worldDriver:SetScript("OnUpdate", function()
     end
     local map = WM.GetMapID and WM:GetMapID()
     local scale = WM.ScrollContainer and WM.ScrollContainer.GetCanvasScale and WM.ScrollContainer:GetCanvasScale()
-    if map == shownMap and scale == shownScale then return end
-    shownMap, shownScale = map, scale
+    local stitched = OpenMapStitched() and true or false
+    if map == shownMap and scale == shownScale and stitched == shownStitched then return end
+    shownMap, shownScale, shownStitched = map, scale, stitched
     local ok, err = pcall(UpdateWorldMap)
     if not ok then HideWorld(); worldDriver:Hide(); if geterrorhandler then geterrorhandler()(err) end end
 end)
+-- (pins drawn in combat couldn't be lifted over OpenMap's art: redone as it ends)
+worldDriver:RegisterEvent("PLAYER_REGEN_ENABLED")
+worldDriver:SetScript("OnEvent", function() shownMap = nil end)
 
 -- =========================================================================
 -- OPTIONS
