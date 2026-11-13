@@ -3,7 +3,7 @@
 ## Notes: Collect. Build. Battle. 
 ## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord, TTS_Campfire
 ## SavedVariablesPerCharacter: TTS_Hero, FCCGE_DB
-## Version: 1.2.1
+## Version: 1.2.2
 ## Author: the_naked_gypsy
 ## X-Engine: Tragic: The Saddening Engine
 ## X-Copyright: Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.

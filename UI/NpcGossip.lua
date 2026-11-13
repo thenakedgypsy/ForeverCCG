@@ -903,15 +903,25 @@ local function InTalkRange()
     return ok and near and true or false
 end
 
+-- The panel waits until all that has held for TARGET_DELAY seconds, so it doesn't pop up the
+-- moment a duel NPC is targeted (talking to them first offers the duel anyway)
+local TARGET_DELAY = 1
+local readySince   -- when the panel's conditions last started holding (GetTime)
+
 local function UpdateTargetPanel()
     local npcId, guid = TargetNpcId(), TargetGuid()
     local show = npcId and DuelOf(npcId) and guid ~= dismissedGuid and not UnitIsDead("target")
         and not NpcWindowOpen() and not (TTS.Engine and TTS.Engine.inMatch) and InTalkRange()
     if show then
-        if targetNpc ~= npcId or not G:IsShown() then ShowPanel(npcId, true) end
-    elseif targetNpc then
-        targetNpc = nil
-        G:Hide()
+        if targetNpc == npcId and G:IsShown() then return end
+        readySince = readySince or GetTime()
+        if GetTime() - readySince >= TARGET_DELAY then ShowPanel(npcId, true) end
+    else
+        readySince = nil
+        if targetNpc then
+            targetNpc = nil
+            G:Hide()
+        end
     end
 end
 
@@ -924,6 +934,7 @@ end
 T:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_TARGET_CHANGED" then
         dismissedGuid = nil
+        readySince = nil
         if targetTicker then targetTicker:Cancel(); targetTicker = nil end
         -- Checked twice a second while a duel NPC is targeted, for walking in and out of range
         if DuelOf(TargetNpcId()) then targetTicker = C_Timer.NewTicker(0.5, UpdateTargetPanel) end
