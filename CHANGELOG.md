@@ -1,5 +1,6 @@
 ## 1.2.2
 *   duels: the duel button that shows on its own when you target a duel opponent now waits a second before it appears
+*   main window: the Campfire Bonus tooltip now says it only affects Denizen cards from kills, not profession cards
 
 ## 1.2.1
 *   main window: hover the Campfire Bonus or Tournament Prize line to see how to get it
