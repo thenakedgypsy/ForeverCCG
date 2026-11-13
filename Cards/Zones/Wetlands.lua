@@ -57,21 +57,21 @@ TTS:AddCards({
     ["WET07"] = {
         id = "WET07", name = "Syndicate Highwayman", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 3, toughness = 4, unblockable = true, firstStrike = true, isMob = true, isBoss = true, displayId = 3984,
-        zone = "Wetlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2586,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2586,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Strikes-First. Invisible."
     },
     ["WET08"] = {
         id = "WET08", name = "Rumbling Exile", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
         power = 5, toughness = 6, support = true, isMob = true, isBoss = true, displayId = 9587,
-        zone = "Wetlands", creatureType = "Elemental", npcId = 2592,
+        zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2592,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Support."
     },
     ["WET09"] = {
         id = "WET09", name = "Burning Exile", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 2172,
-        zone = "Wetlands", creatureType = "Elemental", npcId = 2760,
+        zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2760,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
@@ -79,7 +79,7 @@ TTS:AddCards({
         dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
         id = "WET10", name = "Molok the Crusher", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 8, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 536,
-        zone = "Wetlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
         text = "Brutish."
     },

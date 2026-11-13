@@ -15,7 +15,7 @@ TTS:AddCards({
     ["UNG01"] = {
         id = "UNG01", name = "Ferocious Rage Scar", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 3208,
-        zone = "Un'Goro Crater", creatureType = "Humanoid", npcId = 5299,
+        zone = "Feralas", creatureType = "Humanoid", npcId = 5299,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },

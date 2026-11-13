@@ -151,7 +151,19 @@ function TTS:CardName(card)
     end
     return CardField(card, "name")
 end
-function TTS:CardText(card) return CardField(card, "text") end
+function TTS:CardText(card)
+    if type(card) == "string" then card = TTS.Cards and TTS.Cards[card] end
+    -- A Hero card's text depends on its class (Systems\Hero.lua): "Unique. <class keyword>.",
+    -- put together from the keyword names in the chosen language
+    if card and card.isHero and card.heroKeyword then
+        local TT = TTS.Tooltip
+        local def = TT and TT.KEYWORDS and TT.KEYWORDS[card.heroKeyword]
+        local kw = Loc:Data("keyword." .. card.heroKeyword .. ".name", def and def.name or card.heroKeyword)
+        if card.heroKeywordValue then kw = L("hero.keywordValue", kw, card.heroKeywordValue) end
+        return L("hero.text", Loc:Data("keyword.unique.name", "Unique"), kw)
+    end
+    return CardField(card, "text")
+end
 
 -- A card's type as players read it: "Spell", "Denizen"... and "Gear Card" for Gear Cards
 -- (spells underneath, type "Sorcery", but never called one)

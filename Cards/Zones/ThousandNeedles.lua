@@ -15,7 +15,7 @@ TTS:AddCards({
     ["THO01"] = {
         id = "THO01", name = "Savannah Matriarch", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1058,
-        zone = "Thousand Needles", creatureType = "Beast", npcId = 3416,
+        zone = "The Barrens", creatureType = "Beast", npcId = 3416,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick."
     },

@@ -15,7 +15,7 @@ TTS:AddCards({
     ["BUR01"] = {
         id = "BUR01", name = "Dustbelcher Mauler", cost = "{R}", cmc = 1, color = "R", type = "Creature",
         power = 2, toughness = 1, isMob = true, isBoss = true, displayId = 1120,
-        zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 2717,
+        zone = "Badlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2717,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
         text = ""
     },

@@ -15,28 +15,28 @@ TTS:AddCards({
     ["HIL01"] = {
         id = "HIL01", name = "Rot Hide Brute", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10851,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1939,
+        zone = "Silverpine Forest", creatureType = "Undead", faction = "Gnoll", npcId = 1939,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["HIL02"] = {
         id = "HIL02", name = "Rot Hide Plague Weaver", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 10855,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1940,
+        zone = "Silverpine Forest", creatureType = "Undead", faction = "Gnoll", npcId = 1940,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Shielded."
     },
     ["HIL03"] = {
         id = "HIL03", name = "Raging Rot Hide", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 10856,
-        zone = "Hillsbrad Foothills", creatureType = "Undead", faction = "Gnoll", npcId = 1943,
+        zone = "Silverpine Forest", creatureType = "Undead", faction = "Gnoll", npcId = 1943,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
     ["HIL04"] = {
         id = "HIL04", name = "Elder Lake Creeper", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
         power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 631,
-        zone = "Hillsbrad Foothills", creatureType = "Elemental", npcId = 1956,
+        zone = "Silverpine Forest", creatureType = "Elemental", npcId = 1956,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },
@@ -71,7 +71,7 @@ TTS:AddCards({
     ["HIL09"] = {
         id = "HIL09", name = "Witherbark Headhunter", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 6, toughness = 6, haste = true, isMob = true, isBoss = true, displayId = 3997,
-        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Troll", npcId = 2556,
+        zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Troll", npcId = 2556,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick."
     },
@@ -79,7 +79,7 @@ TTS:AddCards({
         id = "HIL10", name = "Zalas Witherbark", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 4003,
         dropChance = { 100, 100, 50, 25 },   -- long respawn (about 60h)
-        zone = "Hillsbrad Foothills", creatureType = "Humanoid", npcId = 2605,
+        zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2605,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
         text = "Brutish."
     },

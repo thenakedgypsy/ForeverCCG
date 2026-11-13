@@ -195,6 +195,9 @@ function H:BuildCard(id, info)
         art = CLASS_ICON[classFile],
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Unique. " .. base.text,
+        -- Shown in the chosen language from the keyword names (TTS:CardText, Core\Locale.lua):
+        -- no card.<id>.text key can hold it, as it differs by class
+        heroKeyword = base.kw, heroKeywordValue = base.kwValue,
     }
     card[base.kw] = base.kwValue or true
     if id == self.OPP_ID then self.oppDrawnLive = false end   -- a new opponent: not drawn live yet

@@ -15,7 +15,7 @@ TTS:AddCards({
     ["RED01"] = {
         id = "RED01", name = "Gray Forest Wolf", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 380,
-        zone = "Redridge Mountains", creatureType = "Beast", npcId = 1922,
+        zone = "Elwynn Forest", creatureType = "Beast", npcId = 1922,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick."
     },

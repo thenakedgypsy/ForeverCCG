@@ -15,29 +15,15 @@ TTS = TTS or {}
 -- wherever they happen (BossTracker.lua). Generated from classicdb's NPC spawn lists:
 -- zone names as the cards spell them, only zones that have cards, and a zone with fewer
 -- than 3 spawns left out (stray border spawns) unless the creature isn't in its card.zone.
--- Regenerate when denizen cards are added.
+-- Regenerate when denizen cards are added. Checked against WoW Forever's Wowhead spawn
+-- lists on 2026-11-13: a card's zone must be one where its creature spawns on Forever.
 -- =========================================================================
 TTS.MOB_ZONES = {
-    ["BAD07"] = { "Searing Gorge" },   -- Dark Iron Kidnapper
     ["BAD08"] = { "Loch Modan" },   -- Shadowforge Surveyor
     ["BAD09"] = { "Loch Modan" },   -- Shadowforge Digger
-    ["BUR01"] = { "Badlands" },   -- Dustbelcher Mauler
-    ["DAR10"] = { "Ashenvale" },   -- Apothecary Falthis
     ["DMS02"] = { "Westfall" },   -- Defias Watchman
     ["DUR09"] = { "The Barrens" },   -- Dreadmaw Crocolisk
-    ["FEL10"] = { "Winterspring" },   -- Mezzir the Howler
-    ["HIL01"] = { "Silverpine Forest" },   -- Rot Hide Brute
-    ["HIL02"] = { "Silverpine Forest" },   -- Rot Hide Plague Weaver
-    ["HIL03"] = { "Silverpine Forest" },   -- Raging Rot Hide
-    ["HIL04"] = { "Silverpine Forest" },   -- Elder Lake Creeper
-    ["HIL09"] = { "Arathi Highlands" },   -- Witherbark Headhunter
-    ["RED01"] = { "Elwynn Forest" },   -- Gray Forest Wolf
-    ["SWA08"] = { "The Hinterlands" },   -- Witherbark Sadist
-    ["SWA09"] = { "The Hinterlands" },   -- Witherbark Broodguard
-    ["THO01"] = { "The Barrens" },   -- Savannah Matriarch
-    ["ULD01"] = { "Loch Modan" },   -- Stonevault Rockchewer
-    ["UNG01"] = { "Feralas" },   -- Ferocious Rage Scar
-    ["WET07"] = { "Arathi Highlands" },   -- Syndicate Highwayman
-    ["WET08"] = { "Arathi Highlands" },   -- Rumbling Exile
-    ["WET09"] = { "Arathi Highlands" },   -- Burning Exile
+    ["HIL04"] = { "Alterac Mountains" },   -- Elder Lake Creeper
+    ["RED01"] = { "Duskwood" },   -- Gray Forest Wolf
+    ["ULD01"] = { "Badlands" },   -- Stonevault Rockchewer
 }

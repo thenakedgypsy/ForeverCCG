@@ -57,7 +57,7 @@ TTS:AddCards({
     ["BAD07"] = {
         id = "BAD07", name = "Dark Iron Kidnapper", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 7789,
-        zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 15692,
+        zone = "Searing Gorge", creatureType = "Humanoid", faction = "Dark Iron", npcId = 15692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
     },

@@ -318,7 +318,7 @@ end
 
 -- =========================================================================
 -- DECK GENERATION
--- 40 cards: the zone's creatures (2 copies each; past the 10th, the most expensive get 1), or for a dungeon its boss card(s) padded
+-- 40 cards: 20 of the zone's creatures (2 copies each of the usual 10; see BuildEncounterDeck for other sizes), or for a dungeon its boss card(s) padded
 -- to 22 creatures with the dungeon's creatures; then a few class spells the AI can use
 -- (and for a zone, 2 copies of its Gear Card); prayers fill the rest, split by the colour share of the creatures' pips.
 -- =========================================================================
@@ -326,7 +326,8 @@ local DECK_SIZE = 40
 local DUNGEON_CREATURES = 22
 local SPELLS_BY_PROFILE = { dummy = 0, basic = 2, tactical = 3, expert = 4 }
 local ZONE_GEAR_COPIES = 2   -- copies of the zone's Gear Card in a zone opponent's deck
-local ZONE_DENIZENS = 10     -- a zone's usual creature count; the most expensive beyond it get 1 copy, not 2
+local ZONE_CREATURES = 20    -- creature cards in a zone opponent's deck (2 of each of the usual 10 denizens)
+local ZONE_MAX_COPIES = 4    -- most copies of one denizen a small zone's deck pads with
 local PRAYER_IDS = { W = "W01", U = "U01", B = "B01", R = "R01", G = "G01" }
 
 -- Spell ops the AI knows how to use well
@@ -392,6 +393,7 @@ function E:BuildEncounterDeck(enc)
     end)
 
     local creatures = {}
+    local creatureShortfall = 0   -- zone creature slots its pool couldn't fill (taken by extra spells)
     if enc.kind == "dungeon" then
         -- Next Boss dungeons shuffle in only the first boss; the rule brings in the rest
         if nextBoss then
@@ -417,12 +419,24 @@ function E:BuildEncounterDeck(enc)
             end
         end
     else
-        -- The pool is sorted cheapest first, so the singles are the most expensive
-        local doubles = math.min(#pool, ZONE_DENIZENS)
-        for i, id in ipairs(pool) do
-            table.insert(creatures, id)
-            if i <= doubles then table.insert(creatures, id) end
+        -- Always ZONE_CREATURES creature cards, however many denizens the zone has (2 of each
+        -- for the usual 10). The pool is sorted cheapest first: in a big zone everything gets
+        -- 1 copy and the cheapest a 2nd; in a small one the cheapest get extra copies (up to
+        -- ZONE_MAX_COPIES). Pools too small to fill it make up the rest with class spells.
+        local copies = {}
+        local slots = math.min(ZONE_CREATURES, #pool * ZONE_MAX_COPIES)
+        local placed, round = 0, 1
+        while placed < slots do
+            for _, id in ipairs(pool) do
+                if placed >= slots then break end
+                if (copies[id] or 0) < round then copies[id] = (copies[id] or 0) + 1; placed = placed + 1 end
+            end
+            round = round + 1
         end
+        for _, id in ipairs(pool) do
+            for _ = 1, copies[id] or 0 do table.insert(creatures, id) end
+        end
+        creatureShortfall = ZONE_CREATURES - #creatures
     end
 
     -- Colour share of the creatures' pips
@@ -435,6 +449,7 @@ function E:BuildEncounterDeck(enc)
     -- Class spells in the deck's colours
     local spells = {}
     local want = SPELLS_BY_PROFILE[enc.ai] or 0
+    if want > 0 then want = want + creatureShortfall end
     if want > 0 then
         -- Only the deck's main colours (a fifth of the pips or more), so spells are castable
         local totalPips, mainColor = 0, {}
