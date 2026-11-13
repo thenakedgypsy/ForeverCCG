@@ -1,7 +1,11 @@
+## 1.2.1
+*   main window: hover the Campfire Bonus or Tournament Prize line to see how to get it
+
 ## 1.2.0
 *   zones: 19 denizens were listed under a zone they don't live in and now belong to the zone they spawn in: Witherbark Headhunter, Zalas Witherbark, Syndicate Highwayman, Rumbling Exile, Burning Exile and Molok the Crusher (Arathi Highlands), Rot Hide Brute, Rot Hide Plague Weaver, Raging Rot Hide and Elder Lake Creeper (Silverpine Forest), Witherbark Sadist and Witherbark Broodguard (The Hinterlands), Dark Iron Kidnapper (Searing Gorge), Dustbelcher Mauler (Badlands), Apothecary Falthis (Ashenvale), Mezzir the Howler (Winterspring), Gray Forest Wolf (Elwynn Forest), Savannah Matriarch (The Barrens) and Ferocious Rage Scar (Feralas). This moves them in the Collection Guide and the Deckbuilder's zone filter, and changes which zone bonuses they get
 *   Campaign: every zone opponent's deck now has 20 creatures, however many denizens the zone has. Zones with fewer denizens play extra copies of their cheapest, zones with more play one of each with the cheapest doubled, and a zone too small for 20 (Hillsbrad Foothills) fills the rest with class spells
 *   Collection Guide: Elder Lake Creeper is also listed in Alterac Mountains, Gray Forest Wolf in Duskwood, and Stonevault Rockchewer in Badlands instead of Loch Modan
+*   card NPC tracker: world map pins now work with OpenMap. They show above its map and for every zone in view, not just the one in the middle
 
 ## 1.1.2
 *   duels: some opponents had nothing to say once you'd done their quests, so you couldn't challenge them. Stand next to a duel opponent with them targeted and their duel button now shows on its own

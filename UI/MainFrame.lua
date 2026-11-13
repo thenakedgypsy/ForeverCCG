@@ -385,6 +385,29 @@ function M:UpdatePlayState()
     end
 end
 
+-- Hovering either line explains how to get it: a frame over just the text (the lines are
+-- centred in a wider box), resized whenever the text changes
+local function AddHoverTip(label, titleKey, bodyKey)
+    local hover = CreateFrame("Frame", nil, label:GetParent())
+    hover:SetPoint("CENTER", label, "CENTER")
+    hover:SetHeight(CAMPFIRE_LINE_H)
+    hover:SetWidth(1)
+    hover:EnableMouse(true)
+    function hover:FitText()
+        self:SetWidth(math.max(1, label:GetStringWidth() + 8))
+    end
+    hover:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L(titleKey), 1, 0.82, 0)
+        GameTooltip:AddLine(L(bodyKey), 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    label.hover = hover
+end
+AddHoverTip(campfireLabel, "main.campfireTipTitle", "main.campfireTip")
+AddHoverTip(timersLabel, "main.prizeTipTitle", "main.prizeTip")
+
 -- The campfire and tournament prize lines: ready (green), or the time left (grey); while
 -- the bonus runs, its minutes left (orange)
 local GREEN, GREY, ORANGE = "|cFF1AFF1A", "|cFF999999", "|cFFFF9933"
@@ -396,12 +419,13 @@ local function UpdateTimers()
         local value = warmth and (ORANGE .. TTS:FormatWait(warmth) .. "|r")
             or wait and (GREY .. TTS:FormatWait(wait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r")
         campfireLabel:SetText(L(warmth and "minimap.campfire" or "minimap.campfireNext") .. " " .. value)
-
+        campfireLabel.hover:FitText()
     end
     if TTS.TournamentPrizeCooldown then
         local wait = TTS:TournamentPrizeCooldown()
         timersLabel:SetText(L("minimap.prize") .. " "
             .. (wait > 0 and (GREY .. TTS:FormatWait(wait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r")))
+        timersLabel.hover:FitText()
     end
 end
 
