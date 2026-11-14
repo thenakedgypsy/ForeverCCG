@@ -448,6 +448,65 @@ local footer = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 footer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -20, 14)
 footer:SetText("Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy")
 
+-- Join the Discord (bottom-left): a popup with the invite link selected, ready to copy
+local DISCORD_LINK = "https://discord.gg/NprE8CErwP"
+
+local function FillDiscordLink(eb)
+    if not eb then return end
+    eb:SetText(DISCORD_LINK)
+    eb:SetFocus()
+    eb:HighlightText()
+end
+
+local function DiscordEditBox(dialog)
+    return dialog and (dialog.editBox or dialog.EditBox or (dialog.GetEditBox and dialog:GetEditBox()))
+end
+
+StaticPopupDialogs["TTS_DISCORD_LINK"] = {
+    text = "",
+    button1 = OKAY or "Okay",
+    hasEditBox = true,
+    editBoxWidth = 260,
+    OnShow = function(self)
+        local eb = DiscordEditBox(self)
+        FillDiscordLink(eb)
+        -- Some clients clear the box after OnShow: fill it again next frame
+        TTS:SafeAfter(0, function() FillDiscordLink(eb) end)
+    end,
+    -- Read-only: typing puts the link back
+    EditBoxOnTextChanged = function(self, userInput)
+        if userInput and self:GetText() ~= DISCORD_LINK then FillDiscordLink(self) end
+    end,
+    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+local discordBtn = CreatePanelButton(nil, content, 72, 16, "main.discord")
+discordBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 18, 12)
+discordBtn:SetScript("OnClick", function()
+    StaticPopupDialogs["TTS_DISCORD_LINK"].text = L("main.discordPopup")
+    StaticPopup_Show("TTS_DISCORD_LINK")
+end)
+
+-- Shrinks the footer text until it fits between the Discord button and the right edge
+local FOOTER_FONT, FOOTER_SIZE, FOOTER_FLAGS = footer:GetFont()
+local function FitFooter()
+    if not FOOTER_FONT then return end
+    local room = (M:GetWidth() - 20) - (18 + discordBtn:GetWidth() + 8)
+    local size = FOOTER_SIZE
+    footer:SetFont(FOOTER_FONT, size, FOOTER_FLAGS)
+    while footer:GetStringWidth() > room and size > 7 do
+        size = size - 0.5
+        footer:SetFont(FOOTER_FONT, size, FOOTER_FLAGS)
+    end
+end
+FitFooter()
+M:HookScript("OnShow", FitFooter)
+
 -- =========================================================================
 -- SLASH COMMAND
 -- =========================================================================
