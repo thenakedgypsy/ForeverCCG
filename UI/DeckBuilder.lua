@@ -508,6 +508,8 @@ local function CardPassesFilters(cardId, card)
     if card.isToken then return false end   -- made by effects, never collected
     if card.notCollectible then return false end   -- an opponent's hero, or the upgrade preview (Hero.lua)
     if card.isCritter and D.hideCritters then return false end   -- the Hide critters checkbox
+    -- The Foils only checkbox: the cards with a foil (BossTracker.lua), and the always-foil ones
+    if D.foilsOnly and not (TTS:HasFoil(cardId) or card.alwaysFoil) then return false end
     local group = GetTypeGroup(card)
     if not typeOn[group] then return false end
     if CardColor(card) and colorOn[CardColor(card)] == false then return false end
@@ -1797,6 +1799,33 @@ critterCheck:SetScript("OnEnter", function(self)
 end)
 critterCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- Foils only (beside Hide critters, saved): the card pool shows just the cards you have a foil of
+local foilCheck = CreateFrame("CheckButton", nil, poolPanel, "UICheckButtonTemplate")
+foilCheck:SetSize(22, 22)
+foilCheck:SetPoint("LEFT", critterLabel, "RIGHT", 12, -1)
+
+local foilLabel = poolPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+foilLabel:SetPoint("LEFT", foilCheck, "RIGHT", 0, 1)
+Loc:Bind(foilLabel, "db.foilsOnly")
+foilCheck:SetHitRectInsets(0, -(foilLabel:GetStringWidth() + 4), 0, 0)
+
+function D:SetFoilsOnly(on)
+    self.foilsOnly = on and true or false
+    foilCheck:SetChecked(self.foilsOnly)
+end
+
+foilCheck:SetScript("OnClick", function(self)
+    local on = self:GetChecked() and true or false
+    if TTS.Options then TTS.Options:Set("deckBuilderFoilsOnly", on) end
+    D:SetFoilsOnly(on)
+    poolPage = 1
+    D:RefreshPool()
+end)
+foilCheck:SetScript("OnEnter", function(self)
+    TT:ShowText(self, "ANCHOR_TOP", L("db.foilsOnly"), L("db.foilsOnlyDesc"))
+end)
+foilCheck:SetScript("OnLeave", function(self) TT:Hide(self) end)
+
 local nextBtn = CreatePanelButton(poolPanel, 28, 24, ">")
 nextBtn:SetPoint("TOPRIGHT", poolPanel, "TOPRIGHT", -10, -562)
 nextBtn.label:SetJustifyH("CENTER")
@@ -2646,6 +2675,7 @@ scaleLoader:SetScript("OnEvent", function(self, event, addon)
     end
     D:SetFullArt(TTS.Options and TTS.Options:Get("deckBuilderFullArt"))
     D:SetHideCritters(TTS.Options and TTS.Options:Get("deckBuilderHideCritters"))
+    D:SetFoilsOnly(TTS.Options and TTS.Options:Get("deckBuilderFoilsOnly"))
 end)
 
 D:SetScript("OnHide", function()
