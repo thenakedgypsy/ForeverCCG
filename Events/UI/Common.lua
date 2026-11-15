@@ -282,7 +282,8 @@ function UI.List(parent, x, y, width, rowHeight, count, makeRow, fillRow)
     return list
 end
 
-StaticPopupDialogs["FCCGE_CONFIRM"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("FCCGE_CONFIRM", {
     text = "%s",
     button1 = YES or "Yes",
     button2 = NO or "No",
@@ -293,10 +294,10 @@ StaticPopupDialogs["FCCGE_CONFIRM"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 function UI.Confirm(text, fn)
-    StaticPopup_Show("FCCGE_CONFIRM", text, nil, fn)
+    TTS.Dialog:Popup("FCCGE_CONFIRM", text, nil, fn)
 end
 
 -- A player's prize eligibility for the organizer's list: from the wait their client reported

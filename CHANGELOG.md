@@ -1,4 +1,10 @@
 
+## 1.2.5
+*   Collection Guide: hover a card you've collected to see it
+
+## 1.2.4
+*   Deckbuilder: new Foils only checkbox under the card pool, beside Hide critters. Tick it to see just the cards you have a foil of
+
 ## 1.2.3
 *   added a button to join discord
 

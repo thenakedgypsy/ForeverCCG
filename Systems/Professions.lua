@@ -399,18 +399,19 @@ function Prof:Scan()
     if creditPaid > 0 then
         local paid = creditPaid
         creditPaid = 0
-        StaticPopup_Show("TTS_PROFESSION_CREDIT", paid)
+        TTS.Dialog:Popup("TTS_PROFESSION_CREDIT", paid)
     end
 end
 
-StaticPopupDialogs["TTS_PROFESSION_CREDIT"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_PROFESSION_CREDIT", {
     text = L("prof.creditPopup"),
     button1 = OKAY or "OK",
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 -- The popup reads this when it shows: set it again once the chosen language has loaded
 TTS.Locale:OnReady(function() StaticPopupDialogs["TTS_PROFESSION_CREDIT"].text = L("prof.creditPopup") end)
 

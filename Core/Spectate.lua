@@ -904,7 +904,8 @@ end
 
 -- The game finished: says how, in the middle of the board. Accepting leaves the board; until
 -- then the final position stays up behind it.
-StaticPopupDialogs["TTS_SPECTATE_OVER"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_SPECTATE_OVER", {
     text = "%s\n\n%s",
     button1 = ACCEPT or "Accept",
     OnAccept = function() S:StopViewing() end,
@@ -912,7 +913,7 @@ StaticPopupDialogs["TTS_SPECTATE_OVER"] = {
     whileDead = true,
     hideOnEscape = false,
     preferredIndex = 3,
-}
+})
 
 local END_OUTCOMES = { won = true, lost = true, conceded = true, cancelled = true }
 
@@ -920,7 +921,7 @@ local function ShowGameOver(outcome)
     if V.endShown then return end
     V.endShown = true
     local key = "spec.end." .. (END_OUTCOMES[outcome] and outcome or "cancelled")
-    local dialog = StaticPopup_Show("TTS_SPECTATE_OVER", L("spec.end.title"), L(key, V.host or "?", E.opponent or "?"))
+    local dialog = TTS.Dialog:Popup("TTS_SPECTATE_OVER", L("spec.end.title"), L(key, V.host or "?", E.opponent or "?"))
     if dialog and dialog.SetPoint then
         dialog:ClearAllPoints()
         dialog:SetPoint("CENTER", B:IsShown() and B or UIParent, "CENTER", 0, 0)
@@ -1021,7 +1022,7 @@ function S:StopViewing()
     V.meta, V.bsFrom, V.newest, V.miss = nil, nil, nil, nil
     if V.endShown then
         V.endShown = nil
-        StaticPopup_Hide("TTS_SPECTATE_OVER")   -- (left with the bar's button instead)
+        TTS.Dialog:HidePopup("TTS_SPECTATE_OVER")   -- (left with the bar's button instead)
     end
     if not E.viewing then return end
     E.viewing, E.inMatch, E.isSolo = nil, false, false

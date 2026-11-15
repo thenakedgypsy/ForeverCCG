@@ -127,22 +127,31 @@ end
 -- =========================================================================
 -- MATCH COMPLETION & EMOTES
 -- =========================================================================
-function E:PlayMatchEmote(outcome, opponentName, rating)
+-- A PvP result's chat emote, and the built-in emote that follows it (nil for none)
+local function MatchEmote(outcome, opponentName, rating)
     local emoteText = L("emote." .. outcome, opponentName)
     -- A rated PvP result adds the new rating (PvPRecord.lua)
     if rating then emoteText = emoteText .. L("emote.rating", rating) end
-    SendChatMessage(emoteText, "EMOTE")
-
-    -- Play the built-in emote a moment later so it does not collide with the emote text above
     local followUp = nil
     if outcome == "won" then
         followUp = "CHEER"
     elseif outcome == "lost" or outcome == "conceded" then
         followUp = "CRY"
     end
+    return emoteText, followUp
+end
+
+-- Sends a chat emote (unless skipChat: it has gone already) and its built-in emote, which
+-- is played a moment later so it does not collide with the emote text
+local function SendEmote(emoteText, followUp, skipChat)
+    if emoteText and not skipChat then SendChatMessage(emoteText, "EMOTE") end
     if followUp then
         TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
     end
+end
+
+function E:PlayMatchEmote(outcome, opponentName, rating)
+    SendEmote(MatchEmote(outcome, opponentName, rating))
 end
 
 -- Post-game popup: your result, then the opponent's ("Thrall wins!" / "Thrall loses!").
@@ -153,42 +162,52 @@ local RESULT_HEADLINES = { won = true, lost = true, conceded = true }
 local RESULT_DELAY = 2.2   -- seconds a win or loss waits before its result shows (UI\TargetFX.lua's hits land)
 local RESULT_SCALE = 1.6   -- the result popup is drawn this much larger (frame and fonts)
 
-StaticPopupDialogs["TTS_MATCH_RESULT"] = {
+-- The result's emote: its chat text and the built-in emote after it (nil for none)
+local function ResultEmote(data)
+    if not data then return nil end
+    -- No public emote for games against the AI, except for clearing a solo dungeon
+    if not data.isSolo then return MatchEmote(data.outcome, data.opponent, data.rating) end
+    if data.dungeon then return L("emote.dungeon", data.dungeon), "CHEER" end
+    -- An NPC duel (SoloEncounters.lua), won or lost: "/e beat Old Man Heming at a game of
+    -- Forever: CCG!" then a /cheer, or "/e lost a game ..." then a /cry
+    if data.duel and RESULT_HEADLINES[data.outcome] then
+        return L("emote.duel." .. data.outcome, data.duel), (data.outcome == "won") and "CHEER" or "CRY"
+    end
+    return nil
+end
+
+-- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+TTS.Dialog:Register("TTS_MATCH_RESULT", {
     text = "%s\n\n%s",
     button1 = ACCEPT or "Accept",
+    -- With the controller UI on, Accept is a secure macro button that sends this itself
+    emote = function(data) return (ResultEmote(data)) end,
     OnAccept = function(self, data)
-        -- No public emote for games against the AI, except for clearing a solo dungeon
-        if data and not data.isSolo then E:PlayMatchEmote(data.outcome, data.opponent, data.rating) end
-        if data and data.dungeon then
-            SendChatMessage(L("emote.dungeon", data.dungeon), "EMOTE")
-            TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
-        end
-        -- An NPC duel (SoloEncounters.lua), won or lost: "/e beat Old Man Heming at a game of
-        -- Forever: CCG!" then a /cheer, or "/e lost a game ..." then a /cry
-        if data and data.duel and RESULT_HEADLINES[data.outcome] then
-            SendChatMessage(L("emote.duel." .. data.outcome, data.duel), "EMOTE")
-            local followUp = (data.outcome == "won") and "CHEER" or "CRY"
-            TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
-        end
+        local emoteText, followUp = ResultEmote(data)
+        SendEmote(emoteText, followUp, TTS.Dialog:EmoteSent(self))
         -- Leave the final board (unless a new match has already started on it)
         if not E.inMatch then E:CloseMatchBoard() end
     end,
     -- A win's reward card shows in the board's preview while Accept is hovered (the button
-    -- is shared by every popup, so it's hooked once and checks which popup it's on)
+    -- is shared by every popup, so it's hooked once and checks which popup it's on; the
+    -- dialog's emote button lies over its Accept)
     OnShow = function(self)
         -- Popup frames are shared, so the scale is put back in OnHide
         self:SetScale(RESULT_SCALE)
-        local btn = self.button1 or (self.GetButton1 and self:GetButton1())
-        if not btn then return end
-        btn.ttsDialog = self
-        if btn.ttsRewardHooked then return end
-        btn.ttsRewardHooked = true
-        btn:HookScript("OnEnter", function(b)
-            local d = b.ttsDialog
-            local card = d and d.which == "TTS_MATCH_RESULT" and d.data and d.data.rewardCard
-            local B = TTS.BoardFrame
-            if card and B and B.ShowRewardCard then B:ShowRewardCard(card) end
-        end)
+        local btns = { self.button1 or (self.GetButton1 and self:GetButton1()) }
+        if TTS.Dialog:IsDialog(self) then btns[#btns + 1] = TTS.Dialog.emoteButton end
+        for _, btn in ipairs(btns) do
+            btn.ttsDialog = self
+            if not btn.ttsRewardHooked then
+                btn.ttsRewardHooked = true
+                btn:HookScript("OnEnter", function(b)
+                    local d = b.ttsDialog
+                    local card = d and d.which == "TTS_MATCH_RESULT" and d.data and d.data.rewardCard
+                    local B = TTS.BoardFrame
+                    if card and B and B.ShowRewardCard then B:ShowRewardCard(card) end
+                end)
+            end
+        end
     end,
     OnHide = function(self)
         self:SetScale(1)
@@ -197,7 +216,7 @@ StaticPopupDialogs["TTS_MATCH_RESULT"] = {
     whileDead = true,
     hideOnEscape = false,
     preferredIndex = 3,
-}
+})
 
 -- Closes the post-match board and returns to the main window
 function E:CloseMatchBoard()
@@ -273,7 +292,7 @@ function E:EndMatch(outcome, reason)
             -- An NPC duel is announced with an emote either way (named after the NPC)
             local duel = self.isSolo and self.encounter and self.encounter.kind == "duel" and opponentName or nil
             showResult = function()
-                local dialog = StaticPopup_Show("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
+                local dialog = TTS.Dialog:Popup("TTS_MATCH_RESULT", headline, L("result.opponent." .. outcome, opponentName) .. (rewardText or ""),
                     { outcome = outcome, opponent = opponentName, isSolo = isSolo, dungeon = dungeon, duel = duel, rewardCard = rewardCard, rating = newRating })
                 -- In the middle of the board, not at the top of the screen with the other popups
                 if dialog and dialog.SetPoint then
@@ -329,7 +348,8 @@ function E:ConcedeMatch()
     self:EndMatch("conceded", L("end.conceded"))
 end
 
-StaticPopupDialogs["TTS_CONCEDE"] = {
+-- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+TTS.Dialog:Register("TTS_CONCEDE", {
     text = "%s",
     button1 = YES or "Yes",
     button2 = NO or "No",
@@ -338,12 +358,12 @@ StaticPopupDialogs["TTS_CONCEDE"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 -- The board's Concede button asks first
 function E:ConfirmConcede()
     if not self.inMatch then return end
-    StaticPopup_Show("TTS_CONCEDE", L("board.concedeConfirm"))
+    TTS.Dialog:Popup("TTS_CONCEDE", L("board.concedeConfirm"))
 end
 
 -- =========================================================================
@@ -1660,7 +1680,8 @@ function E:Mulligan()
     self:RefreshUI()
 end
 
-StaticPopupDialogs["TTS_MULLIGAN"] = {
+-- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+TTS.Dialog:Register("TTS_MULLIGAN", {
     text = "%s",
     button1 = YES or "Yes",
     button2 = NO or "No",
@@ -1669,11 +1690,11 @@ StaticPopupDialogs["TTS_MULLIGAN"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 function E:ConfirmMulligan()
     if not self:CanMulligan() then return end
-    local dialog = StaticPopup_Show("TTS_MULLIGAN", L("mulligan.confirm", MULLIGAN_HAND_SIZE))
+    local dialog = TTS.Dialog:Popup("TTS_MULLIGAN", L("mulligan.confirm", MULLIGAN_HAND_SIZE))
     -- In the middle of the board, not at the top of the screen (as the match result)
     if dialog and dialog.SetPoint then
         local B = TTS.BoardFrame

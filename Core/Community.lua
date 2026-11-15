@@ -146,7 +146,8 @@ local function FillLink(eb)
 end
 
 -- Shows the invite link, selected for copying
-StaticPopupDialogs["TTS_COMMUNITY_LINK"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_COMMUNITY_LINK", {
     text = "",
     button1 = OKAY or "Okay",
     hasEditBox = true,
@@ -167,12 +168,12 @@ StaticPopupDialogs["TTS_COMMUNITY_LINK"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 function C:ShowLink()
     -- The message is set here, so OnShow doesn't depend on the popup's text field name
     StaticPopupDialogs["TTS_COMMUNITY_LINK"].text = L("community.linkPopup")
-    StaticPopup_Show("TTS_COMMUNITY_LINK")
+    TTS.Dialog:Popup("TTS_COMMUNITY_LINK")
 end
 
 -- The in-game invite as a chat hyperlink. Redeeming a ticket is protected, so the addon

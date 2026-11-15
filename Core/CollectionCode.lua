@@ -415,7 +415,8 @@ local function SetImportHint()
     if tag then SetHint("cc.importHint", tag) else SetHint("cc.importHint.any") end
 end
 
-StaticPopupDialogs["TTS_IMPORT_COLLECTION"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_IMPORT_COLLECTION", {
     text = "%s",
     button1 = ACCEPT or "Accept",
     button2 = CANCEL or "Cancel",
@@ -429,7 +430,7 @@ StaticPopupDialogs["TTS_IMPORT_COLLECTION"] = {
     hideOnEscape = true,
     showAlert = true,
     preferredIndex = 3,
-}
+})
 
 local function TryImport()
     local payload = CC:Decode(W.edit:GetText())
@@ -438,8 +439,7 @@ local function TryImport()
         return
     end
     local when = tonumber(payload.t) and date("%Y-%m-%d %H:%M", payload.t) or "?"
-    local popup = StaticPopup_Show("TTS_IMPORT_COLLECTION", L("cc.confirm", when))
-    if popup then popup.data = payload end
+    TTS.Dialog:Popup("TTS_IMPORT_COLLECTION", L("cc.confirm", when), nil, payload)
 end
 
 local function BuildWindow()

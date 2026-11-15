@@ -2153,7 +2153,7 @@ end
 function TTS.Net:CloseAcceptedPopup(name)
     if not (self.acceptedBy and name and self.acceptedBy:lower() == name:lower()) then return false end
     self.acceptedBy = nil
-    StaticPopup_Hide("TTS_CHALLENGE_ACCEPTED")
+    TTS.Dialog:HidePopup("TTS_CHALLENGE_ACCEPTED")
     return true
 end
 
@@ -2328,11 +2328,17 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net.incomingChallenge = sender
         local receivedAt = time()
 
-        StaticPopupDialogs["TTS_CHALLENGE"] = {
+        -- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua,
+        -- where Accept is a secure macro button that sends the emote itself)
+        TTS.Dialog:Register("TTS_CHALLENGE", {
             text = L("net.challenged", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
             button1 = ACCEPT or "Accept",
             button2 = DECLINE or "Decline",
-            OnAccept = function()
+            emote = function()
+                if (TTS.Engine and TTS.Engine.inMatch) or (TTS.Engine and not TTS.Engine:HasPlayableDeck()) then return nil end
+                return L("emote.started", sender)
+            end,
+            OnAccept = function(self)
                 if TTS.Engine and TTS.Engine.inMatch then
                     TTS.Net:Send(sender, "DECLINE:IN_MATCH")
                     Print(L("net.acceptInMatch"))
@@ -2346,7 +2352,7 @@ function TTS.Net:OnReceive(msg, sender)
                 -- Pick a deck, then accept. The ACCEPT goes once the deck is picked, so the
                 -- challenger (who goes first) can't start before we're ready.
                 -- Announce the game from this native popup's button (blocked from the deck picker's)
-                pcall(SendChatMessage, L("emote.started", sender), "EMOTE")
+                if not TTS.Dialog:EmoteSent(self) then pcall(SendChatMessage, L("emote.started", sender), "EMOTE") end
                 local timeLeft = receivedAt + INVITE_EXPIRY - DECK_PICK_MARGIN - time()
                 TTS.DeckPicker:Open({
                     opponent = sender,
@@ -2385,8 +2391,8 @@ function TTS.Net:OnReceive(msg, sender)
             timeout = CHALLENGE_POPUP_TIMEOUT,
             whileDead = true,
             hideOnEscape = true,
-        }
-        StaticPopup_Show("TTS_CHALLENGE")
+        })
+        TTS.Dialog:Popup("TTS_CHALLENGE")
 
     elseif cmd == "INVITE_ACK" then
         TTS.Net.pendingInvites[sender:lower()] = nil
@@ -2484,11 +2490,14 @@ function TTS.Net:OnReceive(msg, sender)
                 end,
             })
         end
-        StaticPopupDialogs["TTS_CHALLENGE_ACCEPTED"] = {
+        -- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua,
+        -- where its button is a secure macro button that sends the emote itself)
+        TTS.Dialog:Register("TTS_CHALLENGE_ACCEPTED", {
             text = L("net.acceptedPopup", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
             button1 = L("net.chooseDeck"),
-            OnAccept = function()
-                pcall(SendChatMessage, L("emote.started", sender), "EMOTE")
+            emote = function() return L("emote.started", sender) end,
+            OnAccept = function(self)
+                if not TTS.Dialog:EmoteSent(self) then pcall(SendChatMessage, L("emote.started", sender), "EMOTE") end
                 OpenPicker()
             end,
             -- The timeout (there is no Cancel button, and Escape doesn't close it)
@@ -2498,8 +2507,8 @@ function TTS.Net:OnReceive(msg, sender)
             timeout = DECK_PICK_TIMEOUT / 2,
             whileDead = true,
             hideOnEscape = false,
-        }
-        StaticPopup_Show("TTS_CHALLENGE_ACCEPTED")
+        })
+        TTS.Dialog:Popup("TTS_CHALLENGE_ACCEPTED")
 
     elseif cmd == "DECLINE" or cmd == "CANCEL" then
         local key = sender:lower()

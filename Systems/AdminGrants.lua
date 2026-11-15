@@ -148,22 +148,32 @@ end
 -- =========================================================================
 -- PRIZE
 -- A static popup with the card set in below the message, as the beta welcome's (DataStamp.lua).
--- OK sends the emote, from the popup's own button so the client allows it.
+-- OK sends the emote, from the popup's own button so the client allows it (the addon's own
+-- dialog sends it from a secure macro button: UI\Dialog.lua).
 -- =========================================================================
 local CARD_HEAD = 62   -- the card's name and cost are drawn above its frame
 local CARD_GAP = 10    -- between the card and the OK button
 local prizeCard        -- the card frame, built on first show
 local prizeShown       -- the card id the popup is showing
 
-StaticPopupDialogs["TTS_PRIZE"] = {
+-- "/e won [Thrall], a Forever: CCG prize card!", or nil without a card
+local function PrizeEmote()
+    local card = prizeShown and TTS.Cards and TTS.Cards[prizeShown]
+    if not card then return nil end
+    local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
+    return L("emote.prize", tag)
+end
+
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_PRIZE", {
     text = "%s",
     button1 = OKAY or "Okay",
-    -- "/e won [Thrall], a Forever: CCG prize card!" then a /cheer (OK only: Escape skips them)
-    OnAccept = function()
-        local card = prizeShown and TTS.Cards and TTS.Cards[prizeShown]
-        if not card then return end
-        local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
-        SendChatMessage(L("emote.prize", tag), "EMOTE")
+    emote = PrizeEmote,
+    -- The emote, then a /cheer (OK only: Escape skips them)
+    OnAccept = function(self)
+        local text = PrizeEmote()
+        if not text then return end
+        if not TTS.Dialog:EmoteSent(self) then SendChatMessage(text, "EMOTE") end
         TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
     end,
     OnHide = function()
@@ -173,7 +183,7 @@ StaticPopupDialogs["TTS_PRIZE"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 local function PrizeCardFrame()
     if prizeCard then return prizeCard end
@@ -192,9 +202,9 @@ end
 
 local function ShowPrize(card)
     -- A popup already open is replaced, its card with it
-    StaticPopup_Hide("TTS_PRIZE")
+    TTS.Dialog:HidePopup("TTS_PRIZE")
     prizeShown = card.id
-    local dialog = StaticPopup_Show("TTS_PRIZE", L("admin.prizePopup", TTS:CardName(card)))
+    local dialog = TTS.Dialog:Popup("TTS_PRIZE", L("admin.prizePopup", TTS:CardName(card)))
     if not (dialog and TTS.CreateCardFrame and TTS.PaintPreviewCard) then return end
     local f = PrizeCardFrame()
     local textFS = dialog.text or _G[dialog:GetName() .. "Text"]

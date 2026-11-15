@@ -303,7 +303,8 @@ local function AnswerUndo(seq, accepted)
     end
 end
 
-StaticPopupDialogs["TTS_UNDO_REQUEST"] = {
+-- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+TTS.Dialog:Register("TTS_UNDO_REQUEST", {
     text = L("undo.popup"),
     button1 = L("undo.allow"),
     button2 = L("undo.deny"),
@@ -329,7 +330,7 @@ StaticPopupDialogs["TTS_UNDO_REQUEST"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 -- The popup reads these when it shows: set them again once the chosen language has loaded
 TTS.Locale:OnReady(function()
     local d = StaticPopupDialogs["TTS_UNDO_REQUEST"]
@@ -344,7 +345,7 @@ function E:OnUndoRequest(seq, cardId)
         return
     end
     self:Log(L("undo.asks", self.opponent, CardName(cardId)), "SYSTEM")
-    StaticPopup_Show("TTS_UNDO_REQUEST", self.opponent, CardName(cardId), { seq = seq })
+    TTS.Dialog:Popup("TTS_UNDO_REQUEST", self.opponent, CardName(cardId), { seq = seq })
 end
 
 -- =========================================================================

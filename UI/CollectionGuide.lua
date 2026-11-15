@@ -266,6 +266,34 @@ local function GoldLine(parent, y)
     line:SetColorTexture(1, 0.82, 0, 0.30)
 end
 
+-- The preview card (docked to the left of the window, like the Deckbuilder's), for the
+-- collected card under the mouse. Built on first use.
+local preview
+local function ShowPreview(cardId)
+    local card = cardId and TTS.Cards[cardId]
+    if not (card and TTS.CreateCardFrame and TTS.PaintPreviewCard) then
+        if preview then preview:Hide() end
+        return
+    end
+    if not preview then
+        preview = TTS.CreateCardFrame(F, TTS.PREVIEW_W, TTS.PREVIEW_H)
+        preview:SetFrameStrata("DIALOG")
+        preview:SetFrameLevel((F:GetFrameLevel() or 10) + 40)
+        preview:SetClampedToScreen(true)
+        preview:EnableMouse(false)
+        preview:SetScript("OnEnter", nil)
+        preview:SetScript("OnLeave", nil)
+        preview:ClearAllPoints()
+        -- (the card's name and cost sit above its frame: room left for them)
+        preview:SetPoint("TOPRIGHT", F, "TOPLEFT", -12, -76)
+    end
+    TTS.PaintPreviewCard(preview, card, TTS:HasFoil(card.id))
+end
+
+local function HidePreview()
+    if preview then preview:Hide() end
+end
+
 -- One row of the list: a card's name and a pip per copy (gold owned, green at 4/4, dark
 -- missing), or a group's heading, its size and a gold line
 local function CreateListRow(width)
@@ -296,11 +324,24 @@ local function CreateListRow(width)
     row.headerLine:SetHeight(1)
     row.headerLine:SetColorTexture(1, 0.82, 0, 0.30)
 
+    -- Hovering a card you've collected shows it; one still to find stays a name only
+    row:EnableMouse(true)
+    row:SetScript("OnEnter", function(self)
+        self.hovered = true
+        if self.cardId then ShowPreview(self.cardId) end
+    end)
+    row:SetScript("OnLeave", function(self)
+        self.hovered = nil
+        HidePreview()
+    end)
+
     row:Hide()
     return row
 end
 
 local function FillListRow(row, entry)
+    local shownId = row.cardId
+    row.cardId = nil
     local isHeader = entry.header ~= nil
     row.header:SetShown(isHeader)
     row.headerCount:SetShown(isHeader)
@@ -332,6 +373,12 @@ local function FillListRow(row, entry)
                 row.pips[p]:SetColorTexture(1, 0.82, 0, 1)
             end
         end
+        if n > 0 then row.cardId = card.id end
+    end
+    -- Rows are reused as the list scrolls: a hovered row that now holds another card
+    -- shows that one instead (or nothing)
+    if row.hovered and row.cardId ~= shownId then
+        if row.cardId then ShowPreview(row.cardId) else HidePreview() end
     end
     row:Show()
 end

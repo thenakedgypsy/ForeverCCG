@@ -302,10 +302,11 @@ local claimOffered   -- GetTime() the claim was last offered (or waved away)
 
 local function OfferClaim(E)
     claimOffered = GetTime()
-    StaticPopup_Show("TTS_CLAIM_WIN", E.opponent)
+    TTS.Dialog:Popup("TTS_CLAIM_WIN", E.opponent)
 end
 
-StaticPopupDialogs["TTS_CLAIM_WIN"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_CLAIM_WIN", {
     text = L("pvp.claimAsk"),
     button1 = L("pvp.claimWin"),
     button2 = L("pvp.keepWaiting"),
@@ -323,7 +324,7 @@ StaticPopupDialogs["TTS_CLAIM_WIN"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 -- Every few seconds while a PvP game is on: the marker's opponent rating, the "are you still
 -- there?" once they've been quiet a while, and the claim once they've been silent long enough
@@ -333,7 +334,7 @@ ticker.sinceCheck = 0
 ticker:SetScript("OnUpdate", function(self, elapsed)
     local E = TTS.Engine
     if not PvPGameOn(E) then
-        if StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN") then StaticPopup_Hide("TTS_CLAIM_WIN") end
+        if TTS.Dialog:VisiblePopup("TTS_CLAIM_WIN") then TTS.Dialog:HidePopup("TTS_CLAIM_WIN") end
         return
     end
     self.sinceCheck = self.sinceCheck + elapsed
@@ -351,9 +352,9 @@ ticker:SetScript("OnUpdate", function(self, elapsed)
         lastAsk = now
         TTS.Net:SendPing(E.opponent, "ALIVE?")
     end
-    local shown = StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN")
+    local shown = TTS.Dialog:VisiblePopup("TTS_CLAIM_WIN")
     if not answers or silent < CLAIM_AFTER then
-        if shown then StaticPopup_Hide("TTS_CLAIM_WIN") end   -- heard from them again
+        if shown then TTS.Dialog:HidePopup("TTS_CLAIM_WIN") end   -- heard from them again
     elseif not shown and (not claimOffered or GetTime() - claimOffered >= CLAIM_AFTER) then
         OfferClaim(E)
     end
@@ -372,7 +373,7 @@ end
 
 local function OnGameEnd()
     DB().live = nil
-    if StaticPopup_Visible and StaticPopup_Visible("TTS_CLAIM_WIN") then StaticPopup_Hide("TTS_CLAIM_WIN") end
+    if TTS.Dialog:VisiblePopup("TTS_CLAIM_WIN") then TTS.Dialog:HidePopup("TTS_CLAIM_WIN") end
 end
 
 -- At login: a game still marked live was left. It's a loss, and the opponent hears of it.

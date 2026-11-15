@@ -462,7 +462,8 @@ local function DiscordEditBox(dialog)
     return dialog and (dialog.editBox or dialog.EditBox or (dialog.GetEditBox and dialog:GetEditBox()))
 end
 
-StaticPopupDialogs["TTS_DISCORD_LINK"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_DISCORD_LINK", {
     text = "",
     button1 = OKAY or "Okay",
     hasEditBox = true,
@@ -483,13 +484,13 @@ StaticPopupDialogs["TTS_DISCORD_LINK"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 local discordBtn = CreatePanelButton(nil, content, 72, 16, "main.discord")
 discordBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 18, 12)
 discordBtn:SetScript("OnClick", function()
     StaticPopupDialogs["TTS_DISCORD_LINK"].text = L("main.discordPopup")
-    StaticPopup_Show("TTS_DISCORD_LINK")
+    TTS.Dialog:Popup("TTS_DISCORD_LINK")
 end)
 
 -- Shrinks the footer text until it fits between the Discord button and the right edge

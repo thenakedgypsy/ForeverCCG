@@ -138,7 +138,8 @@ signer:SetScript("OnEvent", function(_, event)
 end)
 
 -- Told at every login until dismissed: Show Code keeps the report, so it can be copied again
-StaticPopupDialogs["TTS_DATA_RESET"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_DATA_RESET", {
     text = "%s",
     button1 = "",
     button2 = "",
@@ -154,7 +155,7 @@ StaticPopupDialogs["TTS_DATA_RESET"] = {
     hideOnEscape = false,
     showAlert = true,
     preferredIndex = 3,
-}
+})
 
 local resetNotice = CreateFrame("Frame")
 resetNotice:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -166,7 +167,7 @@ resetNotice:SetScript("OnEvent", function(self)
         local dialog = StaticPopupDialogs["TTS_DATA_RESET"]
         dialog.button1 = L("stamp.showCode")
         dialog.button2 = L("stamp.dismiss")
-        StaticPopup_Show("TTS_DATA_RESET", L("stamp.resetPopup"))
+        TTS.Dialog:Popup("TTS_DATA_RESET", L("stamp.resetPopup"))
     end)
 end)
 
@@ -202,22 +203,33 @@ end)
 -- BETA WELCOME
 -- A static popup (the message and OK) with the beta card, painted as in a card link's
 -- preview (UI\CardLinks.lua), set in below the message. The emote is sent from OK as the
--- match result popup's is (CoreEngine.lua): from the addon's own button the client blocks it.
+-- match result popup's is (CoreEngine.lua): from a plain addon button the client blocks it,
+-- so the addon's own dialog sends it from a secure macro button (UI\Dialog.lua).
 -- =========================================================================
 local CARD_HEAD = 62   -- the card's name and cost are drawn above its frame
 local CARD_GAP = 10    -- between the card and the OK button
 local welcomeCard
 
-StaticPopupDialogs["TTS_BETA_WELCOME"] = {
+-- "/e received [The Bug Reporter] for testing the Forever: CCG beta!" (a card link,
+-- UI\CardLinks.lua), or nil without the card
+local function BetaEmote()
+    local card = TTS.Cards and TTS.Cards[BETA_CARD]
+    if not card then return nil end
+    local tag = TTS.CardTag and TTS:CardTag(BETA_CARD) or TTS:CardName(card)
+    return (TTS.L or tostring)("emote.beta", tag)
+end
+
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_BETA_WELCOME", {
     text = "%s",
     button1 = OKAY or "Okay",
-    -- "/e received [The Bug Reporter] for testing the Forever: CCG beta!" (a card link,
-    -- UI\CardLinks.lua), then a /cheer (OK only: Escape closes it without them)
-    OnAccept = function()
-        local card = TTS.Cards and TTS.Cards[BETA_CARD]
-        if not card then return end
-        local tag = TTS.CardTag and TTS:CardTag(BETA_CARD) or TTS:CardName(card)
-        SendChatMessage((TTS.L or tostring)("emote.beta", tag), "EMOTE")
+    -- With the controller UI on, OK is a secure macro button that sends the emote itself
+    emote = BetaEmote,
+    -- The emote, then a /cheer (OK only: Escape closes it without them)
+    OnAccept = function(self)
+        local text = BetaEmote()
+        if not text then return end
+        if not TTS.Dialog:EmoteSent(self) then SendChatMessage(text, "EMOTE") end
         TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
     end,
     OnHide = function()
@@ -227,7 +239,7 @@ StaticPopupDialogs["TTS_BETA_WELCOME"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 -- Built on first show: the card frame code (UI\Board.lua) loads after this file
 local function WelcomeCard()
@@ -249,7 +261,7 @@ function TTS:ShowBetaWelcome()
     local card = TTS.Cards and TTS.Cards[BETA_CARD]
     if not card then return end
     local text = (TTS.L or tostring)("stamp.betaPopup", TTS:CardName(card))
-    local dialog = StaticPopup_Show("TTS_BETA_WELCOME", text)
+    local dialog = TTS.Dialog:Popup("TTS_BETA_WELCOME", text)
     if not (dialog and TTS.CreateCardFrame and TTS.PaintPreviewCard) then return end
 
     -- The popup has sized itself to the message and OK (anchored to its bottom): make room

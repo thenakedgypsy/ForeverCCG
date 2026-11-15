@@ -1893,7 +1893,8 @@ local function ApplyDeckRename(index, text)
     UpdateDeckTabs()
 end
 
-StaticPopupDialogs["TTS_RENAME_DECK"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_RENAME_DECK", {
     text = L("db.renameDeck"),
     button1 = ACCEPT or "Accept",
     button2 = CANCEL or "Cancel",
@@ -1923,7 +1924,7 @@ StaticPopupDialogs["TTS_RENAME_DECK"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 Loc:OnReady(function() StaticPopupDialogs["TTS_RENAME_DECK"].text = L("db.renameDeck") end)
 
 LAYOUT.TAB_W = math.floor((LAYOUT.LIST_W - (TTS.MAX_DECK_SLOTS - 1) * 7) / TTS.MAX_DECK_SLOTS)
@@ -1952,7 +1953,7 @@ for i = 1, TTS.MAX_DECK_SLOTS do
             CloseMenus()
             TT:Hide()
             pendingRenameIndex = i
-            StaticPopup_Show("TTS_RENAME_DECK")
+            TTS.Dialog:Popup("TTS_RENAME_DECK")
             return
         end
         if TTS_ActiveDeckIndex == i then return end
@@ -2562,7 +2563,8 @@ function D:ClearDeck()
     D:RefreshDeck()
 end
 
-StaticPopupDialogs["TTS_CLEAR_DECK"] = {
+-- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+TTS.Dialog:Register("TTS_CLEAR_DECK", {
     text = "%s",
     button1 = YES or "Yes",
     button2 = NO or "No",
@@ -2572,15 +2574,14 @@ StaticPopupDialogs["TTS_CLEAR_DECK"] = {
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3,
-}
+})
 
 -- The Clear Deck button asks first (an empty deck has nothing to lose)
 function D:ConfirmClearDeck()
     local deck = GetActiveDeck()
     if not (deck and deck.cards and next(deck.cards)) then return end
     if BreaksLastPlayableDeck(deck, 0) then return end
-    local popup = StaticPopup_Show("TTS_CLEAR_DECK", L("db.clearDeckConfirm", deck.name or ""))
-    if popup then popup.data = deck end
+    TTS.Dialog:Popup("TTS_CLEAR_DECK", L("db.clearDeckConfirm", deck.name or ""), nil, deck)
 end
 
 -- =========================================================================
@@ -2682,7 +2683,7 @@ D:SetScript("OnHide", function()
     CardTooltip_OnLeave()
     CloseMenus()
     searchBox:ClearFocus()
-    StaticPopup_Hide("TTS_RENAME_DECK")
+    TTS.Dialog:HidePopup("TTS_RENAME_DECK")
     -- Models may not survive the window being hidden, so force a reload next time
     for _, t in ipairs(tiles) do t.paintedId = nil end
     -- New cards have been seen: no longer marked new (not when the hero card's choice
