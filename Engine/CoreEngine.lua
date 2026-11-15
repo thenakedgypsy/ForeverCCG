@@ -144,10 +144,8 @@ end
 -- Sends a chat emote (unless skipChat: it has gone already) and its built-in emote, which
 -- is played a moment later so it does not collide with the emote text
 local function SendEmote(emoteText, followUp, skipChat)
-    if emoteText and not skipChat then SendChatMessage(emoteText, "EMOTE") end
-    if followUp then
-        TTS:SafeAfter(0.5, function() DoEmote(followUp) end)
-    end
+    if not skipChat then TTS.Dialog:SendEmote(emoteText) end
+    TTS.Dialog:DoEmote(followUp, 0.5)
 end
 
 function E:PlayMatchEmote(outcome, opponentName, rating)
@@ -176,7 +174,7 @@ local function ResultEmote(data)
     return nil
 end
 
--- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+-- The addon's own dialog (UI\Dialog.lua)
 TTS.Dialog:Register("TTS_MATCH_RESULT", {
     text = "%s\n\n%s",
     button1 = ACCEPT or "Accept",
@@ -348,7 +346,7 @@ function E:ConcedeMatch()
     self:EndMatch("conceded", L("end.conceded"))
 end
 
--- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+-- The addon's own dialog (UI\Dialog.lua)
 TTS.Dialog:Register("TTS_CONCEDE", {
     text = "%s",
     button1 = YES or "Yes",
@@ -1680,7 +1678,7 @@ function E:Mulligan()
     self:RefreshUI()
 end
 
--- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+-- The addon's own dialog (UI\Dialog.lua)
 TTS.Dialog:Register("TTS_MULLIGAN", {
     text = "%s",
     button1 = YES or "Yes",

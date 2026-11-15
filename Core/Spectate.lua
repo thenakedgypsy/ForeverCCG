@@ -904,7 +904,7 @@ end
 
 -- The game finished: says how, in the middle of the board. Accepting leaves the board; until
 -- then the final position stays up behind it.
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_SPECTATE_OVER", {
     text = "%s\n\n%s",
     button1 = ACCEPT or "Accept",

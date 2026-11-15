@@ -19,8 +19,10 @@ TTS = TTS or {}
 -- SetPreferredGamepadInteractTarget() is blocked: "ForeverCCG has been blocked from an
 -- action only available to the Blizzard UI" (seen in taint.log).
 --
--- So a popup registered here is the addon's own dialog (below) while the controller UI is
--- on, which Blizzard's gamepad code leaves alone, and a StaticPopup otherwise.
+-- Edit Mode does the same: a layout update after one of our StaticPopups ran tainted and
+-- had its secret aura reads blocked in combat ("Auras cannot be accessed when secret while
+-- tainted by 'ForeverCCG'"). So a popup registered here is always the addon's own dialog
+-- (below), which no Blizzard code touches.
 --
 -- TTS.Dialog:Register("TTS_SOMETHING", {
 --     -- StaticPopupDialogs' fields; the dialog uses these:
@@ -188,6 +190,26 @@ end)
 -- Whether the emote button sent this accept's emote already
 function D:EmoteSent(frame)
     return frame ~= nil and frame == emoteSentFrame
+end
+
+-- Every chat emote the addon sends goes through these. In combat they are skipped: the
+-- client may block an emote sent by addon code then, which reports a blocked action.
+-- frame: the dialog being accepted, if any (the emote button may have sent it already)
+function D:SendEmote(text, frame)
+    if not text or text == "" or self:EmoteSent(frame) then return end
+    if InCombatLockdown() or not SendChatMessage then return end
+    pcall(SendChatMessage, text, "EMOTE")
+end
+
+-- A built-in emote token ("CHEER", "THANK", ...), delay seconds from now (checked for
+-- combat when it plays)
+function D:DoEmote(token, delay)
+    if not token then return end
+    local function Play()
+        if InCombatLockdown() or not DoEmote then return end
+        pcall(DoEmote, token)
+    end
+    if delay and delay > 0 then TTS:SafeAfter(delay, Play) else Play() end
 end
 
 -- Whether a frame is one of these dialogs (not a StaticPopup)
@@ -433,9 +455,12 @@ function D:Show(which, text1, text2, data)
     return f
 end
 
--- A registered popup: the dialog while the controller UI is on, else a StaticPopup
+-- A registered popup: always the addon's own dialog. StaticPopup_Show from addon code
+-- taints whatever Blizzard code runs inside it and saves state (the gamepad code above, and
+-- seen with Edit Mode too: a later layout update read secret auras "tainted by ForeverCCG"
+-- in combat). Only a popup that was never registered falls back to a StaticPopup.
 function D:Popup(which, text1, text2, data)
-    if defs[which] and self:ControllerUI() then
+    if defs[which] then
         return self:Show(which, text1, text2, data)
     end
     return StaticPopup_Show(which, text1, text2, data)

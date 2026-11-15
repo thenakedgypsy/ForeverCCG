@@ -462,7 +462,7 @@ local function DiscordEditBox(dialog)
     return dialog and (dialog.editBox or dialog.EditBox or (dialog.GetEditBox and dialog:GetEditBox()))
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_DISCORD_LINK", {
     text = "",
     button1 = OKAY or "Okay",

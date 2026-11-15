@@ -138,7 +138,7 @@ signer:SetScript("OnEvent", function(_, event)
 end)
 
 -- Told at every login until dismissed: Show Code keeps the report, so it can be copied again
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_DATA_RESET", {
     text = "%s",
     button1 = "",
@@ -219,7 +219,7 @@ local function BetaEmote()
     return (TTS.L or tostring)("emote.beta", tag)
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_BETA_WELCOME", {
     text = "%s",
     button1 = OKAY or "Okay",
@@ -229,8 +229,8 @@ TTS.Dialog:Register("TTS_BETA_WELCOME", {
     OnAccept = function(self)
         local text = BetaEmote()
         if not text then return end
-        if not TTS.Dialog:EmoteSent(self) then SendChatMessage(text, "EMOTE") end
-        TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
+        TTS.Dialog:SendEmote(text, self)
+        TTS.Dialog:DoEmote("CHEER", 0.5)
     end,
     OnHide = function()
         if welcomeCard then welcomeCard:Hide() end

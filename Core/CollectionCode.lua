@@ -415,7 +415,7 @@ local function SetImportHint()
     if tag then SetHint("cc.importHint", tag) else SetHint("cc.importHint.any") end
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_IMPORT_COLLECTION", {
     text = "%s",
     button1 = ACCEPT or "Accept",

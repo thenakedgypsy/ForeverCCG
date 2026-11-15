@@ -164,7 +164,7 @@ local function PrizeEmote()
     return L("emote.prize", tag)
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_PRIZE", {
     text = "%s",
     button1 = OKAY or "Okay",
@@ -173,8 +173,8 @@ TTS.Dialog:Register("TTS_PRIZE", {
     OnAccept = function(self)
         local text = PrizeEmote()
         if not text then return end
-        if not TTS.Dialog:EmoteSent(self) then SendChatMessage(text, "EMOTE") end
-        TTS:SafeAfter(0.5, function() DoEmote("CHEER") end)
+        TTS.Dialog:SendEmote(text, self)
+        TTS.Dialog:DoEmote("CHEER", 0.5)
     end,
     OnHide = function()
         if prizeCard then prizeCard:Hide() end

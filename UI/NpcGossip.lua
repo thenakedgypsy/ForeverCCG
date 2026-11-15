@@ -309,9 +309,9 @@ local function GiveFrom(source)
     local npcName = UnitName("npc")
     if npcName and not IsSecret(npcName) and npcName ~= "" then
         local tag = TTS.CardTag and TTS:CardTag(card.id) or TTS:CardName(card)
-        pcall(SendChatMessage, L("emote.giftedCard", tag, npcName), "EMOTE")
+        TTS.Dialog:SendEmote(L("emote.giftedCard", tag, npcName))
         -- then a /ty (the THANK emote token), a moment later so it doesn't collide with the text above
-        TTS:SafeAfter(0.5, function() DoEmote("THANK") end)
+        TTS.Dialog:DoEmote("THANK", 0.5)
     end
     return "give"
 end

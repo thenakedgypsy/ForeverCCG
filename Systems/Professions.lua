@@ -403,7 +403,7 @@ function Prof:Scan()
     end
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_PROFESSION_CREDIT", {
     text = L("prof.creditPopup"),
     button1 = OKAY or "OK",

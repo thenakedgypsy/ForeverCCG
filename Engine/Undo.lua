@@ -303,7 +303,7 @@ local function AnswerUndo(seq, accepted)
     end
 end
 
--- A StaticPopup, or the addon's own dialog while the controller UI is on (UI\Dialog.lua)
+-- The addon's own dialog (UI\Dialog.lua)
 TTS.Dialog:Register("TTS_UNDO_REQUEST", {
     text = L("undo.popup"),
     button1 = L("undo.allow"),

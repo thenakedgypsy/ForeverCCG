@@ -2328,7 +2328,7 @@ function TTS.Net:OnReceive(msg, sender)
         TTS.Net.incomingChallenge = sender
         local receivedAt = time()
 
-        -- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua,
+        -- (The addon's own dialog: UI\Dialog.lua,
         -- where Accept is a secure macro button that sends the emote itself)
         TTS.Dialog:Register("TTS_CHALLENGE", {
             text = L("net.challenged", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
@@ -2352,7 +2352,7 @@ function TTS.Net:OnReceive(msg, sender)
                 -- Pick a deck, then accept. The ACCEPT goes once the deck is picked, so the
                 -- challenger (who goes first) can't start before we're ready.
                 -- Announce the game from this native popup's button (blocked from the deck picker's)
-                if not TTS.Dialog:EmoteSent(self) then pcall(SendChatMessage, L("emote.started", sender), "EMOTE") end
+                TTS.Dialog:SendEmote(L("emote.started", sender), self)
                 local timeLeft = receivedAt + INVITE_EXPIRY - DECK_PICK_MARGIN - time()
                 TTS.DeckPicker:Open({
                     opponent = sender,
@@ -2490,14 +2490,14 @@ function TTS.Net:OnReceive(msg, sender)
                 end,
             })
         end
-        -- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua,
+        -- (The addon's own dialog: UI\Dialog.lua,
         -- where its button is a secure macro button that sends the emote itself)
         TTS.Dialog:Register("TTS_CHALLENGE_ACCEPTED", {
             text = L("net.acceptedPopup", sender) .. "\n\n" .. OpponentLines(theirScore, theirPvP),
             button1 = L("net.chooseDeck"),
             emote = function() return L("emote.started", sender) end,
             OnAccept = function(self)
-                if not TTS.Dialog:EmoteSent(self) then pcall(SendChatMessage, L("emote.started", sender), "EMOTE") end
+                TTS.Dialog:SendEmote(L("emote.started", sender), self)
                 OpenPicker()
             end,
             -- The timeout (there is no Cancel button, and Escape doesn't close it)

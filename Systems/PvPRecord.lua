@@ -305,7 +305,7 @@ local function OfferClaim(E)
     TTS.Dialog:Popup("TTS_CLAIM_WIN", E.opponent)
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_CLAIM_WIN", {
     text = L("pvp.claimAsk"),
     button1 = L("pvp.claimWin"),

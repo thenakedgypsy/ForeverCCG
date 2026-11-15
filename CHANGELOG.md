@@ -1,4 +1,7 @@
 
+## 1.2.6
+*   controller UI: the addon's popups (mulligan, concede, match results, challenges, undo requests and the rest) no longer cause "ForeverCCG has been blocked from an action only available to the Blizzard UI". With the controller UI on they use the addon's own popup window.
+
 ## 1.2.5
 *   Collection Guide: hover a card you've collected to see it
 

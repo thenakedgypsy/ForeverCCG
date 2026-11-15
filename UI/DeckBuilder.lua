@@ -1893,7 +1893,7 @@ local function ApplyDeckRename(index, text)
     UpdateDeckTabs()
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_RENAME_DECK", {
     text = L("db.renameDeck"),
     button1 = ACCEPT or "Accept",
@@ -2563,7 +2563,7 @@ function D:ClearDeck()
     D:RefreshDeck()
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("TTS_CLEAR_DECK", {
     text = "%s",
     button1 = YES or "Yes",

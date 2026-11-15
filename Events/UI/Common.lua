@@ -282,7 +282,7 @@ function UI.List(parent, x, y, width, rowHeight, count, makeRow, fillRow)
     return list
 end
 
--- (A StaticPopup, or the addon's own dialog while the controller UI is on: UI\Dialog.lua)
+-- (The addon's own dialog: UI\Dialog.lua)
 TTS.Dialog:Register("FCCGE_CONFIRM", {
     text = "%s",
     button1 = YES or "Yes",
