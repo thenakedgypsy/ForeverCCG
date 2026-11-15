@@ -1,3 +1,6 @@
+## 1.2.7
+*   popups: the addon's popups now always use its own popup window, with or without the controller UI - Blizzard's popups could leave the game's UI flagged as ForeverCCG's, which potentially caused "Auras cannot be accessed when secret while tainted by 'ForeverCCG'" in combat
+*   emotes: the chat emotes and /cheer, /ty and /cry from challenges, match results, gifts and prizes are skipped while you're in combat, so the game can't block them
 
 ## 1.2.6
 *   controller UI: the addon's popups (mulligan, concede, match results, challenges, undo requests and the rest) no longer cause "ForeverCCG has been blocked from an action only available to the Blizzard UI". With the controller UI on they use the addon's own popup window.
