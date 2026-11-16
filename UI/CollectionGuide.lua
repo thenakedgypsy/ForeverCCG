@@ -169,10 +169,14 @@ local function Visiting(card)
     return shownZone ~= nil and card.zone ~= shownZone
 end
 
+-- Sorted by zone, one place's own cards are split into sections, in this order
+local SECTION_ORDER = { Creature = 1, Gear = 2, Settlement = 3, Spell = 4, Prayer = 5 }
+
 -- The heading a card goes under in the current sort
 local function GroupLabel(card)
     if cardSort == "ZONE" then
         if Visiting(card) then return L("guide.alsoHere") end
+        if shownZone then return L(TYPE_LABEL[UI.GetTypeGroup(card)]) end
         return card.zone and Loc:Term("zone", card.zone) or L("guide.other")
     elseif cardSort == "FACTION" then
         return card.faction and Loc:Term("faction", card.faction) or L("guide.other")
@@ -356,7 +360,10 @@ local function FillListRow(row, entry)
         local card = entry.card
         local n = math.min(MAX_COPIES, TTS:GetOwnedCopies(card) or 0)
         local name = TTS:CardName(card) or card.name or card.id
-        if card.subType == "Gear" then name = name .. " |cFF888888(" .. Loc:Term("type", "Gear") .. ")|r" end
+        local tag = (card.subType == "Gear" and Loc:Term("type", "Gear"))
+            or (card.type == "Settlement" and Loc:Term("type", "Settlement"))
+            or (card.isReward and L("guide.reward"))
+        if tag then name = name .. " |cFF888888(" .. tag .. ")|r" end
         row.name:SetText(name)
         if TTS:HasFoil(card.id) then
             row.name:SetTextColor(0.2, 0.87, 0.2)   -- its foil is yours
@@ -697,12 +704,19 @@ Refresh = function(resetScroll)
     local cards = current and current.cards or {}
     shownZone = current and current.zone ~= ALL and tab ~= "hearths" and current.zone or nil
     local CompareBy = TTS.DeckBuilderFrame.CompareCardsBy
-    -- Sorted by zone, a zone's own cards come first and the creatures also found there after
+    -- Sorted by zone, a zone's own cards come first, in sections (Denizens, Gear,
+    -- Settlements, Spells), and the creatures also found there after
     local visitorsLast = (cardSort == "ZONE")
+    local GetTypeGroup = UI.GetTypeGroup
     table.sort(cards, function(a, b)
         if visitorsLast then
             local va, vb = Visiting(a), Visiting(b)
             if va ~= vb then return vb end
+            if shownZone and not va then
+                local sa = SECTION_ORDER[GetTypeGroup(a)] or 9
+                local sb = SECTION_ORDER[GetTypeGroup(b)] or 9
+                if sa ~= sb then return sa < sb end
+            end
         end
         return CompareBy(cardSort, a.id, b.id)
     end)

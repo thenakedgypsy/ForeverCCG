@@ -1,3 +1,8 @@
+## 1.2.8
+*   board: in a PvP match, click the chat bubble on your opponent's name plate to start a whisper to them (to their full name, as /w would). It stays up after the match, for a quick "gg"
+*   windows: the close (X) button on the addon's windows now works in combat. Before, most of them couldn't be closed until combat ended
+*   Collection Guide: a zone's or dungeon's cards are now split into Denizens, Gear, Settlements and Spells sections (sorted by zone), and reward cards are marked (Reward) and Settlements (Settlement), as Gear already was
+
 ## 1.2.7
 *   popups: the addon's popups now always use its own popup window, with or without the controller UI - Blizzard's popups could leave the game's UI flagged as ForeverCCG's, which potentially caused "Auras cannot be accessed when secret while tainted by 'ForeverCCG'" in combat
 *   emotes: the chat emotes and /cheer, /ty and /cry from challenges, match results, gifts and prizes are skipped while you're in combat, so the game can't block them
