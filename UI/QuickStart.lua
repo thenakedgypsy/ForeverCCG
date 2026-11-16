@@ -112,6 +112,7 @@ local step = Q:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 step:SetPoint("RIGHT", header, "RIGHT", -34, 0)
 
 local closeBtn = CreateFrame("Button", nil, Q, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("RIGHT", header, "RIGHT", -2, 0)
 
 -- ----- Showcase: the page's card on a dark panel, with a soft pulsing glow behind it -----

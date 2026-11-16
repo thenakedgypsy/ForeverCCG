@@ -185,6 +185,7 @@ local function BuildWindow()
     title:SetPoint("TOPLEFT", 16, -11)
     Loc:Bind(title, "pvp.title")
     local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -2, -2)
 
     F.rating = F:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")

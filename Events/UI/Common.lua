@@ -56,6 +56,7 @@ function UI.Window(globalName, width, height, title)
     F.title:SetPoint("TOPLEFT", 18, -15)
     F.title:SetText(title)
     local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -2, -2)
     return F
 end

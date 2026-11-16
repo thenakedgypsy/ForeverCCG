@@ -103,6 +103,7 @@ do
 end
 
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("TOPRIGHT", -5, -5)
 
 local statusDesc = F:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

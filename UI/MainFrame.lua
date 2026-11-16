@@ -59,6 +59,7 @@ logo:SetPoint("LEFT", titleBar, "LEFT", 4, 0)
 logo:SetTexture("Interface\\AddOns\\ForeverCCG\\Textures\\logo.png")
 
 local closeBtn = CreateFrame("Button", nil, M, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", 6, 27)
 
 local content = CreateFrame("Frame", nil, M)

@@ -465,6 +465,7 @@ local function BuildWindow()
     W.title:SetPoint("TOPLEFT", 18, -16)
 
     local close = CreateFrame("Button", nil, W, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -4, -4)
 
     W.button = CreateFrame("Button", nil, W, "UIPanelButtonTemplate")

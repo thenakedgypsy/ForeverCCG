@@ -977,6 +977,41 @@ B.oppLifeBtn:SetScript("OnEnter", function(self)
 end)
 B.oppLifeBtn:SetScript("OnLeave", function(self) TT:Hide(self) end)
 
+-- WHISPER THE OPPONENT: a chat-bubble button at the right end of their plate (PvP only)
+-- opens a whisper to their full "Firstname Surname" in the chat box, as /w would.
+-- (An IIFE, not a do-block: Board.lua is at Lua's 200-local cap here)
+;(function()
+    function B.WhisperOpponent()
+        local E = TTS.Engine
+        if E.isSolo or not E.opponent then return end
+        local name = TTS.Net and TTS.Net.CharName and TTS.Net.CharName(E.opponent) or E.opponent
+        if name == "" then return end
+        local sendTell = (ChatFrameUtil and ChatFrameUtil.SendTell) or ChatFrame_SendTell
+        if sendTell then
+            sendTell(name)
+        elseif ChatFrame_OpenChat then
+            ChatFrame_OpenChat("/w " .. name .. " ")
+        end
+    end
+
+    local w = CreateFrame("Button", nil, B.oppLifeBtn)
+    w:SetSize(20, 20)
+    w:SetPoint("RIGHT", B.oppLifeBtn, "RIGHT", -5, 0)
+    w:SetFrameLevel(B.oppLifeBtn:GetFrameLevel() + 5)
+    w:SetNormalTexture("Interface\\ChatFrame\\UI-ChatWhisperIcon")
+    w:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    w:SetScript("OnClick", function()
+        if TTS.Sound and TTS.Sound.PlayUI then TTS.Sound:PlayUI("button") end
+        B.WhisperOpponent()
+    end)
+    w:SetScript("OnEnter", function(self)
+        TT:ShowText(self, "ANCHOR_BOTTOM", L("board.whisper", TTS.Engine.opponent or L("side.opponentCap")))
+    end)
+    w:SetScript("OnLeave", function(self) TT:Hide(self) end)
+    w:Hide()
+    B.whisperBtn = w
+end)()
+
 B.myLifeBtn = CreateFrame("Button", nil, B, backdropTemplate)
 B.myLifeBtn:SetSize(160, 30)
 B.myLifeBtn:SetPoint("BOTTOM", 0, 20)   -- centred, mirroring the opponent's; clears the footer below
@@ -4250,7 +4285,10 @@ function B:UpdateDisplay()
 
     B.oppLifeText:SetText(L("board.oppLife", E.opponent or L("side.opponentCap"), E.remoteState.life))
     -- The plate grows to fit a long "Firstname Surname" (the rules / score text follows it)
-    B.oppLifeBtn:SetWidth(math.max(B.oppLifeBtn.minWidth, B.oppLifeText:GetStringWidth() + 18))
+    -- PvP: room at the right end for the whisper button
+    local canWhisper = not E.isSolo and E.opponent ~= nil
+    B.whisperBtn:SetShown(canWhisper)
+    B.oppLifeBtn:SetWidth(math.max(B.oppLifeBtn.minWidth, B.oppLifeText:GetStringWidth() + (canWhisper and 42 or 18)))
     local ruleNames = {}
     if E.isSolo and E.encounter and TTS.GetEncounterRuleLines then
         for _, rule in ipairs(TTS:GetEncounterRuleLines(E.encounter)) do table.insert(ruleNames, rule.name) end

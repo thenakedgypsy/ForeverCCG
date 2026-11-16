@@ -92,6 +92,7 @@ do  -- the Forever: CCG logo on the left of the strip, the title after it (as on
 end
 
 local closeBtn = CreateFrame("Button", nil, S, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("TOPRIGHT", -2, -2)
 
 local footer = S:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -429,6 +430,7 @@ local function BuildEntryDialog()
     D.kind:SetPoint("LEFT", D.title, "RIGHT", 10, -1)
 
     local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -2, -2)
 
     -- The reward card on the left (dimmed until earned, as on the map)

@@ -339,6 +339,7 @@ do  -- the Forever: CCG logo on the left of the strip, the title after it (as on
 end
 
 local close = CreateFrame("Button", nil, D, "UIPanelCloseButton")
+close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 close:SetPoint("TOPRIGHT", -2, -2)
 
 -- =========================================================================

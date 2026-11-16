@@ -382,6 +382,7 @@ local function BuildWindow()
     Loc:Bind(title, "matchLog.title")
 
     local close = CreateFrame("Button", nil, W, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -4, -4)
 
     local hint = W:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")

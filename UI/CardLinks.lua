@@ -158,6 +158,7 @@ title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("Forever CCG")
 
 local closeBtn = CreateFrame("Button", nil, P, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("TOPRIGHT", -4, -4)
 
 local statusText = P:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")

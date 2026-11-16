@@ -520,6 +520,7 @@ local function Build()
     title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
     Loc:Bind(title, "guide.title")
     local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
     close:SetPoint("TOPRIGHT", -2, -2)
 
     local footer = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")

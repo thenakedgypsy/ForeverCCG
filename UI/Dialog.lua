@@ -56,6 +56,14 @@ TTS = TTS or {}
 local D = {}
 TTS.Dialog = D
 
+-- OnClick for every window's UIPanelCloseButton. The template's own handler goes through
+-- HideUIPanel, which the client blocks for add-on code in combat, so the windows couldn't
+-- be closed then; a plain Hide() of an ordinary frame always works.
+function TTS.CloseParent(self)
+    local parent = self and self:GetParent()
+    if parent then parent:Hide() end
+end
+
 local WIDTH = 320
 local PAD = 16
 local BTN_W, BTN_H = 128, 22
@@ -140,6 +148,7 @@ local function Disarm()
     local f = emoteFrame
     emoteFrame = nil
     emoteBtn:Hide()
+    emoteBtn:ClearAllPoints()   -- (no secure button left anchored to a dialog through combat)
     emoteBtn:SetAttribute("macrotext", nil)
     f.button1:SetAlpha(1)
     f.button1:EnableMouse(true)

@@ -207,6 +207,7 @@ do  -- the grey Forever: CCG tag after the title, as on Rules & Guide
 end
 
 local closeBtn = CreateFrame("Button", nil, F, "UIPanelCloseButton")
+closeBtn:SetScript("OnClick", TTS.CloseParent)   -- (not HideUIPanel: blocked in combat)
 closeBtn:SetPoint("TOPRIGHT", -2, -2)
 
 local footer = F:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
