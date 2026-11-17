@@ -18,7 +18,7 @@ TTS = TTS or {}
 -- Two npc ids on one duel: an NPC for each faction, sharing the deck and the Settlement.
 -- faction = "Alliance": only Alliance can reach the NPC; Horde characters are granted the
 -- Settlement once they have beaten every duel they can reach (TTS:CheckDuelGrants).
--- Still to pick in game: Riverglades and Mount Hyjal.
+-- Still to pick in game: Mount Hyjal.
 -- Only pick NPCs sure to open a window: a gossip menu (checked in server data) or a vendor. A quest
 -- giver without gossip opens nothing once its quests are done, leaving only the panel shown while
 -- the NPC is targeted (UI\NpcGossip.lua).
@@ -536,5 +536,19 @@ TTS:AddDuel({
         "ZEP05", "ZEP05", "ZEP08", "ZEP08", "ZEP09", "FER08", "ZEP10", "ZEP11",
         "SHA04", "SHA04", "MAG09", "MAG09", "STL_ZEP", "STL_ZEP",
         "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "U01", "W01", "W01",
+    },
+})
+
+-- Riverglades: Sadi (A dockworker at Powderfuse Port: blasting powder, Venture Co. muscle and the
+-- Twilight's Hammer camped up the river)
+TTS:AddDuel({
+    id = "DUEL_RIV", npcs = { 260359 }, name = "Sadi", zone = "Riverglades",
+    life = 25, ai = "expert", background = { map = "Riverglades" },
+    reward = "STL_RIV",   -- their Settlement (Cards\Settlements.lua)
+    deck = {   -- 38 cards, and 2 copies of their Settlement
+        "RIV01", "RIV03", "RIV03", "BAD03", "STV04", "STV04", "RIV05", "RIV05", "BAD06",
+        "BUR05", "RIV08", "RIV08", "RIV10", "RIV10", "RIV09", "MUL08", "RIV12",
+        "MAG02", "MAG02", "HUN07", "WAR05", "GEAR39", "STL_RIV", "STL_RIV",
+        "R01", "R01", "R01", "R01", "R01", "R01", "R01", "R01", "B01", "B01", "B01", "B01", "B01", "B01", "B01", "B01",
     },
 })

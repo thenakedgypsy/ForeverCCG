@@ -1,3 +1,9 @@
+## 1.3.0
+*   new: Powderfuse Port in Riverglades now has card NPCs for both factions
+*   Gear: Fizzix Boomshot the gunsmith gives out the Powderfuse Blunderbuss
+*   duels: Sadi, on the Powderfuse Port docks, plays you for the new Powderfuse Port Settlement
+*   card NPC tracker: shows the new NPCs on the minimap and world map
+
 ## 1.2.9
 *   addon list: ForeverCCG now has its own icon in the game's AddOns list
 

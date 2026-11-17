@@ -365,4 +365,8 @@ TTS.NPC_SPOTS = {
     [267338] = { 1, 28.8, 66.4, "trainer", "A", "Emrys Flintbeard" },
     [275623] = { 36, 14.6, 71.2, "gear", "A", "Valaden Silverblade" },
     [5940] = { 215, 46.6, 59.2, "duel", "H", "Harn Longcast" },
+    -- Powderfuse Port, Riverglades (area 16591): spots from an in-game capture
+    [259766] = { 16591, 77.8, 52, "gear", "", "Mika Darby" },
+    [260566] = { 16591, 78.6, 53.6, "gear", "", "Fizzix Boomshot" },
+    [260359] = { 16591, 79.7, 54, "duel", "", "Sadi" },
 }

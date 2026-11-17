@@ -134,6 +134,9 @@ TTS:AddCards({
     ["GEAR31"] = Gear("GEAR31", "Nethergarde Felbane Dagger", "{4}", 4, "C", "Blasted Lands",
         { Alliance = 5508 },   -- Strumner Flintheel, Nethergarde Keep
         3, 1, { "lifelink" }, "INV_Weapon_ShortBlade_25", "Equip: +3/+1 and Drain."),
+    ["GEAR39"] = Gear("GEAR39", "Powderfuse Blunderbuss", "{4}", 4, "C", "Riverglades",
+        { Neutral = 260566 },   -- Fizzix Boomshot, Powderfuse Port
+        3, 0, { "haste", "firstStrike" }, "INV_Weapon_Rifle_05", "Equip: +3/+0, Quick and Strikes-First."),
 
     -- Levels 48-55
     ["GEAR32"] = Gear("GEAR32", "Devilsaur-Tooth Dagger", "{4}", 4, "C", "Un'Goro Crater",
@@ -202,6 +205,7 @@ local WEAPONS = {
     GEAR36 = 15809,    -- Heavy Crossbow
     GEAR37 = 9718,     -- Reforged Blade of Heroes
     GEAR38 = 12802,    -- Darkspear
+    GEAR39 = 10508,    -- Mithril Blunderbuss
 }
 for id, item in pairs(WEAPONS) do
     TTS.Cards[id].wear, TTS.Cards[id].wearSlot = item, "weapon"
@@ -277,6 +281,9 @@ TTS:AddCards({
     ["ARMR17"] = Armor("ARMR17", "Mojache Wolfshead Helm", "{4}", 4, "Feralas",
         { Horde = 8159 },   -- Worb Strongstitch, Camp Mojache
         "head", 8345, 1, 3, { "vigilance" }, "INV_Helmet_04", "Equip: +1/+3 and Vigilant."),   -- Wolfshead Helm
+    ["ARMR19"] = Armor("ARMR19", "Powderfuse Blastguard Helm", "{4}", 4, "Riverglades",
+        { Neutral = 259766 },   -- Mika Darby, Powderfuse Port
+        "head", 7934, 1, 3, nil, "INV_Helmet_09", "Equip: +1/+3 and Shielded.", SHIELDED),   -- Heavy Mithril Helm
 
     -- Levels 55-60
     ["ARMR18"] = Armor("ARMR18", "Everlook Imperial Pauldrons", "{6}", 6, "Winterspring",
@@ -288,9 +295,9 @@ TTS:AddCards({
 -- a faction can ask, by level, Neutral ones on both trails
 TTS.GIFT_TRAILS.gear = {
     Alliance = { 54, 2046, 1273, 1240, 3609, 3613, 1668, 1469, 1362, 4183, 4187, 3491, 3493, 3088, 956,
-        11137, 3953, 225, 226, 1441, 1450, 3543, 3053, 275623, 1471, 1322, 2482, 2845, 4888, 4886, 9179,
+        11137, 3953, 225, 226, 1441, 1450, 3543, 3053, 275623, 1471, 1322, 2482, 2845, 4888, 4886, 9179, 260566, 259766,
         1695, 8131, 8161, 11703, 14301, 5508, 3000, 15315, 1296, 10857, 11184, 11182, 11536, 15176 },
     Horde = { 3163, 3167, 3077, 3080, 2136, 2135, 9553, 3553, 3479, 3493, 9549, 6028, 3539, 9551, 32334,
-        9555, 12045, 1146, 1381, 2845, 4884, 4883, 1407, 981, 9548, 8159, 8131, 14737, 10361, 3000,
+        9555, 12045, 1146, 1381, 2845, 4884, 4883, 1407, 981, 260566, 259766, 9548, 8159, 8131, 14737, 10361, 3000,
         10379, 10856, 11184, 11182, 11536, 15176 },
 }

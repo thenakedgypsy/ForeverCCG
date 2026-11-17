@@ -182,6 +182,11 @@ Add("WIN", "Everlook", "U", "Winterspring",
 Add("ZEP", "Zephras Heights", "U", "Zephras Isle",
     Tap("{2}", Buff(0, 0, { "flying" }), "friendly_creature"),
     "{T}, {2}: Target denizen you control gains Airborne until end of turn.")
+-- Riverglades (Forever; added last so the others' art numbers don't shift): the goblins'
+-- blasting-powder port, a big bang that singes you too
+Add("RIV", "Powderfuse Port", "R", "Riverglades",
+    Tap("{4}", { { op = "damage", to = "target", n = 2 }, { op = "damage", to = "self_player", n = 1 } }, "enemy_creature"),
+    "{T}, {4}: Deal 2 damage to target enemy denizen and 1 damage to you.")
 
 -- The tutorial's (UI\Tutorial.lua; Systems\SoloEncounters.lua TUTORIAL): cheap enough to
 -- play on its last turn, and never collected (notCollectible: not in the Deckbuilder,

@@ -1804,6 +1804,20 @@ S["npc.11182.give"] = "Gear Cards? Adventurers sell 'em to pay for furs. This on
 S["npc.11182.comeBack"] = "That's all for now, friend."
 S["npc.11182.allOut"] = "Not a Gear Card left in Everlook."
 S["npc.11182.giftHow"] = "Ask Nixxrak, the heavy armor merchant in Everlook, for spare Gear Cards"
+S["npc.260566.name"] = "Fizzix Boomshot"
+S["place.260566"] = "Powderfuse Port"
+S["npc.260566.greet"] = "Guns that go boom, and Gear Cards that go boom harder. Probably."
+S["npc.260566.give"] = "Gear Cards? Customers trade 'em for powder all the time. Here, this one's on the house."
+S["npc.260566.comeBack"] = "That's all for now. Mind the powder kegs on your way out."
+S["npc.260566.allOut"] = "Not a Gear Card left in Powderfuse Port!"
+S["npc.260566.giftHow"] = "Ask Fizzix Boomshot, the gunsmith in Powderfuse Port, for spare Gear Cards"
+S["npc.259766.name"] = "Mika Darby"
+S["place.259766"] = "Powderfuse Port"
+S["npc.259766.greet"] = "Smithing supplies for the river trade. Gear Cards too, if you ask nicely."
+S["npc.259766.give"] = "Gear Cards? Blast-proofed and everything. Take one."
+S["npc.259766.comeBack"] = "That's all I can spare for now."
+S["npc.259766.allOut"] = "You've had every Gear Card I've got."
+S["npc.259766.giftHow"] = "Ask Mika Darby, the blacksmithing supplier in Powderfuse Port, for spare Gear Cards"
 -- The NPC duels' opponents (Duels.lua): what they say in the panel beside the quest,
 -- merchant or trainer window (npc.<npcId>.greet)
 S["npc.241.greet"] = "Ah, a fresh face in Goldshire. Fancy a friendly hand of cards? Friendly-ish. Mostly friendly."
@@ -1848,6 +1862,7 @@ S["npc.9619.greet"] = "The devilsaur sleeps, so I may sit. Earth Mother guide yo
 S["npc.15194.greet"] = "The sand speaks to me. It says you'll lose. Shall we see if it's right?"
 S["npc.9298.greet"] = "My notes can wait. It's far too cold to write anyway. A game to warm up?"
 S["npc.254358.greet"] = "The winds brought you here. Let them decide our game, as well."
+S["npc.260359.greet"] = "Crates can wait, the boss isn't looking. Quick game on the dock?"
 -- Capital city innkeepers: a random Greater Hearthstone each time (TTS.GIFT_POOLS.capital)
 S["gift.capital.how"] = "Ask an innkeeper in a capital city for spare cards"
 S["npc.6740.give"] = "Spare cards? Nobles and adventurers leave them in the Gilded Rose all the time. Here, this one's yours."
