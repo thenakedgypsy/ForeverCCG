@@ -47,6 +47,13 @@ TTS.SoloMapPositions = {
     EXC = { "EK", 0.5065, 0.4690 },   -- western Wetlands
     DAL = { "EK", 0.4455, 0.3065 },   -- Dalaran, western Alterac Mountains
     RIV = { "EK", 0.5600, 0.6800 },   -- Riverglades, between Redridge, Burning Steppes, Badlands and Swamp of Sorrows
+    -- WoW Forever dungeons added 2026-11-17: OpenMap's entrance pins (Data\Forever\Places.lua),
+    -- converted to the continent with UiMapAssignment from build 1.60.1.70938
+    TDC = { "EK", 0.4301, 0.8445 },   -- The Drowned City, Stranglethorn's west coast
+    KRD = { "EK", 0.5600, 0.6451 },   -- Krol'dok Stronghold, Riverglades
+    ALZ = { "KAL", 0.5977, 0.6247 },  -- Alcaz Prison, Alcaz Island off Dustwallow Marsh
+    BMH = { "KAL", 0.6060, 0.3498 },  -- Blackmaw Hold, Azshara
+    SHT = { "KAL", 0.4976, 0.7711 },  -- Shaper's Terrace, northern Un'Goro Crater
     HIL = { "EK", 0.4697, 0.3466 },
     HIN = { "EK", 0.5540, 0.3104 },
     HYJ = { "KAL", 0.5450, 0.3250 },  -- Mount Hyjal (Forever), between Felwood and Winterspring: foreverdb's Kalimdor flight-path pins

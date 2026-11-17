@@ -55,7 +55,11 @@ local WN_CARDS = {
 -- offers the tutorial game
 local SETS = {
     quickstart = { prefix = "qs", pages = 8, heading = "qs.heading", cards = QS_CARDS, tutorial = true },
-    whatsnew   = { prefix = "wn13", pages = 5, heading = "wn13.heading", cards = WN_CARDS },
+    whatsnew   = { prefix = "wn13", pages = 5, heading = "wn13.heading", cards = WN_CARDS,
+                   -- (page 1 tells an account that got the free welcome pack, Packs.lua)
+                   altText = function(n)
+                       if n == 1 and TTS.Packs and TTS.Packs:GotWelcomePack() then return "wn13.1.textGift" end
+                   end },
 }
 local MAX_PAGES = 8
 local set = SETS.quickstart
@@ -250,7 +254,7 @@ Show = function(n, turned)
     page = n
     step:SetText(L("qs.step", page, pages))
     title:SetText(L(set.prefix .. "." .. page .. ".title"))
-    local body = L(set.prefix .. "." .. page .. ".text")
+    local body = L(set.altText and set.altText(page) or (set.prefix .. "." .. page .. ".text"))
     text:SetText(TTS.FormatSymbols and TTS:FormatSymbols(body, 16) or body)
     for i, d in ipairs(dots) do
         d:SetShown(i <= pages)

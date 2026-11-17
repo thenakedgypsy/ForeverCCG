@@ -347,6 +347,49 @@ local function GivePack(key, card)
     if TTS.Sound and TTS.Sound.PlayUI then TTS.Sound:PlayUI("packOpen") end
 end
 
+-- =========================================================================
+-- WELCOME PACK (1.3): a free Dungeons pack for every account that had collected at least
+-- one card before booster packs came in. Decided once, on the first load with packs
+-- (TTS_Packs.welcomePack: true = given, false = not due); DataStamp.lua's ADDON_LOADED
+-- runs first, so a cleared collection doesn't count. The What's New pages say so
+-- (QuickStart.lua, wn13.1.textGift) when this account got one.
+-- =========================================================================
+local WELCOME_PACK = "dungeon"
+
+local function HadCollection()
+    for _, v in pairs(TTS_KilledBosses or {}) do
+        if v == true or (tonumber(v) or 0) > 0 then return true end
+    end
+    return false
+end
+
+function P:GotWelcomePack()
+    return type(TTS_Packs) == "table" and TTS_Packs.welcomePack == true
+end
+
+do
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("ADDON_LOADED")
+    f:SetScript("OnEvent", function(self, event, name)
+        if name ~= "ForeverCCG" then return end
+        self:UnregisterEvent("ADDON_LOADED")
+        local store = Store()
+        if store.welcomePack ~= nil then return end
+        store.welcomePack = HadCollection()
+        if not store.welcomePack then return end
+        store.owned[WELCOME_PACK] = P:Count(WELCOME_PACK) + 1
+        -- (told in chat once the world is up: lines printed at load can be lost)
+        self:RegisterEvent("PLAYER_ENTERING_WORLD")
+        self:SetScript("OnEvent", function(s)
+            s:UnregisterEvent("PLAYER_ENTERING_WORLD")
+            TTS:SafeAfter(5, function()
+                Say(L("packs.welcome", "|cFFFFD200" .. P:Name(WELCOME_PACK) .. "|r"))
+                Changed()
+            end)
+        end)
+    end)
+end
+
 local function NoPack(card)
     Say("|cFF8A8A8A" .. L("packs.tooLow", TTS:CardName(card) or card.name or "") .. "|r")
 end
