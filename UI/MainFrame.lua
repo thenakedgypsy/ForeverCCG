@@ -196,12 +196,23 @@ collectSection:SetPoint("TOPLEFT", M, "TOPLEFT", 14, -93)
 
 -- Which cards each zone and dungeon holds, and how many of each you have (CollectionGuide.lua)
 local guideBtn = CreatePanelButton("TTS_CollectionGuideBtn", collectSection, GRID_BTN_W, BTN_H, "main.collectionGuide")
-guideBtn:SetPoint("TOP", collectSection, "TOP", 0, RowY(1))
+guideBtn:SetPoint("TOPLEFT", collectSection, "TOPLEFT", SIDE, RowY(1))
 
--- Under it: the campfire bonus (more card drops), running or how long until the next
+-- Beside it: the booster pack opener (PackOpener.lua), with how many packs are waiting
+local packsBtn = CreatePanelButton("TTS_OpenPacksBtn", collectSection, GRID_BTN_W, BTN_H, "packs.button")
+packsBtn:SetPoint("TOPRIGHT", collectSection, "TOPRIGHT", -SIDE, RowY(1))
+packsBtn:SetScript("OnClick", function()
+    if TTS.PackOpener then OpenFromMain(TTS.PackOpener:Open()) end
+end)
+function M:RefreshPacksButton()
+    local n = TTS.Packs and TTS.Packs:Total() or 0
+    if n > 0 then Loc:Bind(packsBtn, "packs.buttonCount", n) else Loc:Bind(packsBtn, "packs.button") end
+end
+
+-- Under them: the campfire bonus (more card drops), running or how long until the next
 -- (UpdateTimers, below)
 local campfireLabel = collectSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-campfireLabel:SetPoint("TOP", guideBtn, "BOTTOM", 0, -4)
+campfireLabel:SetPoint("TOP", collectSection, "TOP", 0, RowY(1) - BTN_H - 4)
 campfireLabel:SetWidth(SECTION_W - 2 * SIDE)
 campfireLabel:SetJustifyH("CENTER")
 guideBtn:SetScript("OnClick", function()
@@ -433,6 +444,7 @@ end
 -- Counted down while the window is open
 local timersTicker
 M:SetScript("OnShow", function()
+    M:RefreshPacksButton()
     M:UpdatePlayState()
     UpdateTimers()
     if timersTicker then timersTicker:Cancel() end
@@ -559,6 +571,9 @@ SlashCmdList["TRAGIC"] = function(msg)
             local f = TTS.CollectionGuide.frame
             if f and f:IsShown() then f:Hide() else TTS.CollectionGuide:Open() end
         end
+    elseif cmd == "pack" or cmd == "packs" or cmd:match("^packs? ") then
+        -- Booster packs (Packs.lua, PackOpener.lua): /tragic pack opens the window, the rest test
+        if TTS.Packs then TTS.Packs:SlashCommand(cmd:match("^packs?%s*(.*)$")) end
     elseif cmd == "tutorial" then
         if TTS.StartTutorial then TTS:StartTutorial() end
     elseif cmd == "welcome" or cmd == "intro" or cmd == "quickstart" then

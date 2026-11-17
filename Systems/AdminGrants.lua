@@ -14,6 +14,7 @@ local L = TTS.L
 -- sets the sender of an addon whisper, so it can't be faked (unlike the <from> inside a
 -- TTS_NET envelope).
 --   GRANT:<cardId>:<n>    REVOKE:<cardId>:<n>    QUERY:<cardId>    WIPE    GRANTALL    BETA    PRIZE
+--   PACK:<pack key>:<n>   (booster packs, Packs.lua; answered PACKED:<pack key>:<owned>)
 -- answered with  HAS:<cardId>:<copies>:<max>,  WIPED,  GRANTEDALL:<cards that gained copies>,
 -- BETAED:<1 = the beta card is new, 0 = they had it>,  PRIZED:<cardId>:<copies>:<max>
 -- or  ERR:<reason>[:<cardId>].
@@ -368,6 +369,18 @@ local function OnAdminMessage(msg, sender)
         Reply(sender, "GRANTEDALL:" .. GrantAll())
         return
     end
+    -- PACK:<pack key>:<n>: n booster packs of that kind (Systems\Packs.lua), answered with
+    -- PACKED:<pack key>:<packs of that kind they now have>
+    if cmd == "PACK" then
+        local key, P = cardId, TTS.Packs
+        if not (P and key and P.BY_KEY[key]) then Reply(sender, "ERR:UNKNOWN_PACK:" .. tostring(key)) return end
+        local n = math.max(1, math.min(99, math.floor(tonumber(count) or 1)))
+        P:Add(key, n)
+        DEFAULT_CHAT_FRAME:AddMessage(L("admin.packs", n, "|cFFFFD200" .. P:Name(key) .. "|r"))
+        if TTS.Sound and TTS.Sound.PlayUI then TTS.Sound:PlayUI("packOpen") end
+        Reply(sender, "PACKED:" .. key .. ":" .. P:Count(key))
+        return
+    end
 
     local card = cardId and TTS.Cards and TTS.Cards[cardId]
     if not card then Reply(sender, "ERR:UNKNOWN:" .. tostring(cardId)) return end
@@ -408,7 +421,7 @@ frame:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
     -- Replies are never answered, or two clients (or one whispering itself) would bounce
     -- errors back and forth forever
     if msg:match("^HAS:") or msg:match("^ERR:") or msg == "WIPED" or msg:match("^GRANTEDALL:")
-        or msg:match("^BETAED:") or msg:match("^PRIZED:") then return end
+        or msg:match("^BETAED:") or msg:match("^PRIZED:") or msg:match("^PACKED:") then return end
     local from = NormalizeName(sender)
     if ADMINS[from:lower()] then
         OnAdminMessage(msg, from)

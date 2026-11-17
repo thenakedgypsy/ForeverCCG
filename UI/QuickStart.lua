@@ -23,7 +23,7 @@ local Loc = TTS.Locale
 -- (TTS_Options.whatsNewSeen holds the version they last saw), and with /tragic whatsnew any
 -- time. A brand-new player gets the Quick Start instead, which already covers what's new.
 -- =========================================================================
-local WHATS_NEW_VERSION = "1.1"
+local WHATS_NEW_VERSION = "1.3"
 local W, H = 620, 410
 local CARD_Y = -12         -- the card sits this far below the showcase's centre: its name and cost go above it
 local HEADER_H = 40
@@ -42,20 +42,20 @@ local QS_CARDS = {
     [6] = { id = "FER03" },               -- Groddoc Ape: a blocker
     [7] = { id = "BOSS01", foil = true }, -- Bazzalan, as a foil: something to collect
 }
+-- (1.3's pages are wn13.*: a new prefix, so a language pack's old 1.1 wn.* translations
+-- don't show up on them; they're English until the packs translate them)
 local WN_CARDS = {
-    [2] = { id = "STL_ELW" },             -- Goldshire: a Settlement
-    [3] = { id = "STL_DUN" },             -- Kharanos: won in a duel
-    [4] = { id = "DES06" },               -- Raging Thunder Lizard: Raze
-    [5] = { id = "BSM01" },               -- Copper Claymore: a profession card
-    [6] = { id = "ELW07" },               -- Defias Rogue Wizard: Blink
-    [7] = { id = "PRZ01", foil = true },  -- Highlord Bolvar Fordragon: a prize card
+    [2] = { id = "BOSS31" },              -- Min'loth the Serpent: a final boss drops a pack
+    [3] = { id = "TDC10" },               -- Brinescale Sorceress: a dungeon denizen from a pack
+    [4] = { id = "TDC09", foil = true },  -- Makrura Snapper, as a foil: a foil pull
+    [5] = { id = "BOSS35" },              -- Nanaya: the new dungeons
 }
 
 -- The page sets: key prefix, page count, heading, showcase cards, and whether the last page
 -- offers the tutorial game
 local SETS = {
     quickstart = { prefix = "qs", pages = 8, heading = "qs.heading", cards = QS_CARDS, tutorial = true },
-    whatsnew   = { prefix = "wn", pages = 8, heading = "wn.heading", cards = WN_CARDS },
+    whatsnew   = { prefix = "wn13", pages = 5, heading = "wn13.heading", cards = WN_CARDS },
 }
 local MAX_PAGES = 8
 local set = SETS.quickstart

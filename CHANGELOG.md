@@ -3,6 +3,16 @@
 *   Gear: Fizzix Boomshot the gunsmith gives out the Powderfuse Blunderbuss
 *   duels: Sadi, on the Powderfuse Port docks, plays you for the new Powderfuse Port Settlement
 *   card NPC tracker: shows the new NPCs on the minimap and world map
+*   new: booster packs - every dungeon final boss you defeat drops a Dungeons booster pack, as long as it isn't grey to you. Party kills count
+*   booster packs: open them with the new Open Packs button in the main window's Collect section (or /tragic pack). Each holds 5 denizen cards, all added to your collection: the first 3 are random (usually zone denizens, sometimes dungeon ones), the last 2 are always dungeon denizens, with a 10% and a 25% chance of being foil. Click each card to turn it over
+*   booster packs: pull a foil and your character announces it in chat with a link to the foil card, then cheers
+*   booster packs: the Barrow Deeps, Onyxia's Lair and Hyjal Summit raid packs can be collected but can't be opened yet, until their raids have cards
+*   Rules & Guide: the Collecting Cards page explains booster packs
+*   new: cards for WoW Forever's five new dungeons - The Drowned City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold and Shaper's Terrace. Each has its denizens and bosses to collect, a final boss card (Min'loth the Serpent, Overlord Mugg, Blazeroar, Varrox Bleakhoof and Nanaya), and a Campaign reward card
+*   booster packs: the five new final bosses drop a Dungeons booster pack too
+*   Campaign: the five new dungeons are Campaign encounters, opened by clearing Stranglethorn Vale, Riverglades, Dustwallow Marsh, Azshara and Un'Goro Crater, each on its own loading screen
+*   sounds: most of the new dungeons' denizens and bosses have their aggro and death sounds
+*   Shaper's Terrace: Venomhide Ravasaur, Ravasaur Matriarch, Stone Guardian and Ravasaur Hunter only count from the dungeon, not from Un'Goro Crater's creatures of the same name
 
 ## 1.2.9
 *   addon list: ForeverCCG now has its own icon in the game's AddOns list

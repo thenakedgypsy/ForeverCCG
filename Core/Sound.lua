@@ -152,6 +152,10 @@ TTS.CreatureSounds = {
     ["BOSS28"] = { aggro = 1357, death = 2936 }, -- Rath'mael (undead caster)
     ["BOSS29"] = { aggro = 472, death = 468 }, -- Relic Guardian (golem)
     ["BOSS30"] = { aggro = 3424, death = 3422 }, -- Shade of the Archmage (phantasm)
+    ["BOSS31"] = { aggro = 344001, death = 3310 }, -- Min'loth the Serpent
+    ["BOSS32"] = { aggro = 4065, death = 4063 }, -- Blazeroar
+    ["BOSS34"] = { aggro = 353457 }, -- Varrox Bleakhoof
+    ["BOSS35"] = { aggro = 349248, death = 349250 }, -- Nanaya
     ["BRD01"] = { death = 2932 }, -- Anvilrage Guardsman
     ["BRD02"] = { aggro = 1288, death = 1286 }, -- Fireguard
     ["BRD03"] = { aggro = 1263, death = 2944 }, -- Twilight's Hammer Torturer
@@ -653,6 +657,86 @@ TTS.CreatureSounds = {
     ["DAL20"] = { aggro = 462, death = 458 }, -- Fel Ancient (treant)
     ["DAL21"] = { aggro = 3611, death = 3609 }, -- Atrexis the Grave Knight (death knight)
     ["DAL22"] = { aggro = 1263, death = 2944 }, -- Archmage Modera
+    -- WoW Forever dungeons added 2026-11-17 (sound ids from the user's NPC sheet)
+    ["TDC01"] = { aggro = 416, death = 420 }, -- Saltscale Muckdweller
+    ["TDC02"] = { aggro = 1230, death = 1228 }, -- Chasm Crawler
+    ["TDC03"] = { aggro = 642, death = 641 }, -- Mana-Rich Frenzy
+    ["TDC04"] = { aggro = 1263, death = 2944 }, -- Saltseer Cultist
+    ["TDC05"] = { aggro = 344002, death = 3304 }, -- Undying Offering
+    ["TDC06"] = { aggro = 1263, death = 2944 }, -- Saltseer Murderer
+    ["TDC07"] = { aggro = 1263, death = 2944 }, -- Saltseer Manhunter
+    ["TDC08"] = { aggro = 1263, death = 2944 }, -- Saltseer Coroner
+    ["TDC09"] = { aggro = 1452, death = 1450 }, -- Makrura Snapper
+    ["TDC10"] = { aggro = 4025, death = 4023 }, -- Brinescale Sorceress
+    ["TDC11"] = { aggro = 4025, death = 4023 }, -- Brinescale Priestess
+    ["TDC12"] = { death = 348865 }, -- Deathless Marrow
+    ["TDC13"] = { aggro = 344001, death = 3310 }, -- Deathless Watcher
+    ["TDC14"] = { aggro = 344001, death = 3310 }, -- Deathless Guardian
+    ["TDC15"] = { aggro = 344001, death = 3310 }, -- Deathless Sorcerer
+    ["TDC16"] = { death = 348534 }, -- Zul'Alai
+    ["TDC18"] = { death = 349782 }, -- Captain Dreadrise
+    ["TDC19"] = { aggro = 367683, death = 367681 }, -- Primeval Elemental
+    ["KRD02"] = { death = 213 }, -- Twilight Grunt
+    ["KRD05"] = { aggro = 396, death = 400 }, -- Krol'dok Brute
+    ["KRD11"] = { death = 1322 }, -- Twilight Lieutenant
+    ["ALZ01"] = { aggro = 579, death = 578 }, -- Slavering Hound
+    ["ALZ02"] = { aggro = 283054, death = 2940 }, -- Alcaz Jailer
+    ["ALZ03"] = { aggro = 283054, death = 2940 }, -- Defias Mercenary
+    ["ALZ04"] = { aggro = 1263, death = 2944 }, -- Defias Bounty Hunter
+    ["ALZ05"] = { aggro = 1263, death = 2944 }, -- Defias Truthfinder
+    ["ALZ06"] = { aggro = 1263, death = 2944 }, -- Alcaz Chaplain
+    ["ALZ07"] = { aggro = 1398, death = 1396 }, -- Arcane Servitor
+    ["ALZ08"] = { aggro = 3438, death = 3436 }, -- Strashaz Soldier
+    ["ALZ09"] = { aggro = 1263, death = 2944 }, -- Renegade Conjurer
+    ["ALZ10"] = { aggro = 1288, death = 1286 }, -- Molten Servitor
+    ["ALZ11"] = { aggro = 1408, death = 1406 }, -- Frozen Servitor
+    ["ALZ12"] = { aggro = 4025, death = 4023 }, -- Strashaz Enchantress
+    ["ALZ13"] = { death = 2932 }, -- Overseer Wrex
+    ["ALZ14"] = { aggro = 283054, death = 2940 }, -- Katerina the Cleaner
+    ["ALZ15"] = { aggro = 4025, death = 4023 }, -- Tidemistress Ca'zass
+    ["ALZ16"] = { aggro = 1263, death = 2944 }, -- The Questioner
+    ["ALZ17"] = { death = 1322 }, -- Commander Folkar
+    ["BMH01"] = { aggro = 5043, death = 5041 }, -- Flesh Maggot
+    ["BMH02"] = { aggro = 770, death = 769 }, -- Felfire Imp
+    ["BMH03"] = { death = 1380 }, -- Festering Swarmer
+    ["BMH04"] = { aggro = 642, death = 641 }, -- Bloodstarved Frenzy
+    ["BMH05"] = { aggro = 356, death = 357 }, -- Blackmaw Thrall
+    ["BMH06"] = { aggro = 356, death = 357 }, -- Blackmaw Berserker
+    ["BMH07"] = { aggro = 356, death = 357 }, -- Blackmaw Headhunter
+    ["BMH08"] = { aggro = 356, death = 357 }, -- Blackmaw Spearfisher
+    ["BMH09"] = { aggro = 356, death = 357 }, -- Blackmaw Shaman
+    ["BMH10"] = { aggro = 356, death = 357 }, -- Blackmaw Druid
+    ["BMH11"] = { aggro = 1010, death = 1009 }, -- Legashi Slayer
+    ["BMH12"] = { aggro = 1010, death = 1009 }, -- Legashi Subjugator
+    ["BMH14"] = { aggro = 1010, death = 1009 }, -- Legashi Ritualist
+    ["BMH15"] = { aggro = 1010, death = 1009 }, -- Legashi Plaguebringer
+    ["BMH16"] = { aggro = 422, death = 426 }, -- Tunnelweb Matriarch
+    ["BMH17"] = { aggro = 5361, death = 5359 }, -- Depraved Owlbeast
+    ["BMH18"] = { aggro = 356, death = 357 }, -- Blackmaw Champion
+    ["BMH19"] = { aggro = 356, death = 357 }, -- Elder Shaman Bloodmane
+    ["BMH20"] = { aggro = 478, death = 475 }, -- Withermaw
+    ["BMH21"] = { aggro = 379, death = 383 }, -- Bonesnout the Unbroken
+    ["BMH22"] = { aggro = 1010, death = 1009 }, -- Impaan the Imprisoner
+    ["BMH24"] = { aggro = 356, death = 357 }, -- Elder Bramblesnap
+    ["SHT01"] = { aggro = 708, death = 707 }, -- Ravasaur Juvenile
+    ["SHT02"] = { aggro = 708, death = 707 }, -- Ravasaur Stalker
+    ["SHT03"] = { aggro = 708, death = 707 }, -- Ravasaur Trapper
+    ["SHT04"] = { aggro = 708, death = 707 }, -- Ravasaur Assassin
+    ["SHT05"] = { aggro = 708, death = 707 }, -- Venomhide Ravasaur
+    ["SHT06"] = { aggro = 346199, death = 346198 }, -- Tor'Rel
+    ["SHT07"] = { aggro = 708, death = 707 }, -- Ironhide Ravasaur
+    ["SHT08"] = { aggro = 708, death = 707 }, -- Ravasaur Matriarch
+    ["SHT09"] = { aggro = 472, death = 468 }, -- Stone Guardian
+    ["SHT10"] = { aggro = 708, death = 707 }, -- Ravasaur Hunter
+    ["SHT11"] = { aggro = 349103, death = 349100 }, -- Thunderhoof
+    ["SHT12"] = { aggro = 349085, death = 349084 }, -- Venomridge
+    ["SHT13"] = { aggro = 708, death = 707 }, -- Cinder
+    ["SHT14"] = { aggro = 708, death = 707 }, -- Bolt
+    ["SHT15"] = { aggro = 708, death = 707 }, -- Snowtalon
+    ["SHT16"] = { aggro = 349122, death = 349204 }, -- Direhorn Matriarch
+    ["SHT17"] = { aggro = 708, death = 707 }, -- Vitrix
+    ["SHT19"] = { aggro = 348920, death = 6159 }, -- Titanosaur
+    ["SHT20"] = { aggro = 346199, death = 346198 }, -- Izha'Rel
     ["STV01"] = { aggro = 647, death = 646 }, -- Young Panther
     ["STV02"] = { aggro = 1263, death = 2944 }, -- Kurzen Medicine Man
     ["STV03"] = { aggro = 647, death = 646 }, -- Stranglethorn Tiger
@@ -956,6 +1040,11 @@ local UI_SOUNDS = {
     -- A match's result as its popup shows: the level-up fanfare for a win, quest failed for a loss
     victory  = { kit = "LEVELUP",         id = 888, legacy = "LevelUp" },
     defeat   = { kit = "IG_QUEST_FAILED", id = 847, legacy = "igQuestFailed" },
+    -- A booster pack torn open (PackOpener.lua)
+    packOpen = { kit = "IG_BACKPACK_OPEN", id = 862, legacy = "igBackPackOpen" },
+    -- The pop as the shaken pack tears open: a sound file (FileDataID), not a sound kit
+    -- (sound/spells/spell_poppingcorn_cast_01.ogg)
+    packPop  = { file = 568206 },
 }
 
 -- Returns whether it will play, and its handle when the client gives one
@@ -973,7 +1062,9 @@ function S:PlayUI(name)
     if not self.enabled then return end
     local def = UI_SOUNDS[name]
     if not def then return end
-    if SOUNDKIT then
+    if def.file then
+        pcall(PlaySoundFile, def.file, "SFX")
+    elseif SOUNDKIT then
         PlayRaw(SOUNDKIT[def.kit] or def.id)
     else
         pcall(PlaySound, def.legacy)

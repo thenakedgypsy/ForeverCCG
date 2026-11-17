@@ -2190,9 +2190,11 @@ local function HideBackground()
 end
 
 -- A loading screen, cropped top and bottom to the panel's shape. Classic ones are stored
--- square but drawn at 4:3. Returns false if the file is missing.
+-- square but drawn at 4:3. Returns false if the file is missing. `file` is a name under
+-- Glues\LoadingScreens, or a file data ID (LoadingScreens.MainImageFileDataID) for screens
+-- newer than the listfile.
 local function ShowLoadScreen(file, wide)
-    local loaded = bgArt:SetTexture(BG.LOADSCREEN_PATH .. file)
+    local loaded = bgArt:SetTexture(type(file) == "number" and file or (BG.LOADSCREEN_PATH .. file))
     if loaded == false or not bgArt:GetTexture() then return false end
     local scaledH = BG.BG_W / (wide and 16 / 9 or 4 / 3)
     local crop = math.max(0, (scaledH - BG.BG_H) / 2) / scaledH

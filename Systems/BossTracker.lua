@@ -180,6 +180,11 @@ function TTS.BossTracker:BuildMobCardCache()
             if npcId then
                 mobCardsByNpcID[npcId] = card
             end
+            -- npcIds = { ... }: the creature's other ids (WoW Forever dungeons spawn some
+            -- creatures under several ids)
+            if card.npcIds then
+                for _, id in ipairs(card.npcIds) do mobCardsByNpcID[id] = card end
+            end
             if named.name then
                 mobCardsByName[Normalize(named.name)] = card
                 -- Kill messages and unit names come in the client's language: match the translated name too
@@ -227,6 +232,11 @@ local BOSS_CARD_INSTANCES = {
     BOSS28 = "Ruins of Lordaeron",
     BOSS29 = "Excavation Site",
     BOSS30 = "City of Dalaran",
+    BOSS31 = "The Drowned City",
+    BOSS32 = "Alcaz Prison",
+    BOSS33 = "Krol'dok Stronghold",
+    BOSS34 = "Blackmaw Hold",
+    BOSS35 = "Shaper's Terrace",
 }
 
 -- Other names the client may report for the same instance (normalized form)
@@ -330,9 +340,13 @@ local function ShowCardCompletePopup(card)
     end
 end
 
--- msgKey: the chat line for a new copy (default boss.mobSlain)
-function TTS.BossTracker:RecordMobKill(card, msgKey)
+-- msgKey: the chat line for a new copy (default boss.mobSlain). guid (optional): the
+-- creature killed, when readable (a booster pack checks its level)
+function TTS.BossTracker:RecordMobKill(card, msgKey, guid)
     if not card or not card.id then return end
+    -- A boss flagged packDrop (Cards\Bosses.lua) gives a booster pack for each kill that
+    -- isn't grey to you (Packs.lua)
+    if card.packDrop and TTS.Packs then TTS.Packs:AwardFromKill(card, guid) end
     TTS_KilledBosses = TTS_KilledBosses or {}
 
     local currentKills = SanitizeKillCount(TTS_KilledBosses[card.id])
@@ -437,7 +451,7 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
                 table.remove(pending, 1)
                 return
             end
-            self:RecordMobKill(card)
+            self:RecordMobKill(card, nil, guid)
             return
         end
     end
@@ -450,12 +464,18 @@ function TTS.BossTracker:RecordMobKillByGUIDOrName(guid, name, dedupeSeconds)
         local exactOnly = (guid and not IsSecret(guid)) or not SafeCall(IsInInstance) or NOT_SCRAMBLED[norm]
         while norm ~= "" do
             local card = mobCardsByName[norm]
+            -- strictIds: the card shares its name with an outdoor creature (a dungeon's Venomhide
+            -- Ravasaur vs Un'Goro's), so a name only counts inside an instance and never with a
+            -- readable GUID (its npcId would have matched above if it were one of the card's)
+            if card and card.strictIds and ((guid and not IsSecret(guid)) or not SafeCall(IsInInstance)) then
+                card = nil
+            end
             if card then
                 if not guid or IsSecret(guid) then
                     pendingNameKills[card.id] = pendingNameKills[card.id] or {}
                     table.insert(pendingNameKills[card.id], GetTime())
                 end
-                self:RecordMobKill(card)
+                self:RecordMobKill(card, nil, (guid and not IsSecret(guid)) and guid or nil)
                 return
             end
             if exactOnly then break end

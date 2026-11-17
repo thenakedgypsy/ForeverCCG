@@ -119,7 +119,7 @@ TTS.SoloDungeonZone = {
     RFK = "BRN", SMO = "TIR", RFD = "BRN", ULD = "BAD", ZFK = "TAN", MAR = "DES", SUN = "SWA",
     BRD = "SEA", BRS = "BUR", DMA = "FER", SCH = "WPL", STR = "EPL",
     -- WoW Forever dungeons
-    HOT = "DUN", ROL = "TIR", EXC = "WET", DAL = "ALT",
+    HOT = "DUN", ROL = "TIR", EXC = "WET", DAL = "ALT", TDC = "STV", KRD = "RIV", ALZ = "DUS", BMH = "AZS", SHT = "UNG",
 }
 
 local neighbours = {}
@@ -168,8 +168,14 @@ local DUNGEONS = {
     { "ROL", "Ruins of Lordaeron", { "BOSS28" },                              25, { "AWAKENING" },                      "ROL16", "tactical", "Camelot160\\Main\\LoadScreen_Camelot_RuinsOfLordaeron", "Tirisfal" },
     { "EXC", "Excavation Site",    { "BOSS29" },                              30, { "AWAKENING" },                      "EXC17", "expert",   "Camelot160\\Main\\LoadScreen_Camelot_Excavation",       "Wetlands" },
     { "DAL", "City of Dalaran",    { "BOSS30" },                              30, { "AWAKENING", "ENRAGE" },            "DAL22", "expert",   "Camelot160\\Main\\LoadScreen_Camelot_Dalaran",          "Alterac" },
+    -- Loading screens newer than the listfile go by file data ID (client LoadingScreens.MainImageFileDataID)
+    { "TDC", "The Drowned City",   { "BOSS31" },                              30, { "REINFORCEMENTS" },                 "TDC20", "expert",   7963741,                                                      "Stranglethorn" },
+    { "KRD", "Krol'dok Stronghold", { "BOSS33" },                             30, { "OPENING_BOSS" },                   "KRD11", "expert",   7963780,                                                      "Riverglades" },
+    { "ALZ", "Alcaz Prison",       { "BOSS32" },                              35, { "REINFORCEMENTS", "ENRAGE" },       "ALZ17", "expert",   7963734,                                                      "Dustwallow" },
+    { "BMH", "Blackmaw Hold",      { "BOSS34" },                              40, { "NEXT_BOSS", "ENRAGE" },            "BMH24", "expert",   7963784,                                                      "Aszhara" },
+    { "SHT", "Shaper's Terrace",   { "BOSS35" },                              40, { "OPENING_BOSS", "ENRAGE" },         "SHT20", "expert",   7963783,                                                      "UngoroCrater" },
 }
-local WIDE_LOADSCREENS = { HOT = true, ROL = true, EXC = true, DAL = true }
+local WIDE_LOADSCREENS = { HOT = true, ROL = true, EXC = true, DAL = true, TDC = true, KRD = true, ALZ = true, BMH = true, SHT = true }
 
 for i, d in ipairs(DUNGEONS) do
     local firstBoss = TTS.Cards[d[3][1]]

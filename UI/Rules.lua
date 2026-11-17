@@ -420,6 +420,47 @@ Blocks.cards = {
     end,
 }
 
+-- The booster packs (Systems\Packs.lua P.TYPES), closed, in a row with their names under
+-- them; a kind that can't be opened yet is greyed: { "packs" }
+local PACK_ART_W, PACK_ART_H = 380, 670     -- the art; the pack's body is 38..342 x 138..642
+local PACK_SHOW_W, PACK_SHOW_H = 76, 126
+Blocks.packs = {
+    make = function(page, blk)
+        blk.slots = {}
+        for i, t in ipairs(TTS.Packs and TTS.Packs.TYPES or {}) do
+            local tex = page:CreateTexture(nil, "ARTWORK")
+            tex:SetSize(PACK_SHOW_W, PACK_SHOW_H)
+            tex:SetTexture(t.closed)
+            tex:SetTexCoord(38 / PACK_ART_W, 342 / PACK_ART_W, 138 / PACK_ART_H, 642 / PACK_ART_H)
+            tex:SetDesaturated(t.disabled == true)
+            if t.disabled then tex:SetAlpha(0.7) end
+            blk.slots[i] = { key = t.key, disabled = t.disabled, tex = tex,
+                caption = NewText(page, "GameFontHighlightSmall", nil, "CENTER") }
+        end
+    end,
+    place = function(page, blk, y)
+        local n = #blk.slots
+        if n == 0 then return y end
+        local slotW = math.min(150, math.floor((CONTENT_W - 10) / n))
+        local x0 = (CONTENT_W - n * slotW) / 2
+        local top = y - 4
+        local lowest = top - PACK_SHOW_H
+        for k, slot in ipairs(blk.slots) do
+            local cx = x0 + (k - 1) * slotW + slotW / 2
+            slot.tex:ClearAllPoints()
+            slot.tex:SetPoint("TOP", page, "TOPLEFT", cx, top)
+            local name = TTS.Packs:Name(slot.key)
+            if slot.disabled then name = name .. "\n|cFF8A8A8A" .. L("packs.disabled") .. "|r" end
+            slot.caption:SetWidth(slotW - 8)
+            slot.caption:SetText(name)
+            slot.caption:ClearAllPoints()
+            slot.caption:SetPoint("TOP", page, "TOPLEFT", cx, top - PACK_SHOW_H - 6)
+            lowest = math.min(lowest, top - PACK_SHOW_H - 6 - slot.caption:GetStringHeight())
+        end
+        return lowest - SECTION_GAP
+    end,
+}
+
 -- Big numbers in tiles: { "stats", { { "40-50", "label.key" }, ... } }
 Blocks.stats = {
     make = function(page, blk)
@@ -682,6 +723,9 @@ local PAGES = {
         { "cards", { { "WES01", "rules.collect.c.zone" }, { "BOSS01", "rules.collect.c.boss" } } },
         { "h", "rules.collect.h.dungeons" },
         { "p", "rules.collect.dungeons" },
+        { "h", "rules.collect.h.packs" },
+        { "p", "rules.collect.packs" },
+        { "packs" },
         { "h", "rules.collect.h.hero" },
         { "p", "rules.collect.hero" },
         { "cards", { { "HERO" } } },
