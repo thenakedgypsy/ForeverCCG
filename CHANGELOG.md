@@ -1,3 +1,6 @@
+## 1.2.9
+*   addon list: ForeverCCG now has its own icon in the game's AddOns list
+
 ## 1.2.8
 *   board: in a PvP match, click the chat bubble on your opponent's name plate to start a whisper to them (to their full name, as /w would). It stays up after the match, for a quick "gg"
 *   windows: the close (X) button on the addon's windows now works in combat. Before, most of them couldn't be closed until combat ended
