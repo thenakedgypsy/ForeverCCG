@@ -1,12 +1,15 @@
+## 1.3.1
+*   tournaments: in a prize tournament, everyone who is prize eligible when it begins gets a Dungeons booster pack when it finishes, the champion included (who still gets the prize card too). Needs at least 4 players and at least one game played in the event
+
 ## 1.3.0
 *   new: Powderfuse Port in Riverglades now has card NPCs for both factions
 *   Gear: Fizzix Boomshot the gunsmith gives out the Powderfuse Blunderbuss
 *   duels: Sadi, on the Powderfuse Port docks, plays you for the new Powderfuse Port Settlement
 *   card NPC tracker: shows the new NPCs on the minimap and world map
 *   new: booster packs - every dungeon final boss you defeat drops a Dungeons booster pack, as long as it isn't grey to you. Party kills count
-*   booster packs: open them with the new Open Packs button in the main window's Collect section (or /tragic pack). Each holds 5 denizen cards, all added to your collection: the first 3 are random (usually zone denizens, sometimes dungeon ones), the last 2 are always dungeon denizens, with a 10% and a 25% chance of being foil. Click each card to turn it over
+*   booster packs: open them with the new Open Packs button in the main window's Collect section. Packs can be selected and opened Click each card to turn it over
 *   booster packs: pull a foil and your character announces it in chat with a link to the foil card, then cheers
-*   booster packs: the Barrow Deeps, Onyxia's Lair and Hyjal Summit raid packs can be collected but can't be opened yet, until their raids have cards
+*   booster packs: the Barrow Deeps, Onyxia's Lair and Hyjal Summit raid packs can be collected but can't be opened yet, until their raids have opened and cards are added
 *   Rules & Guide: the Collecting Cards page explains booster packs
 *   new: cards for WoW Forever's five new dungeons - The Drowned City, Krol'dok Stronghold, Alcaz Prison, Blackmaw Hold and Shaper's Terrace. Each has its denizens and bosses to collect, a final boss card (Min'loth the Serpent, Overlord Mugg, Blazeroar, Varrox Bleakhoof and Nanaya), and a Campaign reward card
 *   booster packs: the five new final bosses drop a Dungeons booster pack too

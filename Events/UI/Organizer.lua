@@ -98,7 +98,7 @@ local function BuildSetup(P)
     -- Two lines beside the dropdown, inside the panel's right edge
     local prizeHint = UI.Label(P, "GameFontDisableSmall", 290, rowY + 30 + 1, 310)
     prizeHint:SetWordWrap(true)
-    prizeHint:SetText("Champion wins a prize card; all players start a week's cooldown.")
+    prizeHint:SetText("Champion wins a prize card; eligible players get a booster; all start a week's cooldown.")
 
     -- Banned cards: picked in their own window (UI\BanPicker.lua); the button says how many
     bannedIds = {}

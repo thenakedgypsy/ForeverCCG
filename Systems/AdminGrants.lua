@@ -309,8 +309,46 @@ function TTS:EnterPrizeEvent(info)
     for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
         if entry.source == "entered" and entry.event == key then return end
     end
-    LogPrize({ source = "entered", by = info.organizer, event = key,
+    -- eligible: off cooldown as it began, so its booster (TTS:AwardTournamentPack) is due
+    LogPrize({ source = "entered", by = info.organizer, event = key, eligible = PrizeCooldownLeft(nil) == 0,
         name = type(info.name) == "string" and info.name:sub(1, 60) or nil })
+end
+
+-- =========================================================================
+-- TOURNAMENT BOOSTERS
+-- Everyone who plays in a prize event while prize eligible (off the cooldown as it began, the
+-- champion included) gets a TOURNAMENT_PACK booster once it finishes. Guarded like the prize:
+-- at least PRIZE_MIN_PLAYERS in the final standings, at least one game this client itself
+-- played in the event (info.played), and one per event.
+-- =========================================================================
+TTS.TOURNAMENT_PACK = "dungeon"
+
+-- info: { organizer, event, name, players, played (games this client played in it) }.
+-- Returns true, or nil and a reason: "invalid", "players", "played", "claimed", "ineligible"
+function TTS:AwardTournamentPack(info)
+    if type(info) ~= "table" or type(info.organizer) ~= "string" or type(info.event) ~= "string"
+        or info.organizer == "" or info.event == "" then
+        return nil, "invalid"
+    end
+    if not (TTS.Packs and TTS.Packs.Give) then return nil, "invalid" end
+    if (tonumber(info.played) or 0) < 1 then return nil, "played" end
+    if (tonumber(info.players) or 0) < TTS.PRIZE_MIN_PLAYERS then return nil, "players" end
+
+    local key = EventKey(info.organizer, info.event)
+    local entered
+    for _, entry in ipairs(TTS_NpcGifts and TTS_NpcGifts.prizeLog or {}) do
+        if entry.source == "pack" and entry.event == key then return nil, "claimed" end
+        if entry.source == "entered" and entry.event == key then entered = entry end
+    end
+    -- (no entry, or one logged before boosters: judged now, leaving this event out)
+    local eligible
+    if entered and entered.eligible ~= nil then eligible = entered.eligible else eligible = PrizeCooldownLeft(key) == 0 end
+    if not eligible then return nil, "ineligible" end
+
+    local name = type(info.name) == "string" and info.name:sub(1, 60) or nil
+    if not TTS.Packs:Give(TTS.TOURNAMENT_PACK, name or info.organizer) then return nil, "invalid" end
+    LogPrize({ source = "pack", pack = TTS.TOURNAMENT_PACK, by = info.organizer, event = key, name = name })
+    return true
 end
 
 -- info: { organizer, event (the event id), name, players (in the standings), beaten (opponents

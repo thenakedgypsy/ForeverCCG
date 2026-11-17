@@ -19,8 +19,9 @@ local L = TTS.L
 -- A raid with fewer denizens than its guaranteed slots fills the rest with dungeon ones.
 -- Owned packs: TTS_Packs.owned[packKey] = count (account-wide, like the collection).
 -- The opening itself is UI\PackOpener.lua, reached from the main window's Open Packs button.
--- Packs come from kills of boss cards flagged packDrop (AwardFromKill, below), or from the
--- developer's admin addon (AdminGrants.lua PACK).
+-- Packs come from kills of boss cards flagged packDrop (AwardFromKill, below), from playing in
+-- a prize tournament (AdminGrants.lua TTS:AwardTournamentPack), or from the developer's admin
+-- addon (AdminGrants.lua PACK).
 -- GRANTS_CARDS: opening a pack adds its cards to the collection (false: only shows them).
 -- =========================================================================
 local P = {}
@@ -341,10 +342,16 @@ local function XpNamed(card)
     return false
 end
 
-local function GivePack(key, card)
-    P:Add(key, 1)
-    Say(L("packs.gained", "|cFFFFD200" .. P:Name(key) .. "|r", TTS:CardName(card) or card.name or ""))
+-- One pack of `key`, told in chat as coming from `from` (a boss's name, a tournament's name)
+function P:Give(key, from)
+    if not self:Add(key, 1) then return false end
+    Say(L("packs.gained", "|cFFFFD200" .. self:Name(key) .. "|r", from or ""))
     if TTS.Sound and TTS.Sound.PlayUI then TTS.Sound:PlayUI("packOpen") end
+    return true
+end
+
+local function GivePack(key, card)
+    P:Give(key, TTS:CardName(card) or card.name or "")
 end
 
 -- =========================================================================

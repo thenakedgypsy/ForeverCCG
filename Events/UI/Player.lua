@@ -77,12 +77,12 @@ local function RefreshJoined(j)
         -- has begun, playing in it has started a new cooldown, so it's only shown before then.
         local wait = not j.prizeEntered and B.PrizeCooldown()
         if wait and wait <= 0 then
-            details = details .. ", prize card (" .. GREEN .. "you're eligible|r" .. GREY .. ")"
+            details = details .. ", prize card + booster (" .. GREEN .. "you're eligible|r" .. GREY .. ")"
         elseif wait then
             local days = math.ceil(wait / 86400)
-            details = details .. ", prize card (" .. ORANGE .. "cooldown " .. days .. (days == 1 and " day" or " days") .. "|r" .. GREY .. ")"
+            details = details .. ", prize card + booster (" .. ORANGE .. "cooldown " .. days .. (days == 1 and " day" or " days") .. "|r" .. GREY .. ")"
         else
-            details = details .. ", prize card"
+            details = details .. ", prize card + booster"
         end
     end
     F.details:SetText(GREY .. details .. "   " .. (UI.STATUS_TEXT[j.status] or "") .. "|r")

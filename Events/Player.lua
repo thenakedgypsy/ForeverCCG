@@ -140,6 +140,7 @@ function P:OnGameEnd(info, outcome)
     if not game or game.gameId ~= info.gameId then return end
     -- Kept for the prize check: games this client saw won, so not the organizer's word
     local j = self:Joined()
+    if j and j.id == game.id then j.played = (j.played or 0) + 1 end   -- (the booster check)
     if outcome == "won" and j and j.id == game.id then
         j.beaten = j.beaten or {}
         j.beaten[B.Key(game.opponent)] = true
@@ -166,7 +167,7 @@ Comm:On("INFO", function(parts, from)
     j.format, j.bestOf, j.deckLock, j.roundMinutes = parts[3], tonumber(parts[4]), parts[5] == "1", tonumber(parts[6])
     j.name = parts[8] or "Tournament"
     j.prizes = parts[9] == "1"
-    Print("Joined " .. j.name .. "." .. (j.prizes and " The champion wins a prize card." or ""))
+    Print("Joined " .. j.name .. "." .. (j.prizes and " The champion wins a prize card, and every prize-eligible player a booster pack." or ""))
     -- Messages can arrive out of order: a YOU that beat this one was ignored, so ask again
     if j.rev == 0 then P:RequestUpdate(false) end
     ns.RefreshUI()
@@ -322,9 +323,25 @@ local PRIZE_REFUSED = {
     unsupported = "Your copy of ForeverCCG doesn't give prize cards. Update it to get one.",
 }
 
+-- Why a player's booster didn't come (the rest say nothing: not eligible, or already had)
+local PACK_REFUSED = {
+    players = "Prize boosters need at least %d players in the event.",
+    unsupported = "Your copy of ForeverCCG doesn't give prize boosters. Update it to get one.",
+}
+
 function P:CheckPrize()
     local j = self:Joined()
-    if not j or not j.prizes or j.status ~= "finished" or j.prizeDone or not j.standings then return end
+    if not j or not j.prizes or j.status ~= "finished" or not j.standings then return end
+    -- Everyone who played while prize eligible, the champion too: a booster
+    -- (ForeverCCG decides, TTS:AwardTournamentPack)
+    if not j.packDone then
+        j.packDone = true
+        local ok, reason = B.AwardPack({ organizer = B.NormalizeName(j.organizer), event = j.id,
+            name = j.name, players = #j.standings, played = j.played or 0 })
+        local text = not ok and PACK_REFUSED[reason]
+        if text then Print(text:format(B.PrizeRules())) end
+    end
+    if j.prizeDone then return end
     if not (j.champion and j.champion ~= "" and B.SameName(j.champion, B.MyName())) then return end
     -- (an organizer playing in their own event can win it too: the player count and the wins this
     -- client saw itself are what stop a made-up event paying out, AdminGrants.lua)

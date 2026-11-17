@@ -87,6 +87,13 @@ function B.AwardPrize(info)
     return TTS:AwardTournamentPrize(info)
 end
 
+-- A booster for playing in a prize event while prize eligible (ForeverCCG AdminGrants.lua
+-- TTS:AwardTournamentPack, which holds the rules). Returns true, or nil and a reason.
+function B.AwardPack(info)
+    if not (TTS and TTS.AwardTournamentPack) then return nil, "unsupported" end
+    return TTS:AwardTournamentPack(info)
+end
+
 -- Seconds until this account can win a prize again (0 = eligible), or nil if this copy of
 -- ForeverCCG can't say
 function B.PrizeCooldown()

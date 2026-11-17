@@ -387,7 +387,7 @@ function H:Announce(chatType)
     if ev.status == "open" or ev.status == "checkin" then
         -- The tag is a click-to-join link for anyone with the addon (UI\JoinLink.lua)
         local tag = ns.UI and ns.UI.JoinTag and ns.UI.JoinTag(ev.code, ev.organizer) or ""
-        text = "ForeverCCG tournament: " .. ev.name .. (ev.settings.prizes and " (a prize card for the champion!)" or "")
+        text = "ForeverCCG tournament: " .. ev.name .. (ev.settings.prizes and " (a prize card for the champion, boosters for eligible players!)" or "")
             .. ". " .. tag .. " (or /fccgevents join " .. ev.code .. " " .. ev.organizer .. ")"
     elseif ev.status == "running" then
         text = ev.name .. ": round " .. #ev.rounds .. " of " .. ev.totalRounds .. " is under way."
