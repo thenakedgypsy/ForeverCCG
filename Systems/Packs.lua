@@ -19,7 +19,8 @@ local L = TTS.L
 -- A raid with fewer denizens than its guaranteed slots fills the rest with dungeon ones.
 -- Owned packs: TTS_Packs.owned[packKey] = count (account-wide, like the collection).
 -- The opening itself is UI\PackOpener.lua, reached from the main window's Open Packs button.
--- Packs come from kills of boss cards flagged packDrop (AwardFromKill, below), from playing in
+-- Packs come from kills of boss cards flagged packDrop (AwardFromKill, below; plus the daily
+-- dungeon pack, GiveDailyPack), from playing in
 -- a prize tournament (AdminGrants.lua TTS:AwardTournamentPack), or from the developer's admin
 -- addon (AdminGrants.lua PACK).
 -- GRANTS_CARDS: opening a pack adds its cards to the collection (false: only shows them).
@@ -247,13 +248,10 @@ end
 -- kind each time the collection credits its kill (BossTracker:RecordMobKill), as long as
 -- the boss would give XP: not grey to you. Its level is read from the dead unit (target,
 -- mouseover, a nameplate or a boss frame), or remembered from the last time one of those
--- showed it (levelByNpc). When it can't be known, the kill counts if an XP message named
--- the boss (XP = not grey), or if you're at the level cap (which earns no XP from anything).
+-- showed it (levelByNpc). When it can't be known (instances often hide it), the kill counts.
 -- =========================================================================
 local levelByNpc = {}      -- npc id -> level, for the packDrop bosses seen this session
 local dropNpcs             -- npc ids of the packDrop bosses (built on first use)
-local lastXp = { t = -100, msg = "" }   -- the last XP gain chat line, for unknown levels
-local XP_WINDOW = 3        -- seconds an XP line and a kill may be apart
 
 local function Secret(v) return issecretvalue and issecretvalue(v) or false end
 
@@ -326,22 +324,6 @@ local function IsGrey(level)
     return pl ~= nil and level <= GreyLevel(pl)
 end
 
-local function AtLevelCap()
-    local pl = PlayerLevel()
-    local cap = (GetMaxPlayerLevel and GetMaxPlayerLevel()) or MAX_PLAYER_LEVEL or 60
-    return pl ~= nil and pl >= cap
-end
-
--- Whether an XP line within XP_WINDOW seconds named the boss (its name in either language)
-local function XpNamed(card)
-    if math.abs(GetTime() - lastXp.t) > XP_WINDOW then return false end
-    local msg = lastXp.msg:lower()
-    for _, name in ipairs({ card.name, TTS:CardName(card) }) do
-        if name and msg:find(name:lower(), 1, true) then return true end
-    end
-    return false
-end
-
 -- One pack of `key`, told in chat as coming from `from` (a boss's name, a tournament's name)
 function P:Give(key, from)
     if not self:Add(key, 1) then return false end
@@ -401,30 +383,55 @@ local function NoPack(card)
     Say("|cFF8A8A8A" .. L("packs.tooLow", TTS:CardName(card) or card.name or "") .. "|r")
 end
 
+-- =========================================================================
+-- DAILY DUNGEON PACK: the first final dungeon boss (packDrop = DAILY_PACK) killed each day
+-- gives one more Dungeons pack, grey or not, on top of its usual one. Once a day per account
+-- (TTS_Packs.dailyDay), resetting at local midnight as the campfire does (Campfire.lua).
+-- =========================================================================
+local DAILY_PACK = "dungeon"
+
+local function Today()
+    return date("%Y-%m-%d", (GetServerTime and GetServerTime()) or time())
+end
+
+-- Seconds until the daily pack can be had again (local midnight) once today's is had; nil
+-- while it's still to be had (the minimap tooltip, MinimapButton.lua)
+function P:DailyCooldownLeft()
+    if Store().dailyDay ~= Today() then return nil end
+    local now = (GetServerTime and GetServerTime()) or time()
+    local t = date("*t", now)
+    t.day, t.hour, t.min, t.sec = t.day + 1, 0, 0, 0
+    return math.max(0, time(t) - now)
+end
+
+local function GiveDailyPack(key, card)
+    if key ~= DAILY_PACK then return end
+    local store, today = Store(), Today()
+    if store.dailyDay == today then return end
+    if not P:Add(key, 1) then return end
+    store.dailyDay = today
+    Say(L("packs.daily", "|cFFFFD200" .. P:Name(key) .. "|r", TTS:CardName(card) or card.name or ""))
+    if TTS.Sound and TTS.Sound.PlayUI then TTS.Sound:PlayUI("packOpen") end
+end
+
 function P:AwardFromKill(card, guid)
     local key = card and card.packDrop
     if not (key and self.BY_KEY[key]) then return end
+    -- Only a level actually read as grey refuses the pack. Inside instances the client often
+    -- hides unit levels and XP lines from add-ons, so an unknown level gives it
     local level = BossLevel(card, guid)
-    if level then
-        if IsGrey(level) then NoPack(card) else GivePack(key, card) end
-        return
-    end
-    -- Level unknown: wait a moment for the kill's XP line (it may come just after)
-    TTS:SafeAfter(1, function()
-        if XpNamed(card) or AtLevelCap() then GivePack(key, card) else NoPack(card) end
-    end)
+    if level and IsGrey(level) then NoPack(card) else GivePack(key, card) end
+    GiveDailyPack(key, card)
 end
 
--- Bosses' levels as they show up, and XP lines as they come
+-- Bosses' levels as they show up
 local watcher = CreateFrame("Frame")
 for _, event in ipairs({ "PLAYER_TARGET_CHANGED", "PLAYER_FOCUS_CHANGED", "UPDATE_MOUSEOVER_UNIT",
-    "NAME_PLATE_UNIT_ADDED", "INSTANCE_ENCOUNTER_ENGAGE_UNIT", "CHAT_MSG_COMBAT_XP_GAIN" }) do
+    "NAME_PLATE_UNIT_ADDED", "INSTANCE_ENCOUNTER_ENGAGE_UNIT" }) do
     pcall(watcher.RegisterEvent, watcher, event)
 end
 watcher:SetScript("OnEvent", function(_, event, arg1)
-    if event == "CHAT_MSG_COMBAT_XP_GAIN" then
-        if type(arg1) == "string" and not Secret(arg1) then lastXp.t, lastXp.msg = GetTime(), arg1 end
-    elseif event == "PLAYER_TARGET_CHANGED" then
+    if event == "PLAYER_TARGET_CHANGED" then
         NoteUnit("target")
     elseif event == "PLAYER_FOCUS_CHANGED" then
         NoteUnit("focus")

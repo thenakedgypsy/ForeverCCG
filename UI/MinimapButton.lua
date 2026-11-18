@@ -175,6 +175,15 @@ local function BuildMinimapTooltip(tip)
             tip:AddDoubleLine(L("minimap.campfireNext"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
         end
     end
+    -- The daily dungeon pack (Packs.lua): ready, or how long until midnight once today's is had
+    if TTS.Packs and TTS.Packs.DailyCooldownLeft then
+        local wait = TTS.Packs:DailyCooldownLeft()
+        if wait then
+            tip:AddDoubleLine(L("minimap.dailyPack"), Duration(wait), 1, 1, 1, 0.6, 0.6, 0.6)
+        else
+            tip:AddDoubleLine(L("minimap.dailyPack"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
+        end
+    end
     -- The weekly tournament prize cooldown (AdminGrants.lua)
     if TTS.TournamentPrizeCooldown then
         local wait = TTS:TournamentPrizeCooldown()

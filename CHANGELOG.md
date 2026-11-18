@@ -1,3 +1,7 @@
+## 1.3.2
+*   booster packs: a dungeon final boss whose level the game hides from addons (often the case inside instances) now drops its pack. Before, it could be refused with "was too low level" even when it wasn't - Whitemane in particular. Only a boss that is actually grey to you gives no pack
+*   new: daily dungeon pack - the first dungeon final boss you defeat each day gives an extra Dungeons booster pack, even if it's grey to you. Once a day per account, resetting at midnight
+
 ## 1.3.1
 *   tournaments: in a prize tournament, everyone who is prize eligible when it begins gets a Dungeons booster pack when it finishes, the champion included (who still gets the prize card too). Needs at least 4 players and at least one game played in the event
 
