@@ -71,7 +71,7 @@ TTS:AddCards({
         text = "Strikes-First. Enrage. Bulwark 2."
     },
     ["ZFK09"] = {
-        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
         id = "ZFK09", name = "Dustwraith", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 6, hexproof = true, isMob = true, isBoss = true, displayId = 9292,
         zone = "Zul'Farrak", creatureType = "Humanoid", npcId = 10081,
@@ -79,7 +79,7 @@ TTS:AddCards({
         text = "Warded."
     },
     ["ZFK10"] = {
-        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
         id = "ZFK10", name = "Sandarr Dunereaver", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 9291,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 10080,

@@ -446,6 +446,7 @@ Refresh = function()
     lines[#lines + 1] = ""
     lines[#lines + 1] = "|cFFFF80FF" .. L("packs.foilOdds", (P.FOIL_CHANCE[1] or 0) * 100 + 0.5,
         (P.FOIL_CHANCE[2] or 0) * 100 + 0.5) .. "|r"
+    lines[#lines + 1] = "|cFFFF80FF" .. L("packs.foilOddsRandom", (P.RANDOM_FOIL_CHANCE or 0) * 100 + 0.5) .. "|r"
     if not P.GRANTS_CARDS then
         lines[#lines + 1] = ""
         lines[#lines + 1] = "|cFFFF8040" .. L("packs.preview") .. "|r"

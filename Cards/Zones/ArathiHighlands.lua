@@ -69,7 +69,7 @@ TTS:AddCards({
         text = "Support."
     },
     ["ARA09"] = {
-        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
         id = "ARA09", name = "Darbel Montrose", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 6, toughness = 7, isMob = true, isNamed = true, isBoss = true, displayId = 4027,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2598,

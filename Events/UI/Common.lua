@@ -204,11 +204,14 @@ function UI.Dropdown(parent, width, options, onChange)
     arrow:SetSize(12, 12)
     arrow:SetPoint("RIGHT", -7, -2)
 
+    -- (options can be empty for a moment: the player window's deck list is filled after it's built)
     local function Show()
-        b:SetText(options[b.index][2])
+        local option = options[b.index]
+        b:SetText(option and option[2] or "")
     end
     function b:GetValue()
-        return options[self.index][1]
+        local option = options[self.index]
+        return option and option[1]
     end
     function b:SetValue(value)
         for i, option in ipairs(options) do
@@ -321,8 +324,8 @@ end
 UI.GREY, UI.RED, UI.ORANGE, UI.GREEN, UI.GOLD = "|cFF888888", "|cFFFF4444", "|cFFFF9933", "|cFF33DD33", "|cFFFFD200"
 
 UI.STATUS_TEXT = {
-    open = "Open for entries", checkin = "Check-in open", running = "Running", finished = "Finished",
+    open = "Open for entries", checkin = "Open for entries", running = "Running", finished = "Finished",
 }
 UI.PLAYER_TEXT = {
-    registered = "Joined", checkedin = "Checked in", active = "Playing", dropped = "Dropped", noshow = "No-show",
+    registered = "Joined", checkedin = "Joined", active = "Playing", dropped = "Dropped", noshow = "No-show",
 }

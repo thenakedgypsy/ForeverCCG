@@ -1,3 +1,35 @@
+## 1.3.11
+*   cards: gathering herbs, mining ore, opening chests or fishing no longer unlocks the card of a mob you have targeted. Only looting (or skinning) the mob itself counts
+
+## 1.3.10
+*   tournaments: an organizer playing in their own event can reopen their player window (and its Challenge button) with the Player Window button on the Players tab. /fccgevents opens it too
+
+## 1.3.9
+*   tournaments: no more check-in. Joining an event enters you, and everyone who has joined plays when the organizer presses Start Event
+*   tournaments: with deck lock on, the deck you play your first game with is the one you keep for the event
+*   tournaments: fix for the Tournaments window showing nothing below the deck picker after joining an event (no deck list, Challenge, Drop Out or standings)
+
+## 1.3.8
+*   windows: Escape now closes the Deckbuilder, Settings, the Waiting Room and Rules & Guide too
+
+## 1.3.7
+*   windows: Escape now closes the main window
+*   board: Escape minimises the board during a game, as the - button does. Click the restore bar (or the minimap button) to bring it back
+
+## 1.3.6
+*   main window: the daily dungeon pack now shows beside the Campfire Bonus under the Collect buttons, each ready or counting down. Once you've had both today, they share one timer until midnight. Hover the line for what each one gives and how to get it
+*   class spells: an alt now has every class spell your highest-level character has unlocked. Log into your highest character once after updating so the addon knows its level. Levelling an alt only announces spells past that level
+
+## 1.3.5
+*   booster packs: rare spawns, in zones and dungeons alike, now come out of packs a quarter as often as other cards
+*   booster packs: the foil chance on the 4th and 5th cards is now 5% and 20% (was 10% and 25%), and the first three cards can now be foil too, at 2% each. The pack window shows the new odds
+
+## 1.3.4
+*   windows: Settings can now be resized too - drag the grip in the bottom-right corner. It remembers its size
+
+## 1.3.3
+*   windows: the main window and the Collection Guide can now be resized - drag the grip in the bottom-right corner, as on the Deckbuilder. Each remembers its size
+
 ## 1.3.2
 *   booster packs: a dungeon final boss whose level the game hides from addons (often the case inside instances) now drops its pack. Before, it could be refused with "was too low level" even when it wasn't - Whitemane in particular. Only a boss that is actually grey to you gives no pack
 *   new: daily dungeon pack - the first dungeon final boss you defeat each day gives an extra Dungeons booster pack, even if it's grey to you. Once a day per account, resetting at midnight

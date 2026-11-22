@@ -8,7 +8,7 @@ local UI, B, P = ns.UI, ns.Bridge, ns.Player
 -- =========================================================================
 -- PLAYER WINDOW
 -- Before joining: the code, the organizer's name. After: the event, this round's pairing, the
--- deck to play (locked at check-in with deck lock), your place, and either the standings or
+-- deck to play (with deck lock, the deck of your first game), your place, and either the standings or
 -- this round's tables (Watch on games being played). Built the first time it opens.
 -- =========================================================================
 local GREY, GREEN, RED, ORANGE = UI.GREY, UI.GREEN, UI.RED, UI.ORANGE
@@ -32,9 +32,7 @@ local function PairingText(j)
         return j.champion ~= "" and ("Champion: |cFFFFFFFF" .. tostring(j.champion) .. "|r") or "The event has finished."
     end
     if j.status ~= "running" then
-        if j.myStatus == "checkedin" then return GREEN .. "You're checked in.|r Waiting for the first round." end
-        if j.status == "checkin" then return ORANGE .. "Check-in is open.|r Pick your deck and check in." end
-        return "Waiting for the organizer to open check-in."
+        return GREEN .. "You're entered.|r Pick your deck and wait for the first round."
     end
     if j.myStatus == "dropped" then return GREY .. "You've dropped from this event.|r" end
     if j.tableNo == 0 then return GREY .. "You aren't in this round.|r" end
@@ -89,13 +87,13 @@ local function RefreshJoined(j)
     F.pairing:SetText(PairingText(j))
     F.match:SetText(MatchText(j))
 
-    -- The deck: chosen here, until deck lock fixes it at check-in
+    -- The deck: chosen here. With deck lock it's fixed by the first game (Tournament.lua CheckDeck)
     local decks, active = B.Decks()
     wipe(F.deckOptions)
     for _, d in ipairs(decks) do
         if d.playable then F.deckOptions[#F.deckOptions + 1] = { d.index, d.name .. GREY .. " (" .. d.cards .. ")|r" } end
     end
-    local locked = j.deckLock and j.myStatus ~= "registered" and j.status ~= "finished"
+    local locked = j.deckLock and (j.played or 0) > 0 and j.status ~= "finished"
     if #F.deckOptions == 0 then
         F.deckOptions[1] = { 0, RED .. "No playable deck|r" }
         F.deckDrop.index = 1
@@ -109,7 +107,7 @@ local function RefreshJoined(j)
         F.deckDrop:SetValue(listed and active or F.deckOptions[1][1])
         F.deckDrop:SetEnabled((not locked and j.status ~= "finished" and not B.InMatch()) and true or false)
     end
-    F.deckNote:SetText(locked and (GREY .. "locked at check-in|r") or "")
+    F.deckNote:SetText(locked and (GREY .. "deck locked|r") or "")
 
     -- You: your place, points and record
     local me
@@ -123,7 +121,6 @@ local function RefreshJoined(j)
         F.me:SetText(GREY .. "Your place in the standings shows once the first round starts.|r")
     end
 
-    F.checkIn:SetShown(j.status == "checkin" and j.myStatus == "registered")
     local canChallenge = j.status == "running" and j.tableNo > 0 and j.matchStatus ~= "bye" and j.result == ""
         and j.myStatus == "active" and not B.InMatch()
     F.challenge:SetShown(j.status == "running" and j.tableNo > 0 and j.matchStatus ~= "bye")
@@ -207,8 +204,6 @@ local function Build()
     F.clock:SetJustifyH("RIGHT")
     F.me = UI.Label(V, "GameFontHighlightSmall", 12, -122, 370)
 
-    F.checkIn = UI.Button(V, "Check In", 110, 24, function() P:CheckIn() end)
-    F.checkIn:SetPoint("TOPLEFT", 12, -142)
     F.challenge = UI.Button(V, "Challenge", 110, 24, function() P:Challenge() end)
     F.challenge:SetPoint("TOPLEFT", 12, -142)
     local refresh = UI.Button(V, "Refresh", 80, 24, function() P:RequestUpdate(true) end)

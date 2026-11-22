@@ -553,6 +553,17 @@ function B:Minimize()
     restoreBar:Show()
 end
 
+-- Escape minimises the board during a match: any hide mid-match (Escape included)
+-- leaves the restore bar up, so the game is never lost off-screen. Closing after the
+-- match hides the restore bar again straight after (CloseAfterMatch).
+tinsert(UISpecialFrames, "TTS_BoardFrame")
+B:HookScript("OnHide", function()
+    if TTS.Engine and TTS.Engine.inMatch then
+        TT:Hide()
+        restoreBar:Show()
+    end
+end)
+
 -- Any way the board comes back (Restore, /tragic board, a new match) removes the restore bar
 B:SetScript("OnShow", function(self)
     restoreBar:Hide()

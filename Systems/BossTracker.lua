@@ -603,6 +603,9 @@ tracker:SetScript("OnEvent", function(self, event, ...)
     elseif event == "LOOT_OPENED" or event == "LOOT_READY" then
         -- The loot source GUIDs stay readable in instances, where the target's GUID is secret
         -- and kill names are scrambled; each slot may list several corpses (area loot)
+        -- A loot window also opens for herbs, ore, chests and fishing, so it does not prove the
+        -- target died: only the slots' sources may grant credit
+        local anySource = false
         if GetLootSourceInfo and GetNumLootItems then
             local seen = {}
             for slot = 1, SafeCall(GetNumLootItems) or 0 do
@@ -610,15 +613,21 @@ tracker:SetScript("OnEvent", function(self, event, ...)
                 if sources[1] then
                     for i = 2, #sources, 2 do
                         local guid = sources[i]
-                        if guid and not IsSecret(guid) and type(guid) == "string" and not seen[guid] then
-                            seen[guid] = true
-                            TTS.BossTracker:RecordMobKillByGUIDOrName(guid, nil, LOOT_DEDUPE_SECONDS)
+                        if guid and not IsSecret(guid) and type(guid) == "string" then
+                            anySource = true
+                            if not seen[guid] then
+                                seen[guid] = true
+                                TTS.BossTracker:RecordMobKillByGUIDOrName(guid, nil, LOOT_DEDUPE_SECONDS)
+                            end
                         end
                     end
                 end
             end
         end
-        if UnitExists("target") then
+        -- Fallback for clients without readable loot sources: a dead target, never while fishing
+        local fishing = false
+        if IsFishingLoot then fishing = SafeCall(IsFishingLoot) and true or false end
+        if not anySource and not fishing and UnitExists("target") and SafeCall(UnitIsDead, "target") then
             local guid = SafeCall(UnitGUID, "target")
             local name = SafeCall(UnitName, "target")
             if guid and not IsSecret(guid) then

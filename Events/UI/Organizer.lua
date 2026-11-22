@@ -192,10 +192,16 @@ end
 local function BuildPlayers(P)
     P.count = UI.Label(P, "GameFontNormal", 12, -8)
     -- The organizer can play in their own event: joined like anyone else, with the code
-    -- (the player's window opens as the organizer's addon answers; they can win its prize)
+    -- (the player's window opens as the organizer's addon answers; they can win its prize).
+    -- Once joined, the same button opens their player's window again.
     P.joinSelf = UI.Button(P, "Join as a Player", 130, 22, function()
         local ev = H:Event()
-        if ev and ns.Player then ns.Player:Join(ev.code, B.MyName()) end
+        local joined = ns.Player and ns.Player:Joined()
+        if ev and joined and joined.id == ev.id then
+            UI.OpenPlayer()
+        elseif ev and ns.Player then
+            ns.Player:Join(ev.code, B.MyName())
+        end
     end)
     P.joinSelf:SetPoint("TOPRIGHT", -14, -4)
     P.list = UI.List(P, 12, -30, 590, 22, 16, function(row)
@@ -236,13 +242,13 @@ end
 
 local function RefreshPlayers(P)
     local ev = H:Event()
-    local data, checkedIn = {}, 0
+    local data, dropped = {}, 0
     for _, key in ipairs(ev and ev.order or {}) do
         local p = ev.players[key]
         data[#data + 1] = p
-        if p.status == "checkedin" or p.status == "active" then checkedIn = checkedIn + 1 end
+        if p.status == "dropped" or p.status == "noshow" then dropped = dropped + 1 end
     end
-    local count = #data .. " entered, " .. checkedIn .. " checked in"
+    local count = (#data - dropped) .. " entered" .. (dropped > 0 and (", " .. dropped .. " dropped") or "")
     if ev and ev.settings.prizes then
         local eligible = 0
         for _, p in ipairs(data) do
@@ -256,8 +262,12 @@ local function RefreshPlayers(P)
     P.list:SetData(data)
     local joined = ns.Player and ns.Player:Joined()
     local playing = ev and ev.players[B.Key(B.MyName())] and true or false
-    P.joinSelf:SetShown(ev and (ev.status == "open" or ev.status == "checkin") and true or false)
-    P.joinSelf:SetEnabled(not playing and not (joined and ev and joined.id == ev.id))
+    local open = ev and (ev.status == "open" or ev.status == "checkin")
+    local inIt = (joined and ev and joined.id == ev.id) and true or false
+    -- Joined: Player Window, at any stage. Not yet: Join as a Player, while entries are open
+    P.joinSelf:SetText(inIt and "Player Window" or "Join as a Player")
+    P.joinSelf:SetShown((inIt or open) and true or false)
+    P.joinSelf:SetEnabled(inIt or not playing)
     local canAdd = ev and (ev.status == "open" or ev.status == "checkin") and true or false
     P.manualAdd:SetEnabled(canAdd)
 end
@@ -358,9 +368,7 @@ local function RefreshRound(P)
     P.endRound:SetEnabled(false)
     if not ev then
         advance:Hide()
-    elseif ev.status == "open" then
-        advance:SetText("Open Check-In")
-    elseif ev.status == "checkin" then
+    elseif ev.status == "open" or ev.status == "checkin" then
         advance:SetText("Start Event")
     elseif ev.status == "running" then
         local complete = T.RoundComplete(round)
@@ -379,18 +387,8 @@ local function BuildRound(P)
     P.advance = UI.Button(P, "", 120, 24, function()
         local ev = H:Event()
         if not ev then return end
-        if ev.status == "open" then
-            H:OpenCheckIn()
-        elseif ev.status == "checkin" then
-            local waiting = 0
-            for _, key in ipairs(ev.order) do
-                if ev.players[key].status == "registered" then waiting = waiting + 1 end
-            end
-            if waiting > 0 then
-                UI.Confirm(waiting .. " player(s) haven't checked in and will be left out. Start anyway?", function() H:Start() end)
-            else
-                H:Start()
-            end
+        if ev.status == "open" or ev.status == "checkin" then
+            UI.Confirm("Start the event? No one can join once it starts.", function() H:Start() end)
         else
             selectedTable = nil
             H:Advance()

@@ -39,6 +39,7 @@ R:RegisterForDrag("LeftButton")
 R:SetScript("OnDragStart", R.StartMoving)
 R:SetScript("OnDragStop", R.StopMovingOrSizing)
 R:Hide()
+tinsert(UISpecialFrames, "TTS_RulesFrame")   -- Escape closes it
 
 local SYMBOL_PATH = "Interface\\AddOns\\ForeverCCG\\Textures\\Symbols\\"
 local TAP_TEX = SYMBOL_PATH .. "T.png"

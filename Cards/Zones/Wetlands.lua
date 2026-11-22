@@ -76,7 +76,7 @@ TTS:AddCards({
         text = "Brutish."
     },
     ["WET10"] = {
-        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
         id = "WET10", name = "Molok the Crusher", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
         power = 9, toughness = 8, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 536,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,

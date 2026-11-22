@@ -13,6 +13,7 @@
 --                         PLAYER_DEAD), with the usual drop chances unless dropChance is set
 --   dropChance = { %, %, %, % }: chance per kill/death for copies 1-4 (default 100/25/12/6; 50/12/6/3 for
 --                                bosses, dungeon denizens and isNamed ones: BossTracker DropChances)
+--   rareSpawn = true: a rare spawn; comes out of booster packs less often (Packs.lua RARE_SPAWN_WEIGHT)
 --   diesAtTurnStart = true: dies at the start of its controller's turn (CoreEngine.lua BeginTurn)
 --   dressItems = { itemIds }: its display model wears these (UI\Board.lua, Hero.lua DressModel)
 --   isBeta = true: one copy for players whose beta collection was cleared at launch

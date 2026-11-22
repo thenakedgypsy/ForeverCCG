@@ -634,6 +634,8 @@ local function Build()
     for i = 1, VISIBLE_ROWS + 1 do F.listRows[i] = CreateListRow(listW) end   -- +1: part of a row at each end
 
     F:SetScript("OnShow", function() Refresh(false) end)
+    -- Resizing: drag the bottom-right grip to scale the whole window (saved)
+    TTS:AddScaleGrip(F, "guideScale")
     if TTS.Sound and TTS.Sound.HookButtons then TTS.Sound:HookButtons(F) end
 end
 

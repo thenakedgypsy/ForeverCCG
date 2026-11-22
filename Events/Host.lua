@@ -24,7 +24,7 @@ local NOTE_MAX = 60
 
 local REASONS = {
     state = "The event isn't at that stage.",
-    players = "At least two players must be checked in.",
+    players = "At least two players must have joined.",
     incomplete = "Every match in the round needs a result first.",
     match = "That table has no match to change.",
     decided = "That match already has a result. Reset it to change the games.",
@@ -209,17 +209,6 @@ Comm:On("JOIN", function(parts, from)
     H:Changed({ [p.key] = true })
 end)
 
-Comm:On("CHECKIN", function(parts, from)
-    local ev = H:Event()
-    if not ev or parts[2] ~= ev.id then return end
-    local p, err = T.CheckIn(ev, from:lower(), parts[3], ns.Now(), H.PrizeWait(parts[4]))
-    if not p then
-        Comm:Send(from, "NOTE:" .. ev.id .. ":Check-in isn't open (" .. tostring(err) .. ").")
-        return
-    end
-    H:Changed({ [p.key] = true })
-end)
-
 Comm:On("DROP", function(parts, from)
     local ev = H:Event()
     if not ev or parts[2] ~= ev.id then return end
@@ -299,14 +288,6 @@ function H:Close()
         if not p.manual then Comm:Send(p.name, "GONE:" .. ev.id) end
     end
     ns.RefreshUI()
-end
-
-function H:OpenCheckIn()
-    local ev = self:Event()
-    if not ev then return end
-    local ok, err = T.OpenCheckIn(ev, ns.Now())
-    if not ok then return Say(err) end
-    self:Changed()
 end
 
 function H:Start()

@@ -64,6 +64,64 @@ function TTS.CloseParent(self)
     if parent then parent:Hide() end
 end
 
+-- A bottom-right grip that resizes a window by scaling it as one (as the Deckbuilder's
+-- does), so its layout never reflows; the top-left corner stays put while dragging. The
+-- scale is saved under Options key optionKey and put back whenever the window opens.
+-- inset: how far in from the corner the grip sits (default 3)
+function TTS:AddScaleGrip(frame, optionKey, minScale, maxScale, inset)
+    minScale, maxScale, inset = minScale or 0.6, maxScale or 1.5, inset or 3
+    local function Clamp(s) return math.max(minScale, math.min(maxScale, s)) end
+
+    local grip = CreateFrame("Button", nil, frame)
+    grip:SetSize(16, 16)
+    grip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset, inset)
+    grip:SetFrameLevel(frame:GetFrameLevel() + 20)
+    grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+
+    local function OnUpdate(self)
+        local cx, cy = GetCursorPosition()
+        -- Grow by however far the cursor moved along the window's diagonal
+        local grow = ((cx - self.startX) / self.startW + (self.startY - cy) / self.startH) / 2
+        local scale = Clamp(self.startScale * (1 + grow))
+        frame:SetScale(scale)
+        if TTS.Options then TTS.Options:Set(optionKey, scale) end
+        local eff = frame:GetEffectiveScale()
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", self.leftPx / eff, self.topPx / eff)
+    end
+
+    grip:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        local eff = frame:GetEffectiveScale()
+        self.startX, self.startY = GetCursorPosition()
+        self.startScale = frame:GetScale()
+        self.startW = frame:GetWidth() * eff     -- screen pixels
+        self.startH = frame:GetHeight() * eff
+        self.leftPx = frame:GetLeft() * eff
+        self.topPx = frame:GetTop() * eff
+        self:SetScript("OnUpdate", OnUpdate)
+    end)
+    grip:SetScript("OnMouseUp", function(self) self:SetScript("OnUpdate", nil) end)
+    grip:SetScript("OnHide", function(self) self:SetScript("OnUpdate", nil) end)
+    grip:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(TTS.L and TTS.L("db.dragScale") or "", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    grip:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- The saved size, put back as the window opens (the settings load after this file)
+    frame:HookScript("OnShow", function()
+        local saved = TTS.Options and tonumber(TTS.Options:Get(optionKey))
+        if saved and math.abs(frame:GetScale() - Clamp(saved)) > 0.001 then
+            frame:SetScale(Clamp(saved))
+        end
+    end)
+    return grip
+end
+
 local WIDTH = 320
 local PAD = 16
 local BTN_W, BTN_H = 128, 22

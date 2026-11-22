@@ -8,7 +8,7 @@ local Print = ns.Print
 
 -- =========================================================================
 -- PLAYER
--- The entrant's side: joining with a code, checking in, and reporting each game played against
+-- The entrant's side: joining with a code (which enters you: no check-in), and reporting each game played against
 -- the current opponent. Only messages from the event's own organizer are listened to.
 -- =========================================================================
 local P = {}
@@ -76,18 +76,6 @@ function P:DeckProblem()
     local banned = j and B.BannedCardIn(deck, j.banned)
     if banned then return banned .. " is banned in this event." end
     return nil
-end
-
-function P:CheckIn()
-    local j = self:Joined()
-    if not j then return end
-    local problem = self:DeckProblem()
-    if problem then
-        Print(problem)
-        return
-    end
-    local fp = B.Fingerprint(B.ActiveDeck())
-    Comm:SendReliable(j.organizer, "CHECKIN:" .. j.id .. ":" .. fp .. ":" .. (B.PrizeCooldown() or -1), { key = "checkin", max = 6 })
 end
 
 function P:Challenge()
@@ -217,10 +205,6 @@ Comm:On("YOU", function(parts, from)
     j.endsAt = secondsLeft >= 0 and (ns.Now() + secondsLeft) or nil
     j.result, j.champion, j.note = parts[14] or "", parts[15] or "", parts[16] or ""
 
-    if j.status == "checkin" and before.status ~= "checkin" then
-        Print((j.name or "The event") .. ": check-in is open. /fccgevents")
-    end
-    if j.myStatus == "checkedin" and before.myStatus ~= "checkedin" then Print("You're checked in.") end
     if j.round ~= before.round and j.status == "running" and j.tableNo > 0 then
         if j.matchStatus == "bye" then
             Print("Round " .. j.round .. ": you have a bye.")

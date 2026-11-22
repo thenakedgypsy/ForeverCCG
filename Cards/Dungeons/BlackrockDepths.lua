@@ -155,7 +155,7 @@ TTS:AddCards({
         text = "Support. Martyrdom: Deal 3 damage to the enemy denizen with the highest power."
     },
     ["BRD20"] = {
-        dropChance = { 100, 25, 12, 6 },   -- rare spawn: normal rates
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
         id = "BRD20", name = "Panzor the Invincible", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
         power = 3, toughness = 11, hexproof = true, isMob = true, isBoss = true, displayId = 8270,
         onDeath = { ops = { { op = "damage", to = "all_creatures", n = 2 } } },

@@ -10,8 +10,9 @@ local _, ns = ...
 -- here (no WoW API, the clock is passed in), so ForeverCCG_Tests can run it outside the game.
 -- The organizer's client holds the one official copy of an event, in its saved variables.
 --
--- An event goes  open -> checkin -> running -> finished.
--- A player is    registered -> checkedin -> active, or dropped / noshow.
+-- An event goes  open -> running -> finished.
+-- A player is    registered -> active, or dropped. Joining enters you: there's no check-in.
+-- (Events saved before check-in was removed can still say "checkin" / "checkedin".)
 --
 -- HOW A GAME IS SETTLED. Each player's client reports the game under the id ForeverCCG gave
 -- it, so the two reports pair up:
@@ -142,27 +143,8 @@ function T.AddPlayer(ev, name, info, now)
     p.rating, p.manual, p.version = rating, info.manual and true or nil, info.version
     -- Seconds until they can win a prize again, as their client reported it (nil = unknown)
     p.prizeWait, p.prizeHeard = info.prizeWait, now
-    p.status = info.manual and "checkedin" or "registered"
+    p.status = "registered"
     Log(ev, now, name .. " joined" .. (info.manual and " (entered by the organizer)" or ""))
-    return p
-end
-
-function T.OpenCheckIn(ev, now)
-    if ev.status ~= "open" then return nil, "state" end
-    ev.status = "checkin"
-    Log(ev, now, "Check-in opened")
-    return true
-end
-
--- prizeWait (optional): the player's prize cooldown, reported again as they check in
-function T.CheckIn(ev, key, deckFp, now, prizeWait)
-    local p = ev.players[key]
-    if not p then return nil, "unknown" end
-    if ev.status ~= "checkin" then return nil, "state" end
-    if p.status ~= "registered" and p.status ~= "checkedin" then return nil, "state" end
-    if p.status == "registered" then Log(ev, now, p.name .. " checked in") end
-    p.status, p.deckFp = "checkedin", deckFp
-    if prizeWait then p.prizeWait, p.prizeHeard = prizeWait, now end
     return p
 end
 
@@ -279,9 +261,13 @@ local function CheckDeck(ev, m, side, deck, legal, now)
         m.flags["illegal" .. side] = true
         Log(ev, now, p.name .. " played a deck containing a banned card")
     end
-    if ev.settings.deckLock and deck and p.deckFp and deck ~= p.deckFp and not m.flags["deck" .. side] then
+    if not (ev.settings.deckLock and deck and deck ~= "") then return end
+    -- Deck lock: the deck of a player's first game is the one they keep
+    if not p.deckFp then
+        p.deckFp = deck
+    elseif deck ~= p.deckFp and not m.flags["deck" .. side] then
         m.flags["deck" .. side] = true
-        Log(ev, now, p.name .. " played a different deck from the one they checked in with")
+        Log(ev, now, p.name .. " played a different deck from their first game")
     end
 end
 
@@ -553,22 +539,15 @@ function T.ForceEndRound(ev, now)
     return true
 end
 
--- Whoever has not checked in is out. Seeds go by rating, highest first.
+-- Everyone who joined (and hasn't dropped) plays. Seeds go by rating, highest first.
 function T.Start(ev, now)
-    if ev.status ~= "checkin" then return nil, "state" end
+    if ev.status ~= "open" and ev.status ~= "checkin" then return nil, "state" end
     local entrants = {}
     for _, key in ipairs(ev.order) do
-        if ev.players[key].status == "checkedin" then entrants[#entrants + 1] = ev.players[key] end
+        local st = ev.players[key].status
+        if st == "registered" or st == "checkedin" then entrants[#entrants + 1] = ev.players[key] end
     end
     if #entrants < T.MIN_PLAYERS then return nil, "players" end
-
-    for _, key in ipairs(ev.order) do
-        local p = ev.players[key]
-        if p.status == "registered" then
-            p.status = "noshow"
-            Log(ev, now, p.name .. " did not check in")
-        end
-    end
     table.sort(entrants, function(a, b)
         if a.rating ~= b.rating then return a.rating > b.rating end
         return a.key < b.key

@@ -72,10 +72,28 @@ function TTS:GetSpellUnlockLevel(cardId)
     return TTS.SPELL_UNLOCK_FIRST_LEVEL + (tier - 1) * TTS.SPELL_UNLOCK_LEVEL_STEP
 end
 
+-- The highest level any character on the account has reached (TTS_HighestLevel, saved
+-- account-wide; this character's own level counts too). Class spells unlock by it, so an alt
+-- has every spell its highest-level character has.
+function TTS:HighestLevel()
+    local saved = tonumber(TTS_HighestLevel) or 1
+    local ok, mine = pcall(UnitLevel, "player")
+    mine = ok and tonumber(mine) or 1
+    return math.max(saved, mine)
+end
+
+-- Records a level reached; returns the previous highest
+function TTS:RecordLevel(level)
+    local before = tonumber(TTS_HighestLevel) or 1
+    level = tonumber(level)
+    if level and level > before then TTS_HighestLevel = level end
+    return before
+end
+
 function TTS:IsSpellUnlocked(cardId)
     local level = TTS:GetSpellUnlockLevel(cardId)
     if not level then return true end
-    return (UnitLevel("player") or 1) >= level
+    return TTS:HighestLevel() >= level
 end
 
 local function DefaultDeckName(i)
@@ -314,6 +332,7 @@ D:RegisterForDrag("LeftButton")
 D:SetScript("OnDragStart", D.StartMoving)
 D:SetScript("OnDragStop", D.StopMovingOrSizing)
 D:Hide()
+tinsert(UISpecialFrames, "TTS_DeckBuilderFrame")   -- Escape closes it
 
 local titleBar = D:CreateTexture(nil, "ARTWORK")
 -- Darkened strip inside the dialog border; its bottom edge stays where it was
@@ -2654,12 +2673,21 @@ local function AnnounceSpellUnlocks(newLevel)
     end
 end
 
--- Levelling up: announce new spells, and show them if the Deckbuilder is open
+-- Levelling up: announce new spells, and show them if the Deckbuilder is open. Only levels
+-- past the account's highest unlock anything: an alt levelling below its main has them all.
+-- Logging in records this character's level (a character levelled before this was saved).
 local levelWatcher = CreateFrame("Frame")
 levelWatcher:RegisterEvent("PLAYER_LEVEL_UP")
+levelWatcher:RegisterEvent("PLAYER_LOGIN")
 levelWatcher:SetScript("OnEvent", function(self, event, newLevel)
+    if event == "PLAYER_LOGIN" then
+        local ok, level = pcall(UnitLevel, "player")
+        if ok then TTS:RecordLevel(level) end
+        return
+    end
     if type(newLevel) == "number" then
-        AnnounceSpellUnlocks(newLevel)
+        local before = TTS:RecordLevel(newLevel)
+        for level = before + 1, newLevel do AnnounceSpellUnlocks(level) end
     end
     -- UnitLevel can still report the old level during the event, so refresh a moment later
     C_Timer.After(0.5, function() if D:IsShown() then D:RefreshAll() end end)

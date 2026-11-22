@@ -35,7 +35,11 @@ P.GRANTS_CARDS = true
 -- Chance of each random card being a zone denizen; otherwise it's a dungeon (or raid) one
 P.RANDOM_ZONE_CHANCE = 0.75
 -- Foil chance of each guaranteed card, in order (the pack's 4th card, then its 5th)
-P.FOIL_CHANCE = { 0.10, 0.25 }
+P.FOIL_CHANCE = { 0.05, 0.20 }
+-- Foil chance of each random card (the pack's first three)
+P.RANDOM_FOIL_CHANCE = 0.02
+-- A rare spawn (card.rareSpawn) is this likely to be drawn as any other card of its pool
+P.RARE_SPAWN_WEIGHT = 0.25
 
 local TEX = "Interface\\AddOns\\ForeverCCG\\Textures\\Packs\\pack_%s_%s.png"
 
@@ -124,14 +128,28 @@ local function Pools()
     return pools
 end
 
+-- How likely a card is to be drawn against an ordinary one of its pool (rare spawns:
+-- card.rareSpawn, in zones and dungeons alike, come up less often)
+local function DrawWeight(card)
+    return card.rareSpawn and P.RARE_SPAWN_WEIGHT or 1
+end
+
 -- A random card of `pool` not already in `taken` (nil when the pool has none left)
 local function Draw(pool, taken)
-    local left = {}
+    local left, total = {}, 0
     for _, card in ipairs(pool or {}) do
-        if not taken[card.id] then left[#left + 1] = card end
+        if not taken[card.id] then
+            left[#left + 1] = card
+            total = total + DrawWeight(card)
+        end
     end
     if #left == 0 then return nil end
-    local card = left[math.random(#left)]
+    local roll = math.random() * total
+    local card = left[#left]
+    for _, c in ipairs(left) do
+        roll = roll - DrawWeight(c)
+        if roll < 0 then card = c; break end
+    end
     taken[card.id] = true
     return card
 end
@@ -149,7 +167,10 @@ function P:Roll(key)
         local first, second = pp.zone, rarePool
         if math.random() >= self.RANDOM_ZONE_CHANCE then first, second = rarePool, pp.zone end
         local card = Draw(first, taken) or Draw(second, taken)
-        if card then out[#out + 1] = { card = card, kind = self:KindOf(card) } end
+        if card then
+            local foil = math.random() < self.RANDOM_FOIL_CHANCE
+            out[#out + 1] = { card = card, kind = self:KindOf(card), foil = foil }
+        end
     end
     for g = 1, self.GUARANTEED_SLOTS do
         local card = t.raid and Draw(pp.raid[t.raid:lower()], taken) or Draw(pp.dungeon, taken)

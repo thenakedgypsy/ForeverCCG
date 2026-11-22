@@ -35,6 +35,7 @@ M:RegisterForDrag("LeftButton")
 M:SetScript("OnDragStart", M.StartMoving)
 M:SetScript("OnDragStop", M.StopMovingOrSizing)
 M:Hide()
+tinsert(UISpecialFrames, "TTS_MainDialog")   -- Escape closes it
 
 -- =========================================================================
 -- TITLE & CLOSE
@@ -209,8 +210,8 @@ function M:RefreshPacksButton()
     if n > 0 then Loc:Bind(packsBtn, "packs.buttonCount", n) else Loc:Bind(packsBtn, "packs.button") end
 end
 
--- Under them: the campfire bonus (more card drops), running or how long until the next
--- (UpdateTimers, below)
+-- Under them: the daily bonuses, the campfire bonus (more card drops; running or how long
+-- until the next) and the daily dungeon pack, one timer once both are had (UpdateTimers, below)
 local campfireLabel = collectSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 campfireLabel:SetPoint("TOP", collectSection, "TOP", 0, RowY(1) - BTN_H - 4)
 campfireLabel:SetWidth(SECTION_W - 2 * SIDE)
@@ -420,18 +421,58 @@ end
 AddHoverTip(campfireLabel, "main.campfireTipTitle", "main.campfireTip")
 AddHoverTip(timersLabel, "main.prizeTipTitle", "main.prizeTip")
 
--- The campfire and tournament prize lines: ready (green), or the time left (grey); while
--- the bonus runs, its minutes left (orange)
+-- The timers: ready (green), or the time left (grey); while the campfire bonus runs, its
+-- time left (orange)
 local GREEN, GREY, ORANGE = "|cFF1AFF1A", "|cFF999999", "|cFFFF9933"
+
+-- The daily bonuses as they stand: each one's label and coloured value, and the seconds
+-- until each can be had again (nil while it can be, or while the campfire's runs)
+local function DailyBonuses()
+    local C, P = TTS.Campfire, TTS.Packs
+    local warmth = C and C:Remaining()
+    local fireWait = C and C.CooldownLeft and C:CooldownLeft()
+    local packWait = P and P.DailyCooldownLeft and P:DailyCooldownLeft()
+    local fire = {
+        label = L(warmth and "minimap.campfire" or "minimap.campfireNext"),
+        value = warmth and (ORANGE .. TTS:FormatWait(warmth) .. "|r")
+            or fireWait and (GREY .. TTS:FormatWait(fireWait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r"),
+        wait = fireWait,
+    }
+    local pack = {
+        label = L("minimap.dailyPack"),
+        value = packWait and (GREY .. TTS:FormatWait(packWait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r"),
+        wait = packWait,
+    }
+    return fire, pack
+end
+
+-- The bonuses line's tooltip: each bonus with its timer and how to get it
+campfireLabel.hover:SetScript("OnEnter", function(self)
+    local fire, pack = DailyBonuses()
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L("main.bonusesTipTitle"), 1, 0.82, 0)
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddDoubleLine(fire.label, fire.value, 1, 0.6, 0.2)
+    GameTooltip:AddLine(L("main.campfireTip"), 0.9, 0.9, 0.9, true)
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddDoubleLine(pack.label, pack.value, 1, 0.82, 0)
+    GameTooltip:AddLine(L("main.dailyPackTip"), 0.9, 0.9, 0.9, true)
+    GameTooltip:Show()
+end)
+
 local function UpdateTimers()
-    local C = TTS.Campfire
-    if C then
-        local warmth = C:Remaining()
-        local wait = C.CooldownLeft and C:CooldownLeft()
-        local value = warmth and (ORANGE .. TTS:FormatWait(warmth) .. "|r")
-            or wait and (GREY .. TTS:FormatWait(wait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r")
-        campfireLabel:SetText(L(warmth and "minimap.campfire" or "minimap.campfireNext") .. " " .. value)
+    if TTS.Campfire or TTS.Packs then
+        local fire, pack = DailyBonuses()
+        if fire.wait and pack.wait then
+            -- Both had today: one timer, until the first is ready again (both at midnight)
+            campfireLabel:SetText(L("main.bonusesNext") .. " "
+                .. GREY .. TTS:FormatWait(math.min(fire.wait, pack.wait)) .. "|r")
+        else
+            campfireLabel:SetText(fire.label .. " " .. fire.value .. "   |cFF666666·|r   " .. pack.label .. " " .. pack.value)
+        end
         campfireLabel.hover:FitText()
+        -- An open tooltip follows the timers
+        if GameTooltip:IsOwned(campfireLabel.hover) then campfireLabel.hover:GetScript("OnEnter")(campfireLabel.hover) end
     end
     if TTS.TournamentPrizeCooldown then
         local wait = TTS:TournamentPrizeCooldown()
@@ -520,6 +561,10 @@ local function FitFooter()
 end
 FitFooter()
 M:HookScript("OnShow", FitFooter)
+
+-- Resizing: drag the bottom-right grip to scale the whole window (saved)
+M:SetClampedToScreen(true)
+TTS:AddScaleGrip(M, "mainScale")
 
 -- =========================================================================
 -- SLASH COMMAND

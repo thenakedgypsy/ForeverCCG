@@ -7,7 +7,7 @@ local T = ns.Tournament
 
 -- =========================================================================
 -- SINGLE ELIMINATION
--- Seeded by rating at check-in. The bracket is the next power of two, so the top seeds get any
+-- Seeded by rating at the start. The bracket is the next power of two, so the top seeds get any
 -- byes. Round 1 fills every slot of the bracket (byes included), which keeps each later round
 -- at exactly half the tables of the one before it. A winner who has since dropped gives their
 -- next opponent a bye; if both players due at a table are gone, the table is left empty.

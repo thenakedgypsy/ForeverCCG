@@ -35,6 +35,9 @@ local DEFAULTS = {
     },
     boardScale = 1,         -- game board size (Board.lua)
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
+    mainScale = 1,          -- main window size (MainFrame.lua, TTS:AddScaleGrip in Dialog.lua)
+    guideScale = 1,         -- Collection Guide size (CollectionGuide.lua)
+    optionsScale = 1,       -- Settings window size (Options.lua)
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
     cardZoneArt = true,      -- a piece of its zone's map behind each creature's model (Board.lua)
@@ -184,6 +187,7 @@ F:RegisterForDrag("LeftButton")
 F:SetScript("OnDragStart", F.StartMoving)
 F:SetScript("OnDragStop", F.StopMovingOrSizing)
 F:Hide()
+tinsert(UISpecialFrames, "TTS_OptionsFrame")   -- Escape closes it
 
 local titleBar = F:CreateTexture(nil, "ARTWORK")
 titleBar:SetPoint("TOPLEFT", 12, -12)
@@ -837,6 +841,11 @@ F:SetScript("OnHide", function()
     if TTS.MobTooltip and TTS.MobTooltip.HideScalePreview then TTS.MobTooltip:HideScalePreview() end
     if TTS.Tooltip then TTS.Tooltip:Hide() end
 end)
+
+-- Resizing: drag the bottom-right grip to scale the whole window (saved). After the
+-- SetScript("OnShow") above, as the grip hooks OnShow to put the saved size back
+F:SetClampedToScreen(true)
+TTS:AddScaleGrip(F, "optionsScale")
 
 -- =========================================================================
 -- LOADING

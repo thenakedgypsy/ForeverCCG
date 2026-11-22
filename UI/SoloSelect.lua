@@ -634,7 +634,17 @@ local function PaintButton(b)
     b.icon:SetVertexColor(dim and 0.55 or 1, dim and 0.55 or 1, dim and 0.55 or 1)
     b:SetAlpha(dim and 0.75 or 1)
     if state == "open" and not dim then b.glow:Show() else b.glow:Hide() end
-    if state == "cleared" then b.check:Show() else b.check:Hide() end
+    if state == "cleared" then
+        -- Gold tick once every copy of the reward card is collected (e.g. 4/4)
+        local card = b.enc.reward and TTS.Cards[b.enc.reward]
+        local maxed = card and TTS.CardMaxCopies
+            and (TTS:GetOwnedCopies(card) or 0) >= TTS:CardMaxCopies(card)
+        if b.check.SetDesaturated then b.check:SetDesaturated(maxed and true or false) end
+        if maxed then b.check:SetVertexColor(1, 0.82, 0) else b.check:SetVertexColor(1, 1, 1) end
+        b.check:Show()
+    else
+        b.check:Hide()
+    end
     if b.label then
         if locked then b.label:SetTextColor(0.6, 0.6, 0.6)
         elseif state == "cleared" then b.label:SetTextColor(0.6, 1, 0.6)

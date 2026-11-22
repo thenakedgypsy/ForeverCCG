@@ -130,6 +130,7 @@ end
 -- and which is active
 function B.Decks()
     local list = {}
+    if TTS and TTS.EnsureDeckSlots then pcall(TTS.EnsureDeckSlots, TTS) end   -- (no gaps for ipairs)
     for i, deck in ipairs(TTS_SavedDecks or {}) do
         local n = 0
         for _, qty in pairs(deck.cards or {}) do n = n + (tonumber(qty) or 0) end

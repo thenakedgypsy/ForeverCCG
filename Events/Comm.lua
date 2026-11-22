@@ -17,7 +17,7 @@ local B = ns.Bridge
 --
 -- Player to organizer:
 --   JOIN:<code>:<protocol>:<ccg version>:<rating>:<wins>:<losses>:<score>:<prize wait>
---   CHECKIN:<event>:<deck>:<prize wait>      DROP:<event>         STATUS:<event>:<want standings>
+--   DROP:<event>         STATUS:<event>:<want standings>
 --   GAME:<event>:<round>:<table>:<game>:<deck>:<legal>
 --   RESULT:<event>:<round>:<table>:<game>:<outcome>:<quiet>:<turns>:<deck>:<legal>
 -- Organizer to player:

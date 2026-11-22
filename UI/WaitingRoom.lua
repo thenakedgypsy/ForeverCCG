@@ -89,6 +89,7 @@ F:RegisterForDrag("LeftButton")
 F:SetScript("OnDragStart", F.StartMoving)
 F:SetScript("OnDragStop", F.StopMovingOrSizing)
 F:Hide()
+tinsert(UISpecialFrames, "TTS_WaitingRoomFrame")   -- Escape closes it
 
 local title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 title:SetPoint("TOP", 0, -18)
