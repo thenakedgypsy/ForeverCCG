@@ -1,3 +1,9 @@
+## 1.3.13
+*   booster packs: a dungeon final boss that's grey to you no longer drops a pack when the game hides its level inside the dungeon. Bazzalan in Ragefire Chasm always did. The addon now knows each final boss's level. The daily dungeon pack still comes from grey bosses
+
+## 1.3.12
+*   deckbuilder: Aggro is now in the Keyword filter, listing every card with an Aggro ability
+
 ## 1.3.11
 *   cards: gathering herbs, mining ore, opening chests or fishing no longer unlocks the card of a mob you have targeted. Only looting (or skinning) the mob itself counts
 

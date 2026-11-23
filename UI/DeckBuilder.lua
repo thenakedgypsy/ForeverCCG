@@ -684,18 +684,22 @@ end
 
 -- Keywords at least one collectable card has, by their shown name, plus the card
 -- abilities listed with them (filter value -> TT.EFFECTS id)
-Keyword.ABILITIES = { aura = "anthem", spawn = "spawn", raze = "raze" }
+Keyword.ABILITIES = { aura = "anthem", spawn = "spawn", raze = "raze", aggro = "aggro" }
 function Keyword.Name(k)
     local effect = Keyword.ABILITIES[k]
     if effect then return TT:Def("effect", effect, "name") end
     return TT:Def("keyword", k, "name")
 end
--- Kinsmanship is the card's rally, not a keyword field; Aura its anthem; Spawn an Arrival,
--- Martyrdom or Aggro that puts Adds onto the battlefield; Raze a spell, Arrival, Martyrdom,
--- Aggro or ability that destroys a Settlement
+-- Kinsmanship is the card's rally, not a keyword field; Aura its anthem; Aggro its onAttack
+-- (or "Aggro:" in its English text, as the bosses' attack triggers are scripted by card id);
+-- Spawn an Arrival, Martyrdom or Aggro that puts Adds onto the battlefield; Raze a spell,
+-- Arrival, Martyrdom, Aggro or ability that destroys a Settlement
 function Keyword.Has(card, k)
     if k == "kinsmanship" then return card.rally ~= nil end
     if k == "aura" then return card.anthem ~= nil end
+    if k == "aggro" then
+        return card.onAttack ~= nil or (card.text ~= nil and card.text:find("Aggro:", 1, true) ~= nil)
+    end
     if k == "raze" then
         for _, key in ipairs({ "effect", "etb", "onDeath", "onAttack", "ability" }) do
             for _, op in ipairs((card[key] and card[key].ops) or {}) do

@@ -269,10 +269,53 @@ end
 -- kind each time the collection credits its kill (BossTracker:RecordMobKill), as long as
 -- the boss would give XP: not grey to you. Its level is read from the dead unit (target,
 -- mouseover, a nameplate or a boss frame), or remembered from the last time one of those
--- showed it (levelByNpc). When it can't be known (instances often hide it), the kill counts.
+-- showed it (levelByNpc). Instances often hide it from add-ons, so failing both, the boss's
+-- known level (BOSS_LEVEL) is used. Only a boss missing from all three gives the pack.
 -- =========================================================================
 local levelByNpc = {}      -- npc id -> level, for the packDrop bosses seen this session
 local dropNpcs             -- npc ids of the packDrop bosses (built on first use)
+
+-- npc id -> level of each packDrop boss, for when the game won't show it. Wowhead Forever's
+-- levels (2026-11-23); Wowhead gives none for Balnazzar (classic's 62) or the Forever-only
+-- bosses, which get the top of their instance's level range (OpenMap's Places.lua).
+-- A new packDrop boss needs adding here, or its kills always give a pack.
+local BOSS_LEVEL = {
+    [11519] = 16,  -- Bazzalan (Ragefire Chasm)
+    [639]   = 21,  -- Edwin VanCleef
+    [3654]  = 22,  -- Mutanus the Devourer
+    [4275]  = 26,  -- Archmage Arugal
+    [4829]  = 28,  -- Aku'mai
+    [1716]  = 29,  -- Bazil Thredd
+    [7800]  = 34,  -- Mekgineer Thermaplugg
+    [4421]  = 33,  -- Charlga Razorflank
+    [4543]  = 34,  -- Bloodmage Thalnos
+    [6487]  = 37,  -- Arcanist Doan
+    [3975]  = 40,  -- Herod
+    [3977]  = 42,  -- High Inquisitor Whitemane
+    [7358]  = 41,  -- Amnennar the Coldbringer
+    [2748]  = 47,  -- Archaedas
+    [7267]  = 48,  -- Chief Ukorz Sandscalp
+    [12201] = 51,  -- Princess Theradras
+    [5709]  = 55,  -- Shade of Eranikus
+    [9019]  = 59,  -- Emperor Dagran Thaurissan
+    [9568]  = 60,  -- Overlord Wyrmthalak
+    [10363] = 63,  -- General Drakkisath ("??")
+    [11492] = 58,  -- Alzzin the Wildshaper
+    [11486] = 61,  -- Prince Tortheldrin
+    [11501] = 62,  -- King Gordok
+    [1853]  = 61,  -- Darkmaster Gandling
+    [10440] = 62,  -- Baron Rivendare
+    [10813] = 62,  -- Balnazzar
+    [261319] = 20, -- Durgen Dirgehammer (The Hall of Thanes 13-20)
+    [250657] = 22, -- Rath'mael (Ruins of Lordaeron 15-22)
+    [260326] = 33, -- Relic Guardian (Excavation Site 26-33)
+    [246020] = 35, -- Shade of the Archmage (City of Dalaran 28-35)
+    [260243] = 42, -- Min'loth the Serpent (The Drowned City 35-42)
+    [258968] = 47, -- Overlord Mugg (Krol'dok Stronghold 40-47)
+    [255702] = 55, -- Blazeroar (Alcaz Prison 48-55)
+    [247234] = 60, -- Varrox Bleakhoof (Blackmaw Hold 55-60)
+    [261809] = 60, -- Nanaya (Shaper's Terrace 58-60)
+}
 
 local function Secret(v) return issecretvalue and issecretvalue(v) or false end
 
@@ -308,7 +351,7 @@ end
 
 local LOOK_UNITS = { "target", "focus", "mouseover", "boss1", "boss2", "boss3", "boss4", "boss5" }
 
--- The killed boss's level, or nil when nothing shows it
+-- The killed boss's level: as shown, as last seen, or as known (BOSS_LEVEL); nil if none
 local function BossLevel(card, guid)
     if guid and not Secret(guid) then
         local units = {}
@@ -323,7 +366,8 @@ local function BossLevel(card, guid)
         end
     end
     local id = NpcIdOf(guid) or (card.dropsFrom and card.dropsFrom.npcId) or card.npcId
-    return id and levelByNpc[id] or nil
+    if not id then return nil end
+    return levelByNpc[id] or BOSS_LEVEL[id]
 end
 
 -- The highest level that's grey to a player of `pl` (the classic XP rule)
@@ -438,8 +482,8 @@ end
 function P:AwardFromKill(card, guid)
     local key = card and card.packDrop
     if not (key and self.BY_KEY[key]) then return end
-    -- Only a level actually read as grey refuses the pack. Inside instances the client often
-    -- hides unit levels and XP lines from add-ons, so an unknown level gives it
+    -- A grey level refuses the pack. Inside instances the client often hides unit levels from
+    -- add-ons, so BossLevel falls back to the boss's known level
     local level = BossLevel(card, guid)
     if level and IsGrey(level) then NoPack(card) else GivePack(key, card) end
     GiveDailyPack(key, card)
