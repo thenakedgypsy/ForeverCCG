@@ -140,6 +140,92 @@ hint:SetPoint("BOTTOMLEFT", S, "BOTTOMLEFT", 20, 16)
 hint:SetJustifyH("LEFT")
 local HINT_TEXT = "solo.hint"
 
+-- Campaign progress, right of the tabs: zones and dungeons won, and each campaign prize's
+-- next copy (Cards\CampaignPrizes.lua); hovering it lists what still needs a win
+local progress = S:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+progress:SetPoint("TOPRIGHT", S, "TOPRIGHT", -22, -51 - HEADER_EXTRA)
+progress:SetJustifyH("RIGHT")
+local progressHover = CreateFrame("Frame", nil, S)
+progressHover:SetPoint("RIGHT", progress, "RIGHT", 4, 0)
+progressHover:SetHeight(18)
+progressHover:EnableMouse(true)
+
+local function WonCount(kind)
+    local won, total = 0, 0
+    for _, enc in ipairs(TTS:GetSoloEncounters(kind)) do
+        total = total + 1
+        if TTS:GetEncounterWins(enc.id) > 0 then won = won + 1 end
+    end
+    return won, total
+end
+
+local function RefreshProgress()
+    local zw, zt = WonCount("zone")
+    local dw, dt = WonCount("dungeon")
+    local parts = { L("solo.progress", zw, zt, dw, dt) }
+    for _, card in ipairs(TTS.CampaignPrizeCards and TTS.CampaignPrizeCards() or {}) do
+        local copies, missing = TTS:CampaignPrizeProgress(card)
+        local name = GOLD .. TTS:CardName(card) .. "|r"
+        if copies >= 4 then
+            parts[#parts + 1] = L("solo.prizeDone", name)
+        else
+            parts[#parts + 1] = L("solo.prizeNext", name, copies, #missing)
+        end
+    end
+    progress:SetText(table.concat(parts, "   |cFF666666·|r   "))
+    progressHover:SetWidth(math.max(1, progress:GetStringWidth() + 8))
+end
+
+-- The tooltip: per prize, its copies, how it's earned, and what still needs a win for the
+-- next copy, zones and dungeons apart, two to a line (at most PRIZE_TIP_MAX names each)
+local PRIZE_TIP_MAX = 16
+
+local function AddNameColumns(tip, encs)
+    local shown = math.min(#encs, PRIZE_TIP_MAX)
+    for i = 1, shown, 2 do
+        local a = TTS:EncounterName(encs[i])
+        local b = encs[i + 1] and i + 1 <= shown and TTS:EncounterName(encs[i + 1]) or " "
+        tip:AddDoubleLine("  " .. a, b, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9)
+    end
+    if #encs > shown then
+        tip:AddLine("  " .. L("solo.prizeTipMore", #encs - shown), 0.55, 0.55, 0.55)
+    end
+end
+
+progressHover:SetScript("OnEnter", function(self)
+    local tip = GameTooltip
+    tip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+    tip:SetText(L("solo.prizeTipTitle"), 1, 0.82, 0)
+    tip:AddLine(L("solo.prizeTipIntro"), 0.7, 0.7, 0.7, true)
+    for _, card in ipairs(TTS.CampaignPrizeCards and TTS.CampaignPrizeCards() or {}) do
+        local copies, missing = TTS:CampaignPrizeProgress(card)
+        tip:AddLine(" ")
+        local done = copies >= 4
+        tip:AddDoubleLine(TTS:CardName(card), copies .. "/4",
+            1, 0.82, 0, done and 0.2 or 1, done and 1 or 1, done and 0.2 or 1)
+        tip:AddLine(L(card.campaignPrize == "all" and "solo.prizeTipAll" or "solo.prizeTipZones"), 0.6, 0.6, 0.6)
+        if done then
+            tip:AddLine(L("solo.prizeTipDone"), 0.2, 1, 0.2)
+        else
+            local zones, dungeons = {}, {}
+            for _, enc in ipairs(missing) do
+                table.insert(enc.kind == "dungeon" and dungeons or zones, enc)
+            end
+            tip:AddLine(L("solo.prizeTipNext", copies + 1, #missing), 1, 1, 1)
+            if #zones > 0 then
+                tip:AddLine(L("solo.prizeTipZonesLeft", #zones), 1, 0.82, 0.5)
+                AddNameColumns(tip, zones)
+            end
+            if #dungeons > 0 then
+                tip:AddLine(L("solo.prizeTipDungeonsLeft", #dungeons), 1, 0.82, 0.5)
+                AddNameColumns(tip, dungeons)
+            end
+        end
+    end
+    tip:Show()
+end)
+progressHover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 -- =========================================================================
 -- MAP
 -- =========================================================================
@@ -733,6 +819,7 @@ function S:Refresh()
     if not self:IsShown() then return end
     if TTS.EnsureDeckSlots then TTS:EnsureDeckSlots() end
     hint:SetText(L(HINT_TEXT))
+    RefreshProgress()
     ShowContinent(currentContinent)
 end
 

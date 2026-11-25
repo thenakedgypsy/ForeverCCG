@@ -919,10 +919,13 @@ function B:CloseAfterMatch()
         if TTS.MainFrame.UpdatePlayState then
             TTS.MainFrame:UpdatePlayState()
         end
-        -- A solo zone or dungeon goes back to the solo map, which closes to the main window
-        -- (practice, the tutorial and PvP stay on the main window)
-        if enc and enc.kind ~= "practice" and TTS.SoloSelectFrame and TTS.MainFrame.OpenChild then
-            TTS.MainFrame:OpenChild(TTS.SoloSelectFrame)
+        -- A solo zone or dungeon goes back to the solo map, the Daily to its panel and an
+        -- Endless fight to the Endless window, each closing to the main window (practice, the
+        -- tutorial and PvP stay on the main window)
+        local back = enc and ((enc.kind == "daily" and TTS.DailyPanel) or (enc.kind == "endless" and TTS.EndlessFrame)
+            or (enc.kind ~= "practice" and TTS.SoloSelectFrame))
+        if back and TTS.MainFrame.OpenChild then
+            TTS.MainFrame:OpenChild(back)
         end
     end
 end
@@ -4314,7 +4317,7 @@ function B:UpdateDisplay()
     end
     B.myLifeText:SetText(L("board.life", E.localState.life))
     -- Health bars: full is 20, or a solo encounter's own starting life for the opponent
-    local oppFull = (E.isSolo and E.encounter and E.encounter.life) or 20
+    local oppFull = (E.isSolo and (E.remoteStartLife or (E.encounter and E.encounter.life))) or 20
     B.SetLifeBar(B.myLifeBtn, E.localState.life, 20)
     B.SetLifeBar(B.oppLifeBtn, E.remoteState.life, oppFull)
     -- While we block: the damage we'd take as the blocks stand (INCOMING DAMAGE)

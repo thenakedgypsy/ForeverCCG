@@ -157,7 +157,6 @@ local BACKDROPS = {
 }
 
 local HIGHLIGHT_TEX = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
-local BAR_TEX       = "Interface\\TargetingFrame\\UI-StatusBar"
 
 local GOLD  = "|cFFFFD200"
 local GREY  = "|cFF8A8A8A"
@@ -475,7 +474,7 @@ local cardPoolKeys = {}
 -- (TTS:GetOwnedCopies).
 -- =========================================================================
 local function IsCollectible(card)
-    return card and (card.isBoss or card.isReward or card.isGift or card.isProfession or card.isHero or card.isBeta or card.isPrize) and true or false
+    return card and (card.isBoss or card.isReward or card.isGift or card.isProfession or card.isHero or card.isBeta or card.isPrize or card.campaignPrize) and true or false
 end
 
 local function GetKillCount(cardId, card)
@@ -493,6 +492,7 @@ local function UnlockHint(card)
     if card.isGift or card.isProfession then return TTS:GiftHow(card) end
     if card.isBeta then return L("link.betaOnly") end
     if card.isPrize then return L("link.prizeOnly") end
+    if card.campaignPrize then return L(card.campaignPrize == "all" and "link.campaignAll" or "link.campaignZones") end
     if card.unlockOnDeath then return L("link.dieToUnlock") end
     return L("link.defeat", TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card))
 end
@@ -795,7 +795,7 @@ local function CheckAdd(cardId, card, deck)
                 if cardMax ~= 4 then
                     return L(kills == 1 and "db.ownCopiesMax.one" or "db.ownCopiesMax.other", kills, TTS:CardName(card), UnlockHint(card), cardMax)
                 end
-                if card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize then
+                if card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize or card.campaignPrize then
                     return L(kills == 1 and "db.ownCopies.one" or "db.ownCopies.other", kills, TTS:CardName(card), UnlockHint(card))
                 end
                 return L("db.kills", kills, TTS:CardName(card))
@@ -1121,7 +1121,7 @@ local function CardTooltip_OnEnter(self)
             if IsCollectible(card) then
                 local kills = GetKillCount(cardId, card)
                 if kills == 0 then
-                    if card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize then
+                    if card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize or card.campaignPrize then
                         tip:AddLine("|cFFFF2222" .. L("db.lockedHow", UnlockHint(card)) .. "|r", 1, 0.2, 0.2, true)
                     else
                         tip:AddLine("|cFFFF2222" .. L("db.lockedDefeat") .. "|r", 1, 0.2, 0.2)
@@ -2199,197 +2199,14 @@ local function SetupCardRow(r, cardId, card, count)
 end
 
 -- =========================================================================
--- DECK STATS (mana curve + sphere distribution, under the deck list)
--- Both charts count every non-Prayer card in the active deck.
+-- DECK STATS (mana curve + sphere distribution, under the deck list): UI\DeckStats.lua,
+-- shared with Endless. Both charts count every non-Prayer card in the active deck.
 -- =========================================================================
-local statsFrame = CreateFrame("Frame", "TTS_DeckStatsFrame", deckPanel)
-statsFrame:SetPoint("BOTTOMLEFT", deckPanel, "BOTTOMLEFT", 10, 10)
-statsFrame:SetSize(LAYOUT.LIST_W, 118)
-Skin(statsFrame, { 0.02, 0.02, 0.02, 0.6 }, STYLE.panelBorder)
+local deckStats = TTS.CreateDeckStats(deckPanel, LAYOUT.LIST_W)
+deckStats.frame:SetPoint("BOTTOMLEFT", deckPanel, "BOTTOMLEFT", 10, 10)
 
-local statsDivider = statsFrame:CreateTexture(nil, "ARTWORK")
-statsDivider:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 200, -8)
-statsDivider:SetPoint("BOTTOMLEFT", statsFrame, "BOTTOMLEFT", 200, 24)
-statsDivider:SetWidth(1)
-statsDivider:SetColorTexture(1, 0.82, 0, 0.25)
-
-local deckSummary = statsFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-deckSummary:SetPoint("BOTTOMLEFT", statsFrame, "BOTTOMLEFT", 10, 7)
-
-local chartsNote = statsFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-chartsNote:SetPoint("BOTTOMRIGHT", statsFrame, "BOTTOMRIGHT", -8, 7)
-Loc:Bind(chartsNote, "db.prayersNotCharted")
-
-CHART.BAR_BASE_Y = 36
-CHART.BAR_MAX_H  = 48
-
--- Mana curve
-CHART.CURVE_COLUMNS = 8      -- mana values 0..7+
-CHART.CURVE_BAR_W   = 16
-CHART.CURVE_BAR_GAP = 7
-
-local curveFrame = CreateFrame("Frame", "TTS_ManaCurveFrame", statsFrame)
-curveFrame:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 0, 0)
-curveFrame:SetSize(200, 118)
-
-local curveTitle = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-curveTitle:SetPoint("TOPLEFT", curveFrame, "TOPLEFT", 10, -8)
-Loc:Bind(curveTitle, "db.manaCurve")
-
-local curveAvg = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-curveAvg:SetPoint("TOPRIGHT", curveFrame, "TOPRIGHT", -10, -8)
-
-local curveBars, curveCounts = {}, {}
-for m = 0, CHART.CURVE_COLUMNS - 1 do
-    local x = 10 + m * (CHART.CURVE_BAR_W + CHART.CURVE_BAR_GAP)
-
-    local track = curveFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    track:SetColorTexture(0, 0, 0, 0.35)
-    track:SetSize(CHART.CURVE_BAR_W, CHART.BAR_MAX_H)
-    track:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
-
-    local bar = curveFrame:CreateTexture(nil, "ARTWORK")
-    bar:SetTexture(BAR_TEX)
-    bar:SetVertexColor(0.30, 0.60, 1.00, 0.95)
-    bar:SetSize(CHART.CURVE_BAR_W, 1)
-    bar:SetPoint("BOTTOMLEFT", curveFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
-    curveBars[m] = bar
-
-    local cnt = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    cnt:SetPoint("BOTTOM", bar, "TOP", 0, 1)
-    curveCounts[m] = cnt
-
-    local lbl = curveFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    lbl:SetPoint("TOP", track, "BOTTOM", 0, -3)
-    lbl:SetText(m == CHART.CURVE_COLUMNS - 1 and (m .. "+") or tostring(m))
-end
-
-function D:UpdateManaCurve(deck)
-    local buckets = {}
-    for m = 0, CHART.CURVE_COLUMNS - 1 do buckets[m] = 0 end
-    local spellCount, cmcSum = 0, 0
-    local nCreature, nSpell, nPrayer = 0, 0, 0
-
-    if deck and deck.cards then
-        for id, count in pairs(deck.cards) do
-            local c = TTS.Cards and TTS.Cards[id]
-            if c and count > 0 then
-                local group = GetTypeGroup(c)
-                if group == "Prayer" then
-                    nPrayer = nPrayer + count
-                else
-                    if group == "Creature" then nCreature = nCreature + count else nSpell = nSpell + count end
-                    local cmc = c.cmc or 0
-                    local m = math.min(CHART.CURVE_COLUMNS - 1, cmc)
-                    buckets[m] = buckets[m] + count
-                    spellCount = spellCount + count
-                    cmcSum = cmcSum + cmc * count
-                end
-            end
-        end
-    end
-
-    local maxCount = 1
-    for m = 0, CHART.CURVE_COLUMNS - 1 do
-        if buckets[m] > maxCount then maxCount = buckets[m] end
-    end
-    for m = 0, CHART.CURVE_COLUMNS - 1 do
-        local n = buckets[m]
-        if n > 0 then
-            curveBars[m]:SetHeight(math.max(2, math.floor(n / maxCount * CHART.BAR_MAX_H)))
-            curveBars[m]:Show()
-            curveCounts[m]:SetText(n)
-        else
-            curveBars[m]:SetHeight(1)
-            curveBars[m]:Hide()
-            curveCounts[m]:SetText("")
-        end
-    end
-
-    local avg = spellCount > 0 and (cmcSum / spellCount) or 0
-    curveAvg:SetText(L("db.avg", avg))
-    deckSummary:SetText(L("db.summary", nCreature, nSpell, nPrayer))
-end
-
--- Sphere distribution
-CHART.COLOR_BAR_W   = 18
-CHART.COLOR_BAR_GAP = 8
-
-local colorFrame = CreateFrame("Frame", "TTS_ColorDistFrame", statsFrame)
-colorFrame:SetPoint("TOPLEFT", statsFrame, "TOPLEFT", 200, 0)
-colorFrame:SetSize(LAYOUT.LIST_W - 200, 118)
-
-local colorTitle = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-colorTitle:SetPoint("TOPLEFT", colorFrame, "TOPLEFT", 10, -8)
-Loc:Bind(colorTitle, "db.colours")
-
-local colorTotal = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-colorTotal:SetPoint("TOPRIGHT", colorFrame, "TOPRIGHT", -8, -8)
-
-local colorBars, colorCounts, colorLabels = {}, {}, {}
-for i, col in ipairs(SPHERE_ORDER) do
-    local x = 10 + (i - 1) * (CHART.COLOR_BAR_W + CHART.COLOR_BAR_GAP)
-    local rgb = SPHERE_RGB[col]
-
-    local track = colorFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    track:SetColorTexture(0, 0, 0, 0.35)
-    track:SetSize(CHART.COLOR_BAR_W, CHART.BAR_MAX_H)
-    track:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
-
-    local bar = colorFrame:CreateTexture(nil, "ARTWORK")
-    bar:SetTexture(BAR_TEX)
-    bar:SetVertexColor(rgb[1], rgb[2], rgb[3], 0.95)
-    bar:SetSize(CHART.COLOR_BAR_W, 1)
-    bar:SetPoint("BOTTOMLEFT", colorFrame, "BOTTOMLEFT", x, CHART.BAR_BASE_Y)
-    colorBars[col] = bar
-
-    local cnt = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    cnt:SetPoint("BOTTOM", bar, "TOP", 0, 1)
-    colorCounts[col] = cnt
-
-    local lbl = colorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    lbl:SetPoint("TOP", track, "BOTTOM", 0, -2)
-    lbl:SetText(RGBHex(rgb) .. col .. "|r")
-    colorLabels[col] = lbl
-end
-
-function D:UpdateColorDistribution(deck)
-    local counts = { W = 0, U = 0, B = 0, R = 0, G = 0 }
-    local total = 0
-
-    if deck and deck.cards then
-        for id, count in pairs(deck.cards) do
-            local c = TTS.Cards and TTS.Cards[id]
-            local col = c and CardColor(c)
-            if col and count > 0 and GetTypeGroup(c) ~= "Prayer" and counts[col] then
-                counts[col] = counts[col] + count
-                total = total + count
-            end
-        end
-    end
-
-    local maxCount = 1
-    for _, col in ipairs(SPHERE_ORDER) do
-        if counts[col] > maxCount then maxCount = counts[col] end
-    end
-
-    for _, col in ipairs(SPHERE_ORDER) do
-        local n = counts[col]
-        if TTS.FormatSymbols then
-            colorLabels[col]:SetText(Sym("{" .. col .. "}", 12))
-        end
-        if n > 0 then
-            colorBars[col]:SetHeight(math.max(2, math.floor(n / maxCount * CHART.BAR_MAX_H)))
-            colorBars[col]:Show()
-            colorCounts[col]:SetText(n)
-        else
-            colorBars[col]:SetHeight(1)
-            colorBars[col]:Hide()
-            colorCounts[col]:SetText("")
-        end
-    end
-
-    colorTotal:SetText(L("db.nCards", total))
+function D:UpdateDeckStats(deck)
+    deckStats:Update(deck and deck.cards)
 end
 
 -- =========================================================================
@@ -2524,8 +2341,7 @@ function D:RefreshDeck()
     end
     SetButtonEnabled(clearBtn, totalCards > 0)
 
-    D:UpdateManaCurve(deck)
-    D:UpdateColorDistribution(deck)
+    D:UpdateDeckStats(deck)
     UpdateDeckTabs()
 
     -- Copy pips and availability on the visible pool tiles

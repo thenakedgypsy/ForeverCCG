@@ -261,6 +261,20 @@ function E:EndMatch(outcome, reason)
         end
     end
 
+    -- The Daily challenge and Endless runs (Systems\Daily.lua, Systems\Endless.lua) handle their
+    -- own result, won or not: a pack, the run going on or ending. They return a result line.
+    if self.isSolo and self.encounter then
+        local kind = self.encounter.kind
+        local handler = (kind == "daily" and TTS.Daily) or (kind == "endless" and TTS.Endless) or nil
+        if handler and handler.OnMatchEnd then
+            local ok, line = pcall(handler.OnMatchEnd, handler, self.encounter, outcome)
+            if not ok then
+                local handlerFn = geterrorhandler and geterrorhandler()
+                if handlerFn then pcall(handlerFn, line) end
+            elseif line then rewardText = (rewardText or "") .. "\n\n" .. line end
+        end
+    end
+
     -- A finished PvP game moves the rating and record (PvPRecord.lua). Conceding to an
     -- opponent who has gone quiet is a disconnect, which counts for nobody.
     if not self.isSolo and self.opponent and TTS.PvP then
@@ -1260,6 +1274,32 @@ function E:AddRemoteFoils(list)
     self:RefreshUI()
 end
 
+-- =========================================================================
+-- SEEDED RANDOM
+-- WoW's math.random can't be seeded, so a solo encounter that carries a seed (encounter.seed,
+-- a number: Endless fights, Systems\Endless.lua) gets its own Park-Miller generator. It drives
+-- both shuffles, the mulligan and the encounter rules that pick cards, so the same fight
+-- replays the same way after a /reload. Without a seed, E:Rand is math.random.
+-- =========================================================================
+local RNG_M = 2147483647
+
+-- A generator: rng(n) -> 1..n, rng() -> [0, 1). Exact in doubles (16807 * 2^31 < 2^53).
+function TTS.NewRng(seed)
+    local state = math.floor(tonumber(seed) or 1) % RNG_M
+    if state <= 0 then state = state + RNG_M - 1 end
+    return function(n)
+        state = (state * 16807) % RNG_M
+        local f = (state - 1) / (RNG_M - 1)
+        if n then return math.floor(f * n) + 1 end
+        return f
+    end
+end
+
+function E:Rand(n)
+    if self.rng then return self.rng(n) end
+    return math.random(n)
+end
+
 function E:StartMatch(opponentName, isHost, isSolo, encounter)
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         self:Log(L("err.deckbuilderOpen"), "ERROR")
@@ -1309,6 +1349,9 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     self.encounter = nil
     self.matchReward = nil
     self.bossIndex = nil
+    self.remoteStartLife = nil
+    -- A seeded solo encounter (see SEEDED RANDOM): set before the first shuffle
+    self.rng = (isSolo and encounter and encounter.seed) and TTS.NewRng(encounter.seed) or nil
     self.lastPlayed = nil   -- the board's What Just Happened button (CardLogic.lua)
     self.lastCombat = nil
     self.lastEffect = nil
@@ -1365,7 +1408,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
 
     if not (scripted and scripted.fixedOrder) then
         for i = #self.localState.deck, 2, -1 do
-            local j = math.random(i)
+            local j = self:Rand(i)
             self.localState.deck[i], self.localState.deck[j] = self.localState.deck[j], self.localState.deck[i]
         end
     end
@@ -1401,7 +1444,7 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
         self.remoteState.deck = self:BuildEncounterDeck(enc)
         if not enc.fixedOrder then
             for i = #self.remoteState.deck, 2, -1 do
-                local j = math.random(i)
+                local j = self:Rand(i)
                 self.remoteState.deck[i], self.remoteState.deck[j] = self.remoteState.deck[j], self.remoteState.deck[i]
             end
         end
@@ -1417,7 +1460,12 @@ function E:StartMatch(opponentName, isHost, isSolo, encounter)
     if TTS.BoardFrame then TTS.BoardFrame:Show() end
     if TTS.MainFrame then TTS.MainFrame:Hide() end
 
-    if self.isSolo then self:RunEncounterRules("onStart") end
+    if self.isSolo then
+        self:RunEncounterRules("onStart")
+        -- The opponent's life once the rules have set it (Sudden Death; the Raging curse and
+        -- the board's life bar measure from it)
+        self.remoteStartLife = self.remoteState.life
+    end
 
     if self.isMyTurn then
         self:SetPhase("MAIN1")
@@ -1665,7 +1713,7 @@ function E:Mulligan()
         table.insert(st.deck, table.remove(st.hand, i))
     end
     for i = #st.deck, 2, -1 do
-        local j = math.random(i)
+        local j = self:Rand(i)
         st.deck[i], st.deck[j] = st.deck[j], st.deck[i]
     end
     for _ = 1, math.min(MULLIGAN_HAND_SIZE, #st.deck) do

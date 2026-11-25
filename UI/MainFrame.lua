@@ -105,42 +105,63 @@ end
 -- =========================================================================
 -- OPENING WINDOWS FROM HERE
 -- Picking an option closes this window; closing the window it opened brings
--- this one back (unless a match has started in the meantime).
+-- this one back (unless a match has started in the meantime). The PvE and PvP windows
+-- (below) open their own windows the same way, and close back to this one.
+-- child.ttsReturnTo: the window that comes back when it closes
+-- child.ttsHome: the PvE or PvP window it belongs to (M:OpenChild goes through it)
 -- =========================================================================
 local function OnChildHidden(child)
-    if not child.ttsOpenedFromMain then return end
-    child.ttsOpenedFromMain = nil
+    local back = child.ttsReturnTo
+    if not back then return end
+    child.ttsReturnTo = nil
     -- Wait a frame: a window closed by a match starting should not bring this back
     TTS:SafeAfter(0, function()
-        if child:IsShown() or M:IsShown() then return end
+        if child:IsShown() or back:IsShown() then return end
         if TTS.Engine and TTS.Engine.inMatch then return end
         -- Hidden for the deck picker: cancelling it may bring the window back, still ours
         if TTS.DeckPicker and TTS.DeckPicker:IsPending() then
-            child.ttsOpenedFromMain = true
+            child.ttsReturnTo = back
             return
         end
-        -- Hidden behind a dialog of its own (the solo map's dungeon entry), which brings it back
+        -- Hidden behind a window of its own (the solo map's dungeon entry, the PvE window's
+        -- solo map), which brings it back
         if child.ttsIsCovered and child.ttsIsCovered() then
-            child.ttsOpenedFromMain = true
+            child.ttsReturnTo = back
             return
         end
-        M:Show()
+        back:Show()
     end)
 end
 
-local function OpenFromMain(child)
-    if not child:IsShown() then return end   -- it refused to open
+local function OpenFrom(parent, child)
+    if not (child and child:IsShown()) then return end   -- it refused to open
     if not child.ttsMainHooked then
         child.ttsMainHooked = true
         child:HookScript("OnHide", OnChildHidden)
     end
-    child.ttsOpenedFromMain = true
-    M:Hide()
+    child.ttsReturnTo = parent
+    parent.ttsOpenChild = child
+    parent:Hide()
 end
 
+local function OpenFromMain(child) OpenFrom(M, child) end
+
+-- A shown window takes over as parent's child (closing it brings parent back): the
+-- tournament windows that replace one another (Events\UI\Choose.lua)
+function M:OpenChildFrom(parent, child) OpenFrom(parent, child) end
+
 -- Opens a window as if from the main window, so closing it comes back here (Board.lua: the
--- solo map after a solo encounter)
+-- solo map after a solo encounter). A window of the PvE or PvP window's opens over that one.
 function M:OpenChild(child)
+    local home = child.ttsHome
+    if home and home ~= child then
+        if not M:IsShown() then M:Show() end
+        home:Show()
+        OpenFrom(M, home)
+        child:Show()
+        OpenFrom(home, child)
+        return
+    end
     child:Show()
     OpenFromMain(child)
 end
@@ -160,34 +181,23 @@ end)
 -- =========================================================================
 -- LAYOUT: three sections, one under another, full width: Collect, Build and Battle.
 -- Every button sits SIDE in from its section's edges, BTN_GAP apart, the first row under
--- the header; two to a row (GRID_BTN_W). Battle's two columns (PvE, PvP) have a small
--- label each above their buttons.
+-- the header; two to a row (GRID_BTN_W). Battle holds two buttons, PvE and PvP, each
+-- opening a window of its own.
 -- =========================================================================
 local SECTION_W, SECTION_GAP = 372, 8
 local SIDE, BTN_H, BTN_GAP, FIRST_Y = 10, 24, 4, -32
 local GRID_BTN_W = (SECTION_W - 2 * SIDE - 12) / 2     -- two to a row, 12 apart
-local COLUMN_LABEL_H = 14                               -- Battle's PvE / PvP labels
 local STATUS_Y = FIRST_Y - BTN_H - 8                    -- under Build's buttons
 local CAMPFIRE_LINE_H = 16                             -- the campfire bonus line under Collect's button
 local COLLECT_H = -FIRST_Y + BTN_H + CAMPFIRE_LINE_H + 10
 local BUILD_H = -STATUS_Y + 34                          -- room for two lines of status
-local PRIZE_LINE_H = 16                                -- the tournament prize line under PvP's buttons
-local BATTLE_H = -FIRST_Y + COLUMN_LABEL_H + 3 * BTN_H + 2 * BTN_GAP + PRIZE_LINE_H + 10   -- three buttons (PvP's)
+local BATTLE_H = -FIRST_Y + BTN_H + 10                  -- the PvE and PvP buttons
 
 -- The window fits them: under the title strip, the sections, then room for the footer
 M:SetHeight(93 + COLLECT_H + BUILD_H + BATTLE_H + 2 * SECTION_GAP + 34)
 
 -- The y offset of button row `row` (1 = first) in a section, below `top` (default FIRST_Y)
 local function RowY(row, top) return (top or FIRST_Y) - (row - 1) * (BTN_H + BTN_GAP) end
-
--- A small label over one of Battle's columns, its text and colour set by UpdatePlayState
-local function ColumnLabel(section, anchor, x)
-    local fs = section:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    fs:SetPoint(anchor, section, anchor, x, FIRST_Y)
-    fs:SetWidth(GRID_BTN_W)
-    fs:SetJustifyH("CENTER")
-    return fs
-end
 
 -- =========================================================================
 -- COLLECT: the Collection Guide, and the collection score in the header
@@ -256,29 +266,165 @@ statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
 
 -- =========================================================================
--- BATTLE: PvE on the left (the campaign and the practice dummy), PvP on the right (the
--- waiting room, the only way to challenge other players; the record; tournaments), and
--- the PvP rating in the header
+-- BATTLE: two buttons, PvE and PvP, each opening a window of its own (below), and the PvP
+-- rating in the header
 -- =========================================================================
 local battleSection = CreateSection("main.battle", SECTION_W, BATTLE_H)
 battleSection:SetPoint("TOPLEFT", buildSection, "BOTTOMLEFT", 0, -SECTION_GAP)
-local BATTLE_TOP = FIRST_Y - COLUMN_LABEL_H   -- the first row, under the column labels
--- PvE coloured by the solo rewards won, PvP by the rating's tier (UpdatePlayState)
-local pveLabel = ColumnLabel(battleSection, "TOPLEFT", SIDE)
-local pvpLabel = ColumnLabel(battleSection, "TOPRIGHT", -SIDE)
 
-local encountersBtn = CreatePanelButton("TTS_SoloEncountersBtn", battleSection, GRID_BTN_W, BTN_H, "main.campaign")
-encountersBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(1, BATTLE_TOP))
+-- PvP rating, right side of the section header (as the collection score is on Collect's)
+local ratingLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+ratingLabel:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, -9)
+ratingLabel:SetJustifyH("RIGHT")
+
+-- PvE coloured by the solo rewards won, PvP by the rating's tier (UpdatePlayState)
+local pveBtn = CreatePanelButton("TTS_PvEBtn", battleSection, GRID_BTN_W, BTN_H, "main.pve")
+pveBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(1))
+local pvpBtn = CreatePanelButton("TTS_PvPBtn", battleSection, GRID_BTN_W, BTN_H, "main.playOthers")
+pvpBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(1))
+
+-- =========================================================================
+-- THE PvE AND PvP WINDOWS
+-- Small windows in the main window's look: a title strip, then one section of full-width
+-- buttons. Each takes the main window's place; the windows they open take theirs, and
+-- closing those comes back to them (OPENING WINDOWS FROM HERE, above).
+-- =========================================================================
+local SUB_W = 280
+local SUB_BTN_W = SUB_W - 28 - 2 * SIDE
+local SUB_TOP = -44
+
+local function CreateSubWindow(name, titleKey, rows, extraH)
+    local w = CreateFrame("Frame", name, UIParent, backdropTemplate)
+    local sectionH = -FIRST_Y + rows * BTN_H + (rows - 1) * BTN_GAP + (extraH or 0) + 10
+    w:SetSize(SUB_W, -SUB_TOP + sectionH + 40)
+    w:SetPoint("CENTER")
+    w:SetFrameStrata("DIALOG")
+    w:SetToplevel(true)
+    w:SetClampedToScreen(true)
+    w:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 }
+    })
+    w:EnableMouse(true)
+    w:SetMovable(true)
+    w:RegisterForDrag("LeftButton")
+    w:SetScript("OnDragStart", w.StartMoving)
+    w:SetScript("OnDragStop", w.StopMovingOrSizing)
+    w:Hide()
+    tinsert(UISpecialFrames, name)
+
+    local bar = w:CreateTexture(nil, "ARTWORK")
+    bar:SetPoint("TOPLEFT", 12, -12)
+    bar:SetPoint("TOPRIGHT", -12, -12)
+    bar:SetHeight(25)
+    bar:SetColorTexture(0, 0, 0, 0.35)
+    local line = w:CreateTexture(nil, "ARTWORK")
+    line:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, 0)
+    line:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+    line:SetHeight(1)
+    line:SetColorTexture(1, 0.82, 0, 0.55)
+    w.title = w:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    w.title:SetPoint("TOPLEFT", 16, -16)
+    Loc:Bind(w.title, titleKey)
+    local close = CreateFrame("Button", nil, w, "UIPanelCloseButton")
+    close:SetScript("OnClick", TTS.CloseParent)
+    close:SetPoint("TOPRIGHT", -2, -2)
+
+    local p = CreateFrame("Frame", nil, w, backdropTemplate)
+    p:SetPoint("TOPLEFT", w, "TOPLEFT", 14, SUB_TOP)
+    p:SetPoint("TOPRIGHT", w, "TOPRIGHT", -14, SUB_TOP)
+    p:SetHeight(sectionH)
+    p:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    p:SetBackdropColor(PANEL_BG[1], PANEL_BG[2], PANEL_BG[3], PANEL_BG[4])
+    p:SetBackdropBorderColor(PANEL_BORDER[1], PANEL_BORDER[2], PANEL_BORDER[3], PANEL_BORDER[4])
+    -- The section header: a line of status (UpdatePlayState) and the divider
+    w.header = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    w.header:SetPoint("TOPLEFT", 10, -9)
+    w.header:SetPoint("TOPRIGHT", -10, -9)
+    w.header:SetJustifyH("LEFT")
+    local divider = p:CreateTexture(nil, "ARTWORK")
+    divider:SetPoint("TOPLEFT", 8, -24)
+    divider:SetPoint("TOPRIGHT", -8, -24)
+    divider:SetHeight(1)
+    divider:SetColorTexture(1, 0.82, 0, 0.30)
+    w.section = p
+
+    -- Hidden behind a window it opened, it isn't closed (OnChildHidden)
+    w.ttsIsCovered = function()
+        local c = w.ttsOpenChild
+        return c ~= nil and (c:IsShown() or c.ttsReturnTo == w)
+    end
+    w:SetScript("OnShow", function(self)
+        if TTS.Engine and TTS.Engine.inMatch then
+            self:Hide()
+            return
+        end
+        M:UpdatePlayState()
+    end)
+    local footerText = w:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    footerText:SetPoint("BOTTOM", w, "BOTTOM", 0, 16)
+    footerText:SetText("Tragic: The Saddening Engine")
+    local loader = CreateFrame("Frame")
+    loader:RegisterEvent("PLAYER_LOGIN")
+    loader:SetScript("OnEvent", function(self)
+        if TTS.Sound and TTS.Sound.HookButtons then TTS.Sound:HookButtons(w) end
+        self:UnregisterAllEvents()
+    end)
+    return w
+end
+
+-- A full-width button on row `row` of a window's section
+local function SubButton(w, name, row, key)
+    local b = CreatePanelButton(name, w.section, SUB_BTN_W, BTN_H, key)
+    b:SetPoint("TOP", w.section, "TOP", 0, RowY(row))
+    return b
+end
+
+-- Opens a PvE / PvP window where the main window stands, in its place
+local function OpenSubWindow(w)
+    local x, y = M:GetCenter()
+    if x then
+        local s = M:GetEffectiveScale() / UIParent:GetEffectiveScale()
+        w:ClearAllPoints()
+        w:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x * s, y * s)
+    end
+    w:Show()
+    OpenFromMain(w)
+end
+
+-- -------------------------------------------------------------------------
+-- PvE: the campaign, the Daily challenge, Endless, practice and the tutorial
+-- -------------------------------------------------------------------------
+local pveWin = CreateSubWindow("TTS_PvEFrame", "main.pveTitle", 5)
+TTS.PvEFrame = pveWin
+pveBtn:SetScript("OnClick", function() OpenSubWindow(pveWin) end)
+
+local encountersBtn = SubButton(pveWin, "TTS_SoloEncountersBtn", 1, "main.campaign")
 encountersBtn:SetScript("OnClick", function()
     if TTS.SoloSelectFrame then
         TTS.SoloSelectFrame:Show()
-        OpenFromMain(TTS.SoloSelectFrame)
+        OpenFrom(pveWin, TTS.SoloSelectFrame)
     end
 end)
 
-local soloBtn = CreatePanelButton("TTS_SoloBtn", battleSection, GRID_BTN_W, BTN_H, "main.practice")
-soloBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(2, BATTLE_TOP))
+-- The Daily challenge (UI\DailyPanel.lua) and Endless (UI\Endless.lua)
+local dailyBtn = SubButton(pveWin, "TTS_DailyBtn", 2, "main.daily")
+dailyBtn:SetScript("OnClick", function()
+    if TTS.DailyPanel then OpenFrom(pveWin, TTS.DailyPanel:Open()) end
+end)
+local endlessBtn = SubButton(pveWin, "TTS_EndlessBtn", 3, "main.endless")
+endlessBtn:SetScript("OnClick", function()
+    if TTS.EndlessFrame then OpenFrom(pveWin, TTS.EndlessFrame:Open()) end
+end)
 
+local soloBtn = SubButton(pveWin, "TTS_SoloBtn", 4, "main.practice")
 soloBtn:SetScript("OnClick", function()
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() then
         DEFAULT_CHAT_FRAME:AddMessage(L("main.closeDeckbuilderFirst"))
@@ -303,54 +449,63 @@ soloBtn:SetScript("OnClick", function()
             TTS.Engine:StartMatch(dummy, true, true)
         end,
     })
-    -- (cancelling the deck picker brings the main window back; a game starting doesn't)
-    OpenFromMain(TTS.DeckPicker)
+    -- (cancelling the deck picker brings this window back; a game starting doesn't)
+    OpenFrom(pveWin, TTS.DeckPicker)
 end)
 
--- The tutorial game (UI\Tutorial.lua), under Practice: it brings its own decks
-local tutorialBtn = CreatePanelButton("TTS_TutorialBtn", battleSection, GRID_BTN_W, BTN_H, "tut.play")
-tutorialBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(3, BATTLE_TOP))
+-- The tutorial game (UI\Tutorial.lua): it brings its own decks
+local tutorialBtn = SubButton(pveWin, "TTS_TutorialBtn", 5, "tut.play")
 tutorialBtn:SetScript("OnClick", function()
     if not TTS.StartTutorial then return end
     TTS:StartTutorial()
-    if TTS.Engine and TTS.Engine.inMatch then M:Hide() end
+    if TTS.Engine and TTS.Engine.inMatch then pveWin:Hide() end
 end)
 
-local waitingRoomBtn = CreatePanelButton("TTS_WaitingRoomBtn", battleSection, GRID_BTN_W, BTN_H, "main.openWaitingRoom")
-waitingRoomBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(1, BATTLE_TOP))
+-- -------------------------------------------------------------------------
+-- PvP: the waiting room (the only way to challenge other players), the record,
+-- tournaments, and the weekly tournament prize under them
+-- -------------------------------------------------------------------------
+local pvpWin = CreateSubWindow("TTS_PvPFrame", "main.pvpTitle", 3, CAMPFIRE_LINE_H + 4)
+TTS.PvPFrame = pvpWin
+pvpBtn:SetScript("OnClick", function() OpenSubWindow(pvpWin) end)
+
+local waitingRoomBtn = SubButton(pvpWin, "TTS_WaitingRoomBtn", 1, "main.openWaitingRoom")
 waitingRoomBtn:SetScript("OnClick", function()
     if TTS.WaitingRoom and TTS.WaitingRoom.frame then
         TTS.WaitingRoom.frame:Show()
-        OpenFromMain(TTS.WaitingRoom.frame)
+        OpenFrom(pvpWin, TTS.WaitingRoom.frame)
     end
 end)
 
 -- The PvP rating, wins and losses, and the latest games (PvPRecord.lua)
-local recordBtn = CreatePanelButton("TTS_PvPRecordBtn", battleSection, GRID_BTN_W, BTN_H, "main.pvpRecord")
-recordBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(2, BATTLE_TOP))
+local recordBtn = SubButton(pvpWin, "TTS_PvPRecordBtn", 2, "main.pvpRecord")
 recordBtn:SetScript("OnClick", function()
-    if TTS.PvP then OpenFromMain(TTS.PvP:Open()) end
+    if TTS.PvP then OpenFrom(pvpWin, TTS.PvP:Open()) end
 end)
 
 -- Tournaments (Events\): join one with a code, or host one
-local tournamentBtn = CreatePanelButton("TTS_TournamentsBtn", battleSection, GRID_BTN_W, BTN_H, "main.tournaments")
-tournamentBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(3, BATTLE_TOP))
-
--- Under it (a minimap tooltip line too): the weekly tournament prize cooldown (UpdateTimers)
-local timersLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-timersLabel:SetPoint("TOP", tournamentBtn, "BOTTOM", 0, -4)
-timersLabel:SetWidth(GRID_BTN_W)
-timersLabel:SetJustifyH("CENTER")
+local tournamentBtn = SubButton(pvpWin, "TTS_TournamentsBtn", 3, "main.tournaments")
 tournamentBtn:SetScript("OnClick", function()
     local win = TTS.OpenTournaments and TTS:OpenTournaments()
-    if win then OpenFromMain(win) end
+    if win then OpenFrom(pvpWin, win) end
 end)
 
--- PvP rating, right side of the section header (as the collection score is on Collect's)
-local ratingLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-ratingLabel:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, -9)
-ratingLabel:SetJustifyH("RIGHT")
+-- Under it (a minimap tooltip line too): the weekly tournament prize cooldown (UpdateTimers)
+local timersLabel = pvpWin.section:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+timersLabel:SetPoint("TOP", tournamentBtn, "BOTTOM", 0, -6)
+timersLabel:SetWidth(SUB_BTN_W)
+timersLabel:SetJustifyH("CENTER")
 
+-- The solo map, the Daily and Endless open over the PvE window however they're opened
+-- (M:OpenChild); they load after this file
+do
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("PLAYER_LOGIN")
+    f:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        for _, w in ipairs({ TTS.SoloSelectFrame, TTS.DailyPanel, TTS.EndlessFrame }) do w.ttsHome = pveWin end
+    end)
+end
 
 -- =========================================================================
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)
@@ -359,17 +514,19 @@ function M:UpdatePlayState()
     if TTS.GetCollectionScore then
         scoreLabel:SetText(L("main.score", TTS:ColoredScore((TTS:GetCollectionScore()))))
     end
-    if TTS.PvP then
-        ratingLabel:SetText(L("pvp.rating", TTS.PvP.ColoredRating((TTS.PvP:Get()))))
+    local rated = TTS.PvP and TTS.PvP.ColoredRating((TTS.PvP:Get()))
+    if rated then
+        ratingLabel:SetText(L("pvp.rating", rated))
+        pvpWin.header:SetText(L("pvp.rating", rated))
     end
     -- PvE in the score's colours by the share of solo reward copies won; PvP in the colour
     -- its rating number has (PvPRecord.lua's tiers)
     local gained, total = 0, 0
     if TTS.PvERewards then gained, total = TTS:PvERewards() end
-    pveLabel:SetText(TTS.TierColored and TTS:TierColored(total > 0 and gained / total or 0, L("main.pve")) or L("main.pve"))
-    local rated = TTS.PvP and TTS.PvP.ColoredRating((TTS.PvP:Get()))
+    pveBtn:SetText(TTS.TierColored and TTS:TierColored(total > 0 and gained / total or 0, L("main.pve")) or L("main.pve"))
+    pveWin.header:SetText(L("main.pveRewards", TTS.ColoredCount and TTS:ColoredCount(gained, total) or (gained .. "/" .. total)))
     local colour = rated and rated:match("^|c(%x%x%x%x%x%x%x%x)")
-    pvpLabel:SetText(colour and ("|c" .. colour .. L("main.playOthers") .. "|r") or L("main.playOthers"))
+    pvpBtn:SetText(colour and ("|c" .. colour .. L("main.playOthers") .. "|r") or L("main.playOthers"))
 
     local inMatch = TTS.Engine and TTS.Engine.inMatch
     local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
@@ -377,8 +534,12 @@ function M:UpdatePlayState()
 
     -- The Deckbuilder cannot be opened while a game is in progress (it can while queued)
     deckBtn:SetEnabled(not inMatch)
+    pveBtn:SetEnabled(not inMatch)
+    pvpBtn:SetEnabled(not inMatch)
     -- Solo encounters open whenever no game is running (the window explains anything else in the way)
     encountersBtn:SetEnabled(not inMatch)
+    dailyBtn:SetEnabled(not inMatch)
+    endlessBtn:SetEnabled(not inMatch)
     tutorialBtn:SetEnabled(not inMatch and not isQueued)
     -- Decks are picked as a game starts, so one playable deck is enough. Once queued the
     -- waiting room always reopens, so the player can leave.
@@ -443,12 +604,23 @@ local function DailyBonuses()
         value = packWait and (GREY .. TTS:FormatWait(packWait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r"),
         wait = packWait,
     }
-    return fire, pack
+    -- The Daily challenge's reward (Daily.lua): ready, or until local midnight once won
+    local D = TTS.Daily
+    local dailyWait = D and D:RewardWait()
+    local daily = {
+        label = L("minimap.daily"),
+        value = dailyWait and (GREY .. TTS:FormatWait(dailyWait) .. "|r") or (GREEN .. L("minimap.ready") .. "|r"),
+        wait = dailyWait,
+    }
+    return fire, pack, daily
 end
+
+-- The line's short labels (three timers share one line)
+local SHORT_LABEL = { fire = "main.short.campfire", warmth = "main.short.warmth", pack = "main.short.dailyPack", daily = "main.short.daily" }
 
 -- The bonuses line's tooltip: each bonus with its timer and how to get it
 campfireLabel.hover:SetScript("OnEnter", function(self)
-    local fire, pack = DailyBonuses()
+    local fire, pack, daily = DailyBonuses()
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:SetText(L("main.bonusesTipTitle"), 1, 0.82, 0)
     GameTooltip:AddLine(" ")
@@ -457,18 +629,24 @@ campfireLabel.hover:SetScript("OnEnter", function(self)
     GameTooltip:AddLine(" ")
     GameTooltip:AddDoubleLine(pack.label, pack.value, 1, 0.82, 0)
     GameTooltip:AddLine(L("main.dailyPackTip"), 0.9, 0.9, 0.9, true)
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddDoubleLine(daily.label, daily.value, 1, 0.82, 0)
+    GameTooltip:AddLine(L("main.dailyTip"), 0.9, 0.9, 0.9, true)
     GameTooltip:Show()
 end)
 
 local function UpdateTimers()
     if TTS.Campfire or TTS.Packs then
-        local fire, pack = DailyBonuses()
-        if fire.wait and pack.wait then
-            -- Both had today: one timer, until the first is ready again (both at midnight)
+        local fire, pack, daily = DailyBonuses()
+        if fire.wait and pack.wait and daily.wait then
+            -- All had today: one timer, until the first is ready again (all at midnight)
             campfireLabel:SetText(L("main.bonusesNext") .. " "
-                .. GREY .. TTS:FormatWait(math.min(fire.wait, pack.wait)) .. "|r")
+                .. GREY .. TTS:FormatWait(math.min(fire.wait, pack.wait, daily.wait)) .. "|r")
         else
-            campfireLabel:SetText(fire.label .. " " .. fire.value .. "   |cFF666666·|r   " .. pack.label .. " " .. pack.value)
+            local warm = TTS.Campfire and TTS.Campfire:Remaining()
+            local sep = "  |cFF666666·|r  "
+            campfireLabel:SetText(L(warm and SHORT_LABEL.warmth or SHORT_LABEL.fire) .. " " .. fire.value .. sep
+                .. L(SHORT_LABEL.pack) .. " " .. pack.value .. sep .. L(SHORT_LABEL.daily) .. " " .. daily.value)
         end
         campfireLabel.hover:FitText()
         -- An open tooltip follows the timers
@@ -494,6 +672,8 @@ end)
 M:HookScript("OnHide", function()
     if timersTicker then timersTicker:Cancel(); timersTicker = nil end
 end)
+-- The PvP window shows the tournament prize timer
+pvpWin:HookScript("OnShow", UpdateTimers)
 
 -- =========================================================================
 -- FOOTER
@@ -635,6 +815,10 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.SoloSelectFrame:Show()
             end
         end
+    elseif cmd == "daily" or cmd == "endless" then
+        -- The Daily challenge (DailyPanel.lua) and Endless (Endless.lua)
+        local win = (cmd == "daily") and TTS.DailyPanel or TTS.EndlessFrame
+        if win then win:SetShown(not win:IsShown()) end
     elseif cmd == "queue" or cmd == "lfm" or cmd == "waiting" then
         if TTS.WaitingRoom and TTS.WaitingRoom.frame then
             if TTS.WaitingRoom.frame:IsShown() then

@@ -366,6 +366,7 @@ local function Hash(s)
     for i = 1, #s do h = (h * 33 + s:byte(i)) % 2147483647 end
     return h
 end
+TTS.StableHash = Hash   -- (the Daily's and Endless's seeds: Systems\Daily.lua, Systems\Endless.lua)
 
 local function CountPips(cost, into)
     for pip in string.gmatch(cost or "", "{(%a)}") do
@@ -630,7 +631,88 @@ function TTS:GetOwnedCopies(card)
         local copies = TTS_NpcGifts and TTS_NpcGifts.prizes and TTS_NpcGifts.prizes[card.id]
         return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
     end
+    if card.campaignPrize then
+        return (TTS:CampaignPrizeProgress(card))
+    end
     return nil
+end
+
+-- =========================================================================
+-- CAMPAIGN PRIZES (Cards\CampaignPrizes.lua)
+-- A campaign prize's copies are the fewest wins of any encounter in its set (every zone, or
+-- every zone and dungeon), up to 4, worked out live from TTS_SoloProgress.cleared. Practice,
+-- the tutorial, NPC duels, the Daily and Endless are never in a set.
+-- =========================================================================
+-- The encounters a prize's set holds, in map order (zones first)
+local function PrizeSet(card)
+    local list = {}
+    for _, enc in pairs(ENC) do
+        if enc.kind == "zone" or (card.campaignPrize == "all" and enc.kind == "dungeon") then
+            table.insert(list, enc)
+        end
+    end
+    table.sort(list, function(a, b)
+        if a.kind ~= b.kind then return a.kind == "zone" end
+        return a.order < b.order
+    end)
+    return list
+end
+
+-- Returns copies owned, and the encounters still needing a win for the next copy (none at 4)
+function TTS:CampaignPrizeProgress(card)
+    if type(card) == "string" then card = TTS.Cards[card] end
+    if not (card and card.campaignPrize) then return 0, {} end
+    local cleared = Progress().cleared
+    local set = PrizeSet(card)
+    local fewest
+    for _, enc in ipairs(set) do
+        local wins = cleared[enc.id] or 0
+        if not fewest or wins < fewest then fewest = wins end
+    end
+    local copies = math.min(MAX_REWARD_COPIES, fewest or 0)
+    local missing = {}
+    if copies < MAX_REWARD_COPIES then
+        for _, enc in ipairs(set) do
+            if (cleared[enc.id] or 0) <= copies then table.insert(missing, enc) end
+        end
+    end
+    return copies, missing
+end
+
+-- The campaign prize cards, by id
+local function CampaignPrizes()
+    local list = {}
+    for id, card in pairs(TTS.Cards or {}) do
+        if card.campaignPrize then table.insert(list, card) end
+    end
+    table.sort(list, function(a, b) return a.id < b.id end)
+    return list
+end
+TTS.CampaignPrizeCards = CampaignPrizes
+
+-- Wins (or a first login with them) that raised a prize's copies are announced once:
+-- TTS_SoloProgress.prizeSeen[cardId] = the copies already told
+function TTS:CheckCampaignPrizes()
+    local p = Progress()
+    p.prizeSeen = p.prizeSeen or {}
+    local changed = false
+    for _, card in ipairs(CampaignPrizes()) do
+        local copies = TTS:CampaignPrizeProgress(card)
+        local seen = tonumber(p.prizeSeen[card.id]) or 0
+        if copies > seen then
+            p.prizeSeen[card.id] = copies
+            if TTS.MarkCardNew then TTS:MarkCardNew(card.id) end
+            local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
+            DEFAULT_CHAT_FRAME:AddMessage(L(card.campaignPrize == "all" and "prize.campaign.earnedAll" or "prize.campaign.earnedZones",
+                link, copies))
+            changed = true
+        elseif copies < seen then
+            p.prizeSeen[card.id] = copies   -- (a reset collection)
+        end
+    end
+    if changed and TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
+        TTS.DeckBuilderFrame:RefreshAll()
+    end
 end
 
 -- Collection score: (Hearthstones + Gear + creature cards collected (1+ copies)) x
@@ -652,6 +734,12 @@ function TTS:GetCollectionScore()
         if card.isBeta or card.isPrize then
             -- Beta players and prize winners only: not everyone can get them, so they never
             -- count towards a collection
+        elseif card.campaignPrize then
+            -- The campaign prizes count with the creature cards (the Ashbringer isn't one)
+            total = total + 1
+            local copies = self:GetOwnedCopies(card) or 0
+            if copies >= 1 then collected = collected + 1 end
+            if copies >= MAX_REWARD_COPIES then mastered = mastered + 1 end
         elseif card.type == "Settlement" and card.isReward then
             lTotal = lTotal + 1
             local copies = self:GetOwnedCopies(card) or 0
@@ -778,10 +866,19 @@ function TTS:IsEncounterUnlocked(enc)
 end
 
 -- Records a win; returns the reward card id and the copies now owned (nil if no reward)
+-- (The Daily and Endless record nothing here: Systems\Daily.lua and Systems\Endless.lua handle
+-- their own wins.)
+local NO_PROGRESS = { practice = true, daily = true, endless = true }
+
 function TTS:RecordEncounterWin(enc)
-    if not enc or enc.kind == "practice" then return nil end
+    if not enc or NO_PROGRESS[enc.kind] then return nil end
     local p = Progress()
     p.cleared[enc.id] = (p.cleared[enc.id] or 0) + 1
+    -- A zone or dungeon win may complete another round for a campaign prize (after this win's
+    -- own reward line)
+    if enc.kind == "zone" or enc.kind == "dungeon" then
+        TTS:SafeAfter(1, function() TTS:CheckCampaignPrizes() end)
+    end
     if not enc.reward or not TTS.Cards[enc.reward] then return nil end
     local max = TTS:CardMaxCopies(TTS.Cards[enc.reward])
     local before = p.rewards[enc.reward] or 0
@@ -838,7 +935,10 @@ do
     f:RegisterEvent("PLAYER_ENTERING_WORLD")
     f:SetScript("OnEvent", function(self)
         self:UnregisterAllEvents()
-        TTS:SafeAfter(5, function() TTS:CheckDuelGrants() end)
+        TTS:SafeAfter(5, function()
+            TTS:CheckDuelGrants()
+            TTS:CheckCampaignPrizes()
+        end)
     end)
 end
 
@@ -926,7 +1026,7 @@ TTS.EncounterRules = {
                 if c and c.type == "Creature" then table.insert(options, i) end
             end
             if #options == 0 then return end
-            local id = table.remove(self.remoteState.deck, options[math.random(#options)])
+            local id = table.remove(self.remoteState.deck, options[self:Rand(#options)])
             self:Log(L("solo.reinforcements", BossName(id), self.opponent), "SYSTEM")
             self:PutCreatureOntoBattlefield(id, true, { spawned = true })
         end,
@@ -980,6 +1080,239 @@ TTS.EncounterRules = {
         end,
     },
 }
+
+-- =========================================================================
+-- MUTATORS (the Daily challenge and Endless: Systems\Daily.lua, Systems\Endless.lua)
+-- Rules like the boss rules, on the same hooks, listed after an encounter's own boss rules.
+-- mutator = "curse": helps the opponent; "twist": changes both sides. milestoneOnly: only
+-- Endless milestone fights (and a Daily whose opponent is a dungeon) get it.
+-- Random picks go through E:Rand, so a seeded fight replays the same way. None of them make
+-- the player draw cards (20-card Endless decks lose on deck-out).
+-- =========================================================================
+local function IsBossId(id) return type(id) == "string" and id:match("^BOSS") ~= nil end
+
+local function IsCreature(perm)
+    local c = perm and TTS.Cards[perm.id]
+    return c and c.type == "Creature"
+end
+
+local function RuleName(ruleId)
+    local rule = TTS.EncounterRules[ruleId]
+    return TTS.Locale:Data("rule." .. ruleId .. ".name", rule and rule.name or ruleId)
+end
+
+-- A random creature on a side's battlefield that passes ok (nil when none does)
+local function RandomCreature(self, isRemote, ok)
+    local list = {}
+    for _, perm in ipairs((isRemote and self.remoteState or self.localState).field) do
+        if IsCreature(perm) and (not ok or ok(perm)) then table.insert(list, perm) end
+    end
+    if #list == 0 then return nil end
+    return list[self:Rand(#list)]
+end
+
+local function SpawnSkeleton(self)
+    return self:PutCreatureOntoBattlefield("TOK03", true, { spawned = true })
+end
+
+-- The colour of prayer the AI's deck holds most of (ties: the first in W U B R G)
+local function MainPrayer(self)
+    local count = {}
+    for _, id in ipairs(self.remoteState.deck) do
+        local c = TTS.Cards[id]
+        if c and c.type == "Land" then count[id] = (count[id] or 0) + 1 end
+    end
+    local best, bestN = "W01", -1
+    for _, id in ipairs({ "W01", "U01", "B01", "R01", "G01" }) do
+        if (count[id] or 0) > bestN then best, bestN = id, count[id] or 0 end
+    end
+    return best
+end
+
+local MUTATORS = {
+    -- CURSES
+    FORTIFIED = {
+        mutator = "curse", name = "Fortified",
+        text = "The opponent's denizens, except bosses, get +1/+1.",
+        statBonus = function(self, enc, perm, isRemote)
+            if isRemote and not IsBossId(perm.id) then return 1, 1 end
+            return 0, 0
+        end,
+    },
+    TYRANNICAL = {
+        mutator = "curse", milestoneOnly = true, name = "Tyrannical",
+        text = "The opponent's bosses get +2/+2.",
+        statBonus = function(self, enc, perm, isRemote)
+            if isRemote and IsBossId(perm.id) then return 2, 2 end
+            return 0, 0
+        end,
+    },
+    RAGING = {
+        mutator = "curse", name = "Raging",
+        text = "While the opponent is at half its starting life or less, its denizens get +2/+0.",
+        statBonus = function(self, enc, perm, isRemote)
+            if not isRemote then return 0, 0 end
+            local start = self.remoteStartLife or enc.life or 20
+            if (self.remoteState.life or 0) <= math.floor(start / 2) then return 2, 0 end
+            return 0, 0
+        end,
+    },
+    BOLSTERING = {
+        mutator = "curse", name = "Bolstering",
+        text = "When one of the opponent's denizens dies, its other denizens permanently get +1/+1.",
+        onCreatureDeath = function(self, enc, perm, isRemote)
+            if not isRemote then return end
+            local any = false
+            for _, other in ipairs(self.remoteState.field) do
+                if other ~= perm and IsCreature(other) then
+                    other.permPower = (other.permPower or 0) + 1
+                    other.permToughness = (other.permToughness or 0) + 1
+                    any = true
+                end
+            end
+            if any then self:Log(L("mut.bolstering", self.opponent), "SYSTEM") end
+        end,
+    },
+    BURSTING = {
+        mutator = "curse", name = "Bursting",
+        text = "When one of the opponent's denizens dies, it deals 1 damage to you.",
+        onCreatureDeath = function(self, enc, perm, isRemote)
+            if isRemote then self:DamagePlayer(false, 1, RuleName("BURSTING")) end
+        end,
+    },
+    SANGUINE = {
+        mutator = "curse", name = "Sanguine",
+        text = "When one of the opponent's denizens dies, the opponent gains 2 life.",
+        onCreatureDeath = function(self, enc, perm, isRemote)
+            if not isRemote then return end
+            self.remoteState.life = (self.remoteState.life or 0) + 2
+            self:Log(L("mut.sanguine", self.opponent, self.remoteState.life), "SYSTEM")
+        end,
+    },
+    SPITEFUL = {
+        mutator = "curse", name = "Spiteful",
+        text = "When one of the opponent's denizens dies (not an Add), it leaves a 1/1 Skeleton.",
+        onCreatureDeath = function(self, enc, perm, isRemote)
+            local c = TTS.Cards[perm.id]
+            if not isRemote or (c and c.isToken) then return end
+            SpawnSkeleton(self)
+            self:Log(L("mut.spiteful", self.opponent), "SYSTEM")
+        end,
+    },
+    AMBUSH = {
+        mutator = "curse", name = "Ambush",
+        text = "The opponent starts with a random denizen costing 3 or less from its deck on the battlefield.",
+        onStart = function(self, enc)
+            local options = {}
+            for i, id in ipairs(self.remoteState.deck) do
+                local c = TTS.Cards[id]
+                if c and c.type == "Creature" and (c.cmc or 0) <= 3 and not IsBossId(id) then table.insert(options, i) end
+            end
+            if #options == 0 then return end
+            local id = table.remove(self.remoteState.deck, options[self:Rand(#options)])
+            self:Log(L("mut.ambush", self.opponent, BossName(id)), "SYSTEM")
+            self:PutCreatureOntoBattlefield(id, true, { spawned = true })
+        end,
+    },
+    ENTRENCHED = {
+        mutator = "curse", name = "Entrenched",
+        text = "The opponent starts with 1 extra prayer on the battlefield.",
+        onStart = function(self, enc)
+            table.insert(self.remoteState.field, { id = MainPrayer(self), tapped = false, uid = self:NewUid(), spawned = true })
+            self:Log(L("mut.entrenched", self.opponent), "SYSTEM")
+        end,
+    },
+    SWARMING = {
+        mutator = "curse", name = "Swarming",
+        text = "At the start of every 3rd turn of the opponent, it spawns a 1/1 Skeleton.",
+        onAITurnStart = function(self, enc)
+            if (self.remoteTurns or 0) % 3 ~= 0 then return end
+            SpawnSkeleton(self)
+            self:Log(L("mut.swarming", self.opponent), "SYSTEM")
+        end,
+    },
+    VOLCANIC = {
+        mutator = "curse", name = "Volcanic",
+        text = "At the start of your turn, 1 damage is dealt to a random denizen you control.",
+        onPlayerTurnStart = function(self, enc)
+            local perm = RandomCreature(self, false)
+            if not perm then return end
+            self:Log(L("mut.volcanic", BossName(perm.id)), "SYSTEM")
+            self:DamageCreature(perm, 1)
+            self:CheckStateBasedActions()
+        end,
+    },
+    GRIEVOUS = {
+        mutator = "curse", name = "Grievous",
+        text = "At the start of your turn, while you're at 10 life or less, you lose 1 life.",
+        onPlayerTurnStart = function(self, enc)
+            if (self.localState.life or 0) > 10 then return end
+            self.localState.life = self.localState.life - 1
+            self:Log(L("mut.grievous", self.localState.life), "SYSTEM")
+            if self.localState.life <= 0 then self:LoseMatch(L("end.zeroLife")) end
+        end,
+    },
+
+    -- TWISTS
+    SUDDEN_DEATH = {
+        mutator = "twist", name = "Sudden Death",
+        text = "Both players start at 10 life.",
+        onStart = function(self, enc)
+            self.localState.life = 10
+            self.remoteState.life = 10
+            self:Log(L("mut.suddenDeath", 10), "SYSTEM")
+        end,
+    },
+    QUAKING = {
+        mutator = "twist", name = "Quaking",
+        text = "At the start of every 3rd turn of yours, 1 damage is dealt to each denizen.",
+        onPlayerTurnStart = function(self, enc)
+            if (self.turn or 0) % 3 ~= 0 then return end
+            self:Log(L("mut.quaking"), "SYSTEM")
+            for _, field in ipairs({ self.localState.field, self.remoteState.field }) do
+                for _, perm in ipairs(field) do
+                    if IsCreature(perm) then self:DamageCreature(perm, 1) end
+                end
+            end
+            self:CheckStateBasedActions()
+        end,
+    },
+    BLIZZARD = {
+        mutator = "twist", name = "Blizzard",
+        text = "At the start of each player's turn, a random denizen that player controls is Frozen for the turn.",
+        -- Frozen for its controller's turn only: the Freeze is lifted again as the other
+        -- side's turn starts, so the denizen untaps as usual at its next untap
+        onPlayerTurnStart = function(self, enc) self:BlizzardFreeze(false) end,
+        onAITurnStart = function(self, enc) self:BlizzardFreeze(true) end,
+    },
+    BLESSING_OF_KINGS = {
+        mutator = "twist", name = "Blessing of Kings",
+        text = "Every denizen gets +1/+1.",
+        statBonus = function(self, enc, perm, isRemote) return 1, 1 end,
+    },
+}
+
+function E:BlizzardFreeze(isRemote)
+    for _, perm in ipairs((isRemote and self.localState or self.remoteState).field) do
+        if perm.blizzardFrozen then
+            perm.blizzardFrozen = nil
+            perm.freezeUntap = nil
+        end
+    end
+    local perm = RandomCreature(self, isRemote, function(p) return not p.tapped end)
+    if not perm then return end
+    perm.tapped = true
+    perm.freezeUntap = true
+    perm.blizzardFrozen = true
+    self:Log(L("mut.blizzard", BossName(perm.id)), "SYSTEM")
+end
+
+for id, rule in pairs(MUTATORS) do TTS.EncounterRules[id] = rule end
+
+-- The mutator ids, in a fixed order (seeded picks need one)
+TTS.MUTATOR_CURSES = { "FORTIFIED", "TYRANNICAL", "RAGING", "BOLSTERING", "BURSTING", "SANGUINE",
+    "SPITEFUL", "AMBUSH", "ENTRENCHED", "SWARMING", "VOLCANIC", "GRIEVOUS" }
+TTS.MUTATOR_TWISTS = { "SUDDEN_DEATH", "QUAKING", "BLIZZARD", "BLESSING_OF_KINGS" }
 
 -- Sum of the stat bonuses the encounter's rules give a creature
 function E:EncounterStatBonus(perm, isRemote)

@@ -174,7 +174,7 @@ local function CollectionStatus(card)
     if card.type == "Land" and not card.isGift and not card.isProfession then
         return "|cFF00FF00" .. L("link.alwaysAvailable") .. "|r"
     end
-    if card.isBoss or card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize then
+    if card.isBoss or card.isReward or card.isGift or card.isProfession or card.isBeta or card.isPrize or card.campaignPrize then
         local copies = TTS:GetOwnedCopies(card) or 0
         -- A beta card is one copy at most (DataStamp.lua)
         if card.isBeta and copies > 0 then
@@ -200,6 +200,8 @@ local function CollectionStatus(card)
             how = L("link.betaOnly")
         elseif card.isPrize then
             how = L("link.prizeOnly")
+        elseif card.campaignPrize then
+            how = L(card.campaignPrize == "all" and "link.campaignAll" or "link.campaignZones")
         elseif card.unlockOnDeath then
             how = L("link.dieToUnlock")
         else

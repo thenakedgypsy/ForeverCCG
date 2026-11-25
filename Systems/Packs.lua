@@ -88,7 +88,7 @@ end
 -- professions, prizes, the beta card, heroes, Settlements, tokens, death unlocks
 local function Packable(card)
     if not (card.isMob and card.zone) then return false end
-    if card.isReward or card.isGift or card.isProfession or card.isPrize or card.isBeta
+    if card.isReward or card.isGift or card.isProfession or card.isPrize or card.isBeta or card.campaignPrize
         or card.isHero or card.isToken or card.unlockOnDeath or card.type == "Settlement" then
         return false
     end
@@ -126,6 +126,19 @@ local function Pools()
         end
     end
     return pools
+end
+
+-- A copy of one pool's cards ("zone" or "dungeon"), in a fixed order (the Endless draft,
+-- Systems\Endless.lua)
+function P:PoolCards(kind)
+    local out = {}
+    for _, card in ipairs(Pools()[kind] or {}) do out[#out + 1] = card end
+    return out
+end
+
+-- Whether a card belongs to a raid (its zone is one of P.TYPES' raids)
+function P:IsRaidCard(card)
+    return card ~= nil and IsRaidZone(card.zone)
 end
 
 -- How likely a card is to be drawn against an ordinary one of its pool (rare spawns:

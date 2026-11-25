@@ -11,21 +11,21 @@ local UI, H, P = ns.UI, ns.Host, ns.Player
 -- window) or Host an Event (the organizer's). Someone already in an event, or running one,
 -- goes straight to that window instead. Built the first time it opens.
 -- Opened from the main window, whichever window is picked takes its place, so closing that
--- one brings the main window back (UI\MainFrame.lua's ttsOpenedFromMain).
+-- one brings the window it came from back (the PvP window: UI\MainFrame.lua's ttsReturnTo).
 -- =========================================================================
 local F
 local Build
 
 -- Hides window `from` and opens the window named `target` in its place (open: shows it).
--- If `from` was opened from the main window, `target` takes that over.
+-- If `from` was opened from another window, `target` takes that over.
 local function Swap(from, open, target)
-    local fromMain = from.ttsOpenedFromMain
-    from.ttsOpenedFromMain = nil   -- (so hiding it doesn't bring the main window back)
+    local back = from.ttsReturnTo
+    from.ttsReturnTo = nil   -- (so hiding it doesn't bring that window back)
     from:Hide()
     open()
     local win = _G[target]
-    if fromMain and win and win:IsShown() and TTS.MainFrame and TTS.MainFrame.OpenChild then
-        TTS.MainFrame:OpenChild(win)
+    if back and win and win:IsShown() and TTS.MainFrame and TTS.MainFrame.OpenChildFrom then
+        TTS.MainFrame:OpenChildFrom(back, win)
     end
 end
 

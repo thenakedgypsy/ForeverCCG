@@ -184,6 +184,15 @@ local function BuildMinimapTooltip(tip)
             tip:AddDoubleLine(L("minimap.dailyPack"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
         end
     end
+    -- The Daily challenge's reward (Daily.lua), the same way
+    if TTS.Daily then
+        local wait = TTS.Daily:RewardWait()
+        if wait then
+            tip:AddDoubleLine(L("minimap.daily"), Duration(wait), 1, 1, 1, 0.6, 0.6, 0.6)
+        else
+            tip:AddDoubleLine(L("minimap.daily"), L("minimap.ready"), 1, 1, 1, 0.1, 1, 0.1)
+        end
+    end
     -- The weekly tournament prize cooldown (AdminGrants.lua)
     if TTS.TournamentPrizeCooldown then
         local wait = TTS:TournamentPrizeCooldown()
