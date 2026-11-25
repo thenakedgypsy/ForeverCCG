@@ -61,6 +61,12 @@ local function GossipNpcId()
     return id and tonumber(id)
 end
 
+-- DialogueUI's window (it replaces the gossip and quest windows) while it's up, or nil
+local function DialogueUIFrame()
+    local f = _G.DUIQuestFrame
+    if f and f:IsShown() then return f end
+end
+
 -- Server time, so changing the computer's clock doesn't bring the next gift forward
 local function Now() return (GetServerTime and GetServerTime()) or time() end
 
@@ -134,6 +140,9 @@ local function StartDuel()
     end
     if fromTarget then DismissTarget() end   -- (back next time they're targeted)
     if C_GossipInfo and C_GossipInfo.CloseGossip then C_GossipInfo.CloseGossip() elseif CloseGossip then CloseGossip() end
+    -- DialogueUI stays up over a quest greeting (no gossip to close): put it away for the game
+    local dui = DialogueUIFrame()
+    if dui and type(dui.HideUI) == "function" then pcall(dui.HideUI, dui) end
     if TTS.NpcGossipPanel then TTS.NpcGossipPanel:Hide() end
     local E = TTS.Engine
     -- The NPC actually asked (a duel can have one for each faction), else the duel's name
@@ -502,8 +511,19 @@ local function ShowPanel(npcId, fromTarget)
     local merchant = not gossip and ((MerchantFrame and MerchantFrame:IsShown() and MerchantFrame)
         or (ClassTrainerFrame and ClassTrainerFrame:IsShown() and ClassTrainerFrame)
         or (QuestFrame and QuestFrame:IsShown() and QuestFrame))
+    -- DialogueUI's window (a single quest, or gossip we couldn't add to)
+    local dui = not gossip and not merchant and not fromTarget and DialogueUIFrame()
     G:ClearAllPoints()
-    if gossip then
+    if dui then
+        -- Beside it, on whichever side of it has room
+        G:SetWidth(300)
+        if (dui:GetLeft() or 0) * dui:GetEffectiveScale() > 300 * G:GetEffectiveScale() then
+            G:SetPoint("TOPRIGHT", dui, "TOPLEFT", -4, 0)
+        else
+            G:SetPoint("TOPLEFT", dui, "TOPRIGHT", 4, 0)
+        end
+        G:SetFrameStrata(dui:GetFrameStrata())
+    elseif gossip then
         G:SetPoint("TOPLEFT", gossip, "BOTTOMLEFT", 0, 2)
         G:SetPoint("TOPRIGHT", gossip, "BOTTOMRIGHT", 0, 2)
         G:SetFrameStrata(gossip:GetFrameStrata())
@@ -565,6 +585,16 @@ local function GreetingBox()
 end
 
 local AddToQuestGreeting   -- (IN THE QUEST WINDOW, below)
+local RefreshDialogueUI    -- (DIALOGUEUI, below)
+local duiNpc               -- the NPC whose lines and options are in DialogueUI's window (DIALOGUEUI, below)
+
+-- Whether DialogueUI is showing our lines and options for this NPC (its gossip or quest
+-- greeting is up, not a single quest)
+local function InDialogueUI(npcId)
+    local f = DialogueUIFrame()
+    return npcId ~= nil and duiNpc == npcId and f ~= nil
+        and (f.handler == "HandleGossip" or f.handler == "HandleQuestGreeting")
+end
 
 -- Asks for a card, then shows the NPC's answer where its line was
 local function Ask()
@@ -572,8 +602,10 @@ local function Ask()
     if not GiftCardOf(npcId) then return end
     reply, waitHint = TTS:AskNpcForCard(npcId)
     replyNpc = npcId
-    if GossipFrame:IsShown() and type(GossipFrame.Update) == "function" and GreetingBox() then
+    if GossipFrame and GossipFrame:IsShown() and type(GossipFrame.Update) == "function" and GreetingBox() then
         GossipFrame:Update()
+    elseif RefreshDialogueUI(npcId) then
+        -- (the answer is in DialogueUI's window)
     elseif not AddToQuestGreeting(npcId) then
         ShowPanel(npcId)
     end
@@ -683,7 +715,11 @@ if GossipFrame then
                 OnGossipUpdate()
             elseif not GossipFrame:IsShown() then
                 local npcId = GossipNpcId()
-                if HasOptions(npcId) then ShowPanel(npcId) end
+                if InDialogueUI(npcId) then
+                    if not targetNpc then G:Hide() end
+                elseif HasOptions(npcId) then
+                    ShowPanel(npcId)
+                end
             end
         end)
     end)
@@ -829,14 +865,34 @@ if GreetingText then
 end
 
 local Q = CreateFrame("Frame")
-for _, event in ipairs({ "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE" }) do
+for _, event in ipairs({ "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE", "QUEST_FINISHED" }) do
     pcall(Q.RegisterEvent, Q, event)
 end
 Q:SetScript("OnEvent", function(_, event)
+    if event == "QUEST_FINISHED" then
+        -- Blizzard's quest window going takes the panel with it (below); DialogueUI's
+        -- doesn't tell us, so the panel goes when the quest does. (The next quest
+        -- event brings it back.)
+        if _G.DUIQuestFrame and not targetNpc and not (GossipFrame and GossipFrame:IsShown()) then
+            G:Hide()
+            reply = nil
+        end
+        return
+    end
     C_Timer.After(0, function()
         if GossipFrame and GossipFrame:IsShown() then return end   -- a quest picked from gossip
         local npcId = GossipNpcId()
-        if not (HasOptions(npcId) and QuestFrame and QuestFrame:IsShown()) then return end
+        if not HasOptions(npcId) then return end
+        if DialogueUIFrame() and not (QuestFrame and QuestFrame:IsShown()) then
+            -- DialogueUI shows the quest: a greeting has ours in it already, else the panel
+            if InDialogueUI(npcId) then
+                if not targetNpc then G:Hide() end
+            else
+                ShowPanel(npcId)
+            end
+            return
+        end
+        if not (QuestFrame and QuestFrame:IsShown()) then return end
         if event == "QUEST_GREETING" and AddToQuestGreeting(npcId) then return end
         HideQuestButtons()
         ShowPanel(npcId)
@@ -853,6 +909,137 @@ if QuestFrame then
             G:Hide()
             reply = nil
         end
+    end)
+end
+
+-- =========================================================================
+-- DIALOGUEUI
+-- The DialogueUI addon hides Blizzard's gossip and quest windows and shows its own
+-- (DUIQuestFrame). Once it has drawn an NPC's gossip or quest greeting, the NPC's line
+-- (npc.<npcId>.greet for a duel NPC, then any answer) and our options go at the bottom
+-- of it, as lines and buttons like its own. A single quest has no room for them: the
+-- panel goes beside the window instead (IN THE QUEST WINDOW, above).
+-- =========================================================================
+local DUI_GAP = 16   -- between its last line or button and ours (its paragraph spacing)
+
+-- Our option button, from DialogueUI's own pool (released with the rest when it redraws)
+local function DialogueUIButton(f, label, onClick)
+    local b = f:AcquireOptionButton()
+    b.gossipOptionID = nil
+    b.questID = nil
+    b.type = "foreverCCG"   -- (not "gossip": greyed out with the rest once an option is picked)
+    b.id = 0
+    b.showIcon = true
+    b.Icon:SetTexture(CARD_BACK_ICON)
+    b.onClickFunc = function() onClick() end
+    b.shouldShowUIOnClick = false
+    if b.SetHotkey then b:SetHotkey(false) end
+    if b.RemoveQuestTypeText then b:RemoveQuestTypeText() end
+    b:SetButtonText(label, false)
+    if b.SetButtonArt then b:SetButtonArt(0) end
+    b:Enable()
+    return b
+end
+
+-- Adds the NPC's line and our options under what DialogueUI has drawn
+local function AddToDialogueUI(f)
+    duiNpc = nil
+    local npcId = GossipNpcId()
+    if not HasOptions(npcId) then return end
+    if not (f.optionButtonPool and f.fontStringPool and f.AcquireOptionButton and f.AcquireLeftFontString) then return end
+
+    -- The lowest line or button in the window (with gossip history, the newest)
+    local last, bottom
+    local function Consider(obj)
+        if obj:IsShown() then
+            local b = obj:GetBottom()
+            if b and (not bottom or b < bottom) then last, bottom = obj, b end
+        end
+    end
+    f.fontStringPool:ProcessActiveObjects(Consider)
+    f.optionButtonPool:ProcessActiveObjects(Consider)
+    if not last then return end
+
+    local lines = {}
+    local greet = DuelOf(npcId) and Loc:Get("npc." .. tostring(npcId) .. ".greet")
+    if greet then lines[#lines + 1] = greet end
+    local said = Said(npcId)
+    if said then lines[#lines + 1] = said end
+
+    local options = {}
+    if GiftCardOf(npcId) and CanAsk(npcId) then options[#options + 1] = { "npc.ask", Ask } end
+    if DuelOf(npcId) then options[#options + 1] = { "npc.duel", StartDuel } end
+
+    local anchor = last
+    for _, line in ipairs(lines) do
+        local fs = f:AcquireLeftFontString()
+        fs:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -DUI_GAP)
+        fs:SetPoint("RIGHT", last, "RIGHT", 0, 0)
+        fs:SetText(line)
+        anchor = fs
+    end
+    for i, opt in ipairs(options) do
+        local b = DialogueUIButton(f, L(opt[1]), opt[2])
+        b:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, (i == 1) and -DUI_GAP or 0)
+        anchor = b
+        if f.IndexGamePadObject then pcall(f.IndexGamePadObject, f, b) end
+    end
+    if anchor == last then return end
+
+    -- Room to scroll down to them
+    local added = bottom - (anchor:GetBottom() or bottom)
+    if added > 0 and f.SetScrollRange then f:SetScrollRange((f.contentHeight or 0) + added) end
+    duiNpc = npcId
+    if not targetNpc then G:Hide() end
+end
+
+-- Draws DialogueUI's gossip or quest greeting again (after the NPC has answered), with
+-- the answer in it. Returns true if it did.
+RefreshDialogueUI = function(npcId)
+    local f = DialogueUIFrame()
+    if not (f and duiNpc == npcId) then return false end
+    if f.handler == "HandleGossip" then
+        -- Drawn fresh, not added under itself as the next page of the conversation
+        local keep = f.keepGossipHistory
+        f.keepGossipHistory = false
+        local ok = pcall(f.HandleGossip, f)
+        f.keepGossipHistory = keep
+        return ok and duiNpc == npcId
+    elseif f.handler == "HandleQuestGreeting" then
+        local ok = pcall(f.HandleQuestGreeting, f)
+        return ok and duiNpc == npcId
+    end
+    return false
+end
+
+-- Follows DialogueUI's drawing of gossip and quest greetings (each returns true when it shows them)
+local function HookDialogueUI()
+    local f = _G.DUIQuestFrame
+    if not f or f.foreverCCGHooked or type(f.HandleGossip) ~= "function" then return end
+    f.foreverCCGHooked = true
+    for _, method in ipairs({ "HandleGossip", "HandleQuestGreeting" }) do
+        local orig = f[method]
+        if type(orig) == "function" then
+            f[method] = function(self, ...)
+                local shown = orig(self, ...)
+                if shown then
+                    local ok, err = pcall(AddToDialogueUI, self)
+                    if not ok then duiNpc = nil; geterrorhandler()(err) end
+                end
+                return shown
+            end
+        end
+    end
+end
+
+HookDialogueUI()
+if not (_G.DUIQuestFrame and _G.DUIQuestFrame.foreverCCGHooked) then
+    local D = CreateFrame("Frame")
+    D:RegisterEvent("ADDON_LOADED")
+    D:SetScript("OnEvent", function(self, _, name)
+        if name ~= "DialogueUI" then return end
+        HookDialogueUI()
+        self:UnregisterAllEvents()
     end)
 end
 
@@ -887,9 +1074,10 @@ DismissTarget = function()
     end
 end
 
--- Whether a window an NPC opens is up (gossip, quests, a vendor, a trainer)
+-- Whether a window an NPC opens is up (gossip, quests, a vendor, a trainer; DialogueUI's
+-- in place of the first two)
 local function NpcWindowOpen()
-    for _, name in ipairs({ "GossipFrame", "QuestFrame", "MerchantFrame", "ClassTrainerFrame" }) do
+    for _, name in ipairs({ "GossipFrame", "QuestFrame", "MerchantFrame", "ClassTrainerFrame", "DUIQuestFrame" }) do
         local f = _G[name]
         if f and f:IsShown() then return true end
     end

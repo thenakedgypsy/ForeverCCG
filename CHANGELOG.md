@@ -1,3 +1,6 @@
+## 1.3.14
+*   npcs: works with the DialogueUI addon. Card gifts and duel offers ("Any spare cards?", "Fancy a game of Forever: CCG?") now show as options in DialogueUI's window, with the NPC's answer above them. On a single quest page they show in a panel beside the window
+
 ## 1.3.13
 *   booster packs: a dungeon final boss that's grey to you no longer drops a pack when the game hides its level inside the dungeon. Bazzalan in Ragefire Chasm always did. The addon now knows each final boss's level. The daily dungeon pack still comes from grey bosses
 
