@@ -1478,6 +1478,9 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
             end)
             if best and self:IsValidSpellTarget(card.etb.target, "CREATURE", false, true) then
                 tgt = { kind = "CREATURE", isRemote = false, perm = best }
+            elseif self:IsValidSpellTarget(card.etb.target, "PLAYER", false, true) then
+                -- No denizen to take: an Arrival that can hit you does (Rotting Dead)
+                tgt = { kind = "PLAYER", isRemote = false }
             end
         end
         -- A targeted Arrival with no target (nothing to choose, or it has left) does nothing

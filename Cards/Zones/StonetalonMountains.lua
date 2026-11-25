@@ -43,10 +43,10 @@ TTS:AddCards({
     },
     ["STO05"] = {
         id = "STO05", name = "Pridewing Wyvern", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
-        power = 2, toughness = 2, flying = true, isMob = true, isBoss = true, displayId = 295,
+        power = 2, toughness = 2, flying = true, bulwark = 2, isMob = true, isBoss = true, displayId = 295,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 4012,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne."
+        text = "Airborne. Bulwark 2."
     },
     ["STO06"] = {
         id = "STO06", name = "Pridewing Consort", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",

@@ -136,7 +136,7 @@ TTS:AddCards({
     ["TDC17"] = {
         id = "TDC17", name = "Var'Taka", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 5, toughness = 4, haste = true, enrage = true, isMob = true, isBoss = true, displayId = 144487,
-        zone = "The Drowned City", creatureType = "Humanoid", npcId = 258924,
+        zone = "The Drowned City", creatureType = "Humanoid", faction = "Naga", npcId = 258924,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Quick. Enrage."
     },

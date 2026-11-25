@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["TIR02"] = {
         id = "TIR02", name = "Wretched Zombie", cost = "{B}", cmc = 1, color = "B", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10979,
+        power = 2, toughness = 1, isMob = true, isBoss = true, displayId = 10979,
         zone = "Tirisfal Glades", creatureType = "Undead", npcId = 1502,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = ""
@@ -41,11 +41,12 @@ TTS:AddCards({
         text = ""
     },
     ["TIR05"] = {
-        id = "TIR05", name = "Rotting Dead", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 1200,
+        id = "TIR05", name = "Rotting Dead", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1200,
         zone = "Tirisfal Glades", creatureType = "Undead", npcId = 1525,
+        etb = { target = "creature_or_enemy", ops = { { op = "damage", to = "target", n = 2 } } },   -- Disease Touch
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Arrival: Deal 2 damage to target denizen (yours too) or the opponent."
     },
     ["TIR06"] = {
         id = "TIR06", name = "Greater Duskbat", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -55,11 +56,12 @@ TTS:AddCards({
         text = "Airborne. Drain."
     },
     ["TIR07"] = {
-        id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
-        power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 1005,
+        id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{1}{U}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 1005,
         zone = "Tirisfal Glades", creatureType = "Humanoid", faction = "Murloc", npcId = 1544,
+        anthem = { tag = "faction", value = "Murloc", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Other Murlocs you control get +1/+0."
     },
     ["TIR08"] = {
         id = "TIR08", name = "Vile Fin Muckdweller", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",

@@ -42,11 +42,12 @@ TTS:AddCards({
         text = "Airborne. Drain."
     },
     ["SFK05"] = {
-        id = "SFK05", name = "Lupine Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 5, toughness = 5, isMob = true, isBoss = true, displayId = 2446,
+        id = "SFK05", name = "Lupine Horror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
+        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2446,
         zone = "Shadowfang Keep", creatureType = "Undead", faction = "Worgen", npcId = 3863,
+        etb = { ops = { { op = "token", id = "TOK14", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Arrival: Spawn: 2 Lupine Delusion Adds (2/1, Blocker)."
     },
     ["SFK06"] = {
         id = "SFK06", name = "Rethilgore", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",

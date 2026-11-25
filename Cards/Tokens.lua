@@ -114,4 +114,11 @@ TTS:AddCards({
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Brutish."
     },
+    ["TOK14"] = {   -- Lupine Horror (Shadowfang Keep)
+        id = "TOK14", name = "Lupine Delusion", cost = "", cmc = 0, color = "B", type = "Creature",
+        power = 2, toughness = 1, defender = true, isToken = true, displayId = 2446,
+        creatureType = "Undead", faction = "Worgen",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Blocker."
+    },
 })
