@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, bulwark = 2, isMob = true, isBoss = true, displayId = 295,
         zone = "Stonetalon Mountains", creatureType = "Beast", npcId = 4012,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Bulwark 2."
+        text = "Airborne. Shield Wall 2."
     },
     ["STO06"] = {
         id = "STO06", name = "Pridewing Consort", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -60,7 +60,7 @@ TTS:AddCards({
         power = 3, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 4607,
         zone = "Stonetalon Mountains", creatureType = "Elemental", npcId = 4036,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["STO08"] = {
         id = "STO08", name = "Blackened Basilisk", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -91,6 +91,6 @@ TTS:AddCards({
         zone = "Stonetalon Mountains", creatureType = "Humanoid", npcEntry = 3994,
         anthem = { tag = "zone", value = "Stonetalon Mountains", t = 2 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Anti-Air. Other Stonetalon Mountains denizens you control get +0/+2."
+        text = "Ranged. Other Stonetalon Mountains denizens you control get +0/+2."
     },
 })

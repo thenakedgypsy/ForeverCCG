@@ -17,21 +17,21 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 8050,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5984,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BLA02"] = {
         id = "BLA02", name = "Snickerfang Hyena", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2714,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5985,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BLA03"] = {
         id = "BLA03", name = "Scorpok Stinger", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 6068,
         zone = "Blasted Lands", creatureType = "Beast", npcId = 5988,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["BLA04"] = {
         id = "BLA04", name = "Felbeast", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -66,14 +66,14 @@ TTS:AddCards({
         power = 6, toughness = 4, bulwark = 2, haste = true, isMob = true, isBoss = true, displayId = 7841,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 6007,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Bulwark 2."
+        text = "Charge. Shield Wall 2."
     },
     ["BLA09"] = {
         id = "BLA09", name = "Dreadmaul Mauler", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 14401,
         zone = "Blasted Lands", creatureType = "Humanoid", faction = "Ogre", npcId = 5977,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["BLA10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 9, toughness = 9, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 7844,
         zone = "Blasted Lands", creatureType = "Humanoid", npcId = 8304,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     -- Solo reward
     ["BLA11"] = {

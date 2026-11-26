@@ -88,6 +88,7 @@ local function CreateSection(labelKey, w, h)
     line:SetPoint("TOPRIGHT", -8, -24)
     line:SetHeight(1)
     line:SetColorTexture(1, 0.82, 0, 0.30)
+    p.headerText, p.divider = header, line   -- (folding moves the one and hides the other)
     return p
 end
 
@@ -152,16 +153,17 @@ function M:OpenChildFrom(parent, child) OpenFrom(parent, child) end
 
 -- Opens a window as if from the main window, so closing it comes back here (Board.lua: the
 -- solo map after a solo encounter). A window of the PvE or PvP window's opens over that one.
+-- (A PvE / PvP section docked in the main window: the child opens from the main window. One
+-- popped out into its own window: from that window, the main window staying as it is.)
 function M:OpenChild(child)
     local home = child.ttsHome
-    if home and home ~= child then
-        if not M:IsShown() then M:Show() end
+    if home and home ~= child and not home.docked then
         home:Show()
-        OpenFrom(M, home)
         child:Show()
         OpenFrom(home, child)
         return
     end
+    if not M:IsShown() then M:Show() end
     child:Show()
     OpenFromMain(child)
 end
@@ -191,7 +193,10 @@ local STATUS_Y = FIRST_Y - BTN_H - 8                    -- under Build's buttons
 local CAMPFIRE_LINE_H = 16                             -- the campfire bonus line under Collect's button
 local COLLECT_H = -FIRST_Y + BTN_H + CAMPFIRE_LINE_H + 10
 local BUILD_H = -STATUS_Y + 34                          -- room for two lines of status
-local BATTLE_H = -FIRST_Y + BTN_H + 10                  -- the PvE and PvP buttons
+-- The PvE and PvP sections, one under the other (THE PvE AND PvP SECTIONS, below, which sizes
+-- the Battle section and the window to them as they open and fold)
+local DOCK_TOP = -28
+local BATTLE_H = 300
 
 -- The window fits them: under the title strip, the sections, then room for the footer
 M:SetHeight(93 + COLLECT_H + BUILD_H + BATTLE_H + 2 * SECTION_GAP + 34)
@@ -266,7 +271,7 @@ statusLabel:SetJustifyH("CENTER")
 statusLabel:SetWordWrap(true)
 
 -- =========================================================================
--- BATTLE: two buttons, PvE and PvP, each opening a window of its own (below), and the PvP
+-- BATTLE: the PvE and PvP sections (each folds down to its header, below), and the PvP
 -- rating in the header
 -- =========================================================================
 local battleSection = CreateSection("main.battle", SECTION_W, BATTLE_H)
@@ -276,12 +281,6 @@ battleSection:SetPoint("TOPLEFT", buildSection, "BOTTOMLEFT", 0, -SECTION_GAP)
 local ratingLabel = battleSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 ratingLabel:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, -9)
 ratingLabel:SetJustifyH("RIGHT")
-
--- PvE coloured by the solo rewards won, PvP by the rating's tier (UpdatePlayState)
-local pveBtn = CreatePanelButton("TTS_PvEBtn", battleSection, GRID_BTN_W, BTN_H, "main.pve")
-pveBtn:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, RowY(1))
-local pvpBtn = CreatePanelButton("TTS_PvPBtn", battleSection, GRID_BTN_W, BTN_H, "main.playOthers")
-pvpBtn:SetPoint("TOPRIGHT", battleSection, "TOPRIGHT", -SIDE, RowY(1))
 
 -- =========================================================================
 -- THE PvE AND PvP WINDOWS
@@ -354,7 +353,7 @@ local function CreateSubWindow(name, titleKey, rows, extraH)
     divider:SetPoint("TOPRIGHT", -8, -24)
     divider:SetHeight(1)
     divider:SetColorTexture(1, 0.82, 0, 0.30)
-    w.section = p
+    w.section, w.divider = p, divider
 
     -- Hidden behind a window it opened, it isn't closed (OnChildHidden)
     w.ttsIsCovered = function()
@@ -380,48 +379,42 @@ local function CreateSubWindow(name, titleKey, rows, extraH)
     return w
 end
 
--- A full-width button on row `row` of a window's section
+-- A full-width button on row `row` of a window's section (its width follows the section's,
+-- docked or popped out: w.buttons)
 local function SubButton(w, name, row, key)
     local b = CreatePanelButton(name, w.section, SUB_BTN_W, BTN_H, key)
     b:SetPoint("TOP", w.section, "TOP", 0, RowY(row))
+    w.buttons = w.buttons or {}
+    table.insert(w.buttons, b)
     return b
 end
 
--- Opens a PvE / PvP window where the main window stands, in its place
-local function OpenSubWindow(w)
-    local x, y = M:GetCenter()
-    if x then
-        local s = M:GetEffectiveScale() / UIParent:GetEffectiveScale()
-        w:ClearAllPoints()
-        w:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x * s, y * s)
-    end
-    w:Show()
-    OpenFromMain(w)
-end
+-- What a PvE / PvP button's window opens over and comes back to: the main window, where both
+-- sections are (THE PvE AND PvP SECTIONS)
+local function Home(w) return w.docked and M or w end
 
 -- -------------------------------------------------------------------------
 -- PvE: the campaign, the Daily challenge, Endless, practice and the tutorial
 -- -------------------------------------------------------------------------
 local pveWin = CreateSubWindow("TTS_PvEFrame", "main.pveTitle", 5)
 TTS.PvEFrame = pveWin
-pveBtn:SetScript("OnClick", function() OpenSubWindow(pveWin) end)
 
 local encountersBtn = SubButton(pveWin, "TTS_SoloEncountersBtn", 1, "main.campaign")
 encountersBtn:SetScript("OnClick", function()
     if TTS.SoloSelectFrame then
         TTS.SoloSelectFrame:Show()
-        OpenFrom(pveWin, TTS.SoloSelectFrame)
+        OpenFrom(Home(pveWin), TTS.SoloSelectFrame)
     end
 end)
 
 -- The Daily challenge (UI\DailyPanel.lua) and Endless (UI\Endless.lua)
 local dailyBtn = SubButton(pveWin, "TTS_DailyBtn", 2, "main.daily")
 dailyBtn:SetScript("OnClick", function()
-    if TTS.DailyPanel then OpenFrom(pveWin, TTS.DailyPanel:Open()) end
+    if TTS.DailyPanel then OpenFrom(Home(pveWin), TTS.DailyPanel:Open()) end
 end)
 local endlessBtn = SubButton(pveWin, "TTS_EndlessBtn", 3, "main.endless")
 endlessBtn:SetScript("OnClick", function()
-    if TTS.EndlessFrame then OpenFrom(pveWin, TTS.EndlessFrame:Open()) end
+    if TTS.EndlessFrame then OpenFrom(Home(pveWin), TTS.EndlessFrame:Open()) end
 end)
 
 local soloBtn = SubButton(pveWin, "TTS_SoloBtn", 4, "main.practice")
@@ -450,7 +443,7 @@ soloBtn:SetScript("OnClick", function()
         end,
     })
     -- (cancelling the deck picker brings this window back; a game starting doesn't)
-    OpenFrom(pveWin, TTS.DeckPicker)
+    OpenFrom(Home(pveWin), TTS.DeckPicker)
 end)
 
 -- The tutorial game (UI\Tutorial.lua): it brings its own decks
@@ -467,27 +460,26 @@ end)
 -- -------------------------------------------------------------------------
 local pvpWin = CreateSubWindow("TTS_PvPFrame", "main.pvpTitle", 3, CAMPFIRE_LINE_H + 4)
 TTS.PvPFrame = pvpWin
-pvpBtn:SetScript("OnClick", function() OpenSubWindow(pvpWin) end)
 
 local waitingRoomBtn = SubButton(pvpWin, "TTS_WaitingRoomBtn", 1, "main.openWaitingRoom")
 waitingRoomBtn:SetScript("OnClick", function()
     if TTS.WaitingRoom and TTS.WaitingRoom.frame then
         TTS.WaitingRoom.frame:Show()
-        OpenFrom(pvpWin, TTS.WaitingRoom.frame)
+        OpenFrom(Home(pvpWin), TTS.WaitingRoom.frame)
     end
 end)
 
 -- The PvP rating, wins and losses, and the latest games (PvPRecord.lua)
 local recordBtn = SubButton(pvpWin, "TTS_PvPRecordBtn", 2, "main.pvpRecord")
 recordBtn:SetScript("OnClick", function()
-    if TTS.PvP then OpenFrom(pvpWin, TTS.PvP:Open()) end
+    if TTS.PvP then OpenFrom(Home(pvpWin), TTS.PvP:Open()) end
 end)
 
 -- Tournaments (Events\): join one with a code, or host one
 local tournamentBtn = SubButton(pvpWin, "TTS_TournamentsBtn", 3, "main.tournaments")
 tournamentBtn:SetScript("OnClick", function()
     local win = TTS.OpenTournaments and TTS:OpenTournaments()
-    if win then OpenFrom(pvpWin, win) end
+    if win then OpenFrom(Home(pvpWin), win) end
 end)
 
 -- Under it (a minimap tooltip line too): the weekly tournament prize cooldown (UpdateTimers)
@@ -508,6 +500,203 @@ do
 end
 
 -- =========================================================================
+-- FOLDING SECTIONS
+-- Every section folds: the main window's Collect, Build and Battle, and inside Battle the PvE
+-- and PvP sections (both windows' sections live there now, one under the other, full width,
+-- their buttons two to a row; the windows themselves no longer open, so what their buttons
+-- open comes back to the main window). A +/- at the left of each header, or a click anywhere
+-- on the header, folds the section down to that line or opens it again, sliding; the main
+-- window grows and shrinks to fit. Remembered (the mainExpand option: { build = false } =
+-- folded). What a folded section hides it shows again as it was when it opens.
+-- (In a function of its own: the file's main chunk is near Lua's 200 locals.)
+-- =========================================================================
+;(function()
+    local HEAD_H = 26                 -- a folded section: its header line
+    local INNER_W = SECTION_W - 2 * SIDE
+    local HALF_W = (INNER_W - 2 * SIDE - 8) / 2
+    local SLIDE = 0.15                -- seconds to fold or open
+    local inner = { pveWin, pvpWin }
+    local folds, tops = {}, {}
+    local battleOpen = HEAD_H
+
+    local function Expanded(key)
+        local o = TTS.Options and TTS.Options:Get("mainExpand")
+        return not (type(o) == "table" and o[key] == false)
+    end
+    local function SaveExpanded(key, on)
+        if not TTS.Options then return end
+        local o = TTS.Options:Get("mainExpand")
+        if type(o) ~= "table" then o = {} end
+        o[key] = on and true or false
+        TTS.Options:Set("mainExpand", o)
+    end
+
+    -- An open PvE / PvP section: its buttons two to a row, and PvP's timer line under them
+    local function InnerOpenHeight(w)
+        local rows = math.ceil(#(w.buttons or {}) / 2)
+        return -FIRST_Y + rows * BTN_H + (rows - 1) * BTN_GAP + (w.timers and (CAMPFIRE_LINE_H + 6) or 0) + 10
+    end
+
+    -- Every section's height as it is now: PvE and PvP stacked in Battle, Battle's open
+    -- height from them, the main window round the three
+    local function Relayout()
+        local y = DOCK_TOP
+        for _, w in ipairs(inner) do
+            local p = w.section
+            p:ClearAllPoints()
+            p:SetPoint("TOPLEFT", battleSection, "TOPLEFT", SIDE, y)
+            p:SetWidth(INNER_W)
+            p:SetHeight(w.fold.height)
+            y = y - w.fold.height - 6
+        end
+        battleOpen = -y + 2
+        local battle = battleSection.fold
+        if battle.expanded and not battle.sliding then battle.height = battleOpen end
+        local total = 0
+        for _, f in ipairs(tops) do
+            f.p:SetHeight(f.height)
+            total = total + f.height
+        end
+        M:SetHeight(93 + total + 2 * SECTION_GAP + 34)
+    end
+
+    -- Hides what's in a section but its header (remembering what was showing), or shows it again
+    local function ShowInside(f, on)
+        local p = f.p
+        if not on then
+            if f.hidden then return end
+            f.hidden = {}
+            local function Hide(x)
+                if not f.keep[x] and x:IsShown() then x:Hide(); f.hidden[#f.hidden + 1] = x end
+            end
+            for _, c in ipairs({ p:GetChildren() }) do Hide(c) end
+            for _, r in ipairs({ p:GetRegions() }) do Hide(r) end
+        elseif f.hidden then
+            for _, x in ipairs(f.hidden) do x:Show() end
+            f.hidden = nil
+        end
+        f.toggle:SetNormalTexture(on and "Interface\\Buttons\\UI-MinusButton-Up" or "Interface\\Buttons\\UI-PlusButton-Up")
+        f.toggle:SetPushedTexture(on and "Interface\\Buttons\\UI-MinusButton-Down" or "Interface\\Buttons\\UI-PlusButton-Down")
+    end
+
+    -- Folds or opens it, sliding (straight there with animations off, UI\Motion.lua's option)
+    local function SetExpanded(f, on, instant)
+        f.expanded = on
+        local target = on and f.open() or HEAD_H
+        if on then ShowInside(f, true) end
+        local motion = not TTS.Options or TTS.Options:Get("uiMotion") ~= false
+        if instant or not motion or not M:IsVisible() then
+            f.height, f.sliding = target, nil
+            if not on then ShowInside(f, false) end
+            Relayout()
+            return
+        end
+        local from, t = f.height or target, 0
+        f.sliding = true
+        f.slider:SetScript("OnUpdate", function(self, dt)
+            t = t + dt
+            local p = math.min(1, t / SLIDE)
+            local e = 1 - (1 - p) ^ 3
+            f.height = from + (target - from) * e
+            Relayout()
+            if p >= 1 then
+                self:SetScript("OnUpdate", nil)
+                f.sliding = nil
+                if not on then ShowInside(f, false) end
+                Relayout()
+            end
+        end)
+    end
+
+    -- Makes section p fold: key (saved), open() its open height, header its header text, keep
+    -- the regions that stay up when folded (besides the header and the toggle)
+    local function Foldable(p, key, open, header, keep)
+        local f = { p = p, key = key, open = open, expanded = true, keep = {} }
+        p.fold = f
+        if p.SetClipsChildren then p:SetClipsChildren(true) end   -- (nothing spills out while it slides)
+        f.slider = CreateFrame("Frame", nil, p)
+        f.toggle = CreateFrame("Button", nil, p)
+        f.toggle:SetSize(16, 16)
+        f.toggle:SetPoint("TOPLEFT", p, "TOPLEFT", 6, -5)
+        f.toggle:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
+        header:ClearAllPoints()
+        header:SetPoint("TOPLEFT", p, "TOPLEFT", 26, -9)
+        if keep.stretch then header:SetPoint("TOPRIGHT", p, "TOPRIGHT", -10, -9) end
+        local band = CreateFrame("Button", nil, p)
+        band:SetPoint("TOPLEFT", p, "TOPLEFT", 4, -3)
+        band:SetPoint("TOPRIGHT", p, "TOPRIGHT", -4, -3)
+        band:SetHeight(HEAD_H - 6)
+        band:SetFrameLevel(math.max(1, f.toggle:GetFrameLevel() - 1))
+        for _, x in ipairs({ f.slider, f.toggle, band, header }) do f.keep[x] = true end
+        for _, x in ipairs(keep) do f.keep[x] = true end
+        local function Toggle()
+            SetExpanded(f, not f.expanded)
+            SaveExpanded(key, f.expanded)
+            if TTS.Sound then TTS.Sound:PlayUI("button") end
+        end
+        f.toggle:SetScript("OnClick", Toggle)
+        band:SetScript("OnClick", Toggle)
+        for _, x in ipairs({ f.toggle, band }) do
+            x:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(L(f.expanded and "main.collapse" or "main.expand"), 1, 0.82, 0)
+                GameTooltip:Show()
+            end)
+            x:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end
+        ShowInside(f, true)
+        folds[#folds + 1] = f
+        return f
+    end
+
+    -- The PvE and PvP sections, moved in from their windows
+    for _, w in ipairs(inner) do
+        local p = w.section
+        p:SetParent(battleSection)
+        w.docked = true
+        w.timers = (w == pvpWin) and timersLabel or nil
+        for i, b in ipairs(w.buttons or {}) do
+            b:ClearAllPoints()
+            b:SetWidth(HALF_W)
+            local row, col = math.ceil(i / 2), (i - 1) % 2
+            b:SetPoint("TOPLEFT", p, "TOPLEFT", SIDE + col * (HALF_W + 8), RowY(row))
+        end
+        if w.timers then
+            local rows = math.ceil(#w.buttons / 2)
+            w.timers:ClearAllPoints()
+            w.timers:SetPoint("TOP", p, "TOP", 0, RowY(rows) - BTN_H - 6)
+            w.timers:SetWidth(INNER_W - 2 * SIDE)
+        end
+        local f = Foldable(p, (w == pveWin) and "pve" or "pvp", function() return InnerOpenHeight(w) end, w.header, { stretch = true })
+        f.height = f.open()
+        w.fold = f
+    end
+
+    -- The three main sections (their right-hand header lines stay up when folded)
+    local function Top(p, key, h, keep)
+        local f = Foldable(p, key, type(h) == "function" and h or function() return h end, p.headerText, keep)
+        f.height = f.open()
+        tops[#tops + 1] = f
+    end
+    Top(collectSection, "collect", COLLECT_H, { scoreLabel })
+    Top(buildSection, "build", BUILD_H, {})
+    Top(battleSection, "battle", function() return battleOpen end, { ratingLabel })
+    Relayout()
+    battleSection.fold.height = battleOpen
+    Relayout()
+
+    -- The saved choice, once the options have loaded
+    local loader = CreateFrame("Frame")
+    loader:RegisterEvent("PLAYER_LOGIN")
+    loader:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        for _, f in ipairs(folds) do
+            if not Expanded(f.key) then SetExpanded(f, false, true) end
+        end
+    end)
+end)()
+
+-- =========================================================================
 -- STATE UPDATER & LIFECYCLE (ENFORCING 40-50 CARDS)
 -- =========================================================================
 function M:UpdatePlayState()
@@ -515,18 +704,18 @@ function M:UpdatePlayState()
         scoreLabel:SetText(L("main.score", TTS:ColoredScore((TTS:GetCollectionScore()))))
     end
     local rated = TTS.PvP and TTS.PvP.ColoredRating((TTS.PvP:Get()))
-    if rated then
-        ratingLabel:SetText(L("pvp.rating", rated))
-        pvpWin.header:SetText(L("pvp.rating", rated))
-    end
-    -- PvE in the score's colours by the share of solo reward copies won; PvP in the colour
-    -- its rating number has (PvPRecord.lua's tiers)
+    if rated then ratingLabel:SetText(L("pvp.rating", rated)) end
+    -- Each section's header: PvE in the score's colours by the share of solo reward copies
+    -- won, with that count; PvP in the colour its rating number has (PvPRecord.lua's tiers),
+    -- with the rating
     local gained, total = 0, 0
     if TTS.PvERewards then gained, total = TTS:PvERewards() end
-    pveBtn:SetText(TTS.TierColored and TTS:TierColored(total > 0 and gained / total or 0, L("main.pve")) or L("main.pve"))
-    pveWin.header:SetText(L("main.pveRewards", TTS.ColoredCount and TTS:ColoredCount(gained, total) or (gained .. "/" .. total)))
+    local pveName = TTS.TierColored and TTS:TierColored(total > 0 and gained / total or 0, L("main.pve")) or L("main.pve")
+    pveWin.header:SetText(pveName .. "  |cFFBBBBBB" .. L("main.pveRewards",
+        TTS.ColoredCount and TTS:ColoredCount(gained, total) or (gained .. "/" .. total)) .. "|r")
     local colour = rated and rated:match("^|c(%x%x%x%x%x%x%x%x)")
-    pvpBtn:SetText(colour and ("|c" .. colour .. L("main.playOthers") .. "|r") or L("main.playOthers"))
+    local pvpName = colour and ("|c" .. colour .. L("main.playOthers") .. "|r") or L("main.playOthers")
+    pvpWin.header:SetText(pvpName .. (rated and ("  |cFFBBBBBB" .. L("pvp.rating", rated) .. "|r") or ""))
 
     local inMatch = TTS.Engine and TTS.Engine.inMatch
     local isQueued = TTS.WaitingRoom and TTS.WaitingRoom.isQueued
@@ -534,8 +723,6 @@ function M:UpdatePlayState()
 
     -- The Deckbuilder cannot be opened while a game is in progress (it can while queued)
     deckBtn:SetEnabled(not inMatch)
-    pveBtn:SetEnabled(not inMatch)
-    pvpBtn:SetEnabled(not inMatch)
     -- Solo encounters open whenever no game is running (the window explains anything else in the way)
     encountersBtn:SetEnabled(not inMatch)
     dailyBtn:SetEnabled(not inMatch)
@@ -799,6 +986,15 @@ SlashCmdList["TRAGIC"] = function(msg)
     elseif cmd == "pack" or cmd == "packs" or cmd:match("^packs? ") then
         -- Booster packs (Packs.lua, PackOpener.lua): /tragic pack opens the window, the rest test
         if TTS.Packs then TTS.Packs:SlashCommand(cmd:match("^packs?%s*(.*)$")) end
+    elseif cmd == "critters" then
+        -- How many critters this account has killed (Systems\Critters.lua), for testing
+        DEFAULT_CHAT_FRAME:AddMessage("|cFFFFD200[TTSE]|r Critters killed: " .. (TTS.Critters and TTS.Critters:Kills() or 0))
+    elseif cmd == "resume" then
+        -- A game saved by a /reload (Core\Resume.lua): offered again if the popup was closed
+        if not (TTS.Resume and TTS.Resume:Offer()) then DEFAULT_CHAT_FRAME:AddMessage(L("resume.none")) end
+    elseif cmd == "toast" or cmd:match("^toast ") then
+        -- Tries out the card toasts (CardToast.lua); nothing is added to the collection
+        if TTS.CardToast then TTS.CardToast:SlashCommand(msg:trim():match("^%S+%s*(.*)$")) end
     elseif cmd == "tutorial" then
         if TTS.StartTutorial then TTS:StartTutorial() end
     elseif cmd == "welcome" or cmd == "intro" or cmd == "quickstart" then
@@ -815,8 +1011,9 @@ SlashCmdList["TRAGIC"] = function(msg)
                 TTS.SoloSelectFrame:Show()
             end
         end
-    elseif cmd == "daily" or cmd == "endless" then
-        -- The Daily challenge (DailyPanel.lua) and Endless (Endless.lua)
+    elseif cmd == "daily" or cmd == "endless" or cmd == "eternity" or cmd == "draft" then
+        -- The Daily challenge (DailyPanel.lua) and the Eternity Draft (Endless.lua; "endless" kept
+        -- from before the rename)
         local win = (cmd == "daily") and TTS.DailyPanel or TTS.EndlessFrame
         if win then win:SetShown(not win:IsShown()) end
     elseif cmd == "queue" or cmd == "lfm" or cmd == "waiting" then

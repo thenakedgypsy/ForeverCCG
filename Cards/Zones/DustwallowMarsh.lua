@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 4, defender = true, isMob = true, isBoss = true, displayId = 2024,
         zone = "Dustwallow Marsh", creatureType = "Elemental", npcId = 4382,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["DUS03"] = {
         id = "DUS03", name = "Mirefin Murloc", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 2546,
         zone = "Dustwallow Marsh", creatureType = "Beast", npcId = 4412,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["DUS07"] = {
         id = "DUS07", name = "Young Murk Thresher", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -74,7 +74,7 @@ TTS:AddCards({
         power = 6, toughness = 6, hexproof = true, isMob = true, isBoss = true, displayId = 2600,
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 4404,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["DUS10"] = {
         id = "DUS10", name = "Lord Angler", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         dropChance = { 100, 50, 25, 12 },   -- long respawn (about 26h)
         zone = "Dustwallow Marsh", creatureType = "Humanoid", npcId = 14236,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     -- Solo reward
     ["DUS11"] = {

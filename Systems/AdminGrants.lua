@@ -86,7 +86,9 @@ local function SetCopies(card, n)
     elseif card.isBeta then
         TTS_DataStamp = TTS_DataStamp or { launch = true }
         TTS_DataStamp.beta = n > 0 or nil
-    elseif card.isPrize then
+    elseif card.isPrize or card.campaignPrize then
+        -- (A campaign prize's copies are the more of this and what campaign wins earned, so
+        -- a revoke can't take back earned copies)
         TTS_NpcGifts = TTS_NpcGifts or {}
         TTS_NpcGifts.prizes = TTS_NpcGifts.prizes or {}
         TTS_NpcGifts.prizes[id] = n > 0 and n or nil

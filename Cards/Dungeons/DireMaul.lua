@@ -18,21 +18,21 @@ TTS:AddCards({
         power = 2, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2021,
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["DMA02"] = {
         id = "DMA02", name = "Warpwood Tangler", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 9592,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 11464,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["DMA03"] = {
         id = "DMA03", name = "Gordok Brute", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 5, toughness = 3, enrage = true, bulwark = 2, trample = true, isMob = true, isBoss = true, displayId = 12473,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11441,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Enrage. Bulwark 2."
+        text = "Cleave. Enrage. Shield Wall 2."
     },
     ["DMA04"] = {
         id = "DMA04", name = "Eldreth Sorcerer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -46,14 +46,14 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, unblockable = true, isMob = true, isBoss = true, displayId = 7552,
         zone = "Dire Maul", creatureType = "Demon", npcId = 14354,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Invisible."
+        text = "Charge. Stealth."
     },
     ["DMA06"] = {
         id = "DMA06", name = "Warpwood Crusher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 12929,
         zone = "Dire Maul", creatureType = "Elemental", npcId = 13021,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["DMA07"] = {
         id = "DMA07", name = "Gordok Mage-Lord", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -68,14 +68,14 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11490,
         anthem = { tag = "faction", value = "Satyr", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Other Satyrs you control get +1/+1."
+        text = "Leech. Other Satyrs you control get +1/+1."
     },
     ["DMA09"] = {
         id = "DMA09", name = "Lethtendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 14378,
         zone = "Dire Maul", creatureType = "Humanoid", npcId = 14327,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["DMA10"] = {
         id = "DMA10", name = "Hydrospawn", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -89,7 +89,7 @@ TTS:AddCards({
         power = 7, toughness = 7, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11270,
         zone = "Dire Maul", creatureType = "Undead", npcId = 11488,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Anti-Air."
+        text = "Ambush. Ranged."
     },
     ["DMA12"] = {
         id = "DMA12", name = "Magister Kalendris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -97,28 +97,28 @@ TTS:AddCards({
         onDeath = { ops = { { op = "destroy", to = "strongest_enemy" } } },
         zone = "Dire Maul", creatureType = "Undead", npcId = 11487,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Martyrdom: Destroy the enemy denizen with the highest power."
+        text = "Leech. Martyrdom: Destroy the enemy denizen with the highest power."
     },
     ["DMA13"] = {
         id = "DMA13", name = "Cho'Rush the Observer", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 6, toughness = 8, shielded = true, isMob = true, isBoss = true, displayId = 11537,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14324,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["DMA14"] = {
         id = "DMA14", name = "Guard Mol'dar", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, enrage = true, bulwark = 2, support = true, isMob = true, isBoss = true, displayId = 11561,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14326,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support. Enrage. Bulwark 2."
+        text = "Support. Enrage. Shield Wall 2."
     },
     ["DMA15"] = {
         id = "DMA15", name = "Stomper Kreeg", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, enrage = true, bulwark = 2, trample = true, isMob = true, isBoss = true, displayId = 11545,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14322,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Enrage. Bulwark 2."
+        text = "Cleave. Enrage. Shield Wall 2."
     },
     ["DMA16"] = {
         id = "DMA16", name = "Tendris Warpwood", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -134,7 +134,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 14325,
         anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support. Enrage. Bulwark 2. Other Ogres you control get +1/+1."
+        text = "Support. Enrage. Shield Wall 2. Other Ogres you control get +1/+1."
     },
     ["DMA18"] = {
         id = "DMA18", name = "Immol'thar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -142,7 +142,7 @@ TTS:AddCards({
         zone = "Dire Maul", creatureType = "Demon", npcId = 11496,
         anthem = { tag = "type", value = "Demon", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Enrage. Other Demons you control get +1/+1."
+        text = "Cleave. Enrage. Other Demons you control get +1/+1."
     },
     -- Solo reward
     ["DMA19"] = {

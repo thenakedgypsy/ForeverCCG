@@ -18,14 +18,14 @@ TTS:AddCards({
         power = 3, toughness = 3, hexproof = true, isMob = true, isBoss = true, displayId = 729,
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3853,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["SFK02"] = {
         id = "SFK02", name = "Slavering Worg", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 11421,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 3862,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SFK03"] = {
         id = "SFK03", name = "Haunted Servitor", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 3, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 8808,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 3866,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Drain."
+        text = "Airborne. Leech."
     },
     ["SFK05"] = {
         id = "SFK05", name = "Lupine Horror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -47,7 +47,7 @@ TTS:AddCards({
         zone = "Shadowfang Keep", creatureType = "Undead", faction = "Worgen", npcId = 3863,
         etb = { ops = { { op = "token", id = "TOK14", n = 2 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Arrival: Spawn: 2 Lupine Delusion Adds (2/1, Blocker)."
+        text = "Arrival: Spawn: 2 Lupine Delusion Adds (2/1, Protection)."
     },
     ["SFK06"] = {
         id = "SFK06", name = "Rethilgore", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -61,21 +61,21 @@ TTS:AddCards({
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 524,
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3886,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["SFK08"] = {
         id = "SFK08", name = "Odo the Blindwatcher", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 522,
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 4279,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SFK09"] = {
         id = "SFK09", name = "Baron Silverlaine", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 3222,
         zone = "Shadowfang Keep", creatureType = "Undead", npcId = 3887,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["SFK10"] = {
         id = "SFK10", name = "Commander Springvale", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -91,14 +91,14 @@ TTS:AddCards({
         zone = "Shadowfang Keep", creatureType = "Humanoid", faction = "Worgen", npcId = 3927,
         anthem = { tag = "faction", value = "Worgen", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Worgen you control get +1/+1."
+        text = "Charge. Other Worgen you control get +1/+1."
     },
     ["SFK12"] = {
         id = "SFK12", name = "Fenrus the Devourer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 2352,
         zone = "Shadowfang Keep", creatureType = "Beast", npcId = 4274,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["SFK13"] = {

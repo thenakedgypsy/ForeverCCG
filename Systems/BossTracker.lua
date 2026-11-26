@@ -170,8 +170,9 @@ function TTS.BossTracker:BuildMobCardCache()
 
     for cardId, card in pairs(TTS.Cards or {}) do
         -- Solo reward cards are earned only by winning their encounter, never from kills;
-        -- unlockOnDeath cards (Leeroy Jenkins) only from your own deaths
-        if card.isMob and not card.isReward and not card.unlockOnDeath then
+        -- unlockOnDeath cards (Leeroy Jenkins) only from your own deaths; critterUnlock ones
+        -- (Mr. Bigglesworth) only from critter kills (Systems\Critters.lua), never his own NPC's
+        if card.isMob and not card.isReward and not card.unlockOnDeath and not card.critterUnlock then
             -- dropsFrom = { npcId, card }: copies come from killing another NPC instead (Sneed's
             -- Shredder drops from Sneed); `card` names it, so its translated name matches too
             local src = card.dropsFrom
@@ -297,6 +298,15 @@ local function FoilChance(card)
     return FOIL_CHANCE.normal
 end
 
+-- How rare a card is to find, for its drop toast (UI\CardToast.lua): "boss" (a final dungeon
+-- boss), "rare" (named characters, rare spawns and dungeon creatures) or "normal"
+function TTS.BossTracker:CardTier(card)
+    if not card then return "normal" end
+    if BOSS_CARD_INSTANCES[card.id] then return "boss" end
+    if card.isNamed or card.rareSpawn or (card.zone and DUNGEON_KEYS[InstanceKey(card.zone)]) then return "rare" end
+    return "normal"
+end
+
 -- instanceId (optional) wins over the name, which only matches on English clients
 function TTS.BossTracker:InstanceHasLockedCards(instanceName, instanceId)
     local key = instanceId and INSTANCE_KEY_BY_ID[instanceId] or InstanceKey(instanceName)
@@ -368,6 +378,9 @@ function TTS.BossTracker:RecordMobKill(card, msgKey, guid)
             ShowCardCompletePopup(card)
         end
 
+        -- A rare or boss card also pops up at the screen's edge (UI\CardToast.lua)
+        if TTS.CardToast then TTS.CardToast:OnCopy(card, newKills) end
+
         if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
             TTS.DeckBuilderFrame:RefreshAll()
         end
@@ -397,8 +410,10 @@ function TTS.BossTracker:RollFoil(card, msgKey)
     else
         DEFAULT_CHAT_FRAME:AddMessage(L(msgKey or "boss.foilSlain", cardText .. zoneText))
     end
-    -- Center-screen announcement outside instances only, as for a card's final copy
-    if not SafeCall(IsInInstance) then
+    -- Its toast at the screen's edge (UI\CardToast.lua), told to the guild too; with toasts
+    -- off, a center-screen announcement outside instances only, as for a card's final copy
+    local toasted = TTS.CardToast and TTS.CardToast:OnFoil(card)
+    if not toasted and not SafeCall(IsInInstance) then
         local text = L("boss.foilPopup", TTS:CardName(card) or card.id)
         if RaidNotice_AddMessage and RaidWarningFrame then
             RaidNotice_AddMessage(RaidWarningFrame, text, { r = 0.6, g = 0.9, b = 1 })

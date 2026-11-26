@@ -39,7 +39,7 @@ TTS:AddCards({
         enterSound = "Interface\\AddOns\\ForeverCCG\\Audio\\leeroy_jenkins.mp3",   -- only when he arrives (Sound.lua)
         etb = { ops = { { op = "token", id = "TOK04", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Arrival: Spawn: 3 Dragon Egg Adds (0/1, Blocker). Dies at the start of your turn."
+        text = "Arrival: Spawn: 3 Dragon Egg Adds (0/1, Protection). Dies at the start of your turn."
     },
     ["BUGREPORTER"] = {
         id = "BUGREPORTER", name = "The Bug Reporter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",

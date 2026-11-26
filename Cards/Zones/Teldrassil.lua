@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11454,
         zone = "Teldrassil", creatureType = "Beast", npcId = 2031,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["TEL02"] = {
         id = "TEL02", name = "Young Thistle Boar", cost = "{G}", cmc = 1, color = "G", type = "Creature",
@@ -31,21 +31,21 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11448,
         zone = "Teldrassil", creatureType = "Beast", npcId = 2032,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["TEL04"] = {
         id = "TEL04", name = "Webwood Spider", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 709,
         zone = "Teldrassil", creatureType = "Beast", npcId = 1986,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["TEL05"] = {
         id = "TEL05", name = "Webwood Lurker", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 2, toughness = 2, haste = true, deathtouch = true, isMob = true, isBoss = true, displayId = 760,
         zone = "Teldrassil", creatureType = "Beast", npcId = 1998,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Quick."
+        text = "Execute. Charge."
     },
     ["TEL06"] = {
         id = "TEL06", name = "Strigid Owl", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -56,10 +56,11 @@ TTS:AddCards({
     },
     ["TEL07"] = {
         id = "TEL07", name = "Gnarlpine Shaman", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
-        power = 3, toughness = 5, isMob = true, isBoss = true, displayId = 897,
+        power = 2, toughness = 4, isMob = true, isBoss = true, displayId = 897,
         zone = "Teldrassil", creatureType = "Humanoid", faction = "Furbolg", npcId = 2009,
+        etb = { ops = { { op = "token", id = "TOK17", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Arrival: Spawn: 1 Windfury Totem Add (0/2, Protection; other denizens you control get +1/+0)."
     },
     ["TEL08"] = {
         id = "TEL08", name = "Gnarlpine Defender", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",

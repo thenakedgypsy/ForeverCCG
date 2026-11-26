@@ -33,13 +33,13 @@ TTS:AddCards({
     },
     ["PAL04"] = {
         id = "PAL04", name = "Blessing of Protection", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Target denizen you control gains Shielded and Soulstone, and permanently gets +1/+1.",
+        text = "Target denizen you control gains Absorb and Soulstone, and permanently gets +1/+1.",
         art = "Interface\\Icons\\Spell_Holy_SealOfProtection",
         effect = { target = "friendly_creature", ops = { { op = "shielded", to = "target" }, { op = "regen", to = "target" }, { op = "buff", to = "target", p = 1, t = 1, perm = true } } }
     },
     ["PAL05"] = {
         id = "PAL05", name = "Divine Shield", cost = "{2}{W}", cmc = 3, color = "W", type = "Sorcery", class = "Paladin",
-        text = "Prevent the next 4 damage to you. Denizens you control gain Shielded.",
+        text = "Prevent the next 4 damage to you. Denizens you control gain Absorb.",
         art = "Interface\\Icons\\Spell_Holy_DivineIntervention",
         effect = { ops = { { op = "shield", to = "self_player", n = 4 }, { op = "shielded", to = "friendly_creatures" } } }
     },

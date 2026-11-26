@@ -573,6 +573,11 @@ function TTS.Net:BroadcastLFM(msg, announce)
     end
 end
 
+-- Sends a background message to the guild only (UI\CardToast.lua's shout-outs)
+function TTS.Net:BroadcastGuild(msg)
+    if IsInGuild and IsInGuild() then QueueSend(msg, "GUILD", nil, true) end
+end
+
 -- Seconds until another challenge can be sent (0 = now)
 function TTS.Net:InviteCooldownLeft()
     return math.max(0, math.ceil((self.lastInviteAt or -INVITE_COOLDOWN) + INVITE_COOLDOWN - GetTime()))
@@ -913,7 +918,8 @@ function TTS.Net:PingContacts(background)
     end
 end
 
--- Contacts known to be online but not in the waiting room: { name, score, pvp }, sorted by name.
+-- Contacts known to be online but not in the waiting room: { name, score, pvp }, sorted by
+-- collection score (highest first), then name.
 -- Online = answered (or sent) a ping within ONLINE_WINDOW, and not silent on a later ping
 -- (unless the channel heard from them within PRESENCE_GRACE: one lost whisper on a busy
 -- channel doesn't hide someone the census just found).
@@ -936,7 +942,12 @@ function TTS.Net:GetOnlineIdleContacts()
             list[#list + 1] = { name = c.name, score = s.score, pvp = s.pvp }
         end
     end
-    table.sort(list, function(a, b) return a.name:lower() < b.name:lower() end)
+    -- Highest collection score first (unknown scores last), then by name
+    table.sort(list, function(a, b)
+        local sa, sb = tonumber(a.score) or -1, tonumber(b.score) or -1
+        if sa ~= sb then return sa > sb end
+        return a.name:lower() < b.name:lower()
+    end)
     return list
 end
 
@@ -1409,6 +1420,9 @@ function TTS.Net:OnChannelMessage(message, sender, chatType)
         end
     elseif message:match("^LFM_") then
         self:OnReceive(message, sender)
+    elseif message:match("^CARD_SHOUT:") and chatType == "GUILD" then
+        -- A guildmate found a foil or boss card (UI\CardToast.lua)
+        if TTS.CardToast then TTS.CardToast:OnShout(message, sender) end
     end
 end
 
@@ -2624,6 +2638,11 @@ function TTS.Net:OnReceive(msg, sender)
             TTS.Net:NoteTheirLastSeq(parts[3])
             TTS.Net:SendPing(sender, "ALIVE")
 
+        elseif actionType == "RESUMED" then
+            -- They reloaded and picked the game up again (Core\Resume.lua): just said in the log;
+            -- their ALIVE? that follows catches either side up on anything missed
+            E:Log(L("resume.oppBack", sender), "SYSTEM")
+
         elseif actionType == "ALIVE" then
             -- ALIVE[:<their last numbered message>]: our "are you still there?" answered.
             -- Hearing it (above) is most of what it's for; the number shows any we missed.
@@ -2681,6 +2700,11 @@ function TTS.Net:OnReceive(msg, sender)
                 E:EndEffectCapture(cap)
                 E:RefreshUI()
             end
+
+        elseif actionType == "CHAINPULL" then
+            -- Their Chain Pull searched their deck (E:ChainPull): CHAINPULL:<cardId or NONE>:<source>
+            local cardId = parts[3] ~= "NONE" and parts[3] or nil
+            E:OnRemoteChainPull(cardId, parts[4])
 
         elseif actionType == "PLAY_LAND" then
             local cardId = parts[3]

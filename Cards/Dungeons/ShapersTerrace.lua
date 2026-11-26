@@ -24,14 +24,14 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 11316,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261898,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SHT02"] = {
         id = "SHT02", name = "Ravasaur Stalker", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 648,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261934,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["SHT03"] = {
         id = "SHT03", name = "Ravasaur Trapper", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -46,28 +46,28 @@ TTS:AddCards({
         power = 3, toughness = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 948,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 262115,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["SHT05"] = {
         id = "SHT05", name = "Venomhide Ravasaur", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 143340,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 269206, strictIds = true,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SHT06"] = {
         id = "SHT06", name = "Tor'Rel", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 3, reach = true, isMob = true, isBoss = true, displayId = 143039,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261811,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["SHT07"] = {
         id = "SHT07", name = "Ironhide Ravasaur", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
         power = 3, toughness = 5, bulwark = 2, isMob = true, isBoss = true, displayId = 1337,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261786,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Bulwark 2."
+        text = "Shield Wall 2."
     },
     ["SHT08"] = {
         id = "SHT08", name = "Ravasaur Matriarch", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         power = 2, toughness = 6, vigilance = true, bulwark = 2, isMob = true, isBoss = true, displayId = 8395,
         zone = "Shaper's Terrace", creatureType = "Elemental", npcId = 262032, npcIds = { 261777, 272317 }, strictIds = true,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Vigilant. Bulwark 2."
+        text = "Vigilant. Shield Wall 2."
     },
     -- Bosses
     ["SHT10"] = {
@@ -90,21 +90,21 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4442,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 253214, npcIds = { 262688 }, strictIds = true,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Strikes-First."
+        text = "Charge. Ambush."
     },
     ["SHT11"] = {
         id = "SHT11", name = "Thunderhoof", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 4, haste = true, trample = true, isMob = true, isBoss = true, displayId = 144514,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261812,
         modelCam = { zoom = 0.65, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Quick. Brutish."
+        text = "Charge. Cleave."
     },
     ["SHT12"] = {
         id = "SHT12", name = "Venomridge", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 4, deathtouch = true, reach = true, isMob = true, isBoss = true, displayId = 144511,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261813,
         modelCam = { zoom = 0.65, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Fatal. Anti-Air."
+        text = "Execute. Ranged."
     },
     ["SHT13"] = {
         id = "SHT13", name = "Cinder", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -112,7 +112,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "damage", to = "target", n = 3 } } },
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261974,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Arrival: Deal 3 damage to target enemy denizen."
+        text = "Charge. Arrival: Deal 3 damage to target enemy denizen."
     },
     ["SHT14"] = {
         id = "SHT14", name = "Bolt", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
@@ -120,7 +120,7 @@ TTS:AddCards({
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 1 } } },
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 262081,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Arrival: Deal 1 damage to each enemy denizen."
+        text = "Charge. Arrival: Deal 1 damage to each enemy denizen."
     },
     ["SHT15"] = {
         id = "SHT15", name = "Snowtalon", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -135,28 +135,28 @@ TTS:AddCards({
         power = 4, toughness = 7, vigilance = true, bulwark = 2, isMob = true, isBoss = true, displayId = 144515,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 262127,
         modelCam = { zoom = 0.60, camScale = 1.20, z = -0.15, rotation = 0.15 },
-        text = "Vigilant. Bulwark 2."
+        text = "Vigilant. Shield Wall 2."
     },
     ["SHT17"] = {
         id = "SHT17", name = "Vitrix", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 5, toughness = 5, firstStrike = true, hexproof = true, isMob = true, isBoss = true, displayId = 147098,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 272561,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Strikes-First. Warded."
+        text = "Ambush. Anti-Magic."
     },
     ["SHT18"] = {
         id = "SHT18", name = "King Op", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 6, enrage = true, bulwark = 2, isMob = true, isBoss = true, displayId = 143129,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 261993,
         modelCam = { zoom = 0.65, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Enrage. Bulwark 2."
+        text = "Enrage. Shield Wall 2."
     },
     ["SHT19"] = {
         id = "SHT19", name = "Titanosaur", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 142989,
         zone = "Shaper's Terrace", creatureType = "Beast", npcId = 253201,
         modelCam = { zoom = 0.45, camScale = 1.40, z = -0.20, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["SHT20"] = {
@@ -165,6 +165,6 @@ TTS:AddCards({
         zone = "Shaper's Terrace", creatureType = "Beast", npcEntry = 253218,
         anthem = { tag = "zone", value = "Shaper's Terrace", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Shaper's Terrace denizens you control get +1/+1."
+        text = "Charge. Other Shaper's Terrace denizens you control get +1/+1."
     },
 })

@@ -21,21 +21,21 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 139813,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 258102,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["KRD02"] = {
         id = "KRD02", name = "Twilight Grunt", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 140001,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 258042,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["KRD03"] = {
         id = "KRD03", name = "Twilight Warlock", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, lifelink = true, isMob = true, isBoss = true, displayId = 139817,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 258100,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["KRD04"] = {
         id = "KRD04", name = "Krol'dok Shaman", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -50,14 +50,14 @@ TTS:AddCards({
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 1045,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Ogre", npcId = 258687,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["KRD06"] = {
         id = "KRD06", name = "Krol'dok Centurion", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
         power = 4, toughness = 5, bulwark = 2, isMob = true, isBoss = true, displayId = 11571,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Ogre", npcId = 257885,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Bulwark 2."
+        text = "Shield Wall 2."
     },
     -- Bosses
     ["KRD07"] = {
@@ -65,7 +65,7 @@ TTS:AddCards({
         power = 5, toughness = 4, trample = true, enrage = true, isMob = true, isBoss = true, displayId = 141217,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Ogre", npcId = 258966,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     ["KRD08"] = {
         id = "KRD08", name = "Twilight Commander Zarmok", cost = "{2}{R}{B}", cmc = 4, color = "R", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 258972,
         anthem = { tag = "faction", value = "Twilight's Hammer", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Twilight's Hammer you control get +1/+1."
+        text = "Ambush. Other Twilight's Hammer you control get +1/+1."
     },
     ["KRD09"] = {
         id = "KRD09", name = "War Handler Ashka", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -81,14 +81,14 @@ TTS:AddCards({
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 259281,
         anthem = { tag = "type", value = "Beast", kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Beasts you control have Quick."
+        text = "Charge. Beasts you control have Charge."
     },
     ["KRD10"] = {
         id = "KRD10", name = "Nar'gurk", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 141215,
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Ogre", npcId = 258964,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["KRD11"] = {
@@ -97,6 +97,6 @@ TTS:AddCards({
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Twilight's Hammer", npcEntry = 258104,
         anthem = { tag = "zone", value = "Krol'dok Stronghold", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Krol'dok Stronghold denizens you control get +1/+1."
+        text = "Ambush. Other Krol'dok Stronghold denizens you control get +1/+1."
     },
 })

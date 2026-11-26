@@ -15,24 +15,26 @@ TTS:AddCards({
     -- STRATHOLME
     ["STR01"] = {
         id = "STR01", name = "Crimson Initiate", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 10496,
+        power = 2, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 10496,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10420,
+        etb = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Arrival: Target friendly denizen gets +1/+1."
     },
     ["STR02"] = {
         id = "STR02", name = "Plague Ghoul", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 559,
         zone = "Stratholme", creatureType = "Undead", npcId = 10405,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STR03"] = {
         id = "STR03", name = "Crimson Gallant", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
-        power = 3, toughness = 4, support = true, isMob = true, isBoss = true, displayId = 10512,
+        power = 3, toughness = 3, support = true, isMob = true, isBoss = true, displayId = 10512,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10424,
+        etb = { target = "friendly_creature", ops = { { op = "shielded", to = "target" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Arrival: Target friendly denizen gains Absorb."
     },
     ["STR04"] = {
         id = "STR04", name = "Rockwing Gargoyle", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -46,14 +48,14 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 10728,
         zone = "Stratholme", creatureType = "Undead", npcId = 10463,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["STR06"] = {
         id = "STR06", name = "Crypt Crawler", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 6841,
         zone = "Stratholme", creatureType = "Undead", npcId = 10412,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["STR07"] = {
         id = "STR07", name = "Patchwork Horror", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -74,21 +76,21 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 10433,
         zone = "Stratholme", creatureType = "Undead", npcId = 10435,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STR10"] = {
         id = "STR10", name = "Hearthsinger Forresten", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 10482,
         zone = "Stratholme", creatureType = "Undead", npcId = 10558,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["STR11"] = {
         id = "STR11", name = "The Unforgiven", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 5, toughness = 8, unblockable = true, isMob = true, isBoss = true, displayId = 10771,
         zone = "Stratholme", creatureType = "Undead", npcId = 10516,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["STR12"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -96,7 +98,7 @@ TTS:AddCards({
         power = 6, toughness = 7, shielded = true, firstStrike = true, isMob = true, isBoss = true, displayId = 2606,
         zone = "Stratholme", creatureType = "Undead", npcId = 10393,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Shielded."
+        text = "Ambush. Absorb."
     },
     ["STR13"] = {
         id = "STR13", name = "Cannon Master Willey", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -114,24 +116,25 @@ TTS:AddCards({
     },
     ["STR15"] = {
         id = "STR15", name = "Malor the Zealous", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
-        power = 7, toughness = 8, support = true, isMob = true, isBoss = true, displayId = 10458,
+        power = 6, toughness = 7, support = true, isMob = true, isBoss = true, displayId = 10458,
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 11032,
+        etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Arrival: Return a denizen card from your graveyard to the battlefield."
     },
     ["STR16"] = {
         id = "STR16", name = "Baroness Anastari", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 10698,
         zone = "Stratholme", creatureType = "Undead", npcId = 10436,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["STR17"] = {
         id = "STR17", name = "Nerub'enkan", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 7, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 9793,
         zone = "Stratholme", creatureType = "Undead", npcId = 10437,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["STR18"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -155,7 +158,7 @@ TTS:AddCards({
         zone = "Stratholme", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 10812,
         anthem = { tag = "faction", value = "Scarlet Crusade", kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Support. Other Scarlet Crusade you control have Drain."
+        text = "Leech. Support. Other Scarlet Crusade you control have Leech."
     },
     -- Solo reward
     ["STR21"] = {
@@ -165,6 +168,6 @@ TTS:AddCards({
         anthem = { tag = "type", value = "Undead", p = 1, t = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2 } } },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Brutish. Arrival: Deal 2 damage to each enemy denizen. Other Undead you control get +1/+1."
+        text = "Cleave. Arrival: Deal 2 damage to each enemy denizen. Other Undead you control get +1/+1."
     },
 })

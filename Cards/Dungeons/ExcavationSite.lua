@@ -18,21 +18,21 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1959,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260799,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["EXC02"] = {
         id = "EXC02", name = "Highland Spider", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 3, reach = true, isMob = true, isBoss = true, displayId = 1088,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260803,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["EXC03"] = {
         id = "EXC03", name = "Dragonmaw Saboteur", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 4916,
         zone = "Excavation Site", creatureType = "Humanoid", faction = "Blackrock", npcId = 275045,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["EXC04"] = {
         id = "EXC04", name = "Marsh Crocolisk", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 545,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260804,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["EXC06"] = {
         id = "EXC06", name = "Dragonmaw Warder", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -60,7 +60,7 @@ TTS:AddCards({
         power = 4, toughness = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 1339,
         zone = "Excavation Site", creatureType = "Beast", npcId = 271732,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["EXC08"] = {
         id = "EXC08", name = "Highland Snapper", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -74,7 +74,7 @@ TTS:AddCards({
         power = 4, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 11316,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260801,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["EXC10"] = {
         id = "EXC10", name = "Elder Crocolisk", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -88,7 +88,7 @@ TTS:AddCards({
         power = 4, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 9010,
         zone = "Excavation Site", creatureType = "Elemental", npcId = 260808,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["EXC12"] = {
         id = "EXC12", name = "Dragonmaw Thaumaturgist", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
@@ -103,7 +103,7 @@ TTS:AddCards({
         power = 7, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 1070,
         zone = "Excavation Site", creatureType = "Elemental", npcId = 275049,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["EXC14"] = {
         id = "EXC14", name = "Thicket Matriarch", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -118,7 +118,7 @@ TTS:AddCards({
         power = 5, toughness = 7, hexproof = true, isMob = true, isBoss = true, displayId = 144209,
         zone = "Excavation Site", creatureType = "Beast", npcId = 260322,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["EXC16"] = {
         id = "EXC16", name = "Shadetooth", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -126,7 +126,7 @@ TTS:AddCards({
         zone = "Excavation Site", creatureType = "Beast", npcId = 260325,
         anthem = { tag = "type", value = "Beast", kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Beasts you control have Quick."
+        text = "Charge. Other Beasts you control have Charge."
     },
     -- Solo reward
     ["EXC17"] = {
@@ -135,6 +135,6 @@ TTS:AddCards({
         zone = "Excavation Site", creatureType = "Humanoid", npcEntry = 13155,
         anthem = { tag = "zone", value = "Excavation Site", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible. Other Excavation Site denizens you control get +1/+1."
+        text = "Stealth. Other Excavation Site denizens you control get +1/+1."
     },
 })

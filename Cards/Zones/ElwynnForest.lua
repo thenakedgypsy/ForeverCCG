@@ -28,18 +28,18 @@ TTS:AddCards({
         text = "Arrival: Spawn: 1 Kobold Digger Add (1/1)."
     },
     ["ELW03"] = {
-        id = "ELW03", name = "Defias Thug", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 5035,
+        id = "ELW03", name = "Defias Thug", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
+        power = 2, toughness = 2, chainPull = true, isMob = true, isBoss = true, displayId = 5035,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 38,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Chain Pull."
     },
     ["ELW04"] = {
         id = "ELW04", name = "Stonetusk Boar", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 1, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 503,
         zone = "Elwynn Forest", creatureType = "Beast", npcId = 113,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ELW05"] = {
         id = "ELW05", name = "Kobold Tunneler", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -61,7 +61,7 @@ TTS:AddCards({
         power = 4, toughness = 4, blink = true, shielded = true, firstStrike = true, isMob = true, isBoss = true, displayId = 2359,
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Defias", npcId = 474,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Blink. Shielded."
+        text = "Ambush. Blink. Absorb."
     },
     ["ELW08"] = {
         id = "ELW08", name = "Murloc Forager", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -93,7 +93,7 @@ TTS:AddCards({
         zone = "Elwynn Forest", creatureType = "Humanoid", faction = "Gnoll", npcId = 448,
         anthem = { tag = "faction", value = "Gnoll", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Gnolls you control get +1/+0."
+        text = "Cleave. Other Gnolls you control get +1/+0."
     },
     -- Solo reward
     ["ELW11"] = {

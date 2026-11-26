@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 513,
         zone = "Tirisfal Glades", creatureType = "Beast", npcId = 1504,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["TIR04"] = {
         id = "TIR04", name = "Decrepit Darkhound", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 4734,
         zone = "Tirisfal Glades", creatureType = "Beast", npcId = 1553,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Drain."
+        text = "Airborne. Leech."
     },
     ["TIR07"] = {
         id = "TIR07", name = "Vile Fin Minor Oracle", cost = "{1}{U}{U}", cmc = 3, color = "U", type = "Creature",

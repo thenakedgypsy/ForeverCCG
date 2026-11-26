@@ -38,42 +38,42 @@ TTS:AddCards({
         1, 0, { "support" }, "INV_Sword_04", "Equip: +1/+0 and Support."),
     ["GEAR02"] = Gear("GEAR02", "Kharanos Hand Axe", "{1}", 1, "C", "Dun Morogh",
         { Alliance = 1273 },   -- Grawn Thromwyn, Kharanos
-        1, 0, { "haste" }, "INV_Axe_04", "Equip: +1/+0 and Quick."),
+        1, 0, { "haste" }, "INV_Axe_04", "Equip: +1/+0 and Charge."),
     ["GEAR03"] = Gear("GEAR03", "Dolanaar Hunting Spear", "{1}", 1, "C", "Teldrassil",
         { Alliance = 3609 },   -- Shalomon, Dolanaar
-        1, 0, { "reach" }, "INV_Spear_02", "Equip: +1/+0 and Anti-Air."),
+        1, 0, { "reach" }, "INV_Spear_02", "Equip: +1/+0 and Ranged."),
     ["GEAR04"] = Gear("GEAR04", "Razor Hill Cleaver", "{1}", 1, "C", "Durotar",
         { Horde = 3163 },   -- Uhgar, Razor Hill
-        1, 0, { "trample" }, "INV_Axe_09", "Equip: +1/+0 and Brutish."),
+        1, 0, { "trample" }, "INV_Axe_09", "Equip: +1/+0 and Cleave."),
     ["GEAR05"] = Gear("GEAR05", "Bloodhoof Totem Club", "{1}", 1, "C", "Mulgore",
         { Horde = 3077 },   -- Mahnott Roughwound, Bloodhoof Village
         0, 1, { "support" }, "INV_Mace_01", "Equip: +0/+1 and Support."),
     ["GEAR06"] = Gear("GEAR06", "Deathguard Dirk", "{1}", 1, "C", "Tirisfal Glades",
         { Horde = 2136 },   -- Oliver Dwor, Brill
-        1, 0, { "lifelink" }, "INV_Weapon_ShortBlade_05", "Equip: +1/+0 and Drain."),
+        1, 0, { "lifelink" }, "INV_Weapon_ShortBlade_05", "Equip: +1/+0 and Leech."),
 
     -- Levels 10-20
     ["GEAR07"] = Gear("GEAR07", "Sentinel Hill Longbow", "{2}", 2, "C", "Westfall",
         { Alliance = 1668 },   -- William MacGregor, Sentinel Hill
-        1, 1, { "reach" }, "INV_Weapon_Bow_02", "Equip: +1/+1 and Anti-Air."),
+        1, 1, { "reach" }, "INV_Weapon_Bow_02", "Equip: +1/+1 and Ranged."),
     ["GEAR08"] = Gear("GEAR08", "Thelsamar Blunderbuss", "{2}", 2, "C", "Loch Modan",
         { Alliance = 1469 },   -- Vrok Blunderblast, Thelsamar
-        2, 0, { "firstStrike" }, "INV_Weapon_Rifle_01", "Equip: +2/+0 and Strikes-First."),
+        2, 0, { "firstStrike" }, "INV_Weapon_Rifle_01", "Equip: +2/+0 and Ambush."),
     ["GEAR09"] = Gear("GEAR09", "Auberdine Moonblade", "{2}", 2, "C", "Darkshore",
         { Alliance = 4183 },   -- Naram Longclaw, Auberdine
         1, 1, { "support" }, "INV_Sword_27", "Equip: +1/+1 and Support."),
     ["GEAR10"] = Gear("GEAR10", "Sepulcher Recurve Bow", "{2}", 2, "C", "Silverpine Forest",
         { Horde = 9553 },   -- Nadia Vernon, the Sepulcher
-        2, 0, { "reach" }, "INV_Weapon_Bow_04", "Equip: +2/+0 and Anti-Air."),
+        2, 0, { "reach" }, "INV_Weapon_Bow_04", "Equip: +2/+0 and Ranged."),
     ["GEAR11"] = Gear("GEAR11", "Barrens Scimitar", "{2}", 2, "C", "The Barrens",
         { Horde = 3479, Neutral = 3491 },   -- Nargal Deatheye, the Crossroads / Ironzar, Ratchet
-        2, 0, { "haste" }, "INV_Sword_19", "Equip: +2/+0 and Quick."),
+        2, 0, { "haste" }, "INV_Sword_19", "Equip: +2/+0 and Charge."),
     ["GEAR12"] = Gear("GEAR12", "Lakeshire Hunting Rifle", "{2}", 2, "C", "Redridge Mountains",
         { Alliance = 3088 },   -- Henry Chapal, Lakeshire
-        1, 1, { "firstStrike" }, "INV_Weapon_Rifle_02", "Equip: +1/+1 and Strikes-First."),
+        1, 1, { "firstStrike" }, "INV_Weapon_Rifle_02", "Equip: +1/+1 and Ambush."),
     ["GEAR13"] = Gear("GEAR13", "Sun Rock Shortbow", "{3}", 3, "C", "Stonetalon Mountains",
         { Horde = 9549 },   -- Borand, Sun Rock Retreat
-        2, 1, { "reach" }, "INV_Weapon_Bow_07", "Equip: +2/+1 and Anti-Air."),
+        2, 1, { "reach" }, "INV_Weapon_Bow_07", "Equip: +2/+1 and Ranged."),
 
     -- Levels 20-30
     ["GEAR14"] = Gear("GEAR14", "Ashenvale Warglaive", "{3}", 3, "C", "Ashenvale",
@@ -81,88 +81,88 @@ TTS:AddCards({
         2, 1, { "support" }, "INV_Weapon_Halberd_02", "Equip: +2/+1 and Support."),
     ["GEAR15"] = Gear("GEAR15", "Darkshire Silvered Sword", "{3}", 3, "C", "Duskwood",
         { Alliance = 225 },   -- Gavin Gnarltree, Darkshire
-        2, 1, { "firstStrike" }, "INV_Sword_31", "Equip: +2/+1 and Strikes-First."),
+        2, 1, { "firstStrike" }, "INV_Sword_31", "Equip: +2/+1 and Ambush."),
     ["GEAR16"] = Gear("GEAR16", "Menethil Boarding Axe", "{3}", 3, "C", "Wetlands",
         { Alliance = 1441 },   -- Brak Durnad, Menethil Harbor
-        2, 1, { "trample" }, "INV_Axe_11", "Equip: +2/+1 and Brutish."),
+        2, 1, { "trample" }, "INV_Axe_11", "Equip: +2/+1 and Cleave."),
     ["GEAR17"] = Gear("GEAR17", "Hillsbrad Militia Pike", "{3}", 3, "C", "Hillsbrad Foothills",
         { Alliance = 3543, Horde = 3539 },   -- Robert Aebischer, Southshore / Ott, Tarren Mill
         1, 2, { "support" }, "INV_Spear_04", "Equip: +1/+2 and Support."),
     ["GEAR18"] = Gear("GEAR18", "Shimmering Flats Boomstick", "{3}", 3, "C", "Thousand Needles",
         { Horde = 9551, Neutral = 3053 },   -- Starn, Freewind Post / Synge, the Shimmering Flats
-        2, 0, { "haste", "firstStrike" }, "INV_Weapon_Rifle_06", "Equip: +2/+0, Quick and Strikes-First."),
+        2, 0, { "haste", "firstStrike" }, "INV_Weapon_Rifle_06", "Equip: +2/+0, Charge and Ambush."),
 
     -- Levels 30-40
     ["GEAR19"] = Gear("GEAR19", "Kirin Tor Spellblade", "{3}", 3, "C", "Alterac Mountains",
         { Alliance = 275623, Neutral = 32334 },   -- Valaden Silverblade / Nixi Fireclaw, Dalaran
-        2, 1, { "hexproof" }, "INV_Sword_10", "Equip: +2/+1 and Warded."),
+        2, 1, { "hexproof" }, "INV_Sword_10", "Equip: +2/+1 and Anti-Magic."),
     ["GEAR20"] = Gear("GEAR20", "Stromgarde Warhammer", "{4}", 4, "C", "Arathi Highlands",
         { Alliance = 1471, Horde = 9555 },   -- Jannos Ironwill, Refuge Pointe / Mu'uta, Hammerfall
         2, 2, { "support" }, "INV_Hammer_05", "Equip: +2/+2 and Support."),
     ["GEAR21"] = Gear("GEAR21", "Kodo-Bone Maul", "{4}", 4, "C", "Desolace",
         { Alliance = 1322, Horde = 12045 },   -- Maxton Strang, Nijel's Point / Hae'Wilani, Shadowprey Village
-        2, 2, { "trample" }, "INV_Mace_04", "Equip: +2/+2 and Brutish."),
+        2, 2, { "trample" }, "INV_Mace_04", "Equip: +2/+2 and Cleave."),
     ["GEAR22"] = Gear("GEAR22", "Booty Bay Cutlass", "{3}", 3, "C", "Stranglethorn Vale",
         { Horde = 1146, Neutral = 2482 },   -- Vharr, Grom'gol / Zarena Cromwind, Booty Bay
-        2, 1, { "lifelink" }, "INV_Sword_12", "Equip: +2/+1 and Drain."),
+        2, 1, { "lifelink" }, "INV_Sword_12", "Equip: +2/+1 and Leech."),
     ["GEAR23"] = Gear("GEAR23", "Dustwallow Harpoon", "{3}", 3, "C", "Dustwallow Marsh",
         { Alliance = 4888, Horde = 4884 },   -- Marie Holdston, Theramore / Zulrg, Brackenwall Village
-        2, 1, { "reach" }, "INV_Spear_06", "Equip: +2/+1 and Anti-Air."),
+        2, 1, { "reach" }, "INV_Spear_06", "Equip: +2/+1 and Ranged."),
     ["GEAR24"] = Gear("GEAR24", "Badlands Dragonbone Axe", "{4}", 4, "C", "Badlands",
         { Horde = 1407, Neutral = 9179 },   -- Sranda, Kargath / Jazzrik
-        3, 1, { "haste" }, "INV_Axe_17", "Equip: +3/+1 and Quick."),
+        3, 1, { "haste" }, "INV_Axe_17", "Equip: +3/+1 and Charge."),
     ["GEAR25"] = Gear("GEAR25", "Sorrowmurk Fang", "{3}", 3, "C", "Swamp of Sorrows",
         { Horde = 981 },   -- Hartash, Stonard
-        2, 0, { "deathtouch" }, "INV_Weapon_ShortBlade_14", "Equip: +2/+0 and Fatal."),
+        2, 0, { "deathtouch" }, "INV_Weapon_ShortBlade_14", "Equip: +2/+0 and Execute."),
 
     -- Levels 40-50
     ["GEAR26"] = Gear("GEAR26", "Feralas Ironwood Bow", "{4}", 4, "C", "Feralas",
         { Alliance = 1695, Horde = 9548 },   -- Rendow, Feathermoon Stronghold / Cawind Trueaim, Camp Mojache
-        2, 2, { "reach" }, "INV_Weapon_Bow_08", "Equip: +2/+2 and Anti-Air."),
+        2, 2, { "reach" }, "INV_Weapon_Bow_08", "Equip: +2/+2 and Ranged."),
     ["GEAR27"] = Gear("GEAR27", "Gadgetzan Thunderstick", "{4}", 4, "C", "Tanaris",
         { Neutral = 8131 },   -- Blizrik Buckshot, Gadgetzan
-        3, 1, { "firstStrike" }, "INV_Weapon_Rifle_10", "Equip: +3/+1 and Strikes-First."),
+        3, 1, { "firstStrike" }, "INV_Weapon_Rifle_10", "Equip: +3/+1 and Ambush."),
     ["GEAR28"] = Gear("GEAR28", "Hinterlands Stormhammer", "{4}", 4, "C", "The Hinterlands",
         { Alliance = 8161, Horde = 14737 },   -- Harggan, Aerie Peak / Smith Slagtree, Revantusk Village
         2, 2, { "flying" }, "INV_Hammer_16", "Equip: +2/+2 and Airborne."),
     ["GEAR29"] = Gear("GEAR29", "Thorium Greataxe", "{4}", 4, "C", "Searing Gorge",
         { Alliance = 11703 },   -- Graw Cornerstone
-        3, 1, { "trample" }, "INV_Axe_02", "Equip: +3/+1 and Brutish."),
+        3, 1, { "trample" }, "INV_Axe_02", "Equip: +3/+1 and Cleave."),
     ["GEAR30"] = Gear("GEAR30", "Highborne Runeblade", "{4}", 4, "C", "Azshara",
         { Alliance = 14301, Horde = 10361 },   -- Brinna Valanaar, Talrendis Point / Gruul Darkblade, Valormok
-        2, 2, { "hexproof" }, "INV_Sword_34", "Equip: +2/+2 and Warded."),
+        2, 2, { "hexproof" }, "INV_Sword_34", "Equip: +2/+2 and Anti-Magic."),
     ["GEAR31"] = Gear("GEAR31", "Nethergarde Felbane Dagger", "{4}", 4, "C", "Blasted Lands",
         { Alliance = 5508 },   -- Strumner Flintheel, Nethergarde Keep
-        3, 1, { "lifelink" }, "INV_Weapon_ShortBlade_25", "Equip: +3/+1 and Drain."),
+        3, 1, { "lifelink" }, "INV_Weapon_ShortBlade_25", "Equip: +3/+1 and Leech."),
     ["GEAR39"] = Gear("GEAR39", "Powderfuse Blunderbuss", "{4}", 4, "C", "Riverglades",
         { Neutral = 260566 },   -- Fizzix Boomshot, Powderfuse Port
-        3, 0, { "haste", "firstStrike" }, "INV_Weapon_Rifle_05", "Equip: +3/+0, Quick and Strikes-First."),
+        3, 0, { "haste", "firstStrike" }, "INV_Weapon_Rifle_05", "Equip: +3/+0, Charge and Ambush."),
 
     -- Levels 48-55
     ["GEAR32"] = Gear("GEAR32", "Devilsaur-Tooth Dagger", "{4}", 4, "C", "Un'Goro Crater",
         { Neutral = 3000 },   -- Gibbert, Marshal's Refuge
-        2, 2, { "deathtouch" }, "INV_Weapon_ShortBlade_16", "Equip: +2/+2 and Fatal."),
+        2, 2, { "deathtouch" }, "INV_Weapon_ShortBlade_16", "Equip: +2/+2 and Execute."),
     ["GEAR33"] = Gear("GEAR33", "Felwood Ironbark Staff", "{6}", 6, "C", "Felwood",
         { Alliance = 15315, Horde = 10379 },   -- Mylini Frostmoon, Talonbranch Glade / Altsoba Ragetotem, Bloodvenom Post
-        2, 3, { "bulwark" }, "INV_Staff_13", "Equip: +2/+3 and Bulwark 2."),
+        2, 3, { "bulwark" }, "INV_Staff_13", "Equip: +2/+3 and Shield Wall 2."),
     ["GEAR34"] = Gear("GEAR34", "Morgan's Vigil Warblade", "{6}", 6, "C", "Burning Steppes",
         { Alliance = 1296 },   -- Felder Stover, Morgan's Vigil
-        3, 2, { "firstStrike", "trample" }, "INV_Sword_36", "Equip: +3/+2, Strikes-First and Brutish."),
+        3, 2, { "firstStrike", "trample" }, "INV_Sword_36", "Equip: +3/+2, Ambush and Cleave."),
     ["GEAR35"] = Gear("GEAR35", "Argent Crusader's Hammer", "{6}", 6, "C", "Western Plaguelands",
         { Alliance = 10857, Horde = 10856 },   -- Argent Quartermasters Lightspark, Chillwind Camp / Hasana, the Bulwark
-        2, 3, { "support" }, "INV_Hammer_19", "Equip: +2/+3, Support and Shielded.",
+        2, 3, { "support" }, "INV_Hammer_19", "Equip: +2/+3, Support and Absorb.",
         { { op = "shielded", to = "target" } }),
 
     -- Levels 55-60
     ["GEAR36"] = Gear("GEAR36", "Everlook Frost Crossbow", "{6}", 6, "C", "Winterspring",
         { Neutral = 11184 },   -- Wixxrak, Everlook
-        3, 2, { "firstStrike", "reach" }, "INV_Weapon_Crossbow_01", "Equip: +3/+2, Strikes-First and Anti-Air."),
+        3, 2, { "firstStrike", "reach" }, "INV_Weapon_Crossbow_01", "Equip: +3/+2, Ambush and Ranged."),
     ["GEAR37"] = Gear("GEAR37", "Light's Hope Runeblade", "{6}", 6, "C", "Eastern Plaguelands",
         { Neutral = 11536 },   -- Quartermaster Miranda Breechlock, Light's Hope Chapel
-        3, 3, { "lifelink" }, "INV_Sword_39", "Equip: +3/+3 and Drain."),
+        3, 3, { "lifelink" }, "INV_Sword_39", "Equip: +3/+3 and Leech."),
     ["GEAR38"] = Gear("GEAR38", "Cenarion Hold Scarab Glaive", "{5}", 5, "C", "Silithus",
         { Neutral = 15176 },   -- Vargus, Cenarion Hold
-        3, 3, { "trample", "reach" }, "INV_Weapon_Halberd_10", "Equip: +3/+3, Brutish and Anti-Air."),
+        3, 3, { "trample", "reach" }, "INV_Weapon_Halberd_10", "Equip: +3/+3, Cleave and Ranged."),
 })
 
 -- The weapon each one puts in a humanoid's hand: a classic item that looks the part
@@ -232,7 +232,7 @@ TTS:AddCards({
         "shoulder", 4694, 0, 1, { "vigilance" }, "INV_Shoulder_28", "Equip: +0/+1 and Vigilant."),   -- Burnished Pauldrons
     ["ARMR03"] = Armor("ARMR03", "Dolanaar Leafweave Mantle", "{1}", 1, "Teldrassil",
         { Alliance = 3613 },   -- Meri Ironweave, Dolanaar
-        "shoulder", 10745, 0, 1, { "hexproof" }, "INV_Shoulder_18", "Equip: +0/+1 and Warded."),   -- Kaylari Shoulders
+        "shoulder", 10745, 0, 1, { "hexproof" }, "INV_Shoulder_18", "Equip: +0/+1 and Anti-Magic."),   -- Kaylari Shoulders
     ["ARMR04"] = Armor("ARMR04", "Razor Hill War Paint Pads", "{1}", 1, "Durotar",
         { Horde = 3167 },   -- Wuark, Razor Hill
         "shoulder", 14728, 0, 2, nil, "INV_Shoulder_07", "Equip: +0/+2."),   -- War Paint Shoulder Pads
@@ -241,7 +241,7 @@ TTS:AddCards({
         "head", 6720, 0, 1, { "vigilance" }, "INV_Helmet_17", "Equip: +0/+1 and Vigilant."),   -- Spirit Hunter Headdress
     ["ARMR06"] = Armor("ARMR06", "Brill Reservist's Cap", "{1}", 1, "Tirisfal Glades",
         { Horde = 2135 },   -- Abe Winters, Brill
-        "head", 20643, 0, 1, { "hexproof" }, "INV_Helmet_15", "Equip: +0/+1 and Warded."),   -- Undercity Reservist's Cap
+        "head", 20643, 0, 1, { "hexproof" }, "INV_Helmet_15", "Equip: +0/+1 and Anti-Magic."),   -- Undercity Reservist's Cap
 
     -- Levels 10-20
     ["ARMR07"] = Armor("ARMR07", "Algaz Mining Helmet", "{2}", 2, "Loch Modan",
@@ -258,7 +258,7 @@ TTS:AddCards({
         "shoulder", 10407, 0, 2, { "support" }, "INV_Shoulder_23", "Equip: +0/+2 and Support."),   -- Raider's Shoulderpads
     ["ARMR11"] = Armor("ARMR11", "Lakeshire Guard's Coif", "{2}", 2, "Redridge Mountains",
         { Alliance = 956 },   -- Dorin Songblade, Lakeshire
-        "head", 1282, 0, 2, nil, "INV_Helmet_02", "Equip: +0/+2 and Shielded.", SHIELDED),   -- Sparkmetal Coif
+        "head", 1282, 0, 2, nil, "INV_Helmet_02", "Equip: +0/+2 and Absorb.", SHIELDED),   -- Sparkmetal Coif
 
     -- Levels 20-30
     ["ARMR12"] = Armor("ARMR12", "Darkshire Watch Spaulders", "{3}", 3, "Duskwood",
@@ -266,10 +266,10 @@ TTS:AddCards({
         "shoulder", 6579, 0, 3, { "vigilance" }, "INV_Shoulder_27", "Equip: +0/+3 and Vigilant."),   -- Defender Spaulders
     ["ARMR13"] = Armor("ARMR13", "Astranaar Feathered Mantle", "{3}", 3, "Ashenvale",
         { Alliance = 3953 },   -- Tandaan Lightmane, Astranaar
-        "shoulder", 4196, 0, 3, { "reach" }, "INV_Shoulder_05", "Equip: +0/+3 and Anti-Air."),   -- Feathered Mantle
+        "shoulder", 4196, 0, 3, { "reach" }, "INV_Shoulder_05", "Equip: +0/+3 and Ranged."),   -- Feathered Mantle
     ["ARMR14"] = Armor("ARMR14", "Menethil Marine's Helm", "{3}", 3, "Wetlands",
         { Alliance = 1450 },   -- Brahnmar, Menethil Harbor
-        "head", 3894, 1, 2, nil, "INV_Helmet_03", "Equip: +1/+2 and Shielded.", SHIELDED),   -- Brigandine Helm
+        "head", 3894, 1, 2, nil, "INV_Helmet_03", "Equip: +1/+2 and Absorb.", SHIELDED),   -- Brigandine Helm
 
     -- Levels 30-50
     ["ARMR15"] = Armor("ARMR15", "Dustwallow Mithril Pauldrons", "{4}", 4, "Dustwallow Marsh",
@@ -277,18 +277,18 @@ TTS:AddCards({
         "shoulder", 7918, 0, 4, { "support" }, "INV_Shoulder_22", "Equip: +0/+4 and Support."),   -- Heavy Mithril Shoulder
     ["ARMR16"] = Armor("ARMR16", "Stranglethorn Brutal Helm", "{4}", 4, "Stranglethorn Vale",
         { Horde = 1381, Neutral = 2845 },   -- Krakk, Grom'gol / Fargon Mortalak, Booty Bay
-        "head", 7130, 0, 3, { "bulwark" }, "INV_Helmet_02", "Equip: +0/+3 and Bulwark 2."),   -- Brutal Helm
+        "head", 7130, 0, 3, { "bulwark" }, "INV_Helmet_02", "Equip: +0/+3 and Shield Wall 2."),   -- Brutal Helm
     ["ARMR17"] = Armor("ARMR17", "Mojache Wolfshead Helm", "{4}", 4, "Feralas",
         { Horde = 8159 },   -- Worb Strongstitch, Camp Mojache
         "head", 8345, 1, 3, { "vigilance" }, "INV_Helmet_04", "Equip: +1/+3 and Vigilant."),   -- Wolfshead Helm
     ["ARMR19"] = Armor("ARMR19", "Powderfuse Blastguard Helm", "{4}", 4, "Riverglades",
         { Neutral = 259766 },   -- Mika Darby, Powderfuse Port
-        "head", 7934, 1, 3, nil, "INV_Helmet_09", "Equip: +1/+3 and Shielded.", SHIELDED),   -- Heavy Mithril Helm
+        "head", 7934, 1, 3, nil, "INV_Helmet_09", "Equip: +1/+3 and Absorb.", SHIELDED),   -- Heavy Mithril Helm
 
     -- Levels 55-60
     ["ARMR18"] = Armor("ARMR18", "Everlook Imperial Pauldrons", "{6}", 6, "Winterspring",
         { Neutral = 11182 },   -- Nixxrak, Everlook
-        "shoulder", 12428, 1, 5, { "bulwark" }, "INV_Shoulder_02", "Equip: +1/+5, Bulwark 2 and Shielded.", SHIELDED),   -- Imperial Plate Shoulders
+        "shoulder", 12428, 1, 5, { "bulwark" }, "INV_Shoulder_02", "Equip: +1/+5, Shield Wall 2 and Absorb.", SHIELDED),   -- Imperial Plate Shoulders
 })
 
 -- The gear trail (see TTS.GIFT_TRAILS in Cards\Core.lua): every weapon merchant and armourer

@@ -24,14 +24,14 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 2729,
         zone = "Desolace", creatureType = "Beast", npcId = 4696,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["DES03"] = {
         id = "DES03", name = "Burning Blade Reaver", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 1, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 4703,
         zone = "Desolace", creatureType = "Humanoid", faction = "Burning Blade", npcId = 4664,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Bulwark 2."
+        text = "Ambush. Shield Wall 2."
     },
     ["DES04"] = {
         id = "DES04", name = "Gritjaw Basilisk", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, flying = true, haste = true, isMob = true, isBoss = true, displayId = 1192,
         zone = "Desolace", creatureType = "Beast", npcId = 4692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Quick."
+        text = "Airborne. Charge."
     },
     ["DES06"] = {
         id = "DES06", name = "Raging Thunder Lizard", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         zone = "Desolace", creatureType = "Beast", npcId = 4726,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
         etb = { ops = { { op = "raze" } } },
-        text = "Brutish. Enrage. Arrival: Raze the opponent's Settlement."
+        text = "Cleave. Enrage. Arrival: Raze the opponent's Settlement."
     },
     ["DES07"] = {
         id = "DES07", name = "Dread Flyer", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -67,14 +67,14 @@ TTS:AddCards({
         power = 4, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 11369,
         zone = "Desolace", creatureType = "Undead", npcId = 11561,
         modelCam = { zoom = 0.68, camScale = 1.12, z = -0.12, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["DES09"] = {
         id = "DES09", name = "Elder Thunder Lizard", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 7, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 2764,
         zone = "Desolace", creatureType = "Beast", npcId = 4727,
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["DES10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -82,7 +82,7 @@ TTS:AddCards({
         power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 14255,
         zone = "Desolace", creatureType = "Demon", npcId = 14226,
         modelCam = { zoom = 0.78, camScale = 1.05, z = -0.11, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     -- Solo reward
     ["DES11"] = {

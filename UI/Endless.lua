@@ -18,7 +18,8 @@ local Loc = TTS.Locale
 --   prayers  a column per colour (its pips among the picks, a stepper), summing to 8
 --   ready    the run screen: the milestone track, the next opponent (its background, life,
 --            AI), the fight's rules, charges; Fight, View Deck, Abandon Run
---   reward   X.OFFER_SIZE cards from the beaten encounter, +1 Prayer of any colour, or Skip
+--   reward   X.OFFER_SIZE cards from the beaten encounter, +1 Prayer of any colour, Skip, or
+--            Cut (then the deck's lines are clicked to remove cards: ShowCut)
 -- The header shows the best run and the pack charges (a pack per charge); the run's deck is
 -- on the right with its mana curve (hover a line for the card).
 -- =========================================================================
@@ -229,6 +230,7 @@ scrollChild:SetSize(DECK_W - 40, 10)
 scroll:SetScrollChild(scrollChild)
 
 local deckLines = {}
+local deckClick   -- while cutting: called with a clicked line's card id
 local function DeckLine(i)
     local b = deckLines[i]
     if b then return b end
@@ -248,6 +250,7 @@ local function DeckLine(i)
     hl:SetColorTexture(1, 1, 1, 0.12)
     b:SetScript("OnEnter", function(self) ShowPreview(self.cardId) end)
     b:SetScript("OnLeave", HidePreview)
+    b:SetScript("OnClick", function(self) if deckClick then deckClick(self.cardId) end end)
     deckLines[i] = b
     return b
 end
@@ -280,7 +283,8 @@ local function FillDeck(list)
         local card = TTS.Cards[id]
         b.cardId = id
         local color = NAME_COLOR[card and card.color or "C"] or NAME_COLOR.C
-        b.text:SetText(string.format("|cFF999999%dx|r |cFF%s%s|r", counts[id], color, card and TTS:CardName(card) or id))
+        b.text:SetText(string.format("%s|cFF999999%dx|r |cFF%s%s|r", deckClick and (RED .. "x|r ") or "",
+            counts[id], color, card and TTS:CardName(card) or id))
         b.cost:SetText(card and card.cost and Sym(card.cost, 11) or "")
         b:Show()
     end
@@ -363,8 +367,9 @@ for i = 1, OFFER do
     b.glow:SetPoint("BOTTOMRIGHT", 30, -36)
     b.glow:SetVertexColor(1, 0.82, 0)
     b.glow:Hide()
+    -- Its badge ("Rare") under the card: above it are the card's own name and cost
     b.badge = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    b.badge:SetPoint("BOTTOM", b, "TOP", 0, 4)
+    b.badge:SetPoint("TOP", b, "BOTTOM", 0, -4)
     -- Hovered: lifts a little and glows
     b:SetScript("OnEnter", function(self)
         self.glow:Show()
@@ -599,6 +604,17 @@ TTS.Dialog:Register("TTS_ENDLESS_ABANDON", {
     preferredIndex = 3,
 })
 
+TTS.Dialog:Register("TTS_ENDLESS_CUT", {
+    text = "%s",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    OnAccept = function(_, id) if id then X:Cut(id) end end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+})
+
 -- =========================================================================
 -- STAGES
 -- =========================================================================
@@ -620,6 +636,7 @@ local function Reset()
         b:Enable()
     end
     hint:SetText("")
+    deckClick = nil
     stageTitle:SetText("")
     stageBadge:SetText("")
     stageSub:SetText("")
@@ -882,7 +899,30 @@ local function ShowReady(run)
     FillDeck(run.deck)
 end
 
+-- The reward taken as a cut: click deck lines to remove them (each confirmed)
+local function ShowCut(run)
+    local allowed = X:CutsAllowed()
+    local left = math.min(allowed - run.cutting, #run.deck - X.MIN_DECK)
+    stageTitle:SetText(L("endless.cut.title", (run.fight or 2) - 1))
+    stageSub:SetText(GREY .. L(left == 1 and "endless.cut.hint1" or "endless.cut.hint", left, X.MIN_DECK) .. "|r")
+    deckClick = function(id)
+        local card = TTS.Cards[id]
+        TTS.Dialog:Popup("TTS_ENDLESS_CUT", L("endless.cut.confirm", card and TTS:CardName(card) or id), nil, id)
+    end
+    if run.cutting == 0 then
+        secondary:SetText(L("endless.cut.back"))
+        secondary:SetScript("OnClick", function() X:CancelCut() end)
+    else
+        secondary:SetText(L("endless.cut.done"))
+        secondary:SetScript("OnClick", function() X:FinishCut() end)
+    end
+    secondary:Show()
+    deckPanel:Show()
+    FillDeck(run.deck)
+end
+
 local function ShowReward(run)
+    if run.cutting then return ShowCut(run) end
     stageTitle:SetText(L("endless.reward.title", (run.fight or 2) - 1))
     stageSub:SetText(GREY .. L("endless.reward.hint") .. "|r")
     ShowCards(run.reward, nil, function(i) X:TakeReward(i) end)
@@ -905,6 +945,15 @@ local function ShowReward(run)
     secondary:SetText(L("endless.skip"))
     secondary:SetScript("OnClick", function() X:SkipReward() end)
     secondary:Show()
+    -- Or, instead: cut a card (two after a milestone) from the deck
+    local n = X:CutsAllowed()
+    tertiary:SetText(L(n > 1 and "endless.cut.button2" or "endless.cut.button", n))
+    tertiary:SetScript("OnClick", function() X:StartCut() end)
+    tertiary:Show()
+    if not X:CanCut() then
+        tertiary:Disable()
+        hint:SetText(GREY .. L("endless.cut.atMin", X.MIN_DECK) .. "|r")
+    end
     FillDeck(run.deck)
 end
 
@@ -957,6 +1006,14 @@ end)
 function F:Open()
     self:Show()
     return self
+end
+
+-- Resizing: drag the bottom-right grip to scale the whole window (saved). The cards are drawn
+-- again once the drag ends, so their models load at the new size (a model keeps its old one).
+-- (After the OnShow scripts above, as the grip hooks OnShow to put the saved size back.)
+do
+    local grip = TTS:AddScaleGrip(F, "endlessScale")
+    grip:HookScript("OnMouseUp", function() if F:IsShown() then F:Refresh() end end)
 end
 
 local loader = CreateFrame("Frame")

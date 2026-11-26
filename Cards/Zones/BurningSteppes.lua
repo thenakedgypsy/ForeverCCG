@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 9371,
         zone = "Burning Steppes", creatureType = "Beast", npcId = 9690,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BUR06"] = {
         id = "BUR06", name = "Flamekin Spitter", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -59,14 +59,14 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 8970,
         zone = "Burning Steppes", creatureType = "Beast", npcId = 9691,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["BUR08"] = {
         id = "BUR08", name = "Firegut Brute", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 10707,
         zone = "Burning Steppes", creatureType = "Humanoid", faction = "Ogre", npcId = 7035,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["BUR09"] = {
         id = "BUR09", name = "War Reaver", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         dropChance = { 100, 100, 50, 25 },   -- long respawn (about 36h)
         zone = "Burning Steppes", creatureType = "Giant", npcId = 10119,
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
-        text = "Brutish. Shielded."
+        text = "Cleave. Absorb."
     },
     -- Solo reward
     ["BUR11"] = {

@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 8180,
         zone = "The Hall of Thanes", creatureType = "Beast", faction = "Dark Iron", npcId = 263470,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HOT02"] = {
         id = "HOT02", name = "Fiery Assistant", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
@@ -32,14 +32,14 @@ TTS:AddCards({
         power = 2, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 3452,
         zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron", npcId = 263396,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["HOT04"] = {
         id = "HOT04", name = "Enraged Apparition", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 3, enrage = true, unblockable = true, isMob = true, isBoss = true, displayId = 143689,
         zone = "The Hall of Thanes", creatureType = "Undead", npcId = 263389,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible. Enrage."
+        text = "Stealth. Enrage."
     },
     ["HOT05"] = {
         id = "HOT05", name = "Tormented Soul", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 3, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 3954,
         zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron", npcId = 263397,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["HOT07"] = {
         id = "HOT07", name = "Dark Iron Summoner", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -68,21 +68,21 @@ TTS:AddCards({
         power = 5, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 2693,
         zone = "The Hall of Thanes", creatureType = "Elemental", npcId = 263466,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HOT09"] = {
         id = "HOT09", name = "Faldrim Anvilmar", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 5, deathtouch = true, isMob = true, isBoss = true, displayId = 142826,
         zone = "The Hall of Thanes", creatureType = "Undead", npcId = 261306,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["HOT10"] = {
         id = "HOT10", name = "Plunder", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 142840,
         zone = "The Hall of Thanes", creatureType = "Elemental", npcId = 261311,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["HOT11"] = {
         id = "HOT11", name = "Magmatus", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",

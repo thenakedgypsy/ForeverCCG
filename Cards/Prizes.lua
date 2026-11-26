@@ -38,7 +38,7 @@ TTS:AddCards({
         displayId = 3597, creatureType = "Humanoid", npcId = 2784,
         etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. Bulwark 2. Arrival: Prevent the next 4 damage to you."
+        text = "Unique. Shield Wall 2. Arrival: Prevent the next 4 damage to you."
     },
 
     -- ARCANE
@@ -69,7 +69,7 @@ TTS:AddCards({
         displayId = 11657, creatureType = "Undead", npcId = 10181,
         etb = { ops = { { op = "raise", src = "own" } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. Fatal. Arrival: Return a denizen card from your graveyard to the battlefield."
+        text = "Unique. Execute. Arrival: Return a denizen card from your graveyard to the battlefield."
     },
     -- Stormwind Keep: Onyxia in disguise (npc 1749)
     ["PRZ06"] = {
@@ -79,7 +79,7 @@ TTS:AddCards({
         etb = { ops = { { op = "draw", n = 1 } } },
         onDeath = { ops = { { op = "token", id = "TOK05", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. Warded. Arrival: Draw 1. Martyrdom: Spawn: 3 Rookery Whelp Adds (1/1, Airborne)."
+        text = "Unique. Anti-Magic. Arrival: Draw 1. Martyrdom: Spawn: 3 Rookery Whelp Adds (1/1, Airborne)."
     },
 
     -- FIRE
@@ -90,7 +90,7 @@ TTS:AddCards({
         displayId = 4527, creatureType = "Humanoid", npcId = 4949,
         etb = { ops = { { op = "damage", to = "enemy_player", n = 3 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. Quick. Arrival: Deal 3 damage to the opponent."
+        text = "Unique. Charge. Arrival: Deal 3 damage to the opponent."
     },
     -- Orgrimmar (npc 14720)
     ["PRZ08"] = {
@@ -98,7 +98,7 @@ TTS:AddCards({
         power = 5, toughness = 3, firstStrike = true, trample = true, unique = true, isPrize = true, alwaysFoil = true,
         displayId = 14732, creatureType = "Humanoid", npcId = 14720,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. Strikes-First. Brutish."
+        text = "Unique. Ambush. Cleave."
     },
 
     -- NATURE
@@ -109,7 +109,7 @@ TTS:AddCards({
         displayId = 4307, creatureType = "Humanoid", npcId = 3057,
         etb = { ops = { { op = "tap", to = "enemy_creatures" } } },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Unique. Brutish. Arrival: Exhaust each enemy denizen."
+        text = "Unique. Cleave. Arrival: Exhaust each enemy denizen."
     },
     -- Darnassus (npc 3516)
     ["PRZ10"] = {

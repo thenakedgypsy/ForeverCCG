@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 1087,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1822,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["WPL02"] = {
         id = "WPL02", name = "Skeletal Sorcerer", cost = "{B}", cmc = 1, color = "B", type = "Creature",
@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 1091,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1821,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["WPL05"] = {
         id = "WPL05", name = "Diseased Wolf", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 4124,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1817,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["WPL06"] = {
         id = "WPL06", name = "Rotting Cadaver", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 1083,
         zone = "Western Plaguelands", creatureType = "Beast", npcId = 1816,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["WPL08"] = {
         id = "WPL08", name = "Scarlet Worker", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -73,14 +73,15 @@ TTS:AddCards({
         power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 146,
         zone = "Western Plaguelands", creatureType = "Undead", npcId = 4472,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["WPL10"] = {
         id = "WPL10", name = "Scarlet High Clerist", cost = "{5}{W}{W}", cmc = 7, color = "W", type = "Creature",
-        power = 9, toughness = 10, support = true, isMob = true, isBoss = true, displayId = 10342,
+        power = 8, toughness = 9, support = true, isMob = true, isBoss = true, displayId = 10342,
         zone = "Western Plaguelands", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 1839,
+        etb = { ops = { { op = "shielded", to = "friendly_creatures" } } },
         modelCam = { zoom = 0.63, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Support."
+        text = "Support. Arrival: Your denizens gain Absorb."
     },
     -- Solo reward
     ["WPL11"] = {
@@ -89,6 +90,6 @@ TTS:AddCards({
         zone = "Western Plaguelands", creatureType = "Humanoid", npcEntry = 1855,
         anthem = { tag = "type", value = "Humanoid", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Drain. Other Humanoids you control get +1/+1."
+        text = "Vigilant. Leech. Other Humanoids you control get +1/+1."
     },
 })

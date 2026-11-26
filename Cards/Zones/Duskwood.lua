@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 246,
         zone = "Duskwood", creatureType = "Beast", npcId = 923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DSK03"] = {
         id = "DSK03", name = "Skeletal Horror", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -38,21 +38,21 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 368,
         zone = "Duskwood", creatureType = "Beast", npcId = 930,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["DSK05"] = {
         id = "DSK05", name = "Defias Night Runner", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, unblockable = true, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4276,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Defias", npcId = 215,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Quick. Invisible."
+        text = "Ambush. Charge. Stealth."
     },
     ["DSK06"] = {
         id = "DSK06", name = "Carrion Recluse", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 545,
         zone = "Duskwood", creatureType = "Beast", npcId = 949,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["DSK07"] = {
         id = "DSK07", name = "Nightbane Worgen", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -66,14 +66,14 @@ TTS:AddCards({
         power = 4, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 519,
         zone = "Duskwood", creatureType = "Undead", npcId = 604,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["DSK09"] = {
         id = "DSK09", name = "Nightbane Dark Runner", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 736,
         zone = "Duskwood", creatureType = "Humanoid", faction = "Worgen", npcId = 205,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["DSK10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 9, toughness = 9, deathtouch = true, isMob = true, isNamed = true, isBoss = true, displayId = 11181,
         zone = "Duskwood", creatureType = "Humanoid", npcId = 534,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     -- Solo reward
     ["DSK11"] = {

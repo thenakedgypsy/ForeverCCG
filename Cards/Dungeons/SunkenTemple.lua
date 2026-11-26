@@ -25,14 +25,14 @@ TTS:AddCards({
         power = 3, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 7549,
         zone = "Sunken Temple", creatureType = "Beast", npcId = 5226,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SUN03"] = {
         id = "SUN03", name = "Atal'ai Witch Doctor", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 6670,
         zone = "Sunken Temple", creatureType = "Humanoid", faction = "Troll", npcId = 5259,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["SUN04"] = {
         id = "SUN04", name = "Hakkari Frostwing", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -53,14 +53,14 @@ TTS:AddCards({
         power = 6, toughness = 5, haste = true, isMob = true, isBoss = true, displayId = 6698,
         zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5713,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SUN07"] = {
         id = "SUN07", name = "Hukku", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 6702,
         zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5715,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SUN08"] = {
         id = "SUN08", name = "Spawn of Hakkar", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -74,7 +74,7 @@ TTS:AddCards({
         power = 7, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 6709,
         zone = "Sunken Temple", creatureType = "Undead", faction = "Troll", npcId = 5711,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SUN10"] = {
         id = "SUN10", name = "Jammal'an the Prophet", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         zone = "Sunken Temple", creatureType = "Humanoid", faction = "Troll", npcId = 5710,
         rally = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Gets +1/+1 for each other Troll you control."
+        text = "Leech. Gets +1/+1 for each other Troll you control."
     },
     ["SUN11"] = {
         id = "SUN11", name = "Morphaz", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -106,6 +106,6 @@ TTS:AddCards({
         zone = "Sunken Temple", creatureType = "Beast", npcEntry = 8443,
         anthem = { tag = "faction", value = "Troll", p = 1, t = 1 },
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Airborne. Drain. Other Trolls you control get +1/+1."
+        text = "Airborne. Leech. Other Trolls you control get +1/+1."
     },
 })

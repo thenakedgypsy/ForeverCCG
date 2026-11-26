@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 1, toughness = 2, shielded = true, reach = true, isMob = true, isBoss = true, displayId = 5561,
         zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. Shielded."
+        text = "Ranged. Absorb."
     },
     ["ARA04"] = {
         id = "ARA04", name = "Thundering Exile", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 2, toughness = 4, unblockable = true, haste = true, isMob = true, isBoss = true, displayId = 4016,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2588,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Invisible."
+        text = "Charge. Stealth."
     },
     ["ARA07"] = {
         id = "ARA07", name = "Stromgarde Troll Hunter", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
@@ -92,6 +92,6 @@ TTS:AddCards({
         zone = "Arathi Highlands", creatureType = "Humanoid", npcEntry = 2700,
         rally = { tag = "zone", value = "Arathi Highlands", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Gets +1/+1 for each other Arathi Highlands denizen you control."
+        text = "Ambush. Gets +1/+1 for each other Arathi Highlands denizen you control."
     },
 })

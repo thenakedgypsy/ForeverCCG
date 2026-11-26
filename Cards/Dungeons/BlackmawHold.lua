@@ -20,28 +20,28 @@ TTS:AddCards({
         power = 1, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 7899,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 268878,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["BMH02"] = {
         id = "BMH02", name = "Felfire Imp", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 3, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 121882,
         zone = "Blackmaw Hold", creatureType = "Demon", npcId = 247249,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BMH03"] = {
         id = "BMH03", name = "Festering Swarmer", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 2, toughness = 2, lifelink = true, isMob = true, isBoss = true, displayId = 1141,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 268865,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["BMH04"] = {
         id = "BMH04", name = "Bloodstarved Frenzy", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 15101,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 268834,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BMH05"] = {
         id = "BMH05", name = "Blackmaw Thrall", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -55,21 +55,21 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, enrage = true, isMob = true, isBoss = true, displayId = 5851,
         zone = "Blackmaw Hold", creatureType = "Humanoid", faction = "Furbolg", npcId = 247237,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Enrage."
+        text = "Charge. Enrage."
     },
     ["BMH07"] = {
         id = "BMH07", name = "Blackmaw Headhunter", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6800,
         zone = "Blackmaw Hold", creatureType = "Humanoid", faction = "Furbolg", npcId = 250027,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["BMH08"] = {
         id = "BMH08", name = "Blackmaw Spearfisher", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 2, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 1997,
         zone = "Blackmaw Hold", creatureType = "Humanoid", faction = "Furbolg", npcId = 258152,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["BMH09"] = {
         id = "BMH09", name = "Blackmaw Shaman", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -84,28 +84,28 @@ TTS:AddCards({
         power = 2, toughness = 4, support = true, shielded = true, isMob = true, isBoss = true, displayId = 3024,
         zone = "Blackmaw Hold", creatureType = "Humanoid", faction = "Furbolg", npcId = 258516,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Shielded."
+        text = "Support. Absorb."
     },
     ["BMH11"] = {
         id = "BMH11", name = "Legashi Slayer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2007,
         zone = "Blackmaw Hold", creatureType = "Demon", faction = "Satyr", npcId = 255347,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["BMH12"] = {
         id = "BMH12", name = "Legashi Subjugator", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 2011,
         zone = "Blackmaw Hold", creatureType = "Demon", faction = "Satyr", npcId = 247235,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["BMH13"] = {
         id = "BMH13", name = "Mopes", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 3, haste = true, firstStrike = true, isMob = true, isBoss = true, displayId = 130499,
         zone = "Blackmaw Hold", creatureType = "Demon", npcId = 247412,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Strikes-First."
+        text = "Charge. Ambush."
     },
     ["BMH14"] = {
         id = "BMH14", name = "Legashi Ritualist", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
@@ -113,7 +113,7 @@ TTS:AddCards({
         zone = "Blackmaw Hold", creatureType = "Demon", faction = "Satyr", npcId = 258668,
         anthem = { tag = "faction", value = "Satyr", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Other Satyrs you control get +1/+0."
+        text = "Leech. Other Satyrs you control get +1/+0."
     },
     ["BMH15"] = {
         id = "BMH15", name = "Legashi Plaguebringer", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
@@ -128,21 +128,21 @@ TTS:AddCards({
         power = 3, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 2424,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 250034,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["BMH17"] = {
         id = "BMH17", name = "Depraved Owlbeast", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
         power = 4, toughness = 5, enrage = true, bulwark = 2, isMob = true, isBoss = true, displayId = 12238,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 258264,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Enrage. Bulwark 2."
+        text = "Enrage. Shield Wall 2."
     },
     ["BMH18"] = {
         id = "BMH18", name = "Blackmaw Champion", cost = "{3}{G}", cmc = 4, color = "G", type = "Creature",
         power = 5, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 1010,
         zone = "Blackmaw Hold", creatureType = "Humanoid", faction = "Furbolg", npcId = 255394,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Bosses
     ["BMH19"] = {
@@ -158,14 +158,14 @@ TTS:AddCards({
         power = 6, toughness = 6, trample = true, reach = true, isMob = true, isBoss = true, displayId = 140708,
         zone = "Blackmaw Hold", creatureType = "Beast", npcId = 247195,
         modelCam = { zoom = 0.65, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Anti-Air."
+        text = "Cleave. Ranged."
     },
     ["BMH21"] = {
         id = "BMH21", name = "Bonesnout the Unbroken", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 6, vigilance = true, bulwark = 2, isMob = true, isBoss = true, displayId = 130427,
         zone = "Blackmaw Hold", creatureType = "Undead", npcId = 247198,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Vigilant. Bulwark 2."
+        text = "Vigilant. Shield Wall 2."
     },
     ["BMH22"] = {
         id = "BMH22", name = "Impaan the Imprisoner", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -173,14 +173,14 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } },
         zone = "Blackmaw Hold", creatureType = "Demon", npcId = 247206,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Arrival: Freeze target enemy denizen."
+        text = "Execute. Arrival: Freeze target enemy denizen."
     },
     ["BMH23"] = {
         id = "BMH23", name = "Unbound Spirit", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 6, trample = true, hexproof = true, isMob = true, isBoss = true, displayId = 131644,
         zone = "Blackmaw Hold", creatureType = "Elemental", npcId = 247231,
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Brutish. Warded."
+        text = "Cleave. Anti-Magic."
     },
     -- Solo reward
     ["BMH24"] = {

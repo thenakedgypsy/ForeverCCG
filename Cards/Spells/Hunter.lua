@@ -69,7 +69,7 @@ TTS:AddCards({
     },
     ["HUN10"] = {
         id = "HUN10", name = "Bestial Wrath", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Sorcery", class = "Hunter",
-        text = "Target denizen you control permanently gets +3/+3 and gains Brutish.",
+        text = "Target denizen you control permanently gets +3/+3 and gains Cleave.",
         art = "Interface\\Icons\\Ability_Druid_FerociousBite",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 3, t = 3, kw = { "trample" }, perm = true } } }
     },

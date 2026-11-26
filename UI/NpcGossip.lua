@@ -281,6 +281,7 @@ function TTS:AddGiftCopy(card, message)
     if message ~= false then
         local link = TTS.CardLink and TTS:CardLink(card.id) or ("|cFFFFD200" .. TTS:CardName(card) .. "|r")
         DEFAULT_CHAT_FRAME:AddMessage(L(message or "npc.gotCard", link, copies))
+        if TTS.CardToast then TTS.CardToast:OnCopy(card, copies) end   -- (its pop-up, UI\CardToast.lua)
     end
     if TTS.DeckBuilderFrame and TTS.DeckBuilderFrame:IsShown() and TTS.DeckBuilderFrame.RefreshAll then
         TTS.DeckBuilderFrame:RefreshAll()

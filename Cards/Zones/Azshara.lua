@@ -17,14 +17,14 @@ TTS:AddCards({
         power = 1, toughness = 1, unblockable = true, isMob = true, isBoss = true, displayId = 10702,
         zone = "Azshara", creatureType = "Undead", npcId = 6116,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["AZS02"] = {
         id = "AZS02", name = "Mosshoof Runner", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 8013,
         zone = "Azshara", creatureType = "Beast", npcId = 8759,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["AZS03"] = {
         id = "AZS03", name = "Spitelash Warrior", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -35,10 +35,11 @@ TTS:AddCards({
     },
     ["AZS04"] = {
         id = "AZS04", name = "Timbermaw Shaman", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 2000,
+        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 2000,
         zone = "Azshara", creatureType = "Humanoid", faction = "Furbolg", npcId = 6188,
+        etb = { ops = { { op = "token", id = "TOK18", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Arrival: Spawn: 1 Stoneskin Totem Add (0/2, Protection; other denizens you control get +0/+1)."
     },
     ["AZS05"] = {
         id = "AZS05", name = "Thunderhead Skystormer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -59,14 +60,14 @@ TTS:AddCards({
         power = 3, toughness = 4, enrage = true, haste = true, isMob = true, isBoss = true, displayId = 10957,
         zone = "Azshara", creatureType = "Beast", npcId = 8761,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Enrage."
+        text = "Charge. Enrage."
     },
     ["AZS08"] = {
         id = "AZS08", name = "Legashi Rogue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 6743,
         zone = "Azshara", creatureType = "Demon", faction = "Satyr", npcId = 6201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["AZS09"] = {
         id = "AZS09", name = "Coralshell Lurker", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
@@ -81,7 +82,7 @@ TTS:AddCards({
         dropChance = { 100, 100, 50, 25 },   -- long respawn (about 60h)
         zone = "Azshara", creatureType = "Giant", npcId = 6646,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["AZS11"] = {

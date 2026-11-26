@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 9756,
         zone = "Ruins of Lordaeron", creatureType = "Beast", npcId = 250625,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ROL02"] = {
         id = "ROL02", name = "Ragged Ghoul", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -39,35 +39,35 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 963,
         zone = "Ruins of Lordaeron", creatureType = "Beast", npcId = 250619,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["ROL05"] = {
         id = "ROL05", name = "Skeletal Mage", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 5, toughness = 3, blink = true, firstStrike = true, isMob = true, isBoss = true, displayId = 7550,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250624,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Blink."
+        text = "Ambush. Blink."
     },
     ["ROL06"] = {
         id = "ROL06", name = "Wailing Banshee", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 8782,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250650,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["ROL07"] = {
         id = "ROL07", name = "Mangled Cadaver", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 10972,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250623,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["ROL08"] = {
         id = "ROL08", name = "Fallen Berserker", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 4, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 9784,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250656,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     ["ROL09"] = {
         id = "ROL09", name = "Fallen Necromancer", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -82,14 +82,14 @@ TTS:AddCards({
         power = 5, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 144189,
         zone = "Ruins of Lordaeron", creatureType = "Beast", npcId = 250483,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["ROL11"] = {
         id = "ROL11", name = "Bjork", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 4, toughness = 5, hexproof = true, isMob = true, isBoss = true, displayId = 144170,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 256097,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["ROL12"] = {
         id = "ROL12", name = "Flesh Golem", cost = "{3}{B}", cmc = 4, color = "B", type = "Creature",
@@ -103,14 +103,14 @@ TTS:AddCards({
         power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 144188,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250660,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ROL14"] = {
         id = "ROL14", name = "Viktor the Vile", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 139455,
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 256035,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["ROL15"] = {
         id = "ROL15", name = "The Abandoned", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -127,6 +127,6 @@ TTS:AddCards({
         zone = "Ruins of Lordaeron", creatureType = "Humanoid", npcEntry = 265701,
         anthem = { tag = "type", value = "Humanoid", p = 1, kw = { "support" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Humanoids you control get +1/+0 and Support."
+        text = "Ambush. Other Humanoids you control get +1/+0 and Support."
     },
 })

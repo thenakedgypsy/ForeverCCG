@@ -14,13 +14,14 @@
 -- swapped (Network.lua: their HERO is our HEROOPP), so the engine treats both as
 -- ordinary cards.
 --
--- Every 10 character levels the player chooses (when the Deckbuilder opens, the only time
--- the level is read, so nothing changes during a match): upgrade the card (+1 cost, and
--- +0/+1 and +1/+0 in turn: six upgrades give +6 cost, +3/+3) or gain another copy (max 4).
--- The choices are the account's (TTS_HeroChoices, in milestone order); each character
--- applies the ones its own level has reached, with its own class, race and gear. An alt
--- at level 25 gets the first two choices a level 60 made; one that gets further than any
--- other character so far makes the next ones. TTS_Hero (per character) = { level }.
+-- Every 10 character levels (when the Deckbuilder opens, the only time the level is read,
+-- so nothing changes during a match) the player takes one of three class talents, one per
+-- spec (Systems\HeroTalents.lua): stats, keywords, an Arrival or attack effect, and at 60 a
+-- signature ability. A hero card has one copy. The choices are the account's, per class
+-- (TTS_HeroChoices[class], in milestone order): each character of that class applies the
+-- ones its own level has reached, with its own race and gear; one that gets further than
+-- any other of its class makes the next ones. They can be reset (H:Respec) outside a match.
+-- TTS_Hero (per character) = { level }.
 -- =========================================================================
 TTS = TTS or {}
 TTS.Hero = TTS.Hero or {}
@@ -30,15 +31,15 @@ H.MY_ID, H.OPP_ID = "HERO", "HEROOPP"
 
 -- Level 1-9 stats, the keyword (a card field) and the frame colour, by class file name
 H.CLASSES = {
-    WARRIOR = { p = 2, t = 2, kw = "haste",       color = "R", text = "Quick." },
-    ROGUE   = { p = 2, t = 2, kw = "unblockable", color = "B", text = "Invisible." },
-    HUNTER  = { p = 2, t = 2, kw = "reach",       color = "G", text = "Anti-Air." },
-    PALADIN = { p = 1, t = 3, kw = "bulwark",     color = "W", text = "Bulwark 2.", kwValue = 2 },
+    WARRIOR = { p = 2, t = 2, kw = "haste",       color = "R", text = "Charge." },
+    ROGUE   = { p = 2, t = 2, kw = "unblockable", color = "B", text = "Stealth." },
+    HUNTER  = { p = 2, t = 2, kw = "reach",       color = "G", text = "Ranged." },
+    PALADIN = { p = 1, t = 3, kw = "bulwark",     color = "W", text = "Shield Wall 2.", kwValue = 2 },
     SHAMAN  = { p = 1, t = 3, kw = "support",     color = "G", text = "Support." },
-    WARLOCK = { p = 1, t = 3, kw = "lifelink",    color = "B", text = "Drain." },
+    WARLOCK = { p = 1, t = 3, kw = "lifelink",    color = "B", text = "Leech." },
     DRUID   = { p = 1, t = 3, kw = "vigilance",   color = "G", text = "Vigilant." },
-    PRIEST  = { p = 0, t = 4, kw = "shielded",    color = "W", text = "Shielded." },
-    MAGE    = { p = 0, t = 4, kw = "hexproof",    color = "U", text = "Warded." },
+    PRIEST  = { p = 0, t = 4, kw = "shielded",    color = "W", text = "Absorb." },
+    MAGE    = { p = 0, t = 4, kw = "hexproof",    color = "U", text = "Anti-Magic." },
 }
 
 local CLASS_ICON = {
@@ -171,39 +172,36 @@ local TRAINER_DISPLAY = {
 }
 
 local MAX_TIER = 6
-local MAX_COPIES = 4   -- at 4 copies the choice is still shown, with only the upgrade left
+local MAX_COPIES = 1   -- one hero card, however far it has come
 H.MAX_COPIES = MAX_COPIES
-H.PREVIEW_ID = "HERONEXT"   -- the upgraded card, shown while choosing
+H.MAX_TIER = MAX_TIER
+H.PREVIEW_ID = "HERONEXT"   -- the card with one option taken, shown while choosing: HERONEXT1..3
+local BASE_COST = 1
+-- TTS_HeroChoices = { version = CHOICES_VERSION, [class file] = { talent ids, in milestone order } }.
+-- Saved choices in any older shape (the upgrade/copy list before talents) are cleared once:
+-- every player chooses again with this update.
+local CHOICES_VERSION = 2
 
--- Cost and stats for a class with a number of upgrades
-function H:Stats(classFile, upgrades)
-    local base = self.CLASSES[classFile] or self.CLASSES.WARRIOR
-    local tier = math.max(0, math.min(MAX_TIER, tonumber(upgrades) or 0))
-    return 1 + tier, base.p + math.floor(tier / 2), base.t + math.ceil(tier / 2)
+-- The account's choices, in this shape (cleared if they're from before talents)
+local function AllChoices()
+    if type(TTS_HeroChoices) ~= "table" or TTS_HeroChoices.version ~= CHOICES_VERSION then
+        local hadOld = type(TTS_HeroChoices) == "table" and next(TTS_HeroChoices) ~= nil
+        TTS_HeroChoices = { version = CHOICES_VERSION }
+        if hadOld then H.wasReset = true end   -- (told once at login)
+    end
+    return TTS_HeroChoices
 end
 
--- info = { name, class (file name), upgrades, race (id), sex (UnitSex), items = { itemIds } }
-function H:BuildCard(id, info)
-    local classFile = self.CLASSES[info.class] and info.class or "WARRIOR"
-    local base = self.CLASSES[classFile]
-    local cost, p, t = self:Stats(classFile, info.upgrades)
-    local card = {
-        id = id, name = info.name or "?", cost = "{" .. cost .. "}", cmc = cost, color = base.color,
-        type = "Creature", subType = "Hero", unique = true, power = p, toughness = t, creatureType = "Humanoid",
-        isHero = true, notCollectible = (id ~= self.MY_ID) or nil, heroInfo = info,
-        displayId = 0,   -- drawn by H:SetModel, never SetDisplayInfo
-        art = CLASS_ICON[classFile],
-        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Unique. " .. base.text,
-        -- Shown in the chosen language from the keyword names (TTS:CardText, Core\Locale.lua):
-        -- no card.<id>.text key can hold it, as it differs by class
-        heroKeyword = base.kw, heroKeywordValue = base.kwValue,
-    }
-    card[base.kw] = base.kwValue or true
-    if id == self.OPP_ID then self.oppDrawnLive = false end   -- a new opponent: not drawn live yet
-    TTS.Cards = TTS.Cards or {}
-    TTS.Cards[id] = card
-    return card
+local function MyClass()
+    local classFile = UnitClass and select(2, UnitClass("player"))
+    return H.CLASSES[classFile] and classFile or "WARRIOR"
+end
+
+-- This class's talent ids so far (made if missing)
+local function ClassChoices(classFile)
+    local all = AllChoices()
+    if type(all[classFile]) ~= "table" then all[classFile] = {} end
+    return all[classFile]
 end
 
 -- Milestones this character has reached (one per 10 levels of its saved level)
@@ -212,34 +210,51 @@ local function Earned()
     return math.min(MAX_TIER, math.floor((TTS_Hero.level or 1) / 10))
 end
 
--- Upgrades and copies from the account's first n choices
-local function Tally(n)
-    local upgrades, copies = 0, 1
-    for i = 1, n do
-        if TTS_HeroChoices[i] == "copy" then copies = copies + 1 else upgrades = upgrades + 1 end
+-- The talents a list of ids gives a class, in tier order, keeping only real ones for it (one
+-- per tier). Used for our own card and an opponent's.
+function H:TalentList(classFile, ids)
+    local list, seen = {}, {}
+    for _, id in ipairs(ids or {}) do
+        local e = self.TALENT_BY_ID and self.TALENT_BY_ID[id]
+        if e and e.class == classFile and not seen[e.tier] then
+            seen[e.tier] = true
+            list[#list + 1] = e
+        end
     end
-    return upgrades, copies
-end
-
--- This character's upgrades and copies
-local function State()
-    TTS_HeroChoices = TTS_HeroChoices or {}
-    local upgrades, copies = Tally(math.min(Earned(), #TTS_HeroChoices))
-    return { upgrades = upgrades, copies = copies }
+    table.sort(list, function(a, b) return a.tier < b.tier end)
+    local out = {}
+    for _, e in ipairs(list) do out[#out + 1] = e.talent end
+    return out
 end
 
 -- Copies of the hero card this character owns
 function H:Copies()
-    return State().copies
+    return MAX_COPIES
 end
 
--- Milestones this character has reached that no character has chosen for yet
+-- This character's class file name (WARRIOR if unknown)
+function H:MyClass()
+    return MyClass()
+end
+
+-- Milestones this character's level has reached (0 to 6)
+function H:Earned()
+    return Earned()
+end
+
+-- Milestones this character has reached that its class hasn't chosen for yet
 function H:PendingChoices()
-    TTS_HeroChoices = TTS_HeroChoices or {}
-    return math.max(0, Earned() - #TTS_HeroChoices)
+    return math.max(0, Earned() - #ClassChoices(MyClass()))
 end
 
--- This character, with the upgrades saved in TTS_Hero
+-- This character's talent ids: as many of its class's picks as its level has reached
+local function MyTalents()
+    local picks, out = ClassChoices(MyClass()), {}
+    for i = 1, math.min(Earned(), #picks) do out[i] = picks[i] end
+    return out
+end
+
+-- This character
 function H:MyInfo()
     local classFile, raceId
     if UnitClass then classFile = select(2, UnitClass("player")) end
@@ -252,13 +267,107 @@ function H:MyInfo()
     return {
         name = UnitName and UnitName("player") or "?",
         class = classFile or "WARRIOR",
-        upgrades = State().upgrades,
+        talents = MyTalents(),
         race = raceId or 1,
         sex = UnitSex and UnitSex("player") or 2,
         items = items,
     }
 end
 
+-- Adds an effect table's ops onto the card's ({ target, ops }); a target is kept from
+-- whichever has one (the talent data keeps targeted Arrivals to one tier per class)
+local function MergeEffect(into, eff)
+    if not eff then return into end
+    into = into or { ops = {} }
+    if eff.target then into.target = eff.target end
+    for _, op in ipairs(eff.ops or {}) do into.ops[#into.ops + 1] = op end
+    return into
+end
+
+-- info = { name, class (file name), talents = { ids }, race (id), sex (UnitSex), items = { itemIds } }
+function H:BuildCard(id, info)
+    local classFile = self.CLASSES[info.class] and info.class or "WARRIOR"
+    local base = self.CLASSES[classFile]
+    local talents = self:TalentList(classFile, info.talents)
+    local cost, p, t = BASE_COST, base.p, base.t
+    local kws = { [base.kw] = base.kwValue or true }
+    local etb, atk, ab
+    for _, tal in ipairs(talents) do
+        cost, p, t = cost + (tal.c or 0), p + (tal.p or 0), t + (tal.t or 0)
+        for kw, v in pairs(tal.kw or {}) do
+            local had = kws[kw]
+            if type(v) == "number" and type(had) == "number" then v = math.max(v, had) end
+            kws[kw] = v
+        end
+        etb = MergeEffect(etb, tal.etb)
+        atk = MergeEffect(atk, tal.atk)
+        if tal.ab then ab = tal.ab end
+    end
+    local card = {
+        id = id, name = info.name or "?", cost = "{" .. cost .. "}", cmc = cost, color = base.color,
+        type = "Creature", subType = "Hero", unique = true, power = p, toughness = t, creatureType = "Humanoid",
+        isHero = true, notCollectible = (id ~= self.MY_ID) or nil, heroInfo = info,
+        displayId = 0,   -- drawn by H:SetModel, never SetDisplayInfo
+        art = CLASS_ICON[classFile],
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        -- Its rules text is put together in the chosen language (H:CardText, via TTS:CardText)
+        heroKeyword = base.kw, heroKeywords = kws, heroTalents = talents,
+        etb = etb, onAttack = atk, ability = ab,
+    }
+    for kw, v in pairs(kws) do card[kw] = v end
+    card.text = self:CardText(card)
+    if id == self.OPP_ID then self.oppDrawnLive = false end   -- a new opponent: not drawn live yet
+    TTS.Cards = TTS.Cards or {}
+    TTS.Cards[id] = card
+    return card
+end
+
+-- Keywords in the order the rules text lists them (the class's own first)
+local KEYWORD_ORDER = { "flying", "reach", "haste", "vigilance", "firstStrike", "deathtouch", "lifelink",
+    "trample", "hexproof", "shielded", "unblockable", "bulwark", "enrage", "support" }
+
+-- "Unique. Charge, Ambush, Shield Wall 2. Arrival: ...", in the chosen language
+function H:CardText(card)
+    local L, Loc = TTS.L, TTS.Locale
+    local TT = TTS.Tooltip
+    local function KeywordName(kw)
+        local def = TT and TT.KEYWORDS and TT.KEYWORDS[kw]
+        local name = Loc and Loc:Data("keyword." .. kw .. ".name", def and def.name or kw) or (def and def.name or kw)
+        local v = card.heroKeywords and card.heroKeywords[kw]
+        if type(v) == "number" and L then name = L("hero.keywordValue", name, v) end
+        return name
+    end
+    local names = {}
+    if card.heroKeyword then names[1] = KeywordName(card.heroKeyword) end
+    for _, kw in ipairs(KEYWORD_ORDER) do
+        if kw ~= card.heroKeyword and card.heroKeywords and card.heroKeywords[kw] then names[#names + 1] = KeywordName(kw) end
+    end
+    local unique = Loc and Loc:Data("keyword.unique.name", "Unique") or "Unique"
+    local text = (L and L("hero.text", unique, table.concat(names, ", "))) or (unique .. ". " .. table.concat(names, ", ") .. ".")
+    -- Talents' lines with the same lead-in ("Arrival:", "Aggro:") are joined under one, in the
+    -- order they first come; an ability ("{T}, {2}: ...") stays a line of its own
+    local groups, order = {}, {}
+    for _, tal in ipairs(card.heroTalents or {}) do
+        local line = self:TalentText(tal)
+        if line then
+            local head, body = line:match("^([^{:][^:]-): (.*)$")
+            local key = head or line
+            if not groups[key] then
+                groups[key] = { head = head, bodies = {} }
+                order[#order + 1] = key
+            end
+            table.insert(groups[key].bodies, body or line)
+        end
+    end
+    for _, key in ipairs(order) do
+        local g = groups[key]
+        local joined = table.concat(g.bodies, " ")
+        text = text .. " " .. (g.head and (g.head .. ": " .. joined) or joined)
+    end
+    return text
+end
+
+-- Rebuilds our own card (talents, gear, level). TTS.Engine's GetAbility and so on read it fresh.
 function H:RebuildMine()
     return self:BuildCard(self.MY_ID, self:MyInfo())
 end
@@ -270,42 +379,79 @@ function H:Snapshot()
     self:RebuildMine()
 end
 
--- Makes the next milestone's choice for the account: "upgrade" or "copy"
-function H:Choose(kind)
-    if self:PendingChoices() <= 0 then return end
-    if kind ~= "copy" or State().copies >= MAX_COPIES then kind = "upgrade" end
-    table.insert(TTS_HeroChoices, kind)
-    self:RebuildMine()
-    if TTS.MarkCardNew then TTS:MarkCardNew(self.MY_ID) end   -- the Deckbuilder's "new" tag
+-- The three talents the next milestone offers this class (nil when none is waiting)
+function H:NextOptions()
+    if self:PendingChoices() <= 0 then return nil end
+    local tiers = self.TALENTS and self.TALENTS[MyClass()]
+    return tiers and tiers[#ClassChoices(MyClass()) + 1] or nil
 end
 
--- What the next choice is about (UI\HeroChoice.lua): the card now, the card upgraded
--- (H.PREVIEW_ID), the copies owned, and the level of the milestone
+-- Takes a talent at the next milestone (talentId: one of H:NextOptions)
+function H:Choose(talentId)
+    local options = self:NextOptions()
+    if not options then return end
+    for _, tal in ipairs(options) do
+        if tal.id == talentId then
+            table.insert(ClassChoices(MyClass()), talentId)
+            self:RebuildMine()
+            if TTS.MarkCardNew then TTS:MarkCardNew(self.MY_ID) end   -- the Deckbuilder's "new" tag
+            return true
+        end
+    end
+end
+
+-- Forgets this class's talents, so every milestone reached can be chosen again (the
+-- Deckbuilder's Reset Talents button; never during a match, when the card is in play)
+function H:Respec()
+    if TTS.Engine and TTS.Engine.inMatch then return false end
+    AllChoices()[MyClass()] = {}
+    self:RebuildMine()
+    return true
+end
+
+-- This class's chosen talents, for showing the path so far (UI\HeroChoice.lua)
+function H:ChosenTalents()
+    return self:TalentList(MyClass(), ClassChoices(MyClass()))
+end
+
+-- What the next choice is about (UI\HeroChoice.lua): the card now, each option with the card
+-- it makes (H.PREVIEW_ID .. n), and the milestone's level and tier
 function H:NextChoice()
     local mine = self:RebuildMine()
-    local next = self:MyInfo()
-    next.upgrades = next.upgrades + 1
-    return {
-        current = mine,
-        upgraded = self:BuildCard(self.PREVIEW_ID, next),
-        copies = State().copies,
-        level = (#TTS_HeroChoices + 1) * 10,
-    }
+    local options = self:NextOptions() or {}
+    local out = { current = mine, options = {}, tier = #ClassChoices(MyClass()) + 1 }
+    out.level = out.tier * 10
+    for n, tal in ipairs(options) do
+        local info = self:MyInfo()
+        local ids = {}
+        for _, id in ipairs(ClassChoices(MyClass())) do ids[#ids + 1] = id end
+        ids[#ids + 1] = tal.id
+        info.talents = ids
+        out.options[n] = { talent = tal, card = self:BuildCard(self.PREVIEW_ID .. n, info) }
+    end
+    return out
 end
 
--- ACTION:HEROINFO:<upgrades>:<class>:<race id>:<sex>:<item,item,...>
+-- ACTION:HEROINFO:<talent ids, dot-separated, or 0>:<class>:<race id>:<sex>:<item,item,...>
+-- (before talents the first field was a number of upgrades: an older client reads ours as 0,
+-- and we read a number as no talents)
 function H:Encode()
     local info = self:MyInfo()
     local items = {}
     for _, id in ipairs(info.items) do table.insert(items, tostring(id)) end
-    return string.format("%d:%s:%d:%d:%s", info.upgrades, info.class, info.race, info.sex, table.concat(items, ","))
+    local talents = #info.talents > 0 and table.concat(info.talents, ".") or "0"
+    return string.format("%s:%s:%d:%d:%s", talents, info.class, info.race, info.sex, table.concat(items, ","))
 end
 
-function H:SetOpponent(name, upgrades, classFile, race, sex, items)
+function H:SetOpponent(name, talents, classFile, race, sex, items)
     local list = {}
     for id in string.gmatch(items or "", "%d+") do table.insert(list, tonumber(id)) end
+    local ids = {}
+    for id in string.gmatch(tostring(talents or ""), "[%w_]+") do
+        if self.TALENT_BY_ID and self.TALENT_BY_ID[id] then ids[#ids + 1] = id end
+    end
     self:BuildCard(self.OPP_ID, {
-        name = name, class = classFile, upgrades = tonumber(upgrades) or 0,
+        name = name, class = classFile, talents = ids,
         race = tonumber(race) or 1, sex = tonumber(sex) or 2, items = list,
     })
 end
@@ -432,5 +578,10 @@ loader:SetScript("OnEvent", function(self)
     TTS_Hero = TTS_Hero or {}
     if not TTS_Hero.level then TTS_Hero.level = (UnitLevel and UnitLevel("player")) or 1 end
     H:RebuildMine()
+    -- Choices saved before talents were cleared (AllChoices): say so, once
+    if H.wasReset then
+        H.wasReset = nil
+        DEFAULT_CHAT_FRAME:AddMessage(TTS.L("hero.resetNotice"))
+    end
     self:UnregisterAllEvents()
 end)

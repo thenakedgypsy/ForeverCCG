@@ -53,21 +53,21 @@ TTS:AddCards({
         power = 3, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 144242,
         zone = "Zephras Isle", creatureType = "Beast", npcId = 251707,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ZEP07"] = {
         id = "ZEP07", name = "Al'Aketh Assassin", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 138289,
         zone = "Zephras Isle", creatureType = "Humanoid", faction = "Al'Aketh", npcId = 254626,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["ZEP08"] = {
         id = "ZEP08", name = "Al'Aketh Stormcaller", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 3, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 143553,
         zone = "Zephras Isle", creatureType = "Humanoid", faction = "Al'Aketh", npcId = 252068,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["ZEP09"] = {
         id = "ZEP09", name = "Wind Hollow", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -88,7 +88,7 @@ TTS:AddCards({
         power = 5, toughness = 5, hexproof = true, isMob = true, isBoss = true, displayId = 139139,
         zone = "Zephras Isle", creatureType = "Elemental", npcId = 255830,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["ZEP12"] = {
         id = "ZEP12", name = "Elaadrin Evengale", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",

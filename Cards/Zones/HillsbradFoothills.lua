@@ -14,17 +14,17 @@ TTS:AddCards({
     -- HILLSBRAD FOOTHILLS
     ["HIL01"] = {
         id = "HIL01", name = "Rot Hide Brute", cost = "{B}", cmc = 1, color = "B", type = "Creature",
-        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 10851,
+        power = 2, toughness = 1, trample = true, isMob = true, isBoss = true, displayId = 10851,
         zone = "Silverpine Forest", creatureType = "Undead", faction = "Gnoll", npcId = 1939,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Cleave."
     },
     ["HIL02"] = {
         id = "HIL02", name = "Rot Hide Plague Weaver", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 10855,
         zone = "Silverpine Forest", creatureType = "Undead", faction = "Gnoll", npcId = 1940,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["HIL03"] = {
         id = "HIL03", name = "Raging Rot Hide", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 1059,
         zone = "Hillsbrad Foothills", creatureType = "Beast", npcId = 2384,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HIL08"] = {
         id = "HIL08", name = "Hillsbrad Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 6, toughness = 6, haste = true, isMob = true, isBoss = true, displayId = 3997,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Troll", npcId = 2556,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HIL10"] = {
         id = "HIL10", name = "Zalas Witherbark", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         dropChance = { 100, 100, 50, 25 },   -- long respawn (about 60h)
         zone = "Arathi Highlands", creatureType = "Humanoid", npcId = 2605,
         modelCam = { zoom = 0.58, camScale = 1.19, z = -0.14, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["HIL11"] = {
@@ -92,5 +92,36 @@ TTS:AddCards({
         etb = { ops = { { op = "shield", to = "self_player", n = 4 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant. Arrival: Prevent the next 4 damage to you. Other Hillsbrad Foothills denizens you control get +1/+0."
+    },
+    -- MURLOCS (Hillsbrad Foothills)
+    ["HIL12"] = {
+        id = "HIL12", name = "Torn Fin Muckdweller", cost = "{B}", cmc = 1, color = "B", type = "Creature",
+        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 1305,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Murloc", npcId = 2374,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = ""
+    },
+    ["HIL13"] = {
+        id = "HIL13", name = "Torn Fin Coastrunner", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 3617,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Murloc", npcId = 2375,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Charge."
+    },
+    ["HIL14"] = {
+        id = "HIL14", name = "Torn Fin Tidehunter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1079,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Murloc", npcId = 2377,
+        etb = { ops = { { op = "token", id = "TOK01", n = 1 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Spawn: 1 Murloc Tadpole Add (1/1)."
+    },
+    ["HIL15"] = {
+        id = "HIL15", name = "Torn Fin Oracle", cost = "{2}{U}{B}", cmc = 4, color = "U", type = "Creature",
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 4920,
+        zone = "Hillsbrad Foothills", creatureType = "Humanoid", faction = "Murloc", npcId = 2376,
+        onDeath = { ops = { { op = "token", id = "TOK01", n = 2 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Martyrdom: Spawn: 2 Murloc Tadpole Adds (1/1)."
     },
 })

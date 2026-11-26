@@ -21,7 +21,7 @@ TTS:AddCards({
     },
     ["WAR02"] = {
         id = "WAR02", name = "Charge", cost = "{R}", cmc = 1, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target denizen you control permanently gets +2/+0 and gains Quick.",
+        text = "Target denizen you control permanently gets +2/+0 and gains Charge.",
         art = "Interface\\Icons\\Ability_Warrior_Charge",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, kw = { "haste" }, perm = true } } }
     },
@@ -45,7 +45,7 @@ TTS:AddCards({
     },
     ["WAR06"] = {
         id = "WAR06", name = "Overpower", cost = "{1}{R}", cmc = 2, color = "R", type = "Sorcery", class = "Warrior",
-        text = "Target denizen you control permanently gets +2/+2 and gains Strikes-First.",
+        text = "Target denizen you control permanently gets +2/+2 and gains Ambush.",
         art = "Interface\\Icons\\Ability_MeleeDamage",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 2, t = 2, kw = { "firstStrike" }, perm = true } } }
     },

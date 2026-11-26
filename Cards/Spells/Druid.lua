@@ -57,7 +57,7 @@ TTS:AddCards({
     },
     ["DRU08"] = {
         id = "DRU08", name = "Thorns", cost = "{G}", cmc = 1, color = "G", type = "Sorcery", class = "Druid",
-        text = "Target denizen you control permanently gets +1/+1 and gains Fatal.",
+        text = "Target denizen you control permanently gets +1/+1 and gains Execute.",
         art = "Interface\\Icons\\Spell_Nature_Thorns",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, t = 1, kw = { "deathtouch" }, perm = true } } }
     },

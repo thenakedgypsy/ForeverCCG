@@ -45,25 +45,25 @@ TTS:AddCards({
     },
     ["ROG06"] = {
         id = "ROG06", name = "Sprint", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target denizen you control permanently gets +1/+0 and gains Quick and Invisible.",
+        text = "Target denizen you control permanently gets +1/+0 and gains Charge and Stealth.",
         art = "Interface\\Icons\\Ability_Rogue_Sprint",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, kw = { "haste", "unblockable" }, perm = true } } }
     },
     ["ROG07"] = {
         id = "ROG07", name = "Vanish", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target denizen you control permanently gets +1/+1 and gains Warded, and Soulstone.",
+        text = "Target denizen you control permanently gets +1/+1 and gains Anti-Magic, and Soulstone.",
         art = "Interface\\Icons\\Ability_Vanish",
         effect = { target = "friendly_creature", ops = { { op = "buff", to = "target", p = 1, t = 1, kw = { "hexproof" }, perm = true }, { op = "regen", to = "target" } } }
     },
     ["ROG08"] = {
         id = "ROG08", name = "Evasion", cost = "{1}{B}", cmc = 2, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Target denizen you control gains Shielded, and permanently gets +1/+1 and gains Strikes-First.",
+        text = "Target denizen you control gains Absorb, and permanently gets +1/+1 and gains Ambush.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWard",
         effect = { target = "friendly_creature", ops = { { op = "shielded", to = "target" }, { op = "buff", to = "target", p = 1, t = 1, kw = { "firstStrike" }, perm = true } } }
     },
     ["ROG09"] = {
         id = "ROG09", name = "Slice and Dice", cost = "{2}{B}", cmc = 3, color = "B", type = "Sorcery", class = "Rogue",
-        text = "Denizens you control permanently get +1/+1 and gain Quick.",
+        text = "Denizens you control permanently get +1/+1 and gain Charge.",
         art = "Interface\\Icons\\Ability_Rogue_SliceDice",
         effect = { ops = { { op = "buff", to = "friendly_creatures", p = 1, t = 1, kw = { "haste" }, perm = true } } }
     },

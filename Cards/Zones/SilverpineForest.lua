@@ -17,14 +17,14 @@ TTS:AddCards({
         power = 1, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 11180,
         zone = "Silverpine Forest", creatureType = "Humanoid", faction = "Worgen", npcId = 1769,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["SIL02"] = {
         id = "SIL02", name = "Mottled Worg", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 246,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1766,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SIL03"] = {
         id = "SIL03", name = "Ferocious Grizzled Bear", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -60,14 +60,14 @@ TTS:AddCards({
         power = 3, toughness = 3, deathtouch = true, isMob = true, isBoss = true, displayId = 760,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1781,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SIL08"] = {
         id = "SIL08", name = "Bloodsnout Worg", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 741,
         zone = "Silverpine Forest", creatureType = "Beast", npcId = 1923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SIL09"] = {
         id = "SIL09", name = "Ravenclaw Guardian", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Silverpine Forest", creatureType = "Undead", npcEntry = 1952,
         anthem = { tag = "zone", value = "Silverpine Forest", t = 1, kw = { "lifelink" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Other Silverpine Forest denizens you control get +0/+1 and Drain."
+        text = "Other Silverpine Forest denizens you control get +0/+1 and Leech."
     },
 })

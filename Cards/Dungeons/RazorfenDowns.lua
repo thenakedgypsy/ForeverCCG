@@ -32,7 +32,7 @@ TTS:AddCards({
         power = 4, toughness = 3, bulwark = 2, haste = true, isMob = true, isBoss = true, displayId = 1065,
         zone = "Razorfen Downs", creatureType = "Undead", npcId = 7347,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Bulwark 2."
+        text = "Charge. Shield Wall 2."
     },
     ["RFD04"] = {
         id = "RFD04", name = "Death's Head Necromancer", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -40,28 +40,28 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { maxPower = 3 } } } },
         zone = "Razorfen Downs", creatureType = "Humanoid", faction = "Quilboar", npcId = 7337,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Arrival: Destroy target enemy denizen with power 3 or less."
+        text = "Leech. Arrival: Destroy target enemy denizen with power 3 or less."
     },
     ["RFD05"] = {
         id = "RFD05", name = "Mordresh Fire Eye", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 8055,
         zone = "Razorfen Downs", creatureType = "Undead", faction = "Quilboar", npcId = 7357,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["RFD06"] = {
         id = "RFD06", name = "Glutton", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 9, enrage = true, lifelink = true, isMob = true, isBoss = true, displayId = 7864,
         zone = "Razorfen Downs", creatureType = "Undead", faction = "Quilboar", npcId = 8567,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Drain. Enrage."
+        text = "Leech. Enrage."
     },
     ["RFD07"] = {
         id = "RFD07", name = "Ragglesnout", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 8, trample = true, isMob = true, isBoss = true, displayId = 11382,
         zone = "Razorfen Downs", creatureType = "Humanoid", faction = "Quilboar", npcId = 7354,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["RFD08"] = {
@@ -70,6 +70,6 @@ TTS:AddCards({
         zone = "Razorfen Downs", creatureType = "Undead", npcEntry = 7355,
         anthem = { tag = "zone", value = "Razorfen Downs", p = 1, t = 1 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Anti-Air. Fatal. Other Razorfen Downs denizens you control get +1/+1."
+        text = "Ranged. Execute. Other Razorfen Downs denizens you control get +1/+1."
     },
 })

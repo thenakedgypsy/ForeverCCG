@@ -38,14 +38,14 @@ TTS:AddCards({
         power = 2, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 1055,
         zone = "Badlands", creatureType = "Beast", npcId = 2732,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["BAD05"] = {
         id = "BAD05", name = "Rock Elemental", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 1, toughness = 7, defender = true, isMob = true, isBoss = true, displayId = 171,
         zone = "Badlands", creatureType = "Elemental", npcId = 92,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["BAD06"] = {
         id = "BAD06", name = "Scalding Whelp", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -56,24 +56,24 @@ TTS:AddCards({
     },
     ["BAD07"] = {
         id = "BAD07", name = "Dark Iron Kidnapper", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
-        power = 4, toughness = 4, isMob = true, isBoss = true, displayId = 7789,
+        power = 3, toughness = 3, chainPull = true, isMob = true, isBoss = true, displayId = 7789,
         zone = "Searing Gorge", creatureType = "Humanoid", faction = "Dark Iron", npcId = 15692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Chain Pull."
     },
     ["BAD08"] = {
         id = "BAD08", name = "Shadowforge Surveyor", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 6, shielded = true, isMob = true, isBoss = true, displayId = 6051,
         zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4844,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["BAD09"] = {
         id = "BAD09", name = "Shadowforge Digger", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 7, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 6052,
         zone = "Badlands", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4846,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["BAD10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 10, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 10040,
         zone = "Badlands", creatureType = "Giant", npcId = 2754,
         modelCam = { zoom = 0.64, camScale = 1.15, z = -0.13, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["BAD11"] = {

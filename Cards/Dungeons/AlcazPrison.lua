@@ -20,7 +20,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 6195,
         zone = "Alcaz Prison", creatureType = "Beast", npcId = 255267,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ALZ02"] = {
         id = "ALZ02", name = "Alcaz Jailer", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -34,28 +34,28 @@ TTS:AddCards({
         power = 3, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 2315,
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Defias", npcId = 255276,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ALZ04"] = {
         id = "ALZ04", name = "Defias Bounty Hunter", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 138839,
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Defias", npcId = 255309,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["ALZ05"] = {
         id = "ALZ05", name = "Defias Truthfinder", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 3, lifelink = true, isMob = true, isBoss = true, displayId = 144356,
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Defias", npcId = 255271,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["ALZ06"] = {
         id = "ALZ06", name = "Alcaz Chaplain", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 4, support = true, shielded = true, isMob = true, isBoss = true, displayId = 138722,
         zone = "Alcaz Prison", creatureType = "Humanoid", npcId = 255262,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Shielded."
+        text = "Support. Absorb."
     },
     ["ALZ07"] = {
         id = "ALZ07", name = "Arcane Servitor", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -69,7 +69,7 @@ TTS:AddCards({
         power = 3, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 4764,
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Naga", npcId = 255995,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ALZ09"] = {
         id = "ALZ09", name = "Renegade Conjurer", cost = "{3}{R}", cmc = 4, color = "R", type = "Creature",
@@ -84,7 +84,7 @@ TTS:AddCards({
         power = 5, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 1070,
         zone = "Alcaz Prison", creatureType = "Elemental", npcId = 255366,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ALZ11"] = {
         id = "ALZ11", name = "Frozen Servitor", cost = "{3}{U}", cmc = 4, color = "U", type = "Creature",
@@ -100,7 +100,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "bounce", to = "target" } } },
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Naga", npcId = 255373,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded. Arrival: Return target enemy denizen to its owner's hand."
+        text = "Absorb. Arrival: Return target enemy denizen to its owner's hand."
     },
     -- Bosses
     ["ALZ13"] = {
@@ -108,14 +108,14 @@ TTS:AddCards({
         power = 4, toughness = 5, vigilance = true, bulwark = 2, isMob = true, isBoss = true, displayId = 7914,
         zone = "Alcaz Prison", creatureType = "Humanoid", npcId = 255391,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Bulwark 2."
+        text = "Vigilant. Shield Wall 2."
     },
     ["ALZ14"] = {
         id = "ALZ14", name = "Katerina the Cleaner", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 4, toughness = 3, deathtouch = true, firstStrike = true, isMob = true, isBoss = true, displayId = 2317,
         zone = "Alcaz Prison", creatureType = "Humanoid", npcId = 257016,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Fatal."
+        text = "Ambush. Execute."
     },
     ["ALZ15"] = {
         id = "ALZ15", name = "Tidemistress Ca'zass", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -123,7 +123,7 @@ TTS:AddCards({
         zone = "Alcaz Prison", creatureType = "Humanoid", faction = "Naga", npcId = 255997,
         anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. Other Naga you control get +1/+1."
+        text = "Ranged. Other Naga you control get +1/+1."
     },
     ["ALZ16"] = {
         id = "ALZ16", name = "The Questioner", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -131,7 +131,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } },
         zone = "Alcaz Prison", creatureType = "Humanoid", npcId = 256236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Arrival: Freeze target enemy denizen."
+        text = "Leech. Arrival: Freeze target enemy denizen."
     },
     -- Solo reward
     ["ALZ17"] = {
@@ -140,6 +140,6 @@ TTS:AddCards({
         zone = "Alcaz Prison", creatureType = "Humanoid", npcEntry = 260386,
         anthem = { tag = "zone", value = "Alcaz Prison", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Alcaz Prison denizens you control get +1/+1."
+        text = "Ambush. Other Alcaz Prison denizens you control get +1/+1."
     },
 })

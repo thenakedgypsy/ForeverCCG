@@ -540,6 +540,18 @@ local function Build()
     F.breakdown:SetJustifyH("LEFT")
     F.breakdown:SetSpacing(2)
 
+    -- Export / Import Collection (Core\CollectionCode.lua), as on the Deckbuilder: right of the
+    -- breakdown, over the footer (the breakdown stops short of them)
+    local importBtn = UI.CreateFlatButton(F, 64, 20, "cc.import")
+    importBtn:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -PAD - 12, 30)
+    importBtn.tooltipTitle, importBtn.tooltipText = "cc.importTip", "cc.importTip.desc"
+    importBtn:SetScript("OnClick", function() TTS.CollectionCode:ShowImport() end)
+    local exportBtn = UI.CreateFlatButton(F, 64, 20, "cc.export")
+    exportBtn:SetPoint("RIGHT", importBtn, "LEFT", -4, 0)
+    exportBtn.tooltipTitle, exportBtn.tooltipText = "cc.exportTip", "cc.exportTip.desc"
+    exportBtn:SetScript("OnClick", function() TTS.CollectionCode:ShowExport() end)
+    F.breakdown:SetWidth(PAD * 3 + NAV_W + LIST_PANEL_W - 16 - (PAD + 12 + 64 * 2 + 4) - 12)
+
     -- Left: the tabs, how the places are sorted, then the places of the chosen tab
     local nav = CreateFrame("Frame", nil, F)
     UI.Skin(nav, UI.STYLE.panelBg, UI.STYLE.panelBorder)

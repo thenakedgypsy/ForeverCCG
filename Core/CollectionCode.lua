@@ -363,9 +363,15 @@ end
 
 -- Lists that don't merge key by key
 local MERGE = {
-    -- Hero choices are in milestone order: the longer list has made more of them
+    -- Hero talents, per class, in milestone order (Systems\Hero.lua): each class keeps the
+    -- longer list, which has made more of them. A code from before talents (no version, a
+    -- plain upgrade/copy list) brings none: everyone chose again with that update.
     TTS_HeroChoices = function(cur, inc)
-        if type(inc) == "table" and (type(cur) ~= "table" or #inc > #cur) then return inc end
+        if type(inc) ~= "table" or inc.version ~= 2 then return cur end
+        if type(cur) ~= "table" or cur.version ~= 2 then return inc end
+        for class, list in pairs(inc) do
+            if type(list) == "table" and (type(cur[class]) ~= "table" or #list > #cur[class]) then cur[class] = list end
+        end
         return cur
     end,
     -- Current decks stay; the code's fill only the slots that are empty
@@ -538,6 +544,7 @@ local function Open(mode, code)
     local tag = CC:Account()
     if mode == "export" then
         W.text = CC:Export()
+        CC:NoteBackup()
         Loc:Bind(W.title, "cc.exportTitle")
         Loc:Bind(W.button, "matchLog.selectAll")
         if tag then SetHint("cc.exportHint", tag) else SetHint("cc.exportHint.any") end
@@ -563,3 +570,79 @@ end
 function CC:ShowExport() Open("export") end
 function CC:ShowImport() Open("import") end
 function CC:ShowReport(code) Open("report", code) end
+
+-- =========================================================================
+-- WEEKLY BACKUP REMINDER
+-- A week after the last export (or the last reminder), a popup at login offers to open the
+-- export window. Never in combat or a match: it waits until both are over. Off with the
+-- backupReminder option (UI\Options.lua). Kept in TTS_Options, which no code carries.
+--   TTS_Options.lastBackup          time() of the last export
+--   TTS_Options.lastBackupReminder  time() the reminder was last shown (or first seen)
+-- =========================================================================
+CC.REMIND_EVERY = 7 * 24 * 60 * 60
+local RETRY = 60   -- seconds, while in combat or a match
+
+local function Opts()
+    if type(TTS_Options) ~= "table" then TTS_Options = {} end
+    return TTS_Options
+end
+
+function CC:NoteBackup()
+    Opts().lastBackup = time()
+end
+
+-- Anything worth keeping: a card won, given or earned
+local function HasCollection()
+    local function Some(t) return type(t) == "table" and next(t) ~= nil end
+    return Some(TTS_KilledBosses) or Some(TTS_NpcGifts)
+        or (type(TTS_SoloProgress) == "table" and Some(TTS_SoloProgress.rewards))
+end
+
+-- Days since the last export (nil: never), if a reminder is due now
+function CC:BackupDue()
+    local o = Opts()
+    if o.backupReminder == false or not HasCollection() then return false end
+    local now = time()
+    -- A first sight starts the clock, so a new player isn't asked before their first week
+    if not o.lastBackup and not o.lastBackupReminder then
+        o.lastBackupReminder = now
+        return false
+    end
+    local since = math.max(o.lastBackup or 0, o.lastBackupReminder or 0)
+    if now - since < self.REMIND_EVERY then return false end
+    return true, o.lastBackup and math.floor((now - o.lastBackup) / 86400) or nil
+end
+
+TTS.Dialog:Register("TTS_BACKUP_REMINDER", {
+    text = "%s",
+    button1 = "Export",
+    button2 = "Later",
+    OnAccept = function() CC:ShowExport() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+})
+
+local function Remind()
+    local due, days = CC:BackupDue()
+    if not due then return end
+    if InCombatLockdown() or (TTS.Engine and TTS.Engine.inMatch) then
+        C_Timer.After(RETRY, Remind)
+        return
+    end
+    Opts().lastBackupReminder = time()
+    local def = TTS.Dialog:Get("TTS_BACKUP_REMINDER")
+    def.button1, def.button2 = L("backup.export"), L("backup.later")
+    local head = days and L("backup.since", days) or L("backup.never")
+    TTS.Dialog:Popup("TTS_BACKUP_REMINDER", head .. "\n\n" .. L("backup.why"))
+end
+
+do
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:SetScript("OnEvent", function(self)
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+        C_Timer.After(15, Remind)   -- after the login rush and any other login popups
+    end)
+end

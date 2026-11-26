@@ -32,28 +32,28 @@ TTS:AddCards({
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 8790,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 8912,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["BRD04"] = {
         id = "BRD04", name = "Anvilrage Medic", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 8752,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8894,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["BRD05"] = {
         id = "BRD05", name = "Doomforge Dragoon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 4, bulwark = 2, reach = true, trample = true, isMob = true, isBoss = true, displayId = 8820,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8899,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Bulwark 2. Anti-Air."
+        text = "Cleave. Shield Wall 2. Ranged."
     },
     ["BRD06"] = {
         id = "BRD06", name = "Lord Roccor", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 5781,
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 9025,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["BRD07"] = {
         id = "BRD07", name = "High Interrogator Gerstahn", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -61,14 +61,14 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { maxPower = 3 } } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9018,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Arrival: Destroy target enemy denizen with power 3 or less."
+        text = "Execute. Arrival: Destroy target enemy denizen with power 3 or less."
     },
     ["BRD08"] = {
         id = "BRD08", name = "Verek", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 6, toughness = 6, enrage = true, haste = true, isMob = true, isBoss = true, displayId = 9019,
         zone = "Blackrock Depths", creatureType = "Demon", npcId = 9042,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Enrage."
+        text = "Charge. Enrage."
     },
     ["BRD09"] = {
         id = "BRD09", name = "Molten War Golem", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -83,7 +83,7 @@ TTS:AddCards({
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9319,
         anthem = { tag = "type", value = "Beast", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Beasts you control get +1/+1."
+        text = "Charge. Other Beasts you control get +1/+1."
     },
     ["BRD11"] = {
         id = "BRD11", name = "Fineous Darkvire", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -91,14 +91,14 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { color = "B" } } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9056,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Arrival: Destroy target enemy Shadow denizen."
+        text = "Leech. Arrival: Destroy target enemy Shadow denizen."
     },
     ["BRD12"] = {
         id = "BRD12", name = "Pyromancer Loregrain", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 8762,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9024,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["BRD13"] = {
         id = "BRD13", name = "Warder Stilgiss", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -106,7 +106,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "bounce", to = "target" } } },
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 9041,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded. Arrival: Return target enemy denizen to its owner's hand."
+        text = "Absorb. Arrival: Return target enemy denizen to its owner's hand."
     },
     ["BRD14"] = {
         id = "BRD14", name = "Phalanx", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",
@@ -122,21 +122,21 @@ TTS:AddCards({
         onDeath = { ops = { { op = "destroy", to = "strongest_enemy" } } },
         zone = "Blackrock Depths", creatureType = "Undead", faction = "Dark Iron", npcId = 9039,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Martyrdom: Destroy the enemy denizen with the highest power."
+        text = "Leech. Martyrdom: Destroy the enemy denizen with the highest power."
     },
     ["BRD16"] = {
         id = "BRD16", name = "Golem Lord Argelmach", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 8, toughness = 9, shielded = true, support = true, isMob = true, isBoss = true, displayId = 8759,
         zone = "Blackrock Depths", creatureType = "Humanoid", faction = "Dark Iron", npcId = 8983,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Shielded."
+        text = "Support. Absorb."
     },
     ["BRD17"] = {
         id = "BRD17", name = "Ambassador Flamelash", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
         power = 9, toughness = 8, firstStrike = true, isMob = true, isBoss = true, displayId = 8329,
         zone = "Blackrock Depths", creatureType = "Humanoid", npcId = 9156,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["BRD18"] = {
         id = "BRD18", name = "Bael'Gar", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -144,7 +144,7 @@ TTS:AddCards({
         onDeath = { ops = { { op = "damage", to = "strongest_enemy", n = 3 } } },
         zone = "Blackrock Depths", creatureType = "Giant", npcId = 9016,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Martyrdom: Deal 3 damage to the enemy denizen with the highest power."
+        text = "Cleave. Martyrdom: Deal 3 damage to the enemy denizen with the highest power."
     },
     ["BRD19"] = {
         id = "BRD19", name = "Lord Incendius", cost = "{4}{R}{R}", cmc = 6, color = "R", type = "Creature",
@@ -161,7 +161,7 @@ TTS:AddCards({
         onDeath = { ops = { { op = "damage", to = "all_creatures", n = 2 } } },
         zone = "Blackrock Depths", creatureType = "Elemental", npcId = 8923,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Warded. Martyrdom: Deal 2 damage to each denizen."
+        text = "Anti-Magic. Martyrdom: Deal 2 damage to each denizen."
     },
     ["BRD21"] = {
         id = "BRD21", name = "General Angerforge", cost = "{5}{R}{R}", cmc = 7, color = "R", type = "Creature",
@@ -177,7 +177,7 @@ TTS:AddCards({
         zone = "Blackrock Depths", creatureType = "Giant", npcId = 9938,
         anthem = { tag = "zone", value = "Blackrock Depths", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Other Blackrock Depths denizens you control get +1/+1."
+        text = "Cleave. Other Blackrock Depths denizens you control get +1/+1."
     },
     -- Solo reward
     ["BRD23"] = {
@@ -187,6 +187,6 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         etb = { ops = { { op = "buff", to = "friendly_creatures", t = 1, perm = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Arrival: Denizens you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
+        text = "Leech. Arrival: Denizens you control permanently get +0/+1. Other Dark Iron you control get +1/+1."
     },
 })

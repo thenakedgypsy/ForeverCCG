@@ -12,7 +12,8 @@ local L = TTS.L
 -- =========================================================================
 -- ENDLESS
 -- A run is one drafted 20-card deck fighting one opponent after another. The draft happens
--- once (12 picks of 1 from 5, then 8 basic Prayers); every win adds a card and leads to the
+-- once (12 picks of 1 from 5, then 8 basic Prayers); every win adds a card (or instead cuts
+-- one, two after a milestone, never below 20: CUTTING) and leads to the
 -- next, harder fight; the first loss (a deck-out or a concede too) ends the run. Every 8th
 -- fight is a dungeon milestone, which pays a Dungeons pack when a charge is banked.
 -- Drafted cards are run-only copies: ownership is ignored and nothing enters the collection.
@@ -37,6 +38,7 @@ local L = TTS.L
 --     recent             the last 5 opponents' encounter ids
 --     plan               the next fight, worked out once (PlanFight)
 --     reward             the X.OFFER_SIZE card ids on offer after a win
+--     cutting            cards cut so far, while the reward is a cut instead (CUTTING)
 --     packs              packs earned this run
 --   } }
 -- The window is UI\Endless.lua; a fight's end comes through CoreEngine.lua's EndMatch.
@@ -124,7 +126,7 @@ end
 local function Excluded(card)
     if not card then return true end
     if card.isPrize or card.isBeta or card.isHero or card.isToken or card.isProfession or card.campaignPrize
-        or card.type == "Settlement" or card.type == "Land" or card.unlockOnDeath then
+        or card.type == "Settlement" or card.type == "Land" or card.unlockOnDeath or card.critterUnlock then
         return true
     end
     return TTS.Packs and TTS.Packs.IsRaidCard and TTS.Packs:IsRaidCard(card) or false
@@ -582,28 +584,95 @@ end
 
 local function FinishReward(run)
     run.reward = nil
+    run.cutting = nil
     run.stage = "ready"
     X:PlanFight()
     Changed()
 end
 
+-- The reward is still a free choice: not cutting (once a card is cut, the cut is the reward)
+local function Choosing(run)
+    return run and run.stage == "reward" and not run.cutting
+end
+
 function X:TakeReward(slot)
     local run = self:Run()
-    if not (run and run.stage == "reward" and run.reward and run.reward[slot]) then return end
+    if not (Choosing(run) and run.reward and run.reward[slot]) then return end
     table.insert(run.deck, run.reward[slot])
     FinishReward(run)
 end
 
 function X:TakePrayer(col)
     local run = self:Run()
-    if not (run and run.stage == "reward" and self.PRAYER_IDS[col]) then return end
+    if not (Choosing(run) and self.PRAYER_IDS[col]) then return end
     table.insert(run.deck, self.PRAYER_IDS[col])
     FinishReward(run)
 end
 
 function X:SkipReward()
     local run = self:Run()
-    if not (run and run.stage == "reward") then return end
+    if not Choosing(run) then return end
+    FinishReward(run)
+end
+
+-- =========================================================================
+-- CUTTING (a reward instead of a card: cut cards from the deck, never below X.MIN_DECK)
+-- run.cutting = cards cut so far while the reward screen is cutting (nil: not cutting).
+-- Choosing to cut can be taken back until the first card goes; after that the reward is
+-- spent, and it ends when the cuts run out, the deck reaches X.MIN_DECK, or Done.
+-- =========================================================================
+X.MIN_DECK = 20
+X.CUTS = 1
+X.MILESTONE_CUTS = 2
+
+-- Cards this reward may cut: more after a milestone win
+function X:CutsAllowed()
+    local run = self:Run()
+    if not run then return 0 end
+    return self:IsMilestone((run.fight or 2) - 1) and self.MILESTONE_CUTS or self.CUTS
+end
+
+function X:CanCut()
+    local run = self:Run()
+    return run ~= nil and run.stage == "reward" and #run.deck > self.MIN_DECK
+end
+
+function X:StartCut()
+    local run = self:Run()
+    if not (Choosing(run) and self:CanCut()) then return false end
+    run.cutting = 0
+    Changed()
+    return true
+end
+
+-- Back to the reward's choice, while nothing has been cut
+function X:CancelCut()
+    local run = self:Run()
+    if not (run and run.stage == "reward" and run.cutting == 0) then return end
+    run.cutting = nil
+    Changed()
+end
+
+function X:Cut(id)
+    local run = self:Run()
+    if not (run and run.stage == "reward" and run.cutting and self:CanCut()) then return false end
+    local at
+    for i, v in ipairs(run.deck) do if v == id then at = i end end
+    if not at then return false end
+    table.remove(run.deck, at)
+    run.cutting = run.cutting + 1
+    if run.cutting >= self:CutsAllowed() or #run.deck <= self.MIN_DECK then
+        FinishReward(run)
+    else
+        Changed()
+    end
+    return true
+end
+
+-- Done cutting before the cuts run out (only once a card has gone)
+function X:FinishCut()
+    local run = self:Run()
+    if not (run and run.stage == "reward" and (run.cutting or 0) > 0) then return end
     FinishReward(run)
 end
 
@@ -668,7 +737,7 @@ end
 -- ENDLESS MIGHT (not a mutator: the late fights' stat bonus, SoloEncounters.lua rules)
 -- =========================================================================
 TTS.EncounterRules.ENDLESS_MIGHT1 = {
-    name = "Endless Might",
+    name = "Eternal Might",
     text = "The opponent's denizens get +1/+1.",
     statBonus = function(self, enc, perm, isRemote)
         if isRemote then return 1, 1 end
@@ -676,7 +745,7 @@ TTS.EncounterRules.ENDLESS_MIGHT1 = {
     end,
 }
 TTS.EncounterRules.ENDLESS_MIGHT2 = {
-    name = "Endless Might",
+    name = "Eternal Might",
     text = "The opponent's denizens get +2/+2.",
     statBonus = function(self, enc, perm, isRemote)
         if isRemote then return 2, 2 end

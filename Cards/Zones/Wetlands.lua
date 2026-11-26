@@ -24,42 +24,42 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 714,
         zone = "Wetlands", creatureType = "Humanoid", faction = "Gnoll", npcId = 1010,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["WET03"] = {
         id = "WET03", name = "Mottled Raptor", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 960,
         zone = "Wetlands", creatureType = "Beast", npcId = 1020,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["WET04"] = {
         id = "WET04", name = "Crimson Whelp", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
         power = 2, toughness = 2, shielded = true, isMob = true, isBoss = true, displayId = 505,
         zone = "Wetlands", creatureType = "Dragonkin", faction = "Scarlet Crusade", npcId = 1069,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["WET05"] = {
         id = "WET05", name = "Dragonmaw Raider", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 4916,
+        power = 2, toughness = 3, chainPull = true, isMob = true, isBoss = true, displayId = 4916,
         zone = "Wetlands", creatureType = "Humanoid", faction = "Blackrock", npcId = 1034,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Chain Pull."
     },
     ["WET06"] = {
         id = "WET06", name = "Highland Razormaw", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 180,
         zone = "Wetlands", creatureType = "Beast", npcId = 1018,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["WET07"] = {
         id = "WET07", name = "Syndicate Highwayman", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
         power = 3, toughness = 4, unblockable = true, firstStrike = true, isMob = true, isBoss = true, displayId = 3984,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Syndicate", npcId = 2586,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Invisible."
+        text = "Ambush. Stealth."
     },
     ["WET08"] = {
         id = "WET08", name = "Rumbling Exile", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 2172,
         zone = "Arathi Highlands", creatureType = "Elemental", npcId = 2760,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["WET10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 536,
         zone = "Arathi Highlands", creatureType = "Humanoid", faction = "Ogre", npcId = 2604,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["WET11"] = {
@@ -90,6 +90,45 @@ TTS:AddCards({
         zone = "Wetlands", creatureType = "Humanoid", npcEntry = 2104,
         anthem = { tag = "zone", value = "Wetlands", p = 1, kw = { "trample" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Wetlands denizens you control get +1/+0 and Brutish."
+        text = "Cleave. Other Wetlands denizens you control get +1/+0 and Cleave."
+    },
+    -- MURLOCS (Wetlands)
+    ["WET12"] = {
+        id = "WET12", name = "Bluegill Murloc", cost = "{U}", cmc = 1, color = "U", type = "Creature",
+        power = 1, toughness = 2, isMob = true, isBoss = true, displayId = 486,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Murloc", npcId = 1024,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = ""
+    },
+    ["WET13"] = {
+        id = "WET13", name = "Bluegill Puddlejumper", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 1, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 983,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Murloc", npcId = 1025,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Stealth."
+    },
+    ["WET14"] = {
+        id = "WET14", name = "Bluegill Forager", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1305,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Murloc", npcId = 1026,
+        etb = { ops = { { op = "draw", n = 1 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Draw 1."
+    },
+    ["WET15"] = {
+        id = "WET15", name = "Bluegill Oracle", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 486,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Murloc", npcId = 1029,
+        etb = { ops = { { op = "buff", to = "friendly_creatures", t = 1, perm = true, filter = { tag = "faction", value = "Murloc" } } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Your Murlocs get +0/+1."
+    },
+    ["WET16"] = {
+        id = "WET16", name = "Gobbler", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 5, toughness = 4, isNamed = true, isMob = true, isBoss = true, displayId = 652,
+        zone = "Wetlands", creatureType = "Humanoid", faction = "Murloc", npcId = 1259,
+        etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { maxPower = 2 } } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Destroy target enemy denizen with power 2 or less."
     },
 })

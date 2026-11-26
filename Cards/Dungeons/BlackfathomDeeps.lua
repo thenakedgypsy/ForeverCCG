@@ -25,21 +25,21 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1244,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BFD03"] = {
         id = "BFD03", name = "Fallenroot Shadowstalker", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 3, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2014,
         zone = "Blackfathom Deeps", creatureType = "Demon", faction = "Satyr", npcId = 4798,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["BFD04"] = {
         id = "BFD04", name = "Twilight Reaver", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 4, bulwark = 2, isMob = true, isBoss = true, displayId = 2901,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4810,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Bulwark 2."
+        text = "Shield Wall 2."
     },
     ["BFD05"] = {
         id = "BFD05", name = "Blackfathom Sea Witch", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -47,7 +47,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "bounce", to = "target" } } },
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4805,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded. Arrival: Return target enemy denizen to its owner's hand."
+        text = "Absorb. Arrival: Return target enemy denizen to its owner's hand."
     },
     ["BFD06"] = {
         id = "BFD06", name = "Lady Sarevess", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -55,7 +55,7 @@ TTS:AddCards({
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Naga", npcId = 4831,
         anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Anti-Air. Other Naga you control get +1/+1."
+        text = "Ambush. Ranged. Other Naga you control get +1/+1."
     },
     ["BFD07"] = {
         id = "BFD07", name = "Ghamoo-ra", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -70,7 +70,7 @@ TTS:AddCards({
         power = 5, toughness = 5, shielded = true, haste = true, isMob = true, isBoss = true, displayId = 12822,
         zone = "Blackfathom Deeps", creatureType = "Humanoid", npcId = 12902,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Shielded."
+        text = "Charge. Absorb."
     },
     ["BFD09"] = {
         id = "BFD09", name = "Gelihast", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -86,7 +86,7 @@ TTS:AddCards({
         onDeath = { ops = { { op = "tuck", to = "strongest_enemy", only = { maxCmc = 3 } } } },
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4830,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Martyrdom: Put the enemy denizen with the highest power that costs 3 or less on top of its owner's deck."
+        text = "Cleave. Martyrdom: Put the enemy denizen with the highest power that costs 3 or less on top of its owner's deck."
     },
     ["BFD11"] = {
         id = "BFD11", name = "Twilight Lord Kelris", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -94,7 +94,7 @@ TTS:AddCards({
         zone = "Blackfathom Deeps", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 4832,
         anthem = { tag = "faction", value = "Twilight's Hammer", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Other Twilight's Hammer you control get +1/+1."
+        text = "Leech. Other Twilight's Hammer you control get +1/+1."
     },
     -- Solo reward
     ["BFD12"] = {

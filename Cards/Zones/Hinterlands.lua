@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11413,
         zone = "The Hinterlands", creatureType = "Beast", npcId = 2923,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HIN02"] = {
         id = "HIN02", name = "Trained Razorbeak", cost = "{W}", cmc = 1, color = "W", type = "Creature",
@@ -27,11 +27,11 @@ TTS:AddCards({
         text = ""
     },
     ["HIN03"] = {
-        id = "HIN03", name = "Witherbark Hideskinner", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 6483,
+        id = "HIN03", name = "Witherbark Hideskinner", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
+        power = 2, toughness = 2, chainPull = true, isMob = true, isBoss = true, displayId = 6483,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2651,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Chain Pull."
     },
     ["HIN04"] = {
         id = "HIN04", name = "Primitive Owlbeast", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 2, haste = true, vigilance = true, isMob = true, isBoss = true, displayId = 6549,
         zone = "The Hinterlands", creatureType = "Humanoid", npcId = 2692,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Vigilant."
+        text = "Charge. Vigilant."
     },
     ["HIN06"] = {
         id = "HIN06", name = "Saltwater Snapjaw", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -66,14 +66,14 @@ TTS:AddCards({
         power = 6, toughness = 6, reach = true, isMob = true, isBoss = true, displayId = 6538,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2645,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["HIN09"] = {
         id = "HIN09", name = "Vilebranch Blood Drinker", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 6495,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2646,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["HIN10"] = {
         id = "HIN10", name = "Mith'rethis the Enchanter", cost = "{5}{U}{U}", cmc = 7, color = "U", type = "Creature",

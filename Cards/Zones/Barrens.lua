@@ -17,35 +17,35 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 9442,
         zone = "The Barrens", creatureType = "Humanoid", npcId = 3272,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["BRN02"] = {
         id = "BRN02", name = "Sunscale Screecher", cost = "{G}", cmc = 1, color = "G", type = "Creature",
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1747,
         zone = "The Barrens", creatureType = "Beast", npcId = 3255,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BRN03"] = {
         id = "BRN03", name = "Savannah Prowler", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 1973,
         zone = "The Barrens", creatureType = "Beast", npcId = 3425,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BRN04"] = {
         id = "BRN04", name = "Hecklefang Hyena", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2710,
         zone = "The Barrens", creatureType = "Beast", npcId = 4127,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["BRN05"] = {
         id = "BRN05", name = "Theramore Marine", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 2, toughness = 2, firstStrike = true, vigilance = true, isMob = true, isBoss = true, displayId = 1858,
         zone = "The Barrens", creatureType = "Humanoid", npcId = 3385,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Vigilant."
+        text = "Ambush. Vigilant."
     },
     ["BRN06"] = {
         id = "BRN06", name = "Stormsnout", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -66,7 +66,7 @@ TTS:AddCards({
         power = 5, toughness = 5, deathtouch = true, isMob = true, isBoss = true, displayId = 2731,
         zone = "The Barrens", creatureType = "Beast", npcId = 3252,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["BRN09"] = {
         id = "BRN09", name = "Stormhide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -74,7 +74,7 @@ TTS:AddCards({
         onDeath = { ops = { { op = "destroy", to = "strongest_enemy", only = { kw = "flying" } } } },
         zone = "The Barrens", creatureType = "Beast", npcId = 3238,
         modelCam = { zoom = 0.82, camScale = 1.02, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
+        text = "Cleave. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
     },
     ["BRN10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -89,7 +89,7 @@ TTS:AddCards({
         power = 2, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 4473,
         zone = "The Barrens", creatureType = "Beast", npcId = 3248,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     -- Solo reward
     ["BRN11"] = {
@@ -98,6 +98,6 @@ TTS:AddCards({
         zone = "The Barrens", creatureType = "Humanoid", npcEntry = 3432,
         rally = { tag = "zone", value = "The Barrens", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Gets +1/+0 for each other Barrens denizen you control."
+        text = "Charge. Gets +1/+0 for each other Barrens denizen you control."
     },
 })

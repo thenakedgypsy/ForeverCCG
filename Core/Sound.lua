@@ -1045,6 +1045,10 @@ local UI_SOUNDS = {
     -- The pop as the shaken pack tears open: a sound file (FileDataID), not a sound kit
     -- (sound/spells/spell_poppingcorn_cast_01.ogg)
     packPop  = { file = 568206 },
+    -- A rare card's drop toast, and a foil's or boss card's (UI\CardToast.lua): the game's
+    -- epic and legendary loot toasts
+    rareCard = { kit = "UI_EPICLOOT_TOAST",     id = 31578, legacy = "igQuestListComplete" },
+    foilCard = { kit = "UI_LEGENDARY_LOOT_TOAST", id = 63971, legacy = "LevelUp" },
 }
 
 -- Returns whether it will play, and its handle when the client gives one

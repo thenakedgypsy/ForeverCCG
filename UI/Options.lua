@@ -37,6 +37,7 @@ local DEFAULTS = {
     deckBuilderScale = 1,   -- Deckbuilder size (DeckBuilder.lua)
     mainScale = 1,          -- main window size (MainFrame.lua, TTS:AddScaleGrip in Dialog.lua)
     guideScale = 1,         -- Collection Guide size (CollectionGuide.lua)
+    endlessScale = 1,       -- Eternity Draft window size (Endless.lua)
     optionsScale = 1,       -- Settings window size (Options.lua)
     boardBackgrounds = true, -- themed image behind the battlefield in solo encounters (Board.lua)
     cardControls = "both",   -- "click", "drag" or "both" (CardDrag.lua)
@@ -52,6 +53,16 @@ local DEFAULTS = {
     windowOpacity = 1,       -- factor on every window's background opacity (WINDOWS SECTION)
     npcMinimap = true,       -- card NPCs on the minimap (UI\NpcTracker.lua)
     npcWorldMap = true,      -- card NPCs on the world map
+    cardToasts = true,       -- a rare, boss or foil card found pops up at the screen's edge (UI\CardToast.lua)
+    toastTier = "all",       -- which cards pop up: "all", "rare" (rare kinds and up) or "big" (foils and boss cards)
+    toastSound = true,       -- the pop-up's loot sound and the creature's voice
+    toastHoverHold = true,   -- a pop-up stays while the mouse is over it (up to a limit)
+    toastDuration = 6,       -- seconds a pop-up stays once turned over (foils and boss cards 2 more)
+    toastScale = 1,          -- the pop-up's size
+    -- toastPos: where it was dragged to, { x, y } of its right edge from the screen's (unset: the default)
+    guildShouts = true,      -- foils and boss cards told to the guild, and theirs shown to us
+    uiMotion = true,         -- windows and buttons animate a little (UI\Motion.lua)
+    mainExpand = {},         -- the main window's sections (collect, build, battle, pve, pvp): false = folded (MainFrame.lua)
     sound = {
         enabled   = true,   -- master switch (also the board's Sounds checkbox)
         creatures = true,
@@ -574,8 +585,128 @@ for i, key in ipairs({ "npcMinimap", "npcWorldMap" }) do
     O.npcChecks[key] = cb
 end
 
-local windowSection = CreateSection("options.windows", 66)
-windowSection:SetPoint("TOPLEFT", O.npcSection, "BOTTOMLEFT", 0, -8)
+-- =========================================================================
+-- COLLECTION SECTION
+-- The weekly backup reminder (Core\CollectionCode.lua). (On O: few locals left here.)
+-- =========================================================================
+O.collectionSection = CreateSection("options.collection", 58)
+O.collectionSection:SetPoint("TOPLEFT", O.npcSection, "BOTTOMLEFT", 0, -8)
+O.backupCheck = CreateCheck(O.collectionSection, 10, -30, "options.backupReminder")
+O.backupCheck:SetScript("OnClick", function(self)
+    O:Set("backupReminder", self:GetChecked() and true or false)
+end)
+
+-- =========================================================================
+-- CARD POP-UPS SECTION
+-- The toasts for rare, boss and foil cards found (UI\CardToast.lua): on or off, foils and
+-- boss cards only, their sound, holding while hovered, how long they stay and their size,
+-- with a test button (it can be dragged where it should go) and one putting it back at the
+-- screen's right edge. The guild shout-outs too. (In a function of its own: the file's main
+-- chunk is near Lua's 200 locals.)
+-- =========================================================================
+;(function()
+    local s = CreateSection("options.toasts", 310)
+    s:SetPoint("TOPLEFT", O.collectionSection, "BOTTOMLEFT", 0, -8)
+    O.toastSection = s
+    O.toastChecks = {}
+    local checks = {
+        { "cardToasts", 10, -30 },
+        { "toastSound", 30, -98 },
+        { "toastHoverHold", 30, -122 },
+        { "guildShouts", 10, -146 },
+    }
+
+    -- Which cards pop up: every card, rare kinds and up, or foils and boss cards only
+    -- (toastTier; label / tooltip: options.toastTier.<tier>[.desc])
+    local tierText = s:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    tierText:SetPoint("TOPLEFT", s, "TOPLEFT", 34, -58)
+    Loc:Bind(tierText, "options.toastTier")
+    O.toastTierRadios = {}
+    for i, tier in ipairs({ "all", "rare", "big" }) do
+        local key = "options.toastTier." .. tier
+        local rb = CreateFrame("CheckButton", nil, s, "UIRadioButtonTemplate")
+        rb:SetPoint("TOPLEFT", s, "TOPLEFT", 34 + (i - 1) * 90, -74)
+        rb.label = rb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        rb.label:SetPoint("LEFT", rb, "RIGHT", 4, 1)
+        Loc:Bind(rb.label, key)
+        Loc:OnReady(function() rb:SetHitRectInsets(0, -(rb.label:GetStringWidth() + 6), 0, 0) end)
+        rb:SetScript("OnClick", function()
+            O:Set("toastTier", tier)
+            O:SyncToastControls()
+    O.motionCheck:SetChecked(db.uiMotion ~= false)
+        end)
+        rb:SetScript("OnEnter", function(self)
+            if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(key), L(key .. ".desc")) end
+        end)
+        rb:SetScript("OnLeave", function(self) if TTS.Tooltip then TTS.Tooltip:Hide(self) end end)
+        rb.tier, rb.text = tier, tierText
+        O.toastTierRadios[i] = rb
+    end
+    for _, c in ipairs(checks) do
+        local key = c[1]
+        local cb = CreateCheck(s, c[2], c[3], "options." .. key)
+        cb:SetScript("OnClick", function(self)
+            O:Set(key, self:GetChecked() and true or false)
+            if O.SyncToastControls then O:SyncToastControls() end
+        end)
+        O.toastChecks[key] = cb
+    end
+
+    local duration = CreateSlider("TTS_OptionsToastDurationSlider", "options.toastDuration",
+        -178, 3, 15, 1, "toastDuration", "options.secondsShort", 1, s)
+    function duration:ShowValue(v) self.valueText:SetText(L("options.secondsShort", v)) end
+    local size = CreateSlider("TTS_OptionsToastScaleSlider", "options.toastScale",
+        -226, 0.6, 1.6, 0.05, "toastScale", "options.percent", 100, s)
+    function size:ShowValue(v) self.valueText:SetText(L("options.percent", math.floor(v * 100 + 0.5))) end
+    size:HookScript("OnValueChanged", function() if TTS.CardToast then TTS.CardToast:ApplyPlacement() end end)
+    O.toastSliders = { duration, size }
+
+    local function Button(key, x, onClick)
+        local b = CreateFrame("Button", nil, s, "UIPanelButtonTemplate")
+        b:SetSize(140, 22)
+        b:SetPoint("TOPLEFT", s, "TOPLEFT", x, -276)
+        Loc:Bind(b, key)
+        b:SetScript("OnClick", onClick)
+        b:SetScript("OnEnter", function(self)
+            if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(key), L(key .. ".desc")) end
+        end)
+        b:SetScript("OnLeave", function(self) if TTS.Tooltip then TTS.Tooltip:Hide(self) end end)
+        return b
+    end
+    O.toastTestBtn = Button("options.toastTest", 12, function()
+        if TTS.CardToast then TTS.CardToast:SlashCommand("") end
+    end)
+    O.toastResetBtn = Button("options.toastReset", 160, function()
+        if TTS.CardToast then TTS.CardToast:ResetPosition() end
+    end)
+
+    -- The pop-up's own settings grey out while pop-ups are off
+    function O:SyncToastControls()
+        local db = self:GetDB()
+        for key, cb in pairs(self.toastChecks) do cb:SetChecked(db[key] ~= false) end
+        local on = db.cardToasts ~= false
+        for _, key in ipairs({ "toastSound", "toastHoverHold" }) do
+            SetCheckEnabled(self.toastChecks[key], on)
+        end
+        local tier = TTS.CardToast and TTS.CardToast:TierSetting() or "all"
+        for _, rb in ipairs(self.toastTierRadios) do
+            rb:SetChecked(rb.tier == tier)
+            if on then rb:Enable() else rb:Disable() end
+            rb.label:SetFontObject(on and "GameFontHighlightSmall" or "GameFontDisableSmall")
+        end
+        self.toastTierRadios[1].text:SetFontObject(on and "GameFontHighlightSmall" or "GameFontDisableSmall")
+        for _, sl in ipairs(self.toastSliders) do
+            local v = tonumber(db[sl.key]) or (sl.key == "toastScale" and 1 or 6)
+            sl:SetValue(v)
+            sl:ShowValue(v)
+            sl:SetAlpha(on and 1 or 0.4)
+        end
+        if on then self.toastTestBtn:Enable() else self.toastTestBtn:Disable() end
+    end
+end)()
+
+local windowSection = CreateSection("options.windows", 90)
+windowSection:SetPoint("TOPLEFT", O.toastSection, "BOTTOMLEFT", 0, -8)
 
 local OPACITY_ROOTS = { "TTS_MainDialog", "TTS_BoardFrame", "TTS_BoardRestoreFrame", "TTS_OptionsFrame",
     "TTS_DeckBuilderFrame", "TTS_DeckPicker", "TTS_RulesFrame", "TTS_SoloSelectFrame", "TTS_DungeonEntryFrame",
@@ -629,6 +760,10 @@ function opacitySlider:ShowValue(v)
     self.valueText:SetText(L("options.percent", math.floor(v * 100 + 0.5)))
 end
 opacitySlider:HookScript("OnValueChanged", function() O:ApplyOpacity() end)
+
+-- Windows opening, buttons and panels moving a little (UI\Motion.lua)
+O.motionCheck = CreateCheck(windowSection, 10, -64, "options.uiMotion")
+O.motionCheck:SetScript("OnClick", function(self) O:Set("uiMotion", self:GetChecked() and true or false) end)
 
 -- =========================================================================
 -- LANGUAGE SECTION
@@ -741,7 +876,7 @@ end)
 -- The scrolled content: every section, the gaps between them, and a little room at each end
 local function UpdateContentHeight()
     local h = 8
-    for _, section in ipairs({ soundSection, tipSection, boardSection, O.npcSection, windowSection, langSection, devSection }) do
+    for _, section in ipairs({ soundSection, tipSection, boardSection, O.npcSection, O.collectionSection, O.toastSection, windowSection, langSection, devSection }) do
         h = h + section:GetHeight() + 8
     end
     content:SetHeight(h)
@@ -821,6 +956,8 @@ function O:SyncControls()
     effectsCheck:SetChecked(db.cardEffects ~= false)
     zoneArtCheck:SetChecked(db.cardZoneArt ~= false)
     for key, cb in pairs(O.npcChecks) do cb:SetChecked(db[key] == true) end
+    O.backupCheck:SetChecked(db.backupReminder ~= false)
+    O:SyncToastControls()
     nudgeCheck:SetChecked(db.actNudge ~= false)
     nudgeSlider:SetValue(db.actNudgeWait or 10)
     nudgeSlider:ShowValue(db.actNudgeWait or 10)

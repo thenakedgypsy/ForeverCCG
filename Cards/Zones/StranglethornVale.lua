@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2437,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 683,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STV02"] = {
         id = "STV02", name = "Kurzen Medicine Man", cost = "{W}", cmc = 1, color = "W", type = "Creature",
@@ -31,21 +31,21 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 320,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 682,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STV04"] = {
         id = "STV04", name = "Venture Co. Geologist", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 7197,
+        power = 2, toughness = 2, fireShield = 1, isMob = true, isBoss = true, displayId = 7197,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", faction = "Venture Co.", npcId = 1096,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Fire Shield 1."
     },
     ["STV05"] = {
         id = "STV05", name = "Stranglethorn Tigress", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 614,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 772,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STV06"] = {
         id = "STV06", name = "Jungle Thunderer", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -59,7 +59,7 @@ TTS:AddCards({
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 838,
         zone = "Stranglethorn Vale", creatureType = "Beast", npcId = 1557,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["STV08"] = {
         id = "STV08", name = "Venture Co. Strip Miner", cost = "{3}{W}{W}", cmc = 5, color = "W", type = "Creature",
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 9, toughness = 9, hexproof = true, isMob = true, isNamed = true, isBoss = true, displayId = 4910,
         zone = "Stranglethorn Vale", creatureType = "Humanoid", npcId = 2541,
         modelCam = { zoom = 0.58, camScale = 1.20, z = -0.14, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     -- Solo reward
     ["STV11"] = {
@@ -91,6 +91,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Stranglethorn Vale", p = 1 },
         etb = { ops = { { op = "damage", to = "enemy_creatures", n = 2, filter = { tag = "type", value = "Beast" } } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. Arrival: Deal 2 damage to each enemy Beast. Other Stranglethorn Vale denizens you control get +1/+0."
+        text = "Ranged. Arrival: Deal 2 damage to each enemy Beast. Other Stranglethorn Vale denizens you control get +1/+0."
     },
 })

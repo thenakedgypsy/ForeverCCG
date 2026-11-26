@@ -18,14 +18,14 @@ TTS:AddCards({
         power = 1, toughness = 1, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 10033,
         zone = "Riverglades", creatureType = "Beast", npcId = 262037,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Drain."
+        text = "Airborne. Leech."
     },
     ["RIV02"] = {
         id = "RIV02", name = "Young Paletusk", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 6807,
         zone = "Riverglades", creatureType = "Beast", npcId = 258331,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["RIV03"] = {
         id = "RIV03", name = "High Plains Buzzard", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -39,7 +39,7 @@ TTS:AddCards({
         power = 2, toughness = 4, reach = true, isMob = true, isBoss = true, displayId = 1284,
         zone = "Riverglades", creatureType = "Beast", npcId = 263348,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["RIV05"] = {
         id = "RIV05", name = "Twilight Peon", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 3, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 3027,
         zone = "Riverglades", creatureType = "Beast", npcId = 255851,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["RIV07"] = {
         id = "RIV07", name = "Freshwater Crocolisk", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
@@ -67,28 +67,28 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 147688,
         zone = "Riverglades", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 256795,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["RIV09"] = {
         id = "RIV09", name = "Twilight Corrupter", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 4, toughness = 5, lifelink = true, isMob = true, isBoss = true, displayId = 139817,
         zone = "Riverglades", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 256797,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["RIV10"] = {
         id = "RIV10", name = "Twilight Enforcer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 142910,
         zone = "Riverglades", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 256800,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["RIV12"] = {
         id = "RIV12", name = "Twilight Champion", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 6, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 139889,
         zone = "Riverglades", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 256799,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["RIV13"] = {
         id = "RIV13", name = "Overlord Kilgar", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -105,6 +105,6 @@ TTS:AddCards({
         zone = "Riverglades", creatureType = "Humanoid", npcEntry = 257558,
         anthem = { tag = "zone", value = "Riverglades", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Vigilant. Other Riverglades denizens you control get +1/+0."
+        text = "Charge. Vigilant. Other Riverglades denizens you control get +1/+0."
     },
 })

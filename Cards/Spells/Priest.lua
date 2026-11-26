@@ -15,7 +15,7 @@ TTS:AddCards({
     -- PRIEST
     ["PRI01"] = {
         id = "PRI01", name = "Power Word: Shield", cost = "{W}", cmc = 1, color = "W", type = "Sorcery", class = "Priest",
-        text = "Prevent the next 4 damage to you, or target denizen you control gains Shielded and permanently gets +1/+1.",
+        text = "Prevent the next 4 damage to you, or target denizen you control gains Absorb and permanently gets +1/+1.",
         art = "Interface\\Icons\\Spell_Holy_PowerWordShield",
         effect = { target = "friendly_any", ops = { { op = "shield", to = "target", n = 4, playerOnly = true }, { op = "shielded", to = "target" }, { op = "buff", to = "target", p = 1, t = 1, perm = true } } }
     },
@@ -63,7 +63,7 @@ TTS:AddCards({
     },
     ["PRI09"] = {
         id = "PRI09", name = "Mind Control", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Sorcery", class = "Priest",
-        text = "Gain control of target enemy denizen until end of turn. Recover it. It gains Quick.",
+        text = "Gain control of target enemy denizen until end of turn. Recover it. It gains Charge.",
         art = "Interface\\Icons\\Spell_Shadow_ShadowWordDominate",
         effect = { target = "enemy_creature", ops = { { op = "steal", to = "target", untilEnd = true } } }
     },

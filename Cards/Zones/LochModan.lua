@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 827,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1195,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["LOC03"] = {
         id = "LOC03", name = "Loch Frenzy", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 3027,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1191,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["LOC06"] = {
         id = "LOC06", name = "Mountain Buzzard", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -59,28 +59,28 @@ TTS:AddCards({
         power = 3, toughness = 4, trample = true, isMob = true, isBoss = true, displayId = 1208,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1192,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["LOC08"] = {
         id = "LOC08", name = "Black Bear Patriarch", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 5, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 762,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1189,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["LOC09"] = {
         id = "LOC09", name = "Young Threshadon", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 6, toughness = 6, trample = true, isMob = true, isBoss = true, displayId = 867,
         zone = "Loch Modan", creatureType = "Beast", npcId = 1224,
         modelCam = { zoom = 0.54, camScale = 1.22, z = -0.14, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["LOC10"] = {
         id = "LOC10", name = "Large Loch Crocolisk", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",
         power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, displayId = 831,
         zone = "Loch Modan", creatureType = "Beast", npcId = 2476,
         modelCam = { zoom = 0.81, camScale = 1.03, z = -0.11, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["LOC11"] = {
@@ -89,6 +89,6 @@ TTS:AddCards({
         zone = "Loch Modan", creatureType = "Humanoid", npcEntry = 1343,
         rally = { tag = "zone", value = "Loch Modan", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Gets +1/+1 for each other Loch Modan denizen you control."
+        text = "Ambush. Gets +1/+1 for each other Loch Modan denizen you control."
     },
 })

@@ -33,6 +33,7 @@ local function Settlement(code, name, sphere, zone, effect, text)
         card.ability = effect
     else
         card.anthem, card.enemyAnthem, card.onTurnStart = effect.anthem, effect.enemyAnthem, effect.onTurnStart
+        card.gearDiscount = effect.gearDiscount   -- your Gear Cards cost this much less (E:CastCost)
     end
     return id, card
 end
@@ -80,7 +81,7 @@ Add("LOC", "Thelsamar", "R", "Loch Modan",
     "Denizens you control get +0/+2.")
 Add("SIL", "Pyrewood Village", "B", "Silverpine Forest",
     Tap("{2}", Buff(2, 0, { "trample" }), "friendly_creature"),
-    "{T}, {2}: Target denizen you control gets +2/+0 and Brutish until end of turn.")
+    "{T}, {2}: Target denizen you control gets +2/+0 and Cleave until end of turn.")
 Add("RED", "Lakeshire", "G", "Redridge Mountains",
     Aura("type", "Humanoid", 1, 1),
     "Humanoids you control get +1/+1.")
@@ -98,7 +99,7 @@ Add("ALT", "Strahnbrad", "B", "Alterac Mountains",
     "{T}, {4}: Destroy target enemy denizen with power 2 or less.")
 Add("ARA", "Faldir's Cove", "U", "Arathi Highlands",
     Tap("{2}", Buff(0, 0, { "unblockable" }), "friendly_creature"),
-    "{T}, {2}: Target denizen you control gains Invisible until end of turn.")
+    "{T}, {2}: Target denizen you control gains Stealth until end of turn.")
 Add("STV", "Nesingwary's Expedition", "G", "Stranglethorn Vale",
     EnemyAura("type", "Beast", -1, -1),
     "Enemy Beasts get -1/-1.")
@@ -110,7 +111,7 @@ Add("SWA", "Stonard", "G", "Swamp of Sorrows",
     "{T}, {4}: Spawn: 1 Sawtooth Crocolisk Add (3/3).")
 Add("HIN", "Revantusk Village", "R", "The Hinterlands",
     Aura("faction", "Troll", 1, 0, { "haste" }),
-    "Trolls you control get +1/+0 and Quick.")
+    "Trolls you control get +1/+0 and Charge.")
 Add("SEA", "Thorium Point", "R", "Searing Gorge",
     Aura("type", "Elemental", 1, 1),
     "Elementals you control get +1/+1.")
@@ -122,7 +123,7 @@ Add("BUR", "Flame Crest", "R", "Burning Steppes",
     "Dragonkin you control get +2/+1.")
 Add("WPL", "Andorhal", "B", "Western Plaguelands",
     Tap("{4}", { { op = "steal", to = "target", untilEnd = true, only = { maxPower = 3 } } }, "enemy_creature"),
-    "{T}, {4}: Gain control of target enemy denizen with power 3 or less until end of turn. Recover it. It gains Quick.")
+    "{T}, {4}: Gain control of target enemy denizen with power 3 or less until end of turn. Recover it. It gains Charge.")
 Add("EPL", "Terrordale", "B", "Eastern Plaguelands",
     Tap("{3}", { { op = "dot", to = "enemy_player", n = 1, turns = 2 } }),
     "{T}, {3}: The opponent takes 1 damage at the start of each of your next 2 turns.")
@@ -130,7 +131,7 @@ Add("EPL", "Terrordale", "B", "Eastern Plaguelands",
 -- ---- Kalimdor ------------------------------------------------------------
 Add("DUR", "Razor Hill", "R", "Durotar",
     Tap("{3}", Spawn("TOK10")),
-    "{T}, {3}: Spawn: 1 Peon Add (2/1, Quick).")
+    "{T}, {3}: Spawn: 1 Peon Add (2/1, Charge).")
 Add("MUL", "Bloodhoof Village", "G", "Mulgore",
     Tap(nil, { { op = "mana", color = "G", n = 1 } }),
     "{T}: Add {G} to your mana pool.")
@@ -138,20 +139,20 @@ Add("TEL", "Ban'ethil Barrow Den", "G", "Teldrassil",
     Tap("{3}", Buff(1, 1, nil, true), "friendly_creature"),
     "{T}, {3}: Target denizen you control permanently gets +1/+1.")
 Add("DAR", "Auberdine", "U", "Darkshore",
-    Tap("{2}", { { op = "tap", to = "target" } }, "enemy_creature"),
-    "{T}, {2}: Exhaust target enemy denizen.")
-Add("BRN", "Ratchet", "U", "The Barrens",
     Tap("{2}", Spawn("TOK01")),
     "{T}, {2}: Spawn: 1 Murloc Tadpole Add (1/1).")
+Add("BRN", "Ratchet", "U", "The Barrens",
+    { gearDiscount = 1 },
+    "Your Gear Cards cost {1} less (but never less than 1).")
 Add("STO", "Sun Rock Retreat", "U", "Stonetalon Mountains",
     Tap("{4}", { { op = "tuck", to = "target", only = { maxCmc = 3 } } }, "enemy_creature"),
     "{T}, {4}: Put target enemy denizen that costs 3 or less on top of its owner's deck.")
 Add("ASH", "Astranaar", "G", "Ashenvale",
     Aura("any", nil, 0, 1, { "reach" }),
-    "Denizens you control get +0/+1 and Anti-Air.")
+    "Denizens you control get +0/+1 and Ranged.")
 Add("THO", "Mirage Raceway", "R", "Thousand Needles",
     Aura("any", nil, 0, 0, { "haste" }),
-    "Denizens you control have Quick.")
+    "Denizens you control have Charge.")
 Add("DES", "Shadowprey Village", "B", "Desolace",
     Tap("{2}", Spawn("TOK03")),
     "{T}, {2}: Spawn: 1 Skeleton Add (1/1).")
@@ -160,7 +161,7 @@ Add("DUS", "Theramore Isle", "U", "Dustwallow Marsh",
     "Enemy denizens get -1/-0.")
 Add("FER", "Camp Mojache", "R", "Feralas",
     Aura("faction", "Ogre", 1, 1, { "trample" }),
-    "Ogres you control get +1/+1 and Brutish.")
+    "Ogres you control get +1/+1 and Cleave.")
 Add("TAN", "Gadgetzan", "W", "Tanaris",
     Aura("type", "Mechanical", 2, 1),
     "Mechanicals you control get +2/+1.")
@@ -172,7 +173,7 @@ Add("FEL", "Emerald Sanctuary", "G", "Felwood",
     "Beasts you control get +1/+1.")
 Add("UNG", "Marshal's Refuge", "G", "Un'Goro Crater",
     Aura("type", "Beast", 1, 0, { "trample" }),
-    "Beasts you control get +1/+0 and Brutish.")
+    "Beasts you control get +1/+0 and Cleave.")
 Add("SLI", "Twilight Post", "B", "Silithus",
     { onTurnStart = { ops = { { op = "damage", to = "enemy_player", n = 1 }, { op = "heal", to = "self_player", n = 1 } } } },
     "At the start of your turn, deal 1 damage to the opponent. You regain 1 life.")

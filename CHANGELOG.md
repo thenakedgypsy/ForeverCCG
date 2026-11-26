@@ -1,3 +1,33 @@
+## 1.4.0
+*   new: the Daily Challenge - everyone faces the same opponent each day, with extra life, one curse and one twist that change the game. Play it with your own deck as often as you like; your first win each day gives a Dungeons booster pack. The minimap button's tooltip shows whether today's reward is still to be won
+*   new: the Eternity Draft - draft a 20-card deck (12 picks from offers of 5, then 8 Prayers; you don't need to own the cards), then fight one opponent after another until you lose. After each win add a card from the opponent you beat, add a Prayer, or cut a card. Every 8th fight is a dungeon milestone that pays a booster pack. Your run is saved between sessions
+*   eternity draft: the window can be resized - drag the grip in its bottom-right corner. It remembers its size. A card's "Rare" label now sits under it, clear of the card's name
+*   new: Campaign prizes - win every zone for Brann Bronzebeard, and every zone and dungeon for Ashbringer, a Gear Card that gives +3/+3, Leech and Ambush for good (always foil). Each full round of wins earns another copy, up to 4. Wins from before 1.4 count
+*   new: hero talents - every 10 levels your hero card takes one of three talents, one for each of your class's specs: stats, keywords, Arrival and Aggro effects. At level 60 it takes a signature ability. A full hero costs 6 and is one of the strongest cards in the game
+*   hero card: one copy per deck now. Everyone's earlier hero upgrades and copies were reset with this update: open the Deckbuilder to choose a talent for each 10 levels you've reached. Each class has its own talents, shared by your characters of that class, and the Talents button in the Deckbuilder resets them
+*   new: 24 Murlocs to collect along the coasts of Westfall, Darkshore, the Wetlands, Hillsbrad Foothills and the Swamp of Sorrows, led by Old Murk-Eye and Gobbler
+*   keywords: renamed to WoW's own terms - Quick is now Charge, Anti-Air Ranged, Strikes-First Ambush, Fatal Execute, Drain Leech, Brutish Cleave, Warded Anti-Magic, Shielded Absorb, Blocker Protection, Invisible Stealth and Bulwark Shield Wall. They work as before
+*   keywords: Enrage is stronger - +2/+0 for each damage marked on the denizen (was +1/+0)
+*   new keyword: Chain Pull - as it arrives, it fetches a denizen of its faction with a different name from your deck, revealed to both players, then your deck is shuffled. On Defias Thug, Murloc Flesheater, Dark Iron Kidnapper, Bristleback Quilboar, Scarlet Torturer, Witherbark Hideskinner and Dragonmaw Raider, each a little weaker to pay for it
+*   cards: ten more critters for everyone, two in each colour (Chicken, Hare, Toad, Crab, Tainted Cockroach, Snake, Fire Beetle, Lava Crab, Skunk, Frog), overpriced as critters are. And a secret for those who hunt them
+*   new keyword: Fire Shield - whatever blocks it, or is blocked by it, takes extra damage. Venture Co. Geologist has Fire Shield 1
+*   new keyword: Sunder - what it deals combat damage to loses toughness over the next turns. Caverndeep Burrower is now 1/5 with Sunder 2
+*   cards: Aggem Thorncurse is now 4/5 Leech with {3}: Spawn a 5/1 Blink Boar Spirit
+*   cards: Celebras the Cursed is now 5/6 Leech; when it attacks, two 2/1 Treants join the attack
+*   cards: Ratchet now makes your Gear Cards cost {1} less (never below 1). Its Murloc Tadpoles moved to Auberdine
+*   cards: Scarlet paladins bless and raise - Crimson Initiate (Arrival: +1/+1 to a friendly denizen), Crimson Gallant (Arrival: Absorb to a friendly denizen), Malor the Zealous (Arrival: return a denizen from your graveyard), Scarlet High Clerist (Arrival: your denizens gain Absorb)
+*   cards: Furbolg shamans drop totems - Gnarlpine Shaman spawns a Windfury Totem (your other denizens +1/+0), Timbermaw Shaman a Stoneskin Totem (+0/+1)
+*   cards: Rot Hide Brute is now 2/1 Cleave; Vile Familiar has Arrival: 1 damage to a denizen or the opponent
+*   cards: Lupine Horror is now {4}{B}{B} 3/3 and arrives with two 2/1 Lupine Delusions that block; Rotting Dead {2}{B}{B} 2/2 with Arrival: 2 damage to a denizen or the opponent; Vile Fin Minor Oracle {1}{U}{U} 2/3, other Murlocs you control get +1/+0; Wretched Zombie 2/1; Pridewing Wyvern gains Shield Wall 2; Var'Taka now counts as Naga
+*   new: card pop-ups - every card you find pops up on screen and turns over, with a flash in its colour and the creature's voice. Drag it where you like. Settings > Card Pop-ups chooses which cards pop up (all, rare and up, or foils and boss cards), how long they stay, their size and sound. They wait until you leave combat
+*   new: guild shout-outs - your guild hears when you find a foil or a boss card, and you hear when they do. Only guildmates with Forever: CCG see it. Switch it off under Card Pop-ups
+*   games: a /reload (or logging out) mid-game no longer ends it - when you're back you're asked to resume it where you left off. In PvP anything your opponent did meanwhile catches up, and they're told you're back; you have 10 minutes, and abandoning counts as a loss. A solo game can be resumed for a day. /tragic resume asks again
+*   main window: PvE and PvP are right there in the main window now. Click the header of any section (Collect, Build, Battle, PvE, PvP) to fold it away or open it again; the window remembers
+*   windows: windows fade and grow into place as they open, buttons glow while hovered and panels light up under the mouse. Switch it off in Settings > Windows
+*   collection: a weekly reminder to back up your collection, and Export / Import buttons in the Collection Guide too. You can turn the reminder off in Settings
+*   waiting room: recent players are listed by collection score
+*   Rules & Guide: a page on the new modes, with every curse and twist; Fire Shield, Sunder and Chain Pull in the keywords; hero talents, card pop-ups and resuming games explained
+
 ## 1.3.14
 *   npcs: works with the DialogueUI addon. Card gifts and duel offers ("Any spare cards?", "Fancy a game of Forever: CCG?") now show as options in DialogueUI's window, with the NPC's answer above them. On a single quest page they show in a panel beside the window
 
@@ -509,4 +539,4 @@
 ## 0.9.3
 
 *   fIxed icons
-*   updated rules text
+*   updated rules text

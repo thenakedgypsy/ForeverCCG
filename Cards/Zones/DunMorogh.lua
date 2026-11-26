@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 855,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 705,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DUN02"] = {
         id = "DUN02", name = "Burly Rockjaw Trogg", cost = "{R}", cmc = 1, color = "R", type = "Creature",
@@ -31,7 +31,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 11416,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 704,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DUN04"] = {
         id = "DUN04", name = "Frostmane Troll Whelp", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 2, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 607,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1125,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DUN06"] = {
         id = "DUN06", name = "Wendigo", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -59,21 +59,21 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 954,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1201,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DUN08"] = {
         id = "DUN08", name = "Winter Wolf", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
         power = 6, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 785,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1131,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DUN09"] = {
         id = "DUN09", name = "Ice Claw Bear", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 6, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 8840,
         zone = "Dun Morogh", creatureType = "Beast", npcId = 1196,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["DUN10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -81,7 +81,7 @@ TTS:AddCards({
         power = 9, toughness = 9, trample = true, isMob = true, isNamed = true, isBoss = true, displayId = 830,
         zone = "Dun Morogh", creatureType = "Humanoid", npcId = 1119,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["DUN11"] = {

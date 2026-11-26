@@ -3083,10 +3083,16 @@ local function ApplyModelCamera(f, card)
 end
 
 -- Card art colour: art keeps its own colours (dual prayers have their own coloured
--- rune art). shade (default 1) darkens it, e.g. for a tapped card.
+-- rune art), unless the card asks for a hue (card.artTint = { r, g, b }, e.g. Ashbringer's
+-- gold). shade (default 1) darkens it, e.g. for a tapped card.
 local function TintArt(tex, card, shade)
     shade = shade or 1
-    tex:SetVertexColor(shade, shade, shade)
+    local t = card and card.artTint
+    if t then
+        tex:SetVertexColor(t[1] * shade, t[2] * shade, t[3] * shade)
+    else
+        tex:SetVertexColor(shade, shade, shade)
+    end
 end
 TTS.TintArt = TintArt
 
@@ -3574,6 +3580,7 @@ local function UpdateTuckedFrames(f, perm)
             tf:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, stepY * k)
             ApplyFrameTexture(tf.border, s.card)
             tf.art:SetTexture(s.card.art or "Interface\\Icons\\INV_Misc_QuestionMark")
+            TintArt(tf.art, s.card)
             tf.border:SetVertexColor(s.r, s.g, s.b)
             tf:Show()
         else
@@ -4060,6 +4067,7 @@ local function ApplyDraws()
             if face and not proxy.faceShown then
                 ApplyFrameTexture(proxy.border, d.card)
                 proxy.art:SetTexture(d.card and d.card.art)
+                TTS.TintArt(proxy.art, d.card)
                 proxy.art:SetShown(d.card and d.card.art and true or false)
             end
             proxy.faceShown = face
@@ -4482,7 +4490,9 @@ function B:UpdateDisplay()
             f.title:SetText(TTS:CardName(card))
 
             if card.cost and card.cost ~= "" then
-                f.cost:SetText(TTS:FormatCost(card.cost, 16))
+                -- (what it costs now: a Gear Card is cheaper with Ratchet out, E:CastCost)
+                local now = E.CastCost and E:CastCost(card, false) or card.cost
+                f.cost:SetText(TTS:FormatCost(now ~= "" and now or "{0}", 16))
                 f.cost:Show()
             else
                 f.cost:Hide()

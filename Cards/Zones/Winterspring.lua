@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 1, toughness = 2, bulwark = 2, flying = true, isMob = true, isBoss = true, displayId = 10810,
         zone = "Winterspring", creatureType = "Beast", npcId = 7448,
         modelCam = { zoom = 0.77, camScale = 1.06, z = -0.11, rotation = 0.15 },
-        text = "Airborne. Bulwark 2."
+        text = "Airborne. Shield Wall 2."
     },
     ["WIN05"] = {
         id = "WIN05", name = "Moontouched Owlbeast", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -73,7 +73,7 @@ TTS:AddCards({
         power = 7, toughness = 6, enrage = true, firstStrike = true, isMob = true, isBoss = true, displayId = 11444,
         zone = "Winterspring", creatureType = "Beast", npcId = 7433,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Enrage."
+        text = "Ambush. Enrage."
     },
     ["WIN10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates

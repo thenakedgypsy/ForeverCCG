@@ -25,35 +25,35 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 130072,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246602,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["DAL03"] = {
         id = "DAL03", name = "Mana Phantom", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 130112,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246683,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["DAL04"] = {
         id = "DAL04", name = "Seeking Remnant", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 3, reach = true, isMob = true, isBoss = true, displayId = 130224,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 247003,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["DAL05"] = {
         id = "DAL05", name = "Saturated Remnant", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 130223,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 247001,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["DAL06"] = {
         id = "DAL06", name = "Phantasm", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 2, toughness = 4, hexproof = true, isMob = true, isBoss = true, displayId = 130218,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246990,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["DAL07"] = {
         id = "DAL07", name = "Fragmented Sentry", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 130220,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 246993,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["DAL11"] = {
         id = "DAL11", name = "Arcane Elemental", cost = "{3}{U}", cmc = 4, color = "U", type = "Creature",
@@ -104,7 +104,7 @@ TTS:AddCards({
         power = 4, toughness = 5, reach = true, isMob = true, isBoss = true, displayId = 130229,
         zone = "City of Dalaran", creatureType = "Elemental", npcId = 247016,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["DAL14"] = {
         id = "DAL14", name = "Mana Wraith", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
@@ -142,7 +142,7 @@ TTS:AddCards({
         power = 5, toughness = 5, lifelink = true, isMob = true, isBoss = true, displayId = 129895,
         zone = "City of Dalaran", creatureType = "Demon", npcId = 246008,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["DAL19"] = {
         id = "DAL19", name = "Lyn the Ignored", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
@@ -176,6 +176,6 @@ TTS:AddCards({
         zone = "City of Dalaran", creatureType = "Humanoid", npcEntry = 246748,
         anthem = { tag = "zone", value = "City of Dalaran", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded. Blink. Other City of Dalaran denizens you control get +1/+1."
+        text = "Anti-Magic. Blink. Other City of Dalaran denizens you control get +1/+1."
     },
 })

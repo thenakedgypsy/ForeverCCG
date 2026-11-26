@@ -15,24 +15,24 @@ TTS:AddCards({
     -- GNOMEREGAN
     ["GNO01"] = {
         id = "GNO01", name = "Caverndeep Burrower", cost = "{1}{R}", cmc = 2, color = "R", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 830,
+        power = 1, toughness = 5, sunder = 2, isMob = true, isBoss = true, displayId = 830,
         zone = "Gnomeregan", creatureType = "Humanoid", npcId = 6206,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Sunder 2."
     },
     ["GNO02"] = {
         id = "GNO02", name = "Leprous Defender", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 5, reach = true, support = true, isMob = true, isBoss = true, displayId = 6982,
         zone = "Gnomeregan", creatureType = "Humanoid", npcId = 6223,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Anti-Air."
+        text = "Support. Ranged."
     },
     ["GNO03"] = {
         id = "GNO03", name = "Mechano-Flamewalker", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6890,
         zone = "Gnomeregan", creatureType = "Mechanical", npcId = 6226,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["GNO04"] = {
         id = "GNO04", name = "Mechano-Frostwalker", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 2, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 5497,
         zone = "Gnomeregan", creatureType = "Elemental", npcId = 7079,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["GNO06"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -54,14 +54,14 @@ TTS:AddCards({
         power = 6, toughness = 6, shielded = true, isMob = true, isBoss = true, displayId = 6669,
         zone = "Gnomeregan", creatureType = "Humanoid", faction = "Dark Iron", npcId = 6228,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Shielded."
+        text = "Absorb."
     },
     ["GNO07"] = {
         id = "GNO07", name = "Electrocutioner 6000", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
         power = 6, toughness = 6, firstStrike = true, isMob = true, isBoss = true, displayId = 6915,
         zone = "Gnomeregan", creatureType = "Mechanical", npcId = 6235,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["GNO08"] = {
         id = "GNO08", name = "Crowd Pummeler 9-60", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
@@ -69,7 +69,7 @@ TTS:AddCards({
         zone = "Gnomeregan", creatureType = "Mechanical", npcId = 6229,
         anthem = { tag = "type", value = "Mechanical", p = 1, t = 1 },
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Bulwark 2. Other Mechanicals you control get +1/+1."
+        text = "Cleave. Shield Wall 2. Other Mechanicals you control get +1/+1."
     },
     -- Solo reward
     ["GNO09"] = {
@@ -78,6 +78,6 @@ TTS:AddCards({
         zone = "Gnomeregan", creatureType = "Humanoid", npcEntry = 7361,
         anthem = { tag = "zone", value = "Gnomeregan", p = 1, kw = { "trample" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Gnomeregan denizens you control get +1/+0 and Brutish."
+        text = "Cleave. Other Gnomeregan denizens you control get +1/+0 and Cleave."
     },
 })

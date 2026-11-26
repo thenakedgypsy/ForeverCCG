@@ -89,7 +89,7 @@ local CARDS = {
     Prayer("MNG01", "mining", 1, "Copper Vein", "R", "INV_Ore_Copper_01",
         "Deplete 2. {T}: Add {R}{R}.", Deplete(2, "R", "R")),
     Gear("MNG02", "mining", 75, "Miner's Pick", 2, 2, 0, { "trample" }, "INV_Pick_02",
-        "Equip: +2/+0 and Brutish.", nil, { "weapon", 2901 }),
+        "Equip: +2/+0 and Cleave.", nil, { "weapon", 2901 }),
     Prayer("MNG03", "mining", 150, "Mithril Deposit", "R", "INV_Ore_Mithril_02",
         "Deplete 3. {T}: Add {R}{W}.", Deplete(3, "R", "W")),
     Prayer("MNG04", "mining", 225, "Rich Thorium Vein", "R", "INV_Ore_Thorium_02",
@@ -99,7 +99,7 @@ local CARDS = {
     Prayer("HRB01", "herbalism", 1, "Peacebloom Patch", "G", "INV_Misc_Flower_02",
         "Arrival: Gain 2 life. {T}: Add {G} or {W}.", { colors = { "G", "W" }, etb = Heal(2) }),
     Gear("HRB02", "herbalism", 75, "Swiftthistle Sprig", 1, 1, 1, { "haste" }, "INV_Misc_Herb_04",
-        "Equip: +1/+1 and Quick."),
+        "Equip: +1/+1 and Charge."),
     Prayer("HRB03", "herbalism", 150, "Kingsblood Patch", "G", "INV_Misc_Herb_03",
         "Deplete 3. {T}: Add {G}{R}.", Deplete(3, "G", "R")),
     Prayer("HRB04", "herbalism", 225, "Black Lotus", "C", "INV_Misc_Herb_BlackLotus",
@@ -108,23 +108,23 @@ local CARDS = {
 
     -- SKINNING
     Gear("SKN01", "skinning", 1, "Skinning Knife", 1, 1, 0, { "firstStrike" }, "INV_Weapon_ShortBlade_01",
-        "Equip: +1/+0 and Strikes-First.", nil, { "weapon", 7005 }),
+        "Equip: +1/+0 and Ambush.", nil, { "weapon", 7005 }),
     Prayer("SKN02", "skinning", 75, "Rugged Leather Cache", "G", "INV_Misc_LeatherScrap_02",
         "Arrives Exhausted. Arrival: Draw 1. {T}: Add {G}.", { entersTapped = true, etb = { ops = { DRAW } } }),
     Prayer("SKN03", "skinning", 150, "Thick Hide Rack", "G", "INV_Misc_Pelt_Bear_Ruin_01",
         "Deplete 3. {T}: Add {G}{B}.", Deplete(3, "G", "B")),
     Gear("SKN04", "skinning", 225, "Pip's Skinner", 4, 3, 1, { "deathtouch" }, "INV_Sword_33",
-        "Equip: +3/+1 and Fatal.", nil, { "weapon", 12709 }),
+        "Equip: +3/+1 and Execute.", nil, { "weapon", 12709 }),
 
     -- BLACKSMITHING
     Gear("BSM01", "blacksmithing", 1, "Copper Claymore", 2, 2, 1, { "trample" }, "INV_Sword_21",
-        "Equip: +2/+1 and Brutish.", nil, { "weapon", 7955 }),
+        "Equip: +2/+1 and Cleave.", nil, { "weapon", 7955 }),
     Prayer("BSM02", "blacksmithing", 75, "Ironforge Anvil", "R", "Trade_BlackSmithing",
         "Workshop. {T}: Add {R} or {W}.", Workshop("R", "W")),
     Gear("BSM03", "blacksmithing", 150, "Hardened Iron Shortsword", 3, 2, 2, { "firstStrike" }, "INV_Sword_20",
-        "Equip: +2/+2 and Strikes-First.", nil, { "weapon", 3849 }),
+        "Equip: +2/+2 and Ambush.", nil, { "weapon", 3849 }),
     Gear("BSM04", "blacksmithing", 225, "Arcanite Reaper", 6, 5, 1, { "trample", "haste" }, "INV_Axe_09",
-        "Equip: +5/+1, Brutish and Quick.", nil, { "weapon", 12784 }),
+        "Equip: +5/+1, Cleave and Charge.", nil, { "weapon", 12784 }),
 
     -- LEATHERWORKING
     Gear("LTW01", "leatherworking", 1, "Embossed Leather Vest", 1, 0, 2, { "vigilance" }, "INV_Chest_Leather_09",
@@ -134,25 +134,25 @@ local CARDS = {
     Gear("LTW03", "leatherworking", 150, "Barbaric Shoulders", 3, 1, 3, { "vigilance" }, "INV_Shoulder_08",
         "Equip: +1/+3 and Vigilant.", nil, { "shoulder", 5964 }),
     Gear("LTW04", "leatherworking", 225, "Devilsaur Gauntlets", 4, 2, 2, { "haste", "firstStrike" }, "INV_Gauntlets_26",
-        "Equip: +2/+2, Quick and Strikes-First."),
+        "Equip: +2/+2, Charge and Ambush."),
 
     -- TAILORING
     Gear("TLR01", "tailoring", 1, "Brown Linen Robe", 1, 0, 2, { "hexproof" }, "INV_Chest_Cloth_21",
-        "Equip: +0/+2 and Warded."),
+        "Equip: +0/+2 and Anti-Magic."),
     Prayer("TLR02", "tailoring", 75, "Tailor's Loom", "U", "Trade_Tailoring",
         "Workshop. {T}: Add {U} or {W}.", Workshop("U", "W")),
     Gear("TLR03", "tailoring", 150, "Shadoweave Mask", 3, 2, 1, { "lifelink" }, "INV_Helmet_27",
-        "Equip: +2/+1 and Drain.", nil, { "head", 10025 }),
+        "Equip: +2/+1 and Leech.", nil, { "head", 10025 }),
     Gear("TLR04", "tailoring", 225, "Robe of the Archmage", 5, 1, 3, { "hexproof" }, "INV_Chest_Cloth_38",
-        "Equip: +1/+3 and Warded. Draw 1.", { DRAW }),
+        "Equip: +1/+3 and Anti-Magic. Draw 1.", { DRAW }),
 
     -- ENGINEERING
     Gear("EGR01", "engineering", 1, "Rough Boomstick", 1, 1, 0, { "firstStrike" }, "INV_Weapon_Rifle_03",
-        "Equip: +1/+0 and Strikes-First.", nil, { "weapon", 4362 }),
+        "Equip: +1/+0 and Ambush.", nil, { "weapon", 4362 }),
     Prayer("EGR02", "engineering", 75, "Engineer's Workbench", "U", "Trade_Engineering",
         "Workshop. {T}: Add {U} or {R}.", Workshop("U", "R")),
     Gear("EGR03", "engineering", 150, "Goblin Rocket Helmet", 3, 1, 2, { "haste" }, "INV_Helmet_49",
-        "Equip: +1/+2 and Quick.", nil, { "head", 10588 }),
+        "Equip: +1/+2 and Charge.", nil, { "head", 10588 }),
     Gear("EGR04", "engineering", 225, "Arcanite Dragonling", 6, 2, 2, nil, "INV_Misc_Head_Dragon_01",
         "Equip: +2/+2. Spawn: 1 Arcanite Dragonling Add (3/3, Airborne).", { { op = "token", id = "TOK08", n = 1 } }),
 
@@ -162,9 +162,9 @@ local CARDS = {
     Prayer("ENC02", "enchanting", 75, "Enchanter's Altar", "U", "Trade_Engraving",
         "Workshop. {T}: Add {U} or {B}.", Workshop("U", "B")),
     Gear("ENC03", "enchanting", 150, "Enchant Weapon - Fiery Weapon", 3, 3, 0, { "haste" }, "Spell_Holy_GreaterHeal",
-        "Equip: +3/+0 and Quick."),
+        "Equip: +3/+0 and Charge."),
     Gear("ENC04", "enchanting", 225, "Enchant Weapon - Crusader", 4, 2, 2, { "lifelink" }, "Spell_Holy_GreaterHeal",
-        "Equip: +2/+2, Drain and Shielded.", { SHIELDED }),
+        "Equip: +2/+2, Leech and Absorb.", { SHIELDED }),
 
     -- ALCHEMY
     Gear("ALC01", "alchemy", 1, "Elixir of Minor Fortitude", 2, 0, 4, nil, "INV_Potion_42",
@@ -173,9 +173,9 @@ local CARDS = {
         "Arrives Exhausted. {T}: Add one mana of any colour.",
         { colors = ALL_COLORS, anyColor = true, entersTapped = true }),
     Gear("ALC03", "alchemy", 150, "Elixir of the Mongoose", 3, 2, 1, { "haste", "firstStrike" }, "INV_Potion_32",
-        "Equip: +2/+1, Quick and Strikes-First."),
+        "Equip: +2/+1, Charge and Ambush."),
     Gear("ALC04", "alchemy", 225, "Flask of the Titans", 5, 2, 4, nil, "INV_Potion_62",
-        "Equip: +2/+4 and Shielded.", { SHIELDED }),
+        "Equip: +2/+4 and Absorb.", { SHIELDED }),
 
     -- COOKING
     Prayer("COK01", "cooking", 1, "Cooking Fire", "R", "Spell_Fire_Fire",
@@ -183,7 +183,7 @@ local CARDS = {
     Gear("COK02", "cooking", 75, "Herb Baked Egg", 1, 1, 2, nil, "INV_Egg_03",
         "Equip: +1/+2."),
     Gear("COK03", "cooking", 150, "Dragonbreath Chili", 3, 2, 1, { "haste" }, "INV_Drink_17",
-        "Equip: +2/+1 and Quick."),
+        "Equip: +2/+1 and Charge."),
     Gear("COK04", "cooking", 225, "Smoked Desert Dumplings", 4, 3, 3, nil, "INV_Misc_Food_64",
         "Equip: +3/+3."),
 
@@ -193,19 +193,19 @@ local CARDS = {
     Prayer("AID02", "firstaid", 75, "Field Medic's Tent", "W", "Spell_Holy_SealOfSacrifice",
         "Arrives Exhausted. Arrival: Gain 3 life. {T}: Add {W}.", { entersTapped = true, etb = Heal(3) }),
     Gear("AID03", "firstaid", 150, "Heavy Silk Bandage", 2, 0, 3, nil, "INV_Misc_Bandage_02",
-        "Equip: +0/+3 and Shielded.", { SHIELDED }),
+        "Equip: +0/+3 and Absorb.", { SHIELDED }),
     Gear("AID04", "firstaid", 225, "Heavy Runecloth Bandage", 3, 1, 5, nil, "INV_Misc_Bandage_12",
-        "Equip: +1/+5, Shielded and Soulstone.", { SHIELDED, SOULSTONE }),
+        "Equip: +1/+5, Absorb and Soulstone.", { SHIELDED, SOULSTONE }),
 
     -- FISHING
     Gear("FSH01", "fishing", 1, "Fishing Pole", 1, 1, 0, { "reach" }, "INV_FishingPole_02",
-        "Equip: +1/+0 and Anti-Air.", nil, { "weapon", 6256 }),
+        "Equip: +1/+0 and Ranged.", nil, { "weapon", 6256 }),
     Prayer("FSH02", "fishing", 75, "Oily Blackmouth School", "U", "INV_Misc_MonsterHead_04",
         "Deplete 3. {T}: Add {U}{B}.", Deplete(3, "U", "B")),
     Prayer("FSH03", "fishing", 150, "Stonescale Eel Swarm", "U", "INV_Misc_Fish_11",
         "Deplete 3. {T}: Add {U}{G}.", Deplete(3, "U", "G")),
     Gear("FSH04", "fishing", 225, "Arcanite Fishing Pole", 3, 2, 2, { "reach" }, "INV_FishingPole_01",
-        "Equip: +2/+2 and Anti-Air. Draw 1.", { DRAW }, { "weapon", 19970 }),
+        "Equip: +2/+2 and Ranged. Draw 1.", { DRAW }, { "weapon", 19970 }),
 }
 
 do

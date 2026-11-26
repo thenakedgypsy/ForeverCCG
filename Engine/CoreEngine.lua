@@ -1284,10 +1284,13 @@ end
 local RNG_M = 2147483647
 
 -- A generator: rng(n) -> 1..n, rng() -> [0, 1). Exact in doubles (16807 * 2^31 < 2^53).
+-- rng("state") returns where it has got to without moving it on: TTS.NewRng(that) carries on
+-- from there (a game resumed after a /reload, Core\Resume.lua)
 function TTS.NewRng(seed)
     local state = math.floor(tonumber(seed) or 1) % RNG_M
     if state <= 0 then state = state + RNG_M - 1 end
     return function(n)
+        if n == "state" then return state end
         state = (state * 16807) % RNG_M
         local f = (state - 1) / (RNG_M - 1)
         if n then return math.floor(f * n) + 1 end

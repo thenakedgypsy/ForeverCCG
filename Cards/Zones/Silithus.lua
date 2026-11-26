@@ -31,14 +31,14 @@ TTS:AddCards({
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 15384,
         zone = "Silithus", creatureType = "Beast", npcId = 11736,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["SLI04"] = {
         id = "SLI04", name = "Sand Skitterer", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
         power = 1, toughness = 2, reach = true, isMob = true, isBoss = true, displayId = 8014,
         zone = "Silithus", creatureType = "Beast", npcId = 11738,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["SLI05"] = {
         id = "SLI05", name = "Dust Stormer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -52,7 +52,7 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, displayId = 15385,
         zone = "Silithus", creatureType = "Beast", npcId = 11737,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SLI07"] = {
         id = "SLI07", name = "Desert Rumbler", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
@@ -67,14 +67,14 @@ TTS:AddCards({
         power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 11811,
         zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11880,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["SLI09"] = {
         id = "SLI09", name = "Twilight Geolord", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",
         power = 6, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 11819,
         zone = "Silithus", creatureType = "Humanoid", faction = "Twilight's Hammer", npcId = 11881,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["SLI10"] = {
         id = "SLI10", name = "Mistress Natalia Mar'alith", cost = "{5}{B}{B}", cmc = 7, color = "B", type = "Creature",
@@ -90,6 +90,6 @@ TTS:AddCards({
         zone = "Silithus", creatureType = "Humanoid", npcEntry = 14347,
         anthem = { tag = "zone", value = "Silithus", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Vigilant. Strikes-First. Other Silithus denizens you control get +1/+1."
+        text = "Vigilant. Ambush. Other Silithus denizens you control get +1/+1."
     },
 })

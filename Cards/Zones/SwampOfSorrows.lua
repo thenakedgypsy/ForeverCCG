@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, reach = true, isMob = true, isBoss = true, displayId = 2543,
         zone = "Swamp of Sorrows", creatureType = "Beast", npcId = 858,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["SWA03"] = {
         id = "SWA03", name = "Lost One Hunter", cost = "{1}{B}", cmc = 2, color = "B", type = "Creature",
@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 633,
         zone = "Swamp of Sorrows", creatureType = "Beast", npcId = 768,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SWA05"] = {
         id = "SWA05", name = "Tangled Horror", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -67,14 +67,14 @@ TTS:AddCards({
         power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 6489,
         zone = "The Hinterlands", creatureType = "Humanoid", faction = "Troll", npcId = 2653,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["SWA09"] = {
         id = "SWA09", name = "Witherbark Broodguard", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
         power = 5, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 1157,
         zone = "The Hinterlands", creatureType = "Beast", faction = "Troll", npcId = 2686,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SWA10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -91,6 +91,37 @@ TTS:AddCards({
         zone = "Swamp of Sorrows", creatureType = "Humanoid", npcEntry = 7572,
         anthem = { tag = "zone", value = "Swamp of Sorrows", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Other Swamp of Sorrows denizens you control get +1/+1."
+        text = "Leech. Other Swamp of Sorrows denizens you control get +1/+1."
+    },
+    -- MURLOCS (Swamp of Sorrows)
+    ["SWA12"] = {
+        id = "SWA12", name = "Marsh Murloc", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 506,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Murloc", npcId = 747,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = ""
+    },
+    ["SWA13"] = {
+        id = "SWA13", name = "Marsh Inkspewer", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 3, isMob = true, isBoss = true, displayId = 1995,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Murloc", npcId = 750,
+        etb = { target = "enemy_creature", ops = { { op = "freeze", to = "target" } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Freeze target enemy denizen."
+    },
+    ["SWA14"] = {
+        id = "SWA14", name = "Marsh Flesheater", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
+        power = 4, toughness = 3, enrage = true, isMob = true, isBoss = true, displayId = 391,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Murloc", npcId = 751,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Enrage."
+    },
+    ["SWA15"] = {
+        id = "SWA15", name = "Marsh Oracle", cost = "{3}{U}", cmc = 4, color = "U", type = "Creature",
+        power = 2, toughness = 4, isMob = true, isBoss = true, displayId = 386,
+        zone = "Swamp of Sorrows", creatureType = "Humanoid", faction = "Murloc", npcId = 752,
+        anthem = { tag = "faction", value = "Murloc", p = 1 },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Other Murlocs you control get +1/+0."
     },
 })

@@ -377,11 +377,14 @@ local function OnGameEnd()
     if TTS.Dialog:VisiblePopup("TTS_CLAIM_WIN") then TTS.Dialog:HidePopup("TTS_CLAIM_WIN") end
 end
 
--- At login: a game still marked live was left. It's a loss, and the opponent hears of it.
-local function SettleLeftGame()
+-- At login: a game still marked live was left. It's a loss, and the opponent hears of it,
+-- unless it was saved to be picked up again (Core\Resume.lua): then it waits, and Resume
+-- settles it this way if the player abandons it (or it can't be resumed)
+local function SettleLeftGame(force)
     local db = DB()
     local live = db.live
     if type(live) ~= "table" or not live.opponent then db.live = nil; return end
+    if not force and TTS.Resume and TTS.Resume:HasPvPGame(live.matchId) then return end
     db.live = nil
     local delta, why = P:RecordResult(live.opponent, live.theirs, "lost", false)
     local line = (delta or why) and P:ResultText(delta, why)
@@ -390,6 +393,11 @@ local function SettleLeftGame()
     C_Timer.After(5, function()
         if TTS.Net and TTS.Net.Send then TTS.Net:Send(live.opponent, "ACTION:LEFT:" .. tostring(live.matchId or "")) end
     end)
+end
+
+-- A saved game that won't be resumed: settled as a left game (Core\Resume.lua)
+function P:SettleLeftGame()
+    SettleLeftGame(true)
 end
 
 local login = CreateFrame("Frame")

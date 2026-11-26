@@ -11,6 +11,9 @@ TTS.Engine = TTS.Engine or {}
 local E = TTS.Engine
 local L = TTS.L
 
+-- Enrage: power gained for each damage marked on the denizen (E:GetCreatureStats, E:PlanCombatDamage)
+E.ENRAGE_PER_DAMAGE = 2
+
 -- =========================================================================
 -- SMALL HELPERS
 -- =========================================================================
@@ -206,9 +209,10 @@ function E:GetCreatureStats(perm, isRemote)
         p, t = p + bp, t + bt
     end
 
-    -- Enrage (the keyword): +1/+0 for each damage marked on it, the health it's missing
+    -- Enrage (the keyword): +2/+0 for each damage marked on it, the health it's missing
+    -- (E.ENRAGE_PER_DAMAGE)
     if (perm.damage or 0) > 0 and self:HasKeyword(perm, isRemote, "enrage") then
-        p = p + perm.damage
+        p = p + perm.damage * E.ENRAGE_PER_DAMAGE
     end
 
     return math.max(0, p), t
@@ -992,12 +996,28 @@ end
 
 -- Creates op.n (default 1) copies of the token card op.id on the caster's battlefield. Each
 -- remembers the card that made it (perm.tokenSource: its zone art, UI\Board.lua).
+-- op.attacking (an Aggro's tokens): they come in Exhausted and attacking, in the attack being
+-- declared (every client adds them the same way, as every client resolves the Aggro: field
+-- indices stay in step). The AI's attack list is made after its Aggros, so they wait in
+-- E.joiningAttackers for it (AI.lua E:AIDeclareAttack).
 SPELL_GLOBAL_OPS.token = function(self, op, card, cr)
     local tok = TTS.Cards[op.id]
     if not tok then return end
     for _ = 1, op.n or 1 do
         if not self.inMatch then break end
-        self:PutCreatureOntoBattlefield(op.id, cr, { source = card and card.id })
+        local perm = self:PutCreatureOntoBattlefield(op.id, cr, { source = card and card.id })
+        if perm and op.attacking then
+            perm.isAttacking, perm.tapped, perm.hasAttackedThisTurn = true, true, true
+            local _, idx = self:FindPerm(perm)
+            local bs = self.blockingState
+            if idx and bs and bs.attackers then
+                table.insert(bs.attackers, idx)
+                if bs.attackerSet then bs.attackerSet[idx] = true end
+            elseif idx then
+                self.joiningAttackers = self.joiningAttackers or {}
+                table.insert(self.joiningAttackers, idx)
+            end
+        end
     end
     self:Log(L(cr and "log.tokensOpp" or "log.tokensYou", TTS:CardName(card), op.n or 1, TTS:CardName(tok), self.opponent or L("side.opponent")), "ACTION")
 end
@@ -1272,6 +1292,31 @@ function E:GetSettlement(isRemote)
     return nil
 end
 
+-- What casting a card costs side isRemote: its printed cost, less a Settlement's Gear
+-- discount (card.gearDiscount, Ratchet): that much less generic mana for a Gear Card, never
+-- below a total of 1
+-- A Critter card costs what a denizen on its side's battlefield says (card.critterCost: Mr.
+-- Bigglesworth makes them {1})
+function E:CastCost(card, isRemote)
+    local cost = card and card.cost or ""
+    if card and card.isCritter then
+        for _, p in ipairs((isRemote and self.remoteState or self.localState).field or {}) do
+            local pc = TTS.Cards[p.id]
+            if pc and pc.critterCost then return pc.critterCost end
+        end
+        return cost
+    end
+    if not (card and card.subType == "Gear") then return cost end
+    local s = self:GetSettlement(isRemote)
+    local n = s and TTS.Cards[s.id] and tonumber(TTS.Cards[s.id].gearDiscount)
+    if not n then return cost end
+    local generic = tonumber(cost:match("{(%d+)}")) or 0
+    local cut = math.min(n, generic, math.max(0, (card.cmc or 0) - 1))
+    if cut <= 0 then return cost end
+    local rest = generic - cut
+    return (cost:gsub("{%d+}", rest > 0 and ("{" .. rest .. "}") or "", 1))
+end
+
 -- Calls fn(aura) for each Settlement aura that reaches a denizen card on side isRemote: its own
 -- side's Settlement's anthem and the other side's Settlement's enemyAnthem, if the tag matches
 function E:SettlementAuras(card, isRemote, fn)
@@ -1483,13 +1528,134 @@ function E:OnCreatureEnter(perm, isRemote, tgt)
                 tgt = { kind = "PLAYER", isRemote = false }
             end
         end
-        -- A targeted Arrival with no target (nothing to choose, or it has left) does nothing
+        -- A targeted Arrival with no target (nothing to choose, or it has left) does nothing,
+        -- except its parts that don't touch the target (a hero card's other Arrival talents,
+        -- Systems\HeroTalents.lua, which share its one Arrival)
         if not card.etb.target or tgt then
             local cap = self:BeginEffectCapture(card.id, isRemote, tgt)
             self:ResolveEffect(card.etb, card, isRemote, tgt)
             self:EndEffectCapture(cap)
+        else
+            local rest = {}
+            for _, op in ipairs(card.etb.ops or {}) do
+                if op.to ~= "target" then rest[#rest + 1] = op end
+            end
+            if #rest > 0 then
+                local cap = self:BeginEffectCapture(card.id, isRemote)
+                self:ResolveEffect({ ops = rest }, card, isRemote)
+                self:EndEffectCapture(cap)
+            end
         end
     end
+
+    if card.chainPull and self.inMatch then self:ChainPull(card, isRemote) end
+end
+
+-- =========================================================================
+-- CHAIN PULL (card.chainPull)
+-- As the denizen arrives, its controller searches their deck for a denizen of its faction
+-- (or, with no faction, its creature type) with a different name, reveals it, puts it in
+-- their hand, then shuffles the deck. Pull one and the rest of its pack comes along.
+-- The player picks (one button per name), the AI takes its most valuable. With nothing to
+-- find, the deck is shuffled anyway; with a full hand, the card found goes to the graveyard.
+-- PvP: the caster's client picks and sends ACTION:CHAINPULL:<cardId or NONE>:<sourceCardId>,
+-- and the other side moves one card from their deck count to their hand count (or graveyard).
+-- =========================================================================
+E.MAX_HAND_SIZE = E.MAX_HAND_SIZE or 10
+
+-- Whether a card in the deck answers this Chain Pull
+function E:ChainPullFinds(card, other)
+    if not (card and other) or other.type ~= "Creature" or other.isHero or other.isToken then return false end
+    if TTS:CardName(other) == TTS:CardName(card) then return false end
+    if card.faction then return self:CardHasTag(other, "faction", card.faction) end
+    return card.creatureType ~= nil and self:CardHasTag(other, "type", card.creatureType)
+end
+
+function E:ShuffleDeck(deck)
+    for i = #deck, 2, -1 do
+        local j = self:Rand(i)
+        deck[i], deck[j] = deck[j], deck[i]
+    end
+end
+
+-- The card found leaves the deck for the hand (or the graveyard, with a full hand); logged
+-- for both players either way, as the card is revealed
+local function TakePulled(self, st, cardId, source, isRemote)
+    for i, id in ipairs(st.deck) do
+        if id == cardId then table.remove(st.deck, i); break end
+    end
+    local full = #st.hand >= self.MAX_HAND_SIZE
+    if full then
+        table.insert(st.graveyard, cardId)
+    else
+        table.insert(st.hand, cardId)
+        if isRemote then st.handCount = #st.hand end
+    end
+    local who = self:SideName(isRemote)
+    self:Log(L(full and "log.chainPullBurned" or "log.chainPulled", TTS:CardName(source), who, TTS:CardName(cardId)), "ACTION")
+end
+
+function E:ChainPull(card, isRemote)
+    -- PvP: their client searches its own deck and tells us what it found (OnRemoteChainPull)
+    if isRemote and not self.isSolo then return end
+    local st = isRemote and self.remoteState or self.localState
+    local options = self.CardOptions(st.deck, function(id) return self:ChainPullFinds(card, TTS.Cards[id]) end)
+
+    local function Finish(cardId)
+        if not self.inMatch then return end
+        if cardId then
+            TakePulled(self, st, cardId, card, isRemote)
+        else
+            self:Log(L("log.chainPullNone", TTS:CardName(card), self:SideName(isRemote)), "ACTION")
+        end
+        self:ShuffleDeck(st.deck)
+        if not isRemote then
+            self:LockInPlays()   -- the deck has been searched: no undo past it
+            if not self.isSolo then
+                TTS.Net:Send(self.opponent, string.format("ACTION:CHAINPULL:%s:%s", cardId or "NONE", card.id))
+            end
+            self:SyncDeckCount()
+        end
+        self:RefreshUI()
+    end
+
+    if #options == 0 then Finish(nil); return end
+    if isRemote then
+        local best, bestV
+        for _, o in ipairs(options) do
+            local v = self:AICardValue(o.cardId)
+            if not bestV or v > bestV then best, bestV = o.cardId, v end
+        end
+        Finish(best)
+        return
+    end
+    -- Copies are counted on their button ("Defias Pillager x3")
+    local counts = {}
+    for _, id in ipairs(st.deck) do counts[id] = (counts[id] or 0) + 1 end
+    for _, o in ipairs(options) do
+        if counts[o.cardId] > 1 then o.text = L("choice.chainPullCopies", TTS:CardName(o.cardId), counts[o.cardId]) end
+    end
+    self:AskChoice({ title = L("choice.chainPull", TTS:CardName(card)), options = options,
+        onChoose = function(value) Finish(value) end })
+end
+
+-- Their Chain Pull (PvP): cardId is what they found (nil: nothing)
+function E:OnRemoteChainPull(cardId, sourceId)
+    local st = self.remoteState
+    local source = TTS.Cards[sourceId] or { id = sourceId, name = sourceId }
+    if cardId and TTS.Cards[cardId] then
+        local full = (st.handCount or 0) >= self.MAX_HAND_SIZE
+        if full then
+            table.insert(st.graveyard, cardId)
+        else
+            st.handCount = (st.handCount or 0) + 1
+        end
+        if st.deckCount and st.deckCount > 0 then st.deckCount = st.deckCount - 1 end
+        self:Log(L(full and "log.chainPullBurned" or "log.chainPulled", TTS:CardName(source), self:SideName(true), TTS:CardName(cardId)), "ACTION")
+    else
+        self:Log(L("log.chainPullNone", TTS:CardName(source), self:SideName(true)), "ACTION")
+    end
+    self:RefreshUI()
 end
 
 -- Attack triggers for either side (the creature has just been declared as an attacker)
@@ -1533,11 +1699,13 @@ local ABILITIES = {
     BOSS22 = { cost = "{2}{U}" },
 }
 
--- A boss's ability above, or a Settlement's own (card.ability, with its ops: Settlement section)
+-- A boss's ability above, or a Settlement's own (card.ability, with its ops: Settlement section),
+-- a hero card's signature talent (Systems\HeroTalents.lua), or any denizen's own card.ability
+-- (Aggem Thorncurse's), all the same shape: { tap, cost, target, ops }
 function E:GetAbility(cardId)
     if ABILITIES[cardId] then return ABILITIES[cardId] end
     local card = TTS.Cards[cardId]
-    return card and card.type == "Settlement" and card.ability or nil
+    return card and card.ability and card.ability.ops and card.ability or nil
 end
 
 -- How the board asks for an ability's target: "PLAYER", "CREATURE" or "ANY"
@@ -1882,8 +2050,8 @@ function E:PlayCard(handIndex, bounceIndex)
             return
         end
 
-        if not self:CanPayManaAuto(card.cost) then
-            self:Log(L("err.manaCast", TTS:CardName(card), card.cost), "ERROR")
+        if not self:CanPayManaAuto(self:CastCost(card, false)) then
+            self:Log(L("err.manaCast", TTS:CardName(card), self:CastCost(card, false)), "ERROR")
             return
         end
         if card.unique and self:HasCopyOnField(cardId, false) then
@@ -1914,9 +2082,9 @@ function E:PlayCard(handIndex, bounceIndex)
             self:Log(L("err.settlementInPlay", TTS:CardName(card)), "ERROR")
             return
         end
-        self:AutoPayMana(card.cost)
+        self:AutoPayMana(self:CastCost(card, false))
         local undoSnap = self:BeginUndoablePlay()
-        if not self:PayMana(card.cost) then
+        if not self:PayMana(self:CastCost(card, false)) then
             self:Log(L("err.manaPool"), "ERROR")
             return
         end
@@ -1941,9 +2109,9 @@ function E:PlayCard(handIndex, bounceIndex)
             self:Log(L("err.uniqueInPlay", TTS:CardName(card)), "ERROR")
             return
         end
-        self:AutoPayMana(card.cost)
+        self:AutoPayMana(self:CastCost(card, false))
         local undoSnap = self:BeginUndoablePlay()
-        if not self:PayMana(card.cost) then
+        if not self:PayMana(self:CastCost(card, false)) then
             self:Log(L("err.manaPool"), "ERROR")
             return
         end
@@ -1960,9 +2128,9 @@ function E:PlayCard(handIndex, bounceIndex)
             self:Log(L("err.sorceryMainPhase"), "ERROR")
             return
         end
-        self:AutoPayMana(card.cost)
+        self:AutoPayMana(self:CastCost(card, false))
         local undoSnap = self:BeginUndoablePlay()
-        if not self:PayMana(card.cost) then
+        if not self:PayMana(self:CastCost(card, false)) then
             self:Log(L("err.manaPool"), "ERROR")
             return
         end
@@ -2068,9 +2236,9 @@ function E:ResolveTarget(targetKind, isRemote, fieldIndex)
         return
     end
 
-    self:AutoPayMana(card.cost)
+    self:AutoPayMana(self:CastCost(card, false))
     local undoSnap = self:BeginUndoablePlay()
-    if not self:PayMana(card.cost) then
+    if not self:PayMana(self:CastCost(card, false)) then
         self:Log(L("err.payFailed"), "ERROR")
         self.targeting = nil
         self:RefreshUI()
@@ -2668,11 +2836,11 @@ function E:PlanCombatDamage(bs)
     -- toughness the Fatal blow didn't actually use)
     local marked = {}
     local function Down(perm) return (perm.damage or 0) + (taken[perm] or 0) >= info[perm].t end
-    -- Its power as it strikes: Enrage adds what Strikes-First blows have just taken off it
+    -- Its power as it strikes: Enrage adds twice what Strikes-First blows have just taken off it
     -- (damage from before this combat is in info.p already, E:GetCreatureStats)
     local function Power(perm)
         local src = info[perm]
-        return src.p + ((src.enrage and taken[perm] and taken[perm] < 999) and taken[perm] or 0)
+        return src.p + ((src.enrage and taken[perm] and taken[perm] < 999) and taken[perm] * E.ENRAGE_PER_DAMAGE or 0)
     end
     local function Strikes(perm, firstStep)
         local src = info[perm]
@@ -2743,7 +2911,34 @@ function E:PlanCombatDamage(bs)
         for _, f in ipairs(blockers) do Hit(f.blk, f.atk, Power(f.blk)) end
     end
 
-    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped, hits = hits }
+    -- Fire Shield N (card.fireShield): whatever blocks it, or is blocked by it, takes N more
+    -- damage, whether or not it has struck (never Fatal; a Shielded one not yet hit negates it)
+    for _, f in ipairs(fights) do
+        for _, pair in ipairs({ { f.atk, f.blk }, { f.blk, f.atk } }) do
+            local src, dst = pair[1], pair[2]
+            local n = tonumber(self:HasKeyword(src, info[src].isRemote, "fireShield"))
+            if n and n > 0 then
+                if dst.shielded and not popped[dst] then
+                    popped[dst] = true
+                else
+                    taken[dst] = (taken[dst] or 0) + n
+                    marked[dst] = (marked[dst] or 0) + n
+                    table.insert(hits, { src = src, dst = dst, n = n, fireShield = true })
+                end
+            end
+        end
+    end
+
+    -- Sunder N (card.sunder): each denizen it dealt combat damage to loses 1 toughness at the
+    -- start of each of its controller's next N turns (a creature DoT, E:TickOverTime)
+    local sunders = {}
+    for _, h in ipairs(hits) do
+        local n = not h.fireShield and tonumber(self:HasKeyword(h.src, info[h.src].isRemote, "sunder"))
+        if n and n > 0 then table.insert(sunders, { perm = h.dst, turns = n, src = h.src, byRemote = info[h.src].isRemote }) end
+    end
+
+    return { fights = fights, info = info, taken = taken, dealt = dealt, trample = trample, popped = popped, hits = hits,
+        sunders = sunders }
 end
 
 -- The combat damage the defending player takes if the current blocks stand: unblocked
@@ -2931,6 +3126,17 @@ function E:ResolveCombatDamage()
         end
         for perm, n in pairs(plan.taken) do perm.damage = (perm.damage or 0) + n end
         for _, h in ipairs(plan.hits) do self:NoteSoundHit(h.src.id, h.dst) end
+        for _, h in ipairs(plan.hits) do
+            if h.fireShield then
+                self:Log(L("log.fireShield", TTS:CardName(h.src.id), CreatureName(h.dst), h.n), "COMBAT")
+            end
+        end
+        -- Sunder: the armour it broke keeps crumbling (both clients add it, as both resolve combat)
+        for _, s in ipairs(plan.sunders or {}) do
+            s.perm.dots = s.perm.dots or {}
+            table.insert(s.perm.dots, { n = 1, turns = s.turns, src = s.src.id, srcId = s.src.id, byRemote = s.byRemote })
+            self:Log(L("log.sundered", TTS:CardName(s.src.id), CreatureName(s.perm), s.turns), "COMBAT")
+        end
     end
 
     -- Drain: combat damage the attacker deals to the opponent (unblocked, or Brutish damage

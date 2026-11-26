@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 131968,
         zone = "Mount Hyjal", creatureType = "Beast", npcId = 249474,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HYJ02"] = {
         id = "HYJ02", name = "Hyjal Owl", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -32,14 +32,14 @@ TTS:AddCards({
         power = 2, toughness = 1, lifelink = true, isMob = true, isBoss = true, displayId = 6173,
         zone = "Mount Hyjal", creatureType = "Demon", npcId = 249230,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["HYJ04"] = {
         id = "HYJ04", name = "Blackthorne Cultist", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 145457,
         zone = "Mount Hyjal", creatureType = "Humanoid", faction = "Blackthorne Pact", npcId = 249551,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HYJ05"] = {
         id = "HYJ05", name = "Ashen Acolyte", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -53,7 +53,7 @@ TTS:AddCards({
         power = 3, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 148858,
         zone = "Mount Hyjal", creatureType = "Beast", npcId = 244525,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["HYJ07"] = {
         id = "HYJ07", name = "Fleshflay Ravener", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
@@ -67,14 +67,14 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 144996,
         zone = "Mount Hyjal", creatureType = "Beast", npcId = 249493,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["HYJ09"] = {
         id = "HYJ09", name = "Tainted Grovewalker", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 1, toughness = 8, defender = true, isMob = true, isBoss = true, displayId = 123593,
         zone = "Mount Hyjal", creatureType = "Elemental", npcId = 260822,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["HYJ10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -82,28 +82,28 @@ TTS:AddCards({
         power = 3, toughness = 4, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 138685,
         zone = "Mount Hyjal", creatureType = "Demon", npcId = 255183,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["HYJ12"] = {
         id = "HYJ12", name = "Wildbreath Chimaerok", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 4, toughness = 4, bulwark = 2, flying = true, isMob = true, isBoss = true, displayId = 4269,
         zone = "Mount Hyjal", creatureType = "Beast", npcId = 249490,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Bulwark 2."
+        text = "Airborne. Shield Wall 2."
     },
     ["HYJ13"] = {
         id = "HYJ13", name = "Felguard Sentinel", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 4, firstStrike = true, isMob = true, isBoss = true, displayId = 9129,
         zone = "Mount Hyjal", creatureType = "Demon", npcId = 249229,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["HYJ14"] = {
         id = "HYJ14", name = "Blackthorne Outrunner", cost = "{4}{R}", cmc = 5, color = "R", type = "Creature",
         power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 148136,
         zone = "Mount Hyjal", creatureType = "Humanoid", faction = "Blackthorne Pact", npcId = 275173,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["HYJ15"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -111,7 +111,7 @@ TTS:AddCards({
         power = 5, toughness = 5, flying = true, lifelink = true, isMob = true, isNamed = true, isBoss = true, displayId = 8783,
         zone = "Mount Hyjal", creatureType = "Undead", npcId = 249226,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Drain."
+        text = "Airborne. Leech."
     },
     ["HYJ16"] = {
         id = "HYJ16", name = "Ve'han Talongrasp", cost = "{5}{G}{G}", cmc = 7, color = "G", type = "Creature",

@@ -41,7 +41,7 @@ TTS:AddCards({
         creatureType = "Dragonkin",
         onDeath = { ops = { { op = "token", id = "TOK05", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker. Martyrdom: Spawn: 1 Rookery Whelp Add (1/1, Airborne)."
+        text = "Protection. Martyrdom: Spawn: 1 Rookery Whelp Add (1/1, Airborne)."
     },
     ["TOK05"] = {
         id = "TOK05", name = "Rookery Whelp", cost = "", cmc = 0, color = "R", type = "Creature",
@@ -56,7 +56,7 @@ TTS:AddCards({
         power = 1, toughness = 5, defender = true, isToken = true, displayId = 1132,   -- warlock voidwalker model
         creatureType = "Demon",
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     -- Sneed's Shredder (Cards\Dungeons\Deadmines.lua): the pilot, once his shredder is scrap
     ["TOK07"] = {
@@ -66,7 +66,7 @@ TTS:AddCards({
         anthem = { tag = "faction", value = "Defias", p = 0, kw = { "haste" } },
         rally = { tag = "faction", value = "Defias", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Quick."
+        text = "Gets +1/+1 for each other Defias you control. Other Defias you control have Charge."
     },
     -- Arcanite Dragonling (Cards\Professions.lua). No displayId yet, so it shows its icon
     ["TOK08"] = {
@@ -91,7 +91,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isToken = true, displayId = 11857,
         creatureType = "Humanoid",
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["TOK11"] = {   -- Agamand Mills
         id = "TOK11", name = "Rattlecage Soldier", cost = "", cmc = 0, color = "B", type = "Creature",
@@ -112,13 +112,43 @@ TTS:AddCards({
         power = 4, toughness = 4, trample = true, isToken = true, displayId = 8511,
         creatureType = "Beast",
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["TOK14"] = {   -- Lupine Horror (Shadowfang Keep)
         id = "TOK14", name = "Lupine Delusion", cost = "", cmc = 0, color = "B", type = "Creature",
         power = 2, toughness = 1, defender = true, isToken = true, displayId = 2446,
         creatureType = "Undead", faction = "Worgen",
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
+    },
+    ["TOK15"] = {   -- Aggem Thorncurse (Razorfen Kraul)
+        id = "TOK15", name = "Boar Spirit", cost = "", cmc = 0, color = "G", type = "Creature",
+        power = 5, toughness = 1, blink = true, isToken = true, displayId = 4716,
+        creatureType = "Beast", faction = "Quilboar",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Blink."
+    },
+    ["TOK16"] = {   -- Celebras the Cursed (Maraudon)
+        id = "TOK16", name = "Treant", cost = "", cmc = 0, color = "G", type = "Creature",
+        power = 2, toughness = 1, isToken = true, displayId = 9590,
+        creatureType = "Elemental",
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = ""
+    },
+    ["TOK17"] = {   -- Gnarlpine Shaman (Teldrassil)
+        id = "TOK17", name = "Windfury Totem", cost = "", cmc = 0, color = "W", type = "Creature",
+        power = 0, toughness = 2, defender = true, isToken = true, displayId = 4590,
+        creatureType = "Totem",
+        anthem = { tag = "any", p = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Protection. Other denizens you control get +1/+0."
+    },
+    ["TOK18"] = {   -- Timbermaw Shaman (Azshara)
+        id = "TOK18", name = "Stoneskin Totem", cost = "", cmc = 0, color = "W", type = "Creature",
+        power = 0, toughness = 2, defender = true, isToken = true, displayId = 4588,
+        creatureType = "Totem",
+        anthem = { tag = "any", t = 1 },
+        modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
+        text = "Protection. Other denizens you control get +0/+1."
     },
 })

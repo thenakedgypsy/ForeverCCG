@@ -14,46 +14,46 @@
 TTS:AddCards({
     -- SCARLET MONASTERY
     ["SMO01"] = {
-        id = "SMO01", name = "Scarlet Torturer", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
-        power = 3, toughness = 3, isMob = true, isBoss = true, displayId = 2607,
+        id = "SMO01", name = "Scarlet Torturer", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
+        power = 2, toughness = 3, chainPull = true, isMob = true, isBoss = true, displayId = 2607,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4306,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = ""
+        text = "Chain Pull."
     },
     ["SMO02"] = {
         id = "SMO02", name = "Scarlet Tracking Hound", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 2709,
         zone = "Scarlet Monastery", creatureType = "Beast", faction = "Scarlet Crusade", npcId = 4304,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["SMO03"] = {
         id = "SMO03", name = "Scarlet Monk", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 2604,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4540,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["SMO04"] = {
         id = "SMO04", name = "Scarlet Adept", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 5725,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4296,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["SMO05"] = {
         id = "SMO05", name = "Haunting Phantasm", cost = "{2}{B}", cmc = 3, color = "B", type = "Creature",
         power = 2, toughness = 3, unblockable = true, isMob = true, isBoss = true, displayId = 4629,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6427,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["SMO06"] = {
         id = "SMO06", name = "Scarlet Myrmidon", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 4, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 2515,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 4295,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     ["SMO07"] = {
         id = "SMO07", name = "Scarlet Champion", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
@@ -68,7 +68,7 @@ TTS:AddCards({
         power = 5, toughness = 6, deathtouch = true, isMob = true, isBoss = true, displayId = 2044,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3983,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["SMO09"] = {
         id = "SMO09", name = "Houndmaster Loksey", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
@@ -76,7 +76,7 @@ TTS:AddCards({
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3974,
         anthem = { tag = "type", value = "Beast", kw = { "haste" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Beasts you control have Quick."
+        text = "Charge. Other Beasts you control have Charge."
     },
     ["SMO10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -84,7 +84,7 @@ TTS:AddCards({
         power = 7, toughness = 7, bulwark = 2, lifelink = true, isMob = true, isBoss = true, displayId = 5230,
         zone = "Scarlet Monastery", creatureType = "Undead", npcId = 6488,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Bulwark 2."
+        text = "Leech. Shield Wall 2."
     },
     ["SMO11"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -99,7 +99,7 @@ TTS:AddCards({
         power = 6, toughness = 8, shielded = true, lifelink = true, isMob = true, isBoss = true, displayId = 2605,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade", npcId = 4542,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Shielded."
+        text = "Leech. Absorb."
     },
     ["SMO13"] = {
         id = "SMO13", name = "Scarlet Commander Mograine", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

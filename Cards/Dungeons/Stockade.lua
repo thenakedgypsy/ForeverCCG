@@ -25,14 +25,14 @@ TTS:AddCards({
         power = 4, toughness = 3, haste = true, isMob = true, isBoss = true, displayId = 2147,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1715,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["STK03"] = {
         id = "STK03", name = "Targorr the Dread", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 6, toughness = 5, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 517,
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1696,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     ["STK04"] = {
         id = "STK04", name = "Dextren Ward", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -62,7 +62,7 @@ TTS:AddCards({
         zone = "The Stockade", creatureType = "Humanoid", faction = "Defias", npcId = 1720,
         anthem = { tag = "zone", value = "The Stockade", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Other Stockade denizens you control get +1/+1."
+        text = "Ambush. Other Stockade denizens you control get +1/+1."
     },
     -- Solo reward
     ["STK08"] = {
@@ -72,6 +72,6 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "The Stockade", p = 0, kw = { "haste" } },
         rally = { tag = "faction", value = "Defias", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Gets +1/+0 for each other Defias you control. Other Stockade denizens you control have Quick."
+        text = "Charge. Gets +1/+0 for each other Defias you control. Other Stockade denizens you control have Charge."
     },
 })

@@ -24,7 +24,7 @@ TTS:AddCards({
         power = 1, toughness = 1, firstStrike = true, isMob = true, isBoss = true, displayId = 3709,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2241,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ALT03"] = {
         id = "ALT03", name = "Giant Yeti", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
@@ -38,35 +38,35 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 2300,
         zone = "Alterac Mountains", creatureType = "Beast", npcId = 2407,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ALT05"] = {
         id = "ALT05", name = "Syndicate Wizard", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
         power = 3, toughness = 4, blink = true, shielded = true, isMob = true, isBoss = true, displayId = 3712,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2319,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blink. Shielded."
+        text = "Blink. Absorb."
     },
     ["ALT06"] = {
         id = "ALT06", name = "Crushridge Ogre", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 11567,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2252,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ALT07"] = {
         id = "ALT07", name = "Crushridge Brute", cost = "{2}{R}{R}", cmc = 4, color = "R", type = "Creature",
         power = 4, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 610,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2253,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ALT08"] = {
         id = "ALT08", name = "Syndicate Assassin", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 5, unblockable = true, firstStrike = true, isMob = true, isBoss = true, displayId = 3727,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Syndicate", npcId = 2246,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Invisible."
+        text = "Ambush. Stealth."
     },
     ["ALT09"] = {
         id = "ALT09", name = "Crushridge Mage", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
@@ -80,7 +80,7 @@ TTS:AddCards({
         power = 9, toughness = 9, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 536,
         zone = "Alterac Mountains", creatureType = "Humanoid", faction = "Ogre", npcId = 2287,
         modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     -- Solo reward
     ["ALT11"] = {

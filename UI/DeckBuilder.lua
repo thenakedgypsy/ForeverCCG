@@ -494,6 +494,7 @@ local function UnlockHint(card)
     if card.isPrize then return L("link.prizeOnly") end
     if card.campaignPrize then return L(card.campaignPrize == "all" and "link.campaignAll" or "link.campaignZones") end
     if card.unlockOnDeath then return L("link.dieToUnlock") end
+    if card.critterUnlock then return L("link.critterSecret") end
     return L("link.defeat", TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card))
 end
 
@@ -2037,8 +2038,37 @@ do
     HeroBtns.choice:HookScript("OnHide", function() pulse:Stop() end)
 end
 
+-- Resets the hero's talents for its class, so they can be chosen again (asks first). In the
+-- Hero button's place while no choice is waiting and some talents have been taken.
+HeroBtns.reset = CreatePanelButton(deckPanel, 60, 22, "db.heroReset")
+HeroBtns.reset:SetPoint("RIGHT", clearBtn, "LEFT", -6, 0)
+HeroBtns.reset.label:SetJustifyH("CENTER")
+HeroBtns.reset.tooltipTitle, HeroBtns.reset.tooltipText = "db.heroResetTip", "db.heroResetTip.desc"
+HeroBtns.reset:SetScript("OnClick", function()
+    TTS.Dialog:Popup("TTS_HERO_RESPEC", L("db.heroResetConfirm"))
+end)
+HeroBtns.reset:Hide()
+
+TTS.Dialog:Register("TTS_HERO_RESPEC", {
+    text = "%s",
+    button1 = YES or "Yes",
+    button2 = NO or "No",
+    OnAccept = function()
+        if TTS.Hero and TTS.Hero:Respec() then
+            if D.RefreshAll then D:RefreshAll() end
+            if TTS.HeroChoice then TTS.HeroChoice:Open() end
+        end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+})
+
 function HeroBtns.Update()
-    HeroBtns.choice:SetShown(TTS.Hero and TTS.HeroChoice and TTS.Hero:PendingChoices() > 0 or false)
+    local pending = TTS.Hero and TTS.HeroChoice and TTS.Hero:PendingChoices() > 0 or false
+    HeroBtns.choice:SetShown(pending)
+    HeroBtns.reset:SetShown(not pending and TTS.Hero and TTS.Hero.ChosenTalents and #TTS.Hero:ChosenTalents() > 0 or false)
 end
 
 local listDivider = deckPanel:CreateTexture(nil, "ARTWORK")

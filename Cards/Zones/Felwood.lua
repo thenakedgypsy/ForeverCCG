@@ -17,7 +17,7 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 4124,
         zone = "Felwood", creatureType = "Beast", npcId = 8959,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["FEL02"] = {
         id = "FEL02", name = "Angerclaw Bear", cost = "{G}", cmc = 1, color = "G", type = "Creature",
@@ -38,7 +38,7 @@ TTS:AddCards({
         power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 9278,
         zone = "Felwood", creatureType = "Beast", npcId = 8960,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["FEL05"] = {
         id = "FEL05", name = "Jadefire Satyr", cost = "{2}{R}", cmc = 3, color = "R", type = "Creature",
@@ -52,28 +52,28 @@ TTS:AddCards({
         power = 2, toughness = 3, enrage = true, trample = true, isMob = true, isBoss = true, displayId = 1083,
         zone = "Felwood", creatureType = "Beast", npcId = 8958,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Brutish. Enrage."
+        text = "Cleave. Enrage."
     },
     ["FEL07"] = {
         id = "FEL07", name = "Irontree Stomper", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
         power = 1, toughness = 9, defender = true, isMob = true, isBoss = true, displayId = 6351,
         zone = "Felwood", creatureType = "Elemental", npcId = 7139,
         modelCam = { zoom = 0.61, camScale = 1.17, z = -0.13, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["FEL08"] = {
         id = "FEL08", name = "Warpwood Moss Flayer", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 5, toughness = 6, reach = true, isMob = true, isBoss = true, displayId = 8389,
         zone = "Felwood", creatureType = "Elemental", npcId = 7100,
         modelCam = { zoom = 0.79, camScale = 1.04, z = -0.11, rotation = 0.15 },
-        text = "Anti-Air."
+        text = "Ranged."
     },
     ["FEL09"] = {
         id = "FEL09", name = "Jaedenar Darkweaver", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
         power = 5, toughness = 7, hexproof = true, isMob = true, isBoss = true, displayId = 6393,
         zone = "Felwood", creatureType = "Humanoid", npcId = 7118,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Warded."
+        text = "Anti-Magic."
     },
     ["FEL10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates

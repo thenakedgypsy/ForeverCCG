@@ -23,7 +23,7 @@ local Loc = TTS.Locale
 -- (TTS_Options.whatsNewSeen holds the version they last saw), and with /tragic whatsnew any
 -- time. A brand-new player gets the Quick Start instead, which already covers what's new.
 -- =========================================================================
-local WHATS_NEW_VERSION = "1.3"
+local WHATS_NEW_VERSION = "1.4"
 local W, H = 620, 410
 local CARD_Y = -12         -- the card sits this far below the showcase's centre: its name and cost go above it
 local HEADER_H = 40
@@ -42,24 +42,23 @@ local QS_CARDS = {
     [6] = { id = "FER03" },               -- Groddoc Ape: a blocker
     [7] = { id = "BOSS01", foil = true }, -- Bazzalan, as a foil: something to collect
 }
--- (1.3's pages are wn13.*: a new prefix, so a language pack's old 1.1 wn.* translations
--- don't show up on them; they're English until the packs translate them)
+-- (Each version's pages have their own prefix, wn14.* for 1.4, so a language pack's
+-- translations of older pages never show up on newer ones; English until the packs catch up)
 local WN_CARDS = {
-    [2] = { id = "BOSS31" },              -- Min'loth the Serpent: a final boss drops a pack
-    [3] = { id = "TDC10" },               -- Brinescale Sorceress: a dungeon denizen from a pack
-    [4] = { id = "TDC09", foil = true },  -- Makrura Snapper, as a foil: a foil pull
-    [5] = { id = "BOSS35" },              -- Nanaya: the new dungeons
+    [2] = { id = "TDC17" },               -- Var'Taka: a dungeon opponent for the Daily
+    [3] = { id = "SFK09" },               -- Baron Silverlaine: a card to draft
+    [4] = { id = "CMP01", foil = true },  -- Brann Bronzebeard: the zones' campaign prize
+    [5] = { id = "CMP02", foil = true },  -- Ashbringer: the whole campaign's prize
+    [6] = { id = "SFK05" },               -- Lupine Horror: one of the reworked cards
+    [7] = { id = "WES17" },               -- Old Murk-Eye: the new Murlocs' lord
+    [8] = { id = "HERO" },                -- the player's own hero card, with its talents
 }
 
 -- The page sets: key prefix, page count, heading, showcase cards, and whether the last page
 -- offers the tutorial game
 local SETS = {
     quickstart = { prefix = "qs", pages = 8, heading = "qs.heading", cards = QS_CARDS, tutorial = true },
-    whatsnew   = { prefix = "wn13", pages = 5, heading = "wn13.heading", cards = WN_CARDS,
-                   -- (page 1 tells an account that got the free welcome pack, Packs.lua)
-                   altText = function(n)
-                       if n == 1 and TTS.Packs and TTS.Packs:GotWelcomePack() then return "wn13.1.textGift" end
-                   end },
+    whatsnew   = { prefix = "wn14", pages = 9, heading = "wn14.heading", cards = WN_CARDS },
 }
 local MAX_PAGES = 8
 local set = SETS.quickstart

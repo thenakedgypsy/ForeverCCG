@@ -2,10 +2,10 @@
 ## Title: ForeverCCG
 ## Notes: Collect. Build. Battle. 
 ## IconTexture: Interface\AddOns\ForeverCCG\Textures\icon.png
-## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord, TTS_Campfire, TTS_Packs, TTS_HighestLevel, TTS_Daily, TTS_Endless
-## SavedVariablesPerCharacter: TTS_Hero, FCCGE_DB
+## SavedVariables: TTS_SavedDecks, TTS_ActiveDeckIndex, TTS_KilledBosses, TTS_MinimapPos, TTS_Options, TTS_SoloProgress, TTS_NewCards, TTS_Contacts, TTS_NpcGifts, TTS_HeroChoices, TTS_DataStamp, TTS_LastMatchLog, TTS_FoilCards, TTS_PvPRecord, TTS_Campfire, TTS_Packs, TTS_HighestLevel, TTS_Daily, TTS_Endless, TTS_CritterKills
+## SavedVariablesPerCharacter: TTS_Hero, FCCGE_DB, TTS_Resume
 ## OptionalDeps: DialogueUI
-## Version: 1.3.14
+## Version: 1.4.0
 ## Author: the_naked_gypsy
 ## X-Engine: Tragic: The Saddening Engine
 ## X-Copyright: Copyright (c) 2026 the_naked_gypsy. All Rights Reserved.
@@ -103,8 +103,10 @@ Cards\Tokens.lua
 Cards\Critters.lua
 Cards\Gear.lua
 Cards\Professions.lua
+Systems\HeroTalents.lua
 Systems\Hero.lua
 Systems\BossTracker.lua
+Systems\Critters.lua
 Systems\Packs.lua
 UI\MobTooltip.lua
 Systems\PvPRecord.lua
@@ -145,6 +147,7 @@ UI\SoloSelect.lua
 UI\DailyPanel.lua
 UI\Endless.lua
 UI\CardLinks.lua
+UI\CardToast.lua
 UI\NpcGossip.lua
 Data\NpcSpots.lua
 Data\MobZones.lua
@@ -156,6 +159,8 @@ UI\Tutorial.lua
 UI\ModelGuard.lua
 Core\MatchRecorder.lua
 Core\Spectate.lua
+Core\Resume.lua
+UI\Motion.lua
 Core\CollectionCode.lua
 Events\Tournament.lua
 Events\Formats\Swiss.lua

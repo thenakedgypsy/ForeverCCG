@@ -66,6 +66,7 @@ local function Name(perm) local c = Card(perm.id); return c and TTS:CardName(c) 
 local KEYWORD_VALUE = {
     flying = 1.5, unblockable = 1.5, deathtouch = 1.5, firstStrike = 1, lifelink = 1, hexproof = 1,
     trample = 0.5, vigilance = 0.5, haste = 0.5, reach = 0.5, bulwark = 1, support = 0.5, shielded = 1,
+    fireShield = 1, sunder = 1,
 }
 
 -- How much a creature is worth to its controller, as it stands on the battlefield
@@ -118,6 +119,7 @@ local function CreatureCardValue(self, c, isRemote)
     end
     if c.onDeath then v = v + 1 end
     if self:GetAbility(c.id) then v = v + 2 end
+    if c.chainPull then v = v + 1.5 end   -- a card in hand from the deck (E:ChainPull)
     return v
 end
 
@@ -148,6 +150,13 @@ local function SettlementCardValue(self, c)
     if c.etb then v = v + 1.5 end
     if c.onTurnStart then v = v + 2 end
     if c.ability then v = v + 2 end
+    -- Ratchet's cheaper Gear: worth a point for each Gear Card in hand
+    if c.gearDiscount then
+        for _, id in ipairs(self.remoteState.hand) do
+            local hc = Card(id)
+            if hc and hc.subType == "Gear" then v = v + 1 end
+        end
+    end
     return v
 end
 
@@ -200,7 +209,7 @@ end
 -- (Free Boss, SoloEncounters.lua)
 function E:AICardCost(card)
     if self.EncounterFreeCast and self:EncounterFreeCast(card.id) then return "" end
-    return card.cost
+    return self:CastCost(card, true)
 end
 
 function E:AIPlanLandTaps(costString)
@@ -553,6 +562,9 @@ function E:AIDeclareAttack(indices)
         end
     end
 
+    -- Adds an Aggro brought into the attack (SPELL_GLOBAL_OPS.token's op.attacking)
+    for _, i in ipairs(self.joiningAttackers or {}) do table.insert(attackerIndices, i) end
+    self.joiningAttackers = nil
     if #attackerIndices == 0 then return false end
     self.blockingState = {
         attackers = attackerIndices,
@@ -1261,8 +1273,11 @@ end
 -- =========================================================================
 -- TURN
 -- =========================================================================
-function E:AITakeTurn()
-    if not self:BeginTurn(true) then return end
+-- resume: the turn was under way when the game was saved for a /reload (Core\Resume.lua): it
+-- carries on from where it can (no new turn start, no second Prayer), its combat if one is
+-- waiting on the player's blocks, else its main phase
+function E:AITakeTurn(resume)
+    if not resume and not self:BeginTurn(true) then return end
     self:RefreshUI()
 
     local profile = self:AIProfile()
@@ -1332,7 +1347,7 @@ function E:AITakeTurn()
     end
 
     local function PrayerStep()
-        local idx = E:AIChoosePrayer(profile)
+        local idx = not E.remoteLandPlayed and E:AIChoosePrayer(profile)
         if idx then
             E:AIPlayLand(idx)
             E:RefreshUI()
@@ -1344,7 +1359,12 @@ function E:AITakeTurn()
 
     -- Store this turn's continuation so combat resolution can resume it
     self.aiResume = function(fn) Next(fn) end
-    Next(PrayerStep)
+    if resume and self.blockingState and self.blockingState.isRemoteAttacking then
+        -- Its attack is waiting on the player's blocks: the second main phase follows combat
+        self.aiAfterCombat = SecondMain
+        return
+    end
+    Next(resume == "main2" and SecondMain or PrayerStep)
 end
 
 -- Combat against the player has resolved: the AI carries on with its second main phase

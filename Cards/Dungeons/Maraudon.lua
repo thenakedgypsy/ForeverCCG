@@ -18,7 +18,7 @@ TTS:AddCards({
         power = 2, toughness = 2, unblockable = true, isMob = true, isBoss = true, displayId = 2021,
         zone = "Maraudon", creatureType = "Demon", faction = "Satyr", npcId = 11792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Invisible."
+        text = "Stealth."
     },
     ["MAR02"] = {
         id = "MAR02", name = "Barbed Lasher", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -26,7 +26,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { kw = "flying" } } } },
         zone = "Maraudon", creatureType = "Elemental", npcId = 12219,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Anti-Air. Arrival: Destroy target enemy Airborne denizen."
+        text = "Ranged. Arrival: Destroy target enemy Airborne denizen."
     },
     ["MAR03"] = {
         id = "MAR03", name = "Deeprot Stomper", cost = "{2}{G}", cmc = 3, color = "G", type = "Creature",
@@ -41,7 +41,7 @@ TTS:AddCards({
         etb = { target = "enemy_creature", ops = { { op = "destroy", to = "target", only = { color = "B" } } } },
         zone = "Maraudon", creatureType = "Humanoid", npcId = 11793,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain. Anti-Air. Arrival: Destroy target enemy Shadow denizen."
+        text = "Leech. Ranged. Arrival: Destroy target enemy Shadow denizen."
     },
     ["MAR05"] = {
         id = "MAR05", name = "Theradrim Guardian", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
@@ -55,35 +55,36 @@ TTS:AddCards({
         power = 6, toughness = 6, bulwark = 2, firstStrike = true, isMob = true, isBoss = true, displayId = 12389,
         zone = "Maraudon", creatureType = "Elemental", npcId = 12258,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Bulwark 2."
+        text = "Ambush. Shield Wall 2."
     },
     ["MAR07"] = {
         id = "MAR07", name = "Noxxion", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 6, toughness = 8, deathtouch = true, isMob = true, isBoss = true, displayId = 11172,
         zone = "Maraudon", creatureType = "Elemental", npcId = 13282,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["MAR08"] = {
         id = "MAR08", name = "Lord Vyletongue", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 8, toughness = 7, blink = true, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 12334,
         zone = "Maraudon", creatureType = "Demon", npcId = 12236,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Blink. Anti-Air."
+        text = "Ambush. Blink. Ranged."
     },
     ["MAR09"] = {
         id = "MAR09", name = "Tinkerer Gizlock", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 7, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 7125,
         zone = "Maraudon", creatureType = "Humanoid", npcId = 13601,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Anti-Air."
+        text = "Ambush. Ranged."
     },
     ["MAR10"] = {
         id = "MAR10", name = "Celebras the Cursed", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
-        power = 7, toughness = 8, lifelink = true, isMob = true, isBoss = true, displayId = 12350,
+        power = 5, toughness = 6, lifelink = true, isMob = true, isBoss = true, displayId = 12350,
         zone = "Maraudon", creatureType = "Humanoid", npcId = 12225,
+        onAttack = { ops = { { op = "token", id = "TOK16", n = 2, attacking = true } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech. Aggro: Spawn: 2 Treant Adds (2/1), Exhausted and attacking."
     },
     ["MAR11"] = {
         id = "MAR11", name = "Rotgrip", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -91,7 +92,7 @@ TTS:AddCards({
         onDeath = { ops = { { op = "destroy", to = "strongest_enemy", only = { kw = "flying" } } } },
         zone = "Maraudon", creatureType = "Beast", npcId = 13596,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Brutish. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
+        text = "Cleave. Martyrdom: Destroy the enemy Airborne denizen with the highest power."
     },
     ["MAR12"] = {
         id = "MAR12", name = "Landslide", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -109,6 +110,6 @@ TTS:AddCards({
         zone = "Maraudon", creatureType = "Elemental", npcEntry = 12237,
         anthem = { tag = "type", value = "Elemental", p = 1, t = 1 },
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Brutish. Other Elementals you control get +1/+1."
+        text = "Cleave. Other Elementals you control get +1/+1."
     },
 })

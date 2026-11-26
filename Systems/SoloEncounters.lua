@@ -632,7 +632,11 @@ function TTS:GetOwnedCopies(card)
         return math.min(MAX_REWARD_COPIES, tonumber(copies) or 0)
     end
     if card.campaignPrize then
-        return (TTS:CampaignPrizeProgress(card))
+        -- Earned live from campaign wins, or more if the developer granted them
+        -- (AdminGrants.lua: TTS_NpcGifts.prizes[cardId], as the prize cards above)
+        local earned = TTS:CampaignPrizeProgress(card)
+        local granted = TTS_NpcGifts and TTS_NpcGifts.prizes and tonumber(TTS_NpcGifts.prizes[card.id]) or 0
+        return math.min(MAX_REWARD_COPIES, math.max(earned, granted))
     end
     return nil
 end
@@ -735,7 +739,7 @@ function TTS:GetCollectionScore()
             -- Beta players and prize winners only: not everyone can get them, so they never
             -- count towards a collection
         elseif card.campaignPrize then
-            -- The campaign prizes count with the creature cards (the Ashbringer isn't one)
+            -- The campaign prizes count with the creature cards (Ashbringer isn't one)
             total = total + 1
             local copies = self:GetOwnedCopies(card) or 0
             if copies >= 1 then collected = collected + 1 end

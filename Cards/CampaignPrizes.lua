@@ -29,14 +29,15 @@ TTS:AddCards({
         text = "Unique. Vigilant. Arrival: Draw 2."
     },
     ["CMP02"] = {
-        id = "CMP02", name = "The Ashbringer", cost = "{5}", cmc = 5, color = "C", type = "Sorcery", subType = "Gear",
+        id = "CMP02", name = "Ashbringer", cost = "{5}", cmc = 5, color = "C", type = "Sorcery", subType = "Gear",
         campaignPrize = "all", alwaysFoil = true,
-        -- TODO verify in game: the item id worn by a humanoid denizen (13262 = Ashbringer) and the icon
-        art = "Interface\\Icons\\INV_Sword_48",
+        -- TODO verify in game: the item id worn by a humanoid denizen (13262 = Ashbringer)
+        art = 135331,                    -- icon file id, hued gold (Board.lua TintArt)
+        artTint = { 1.0, 0.82, 0.35 },
         wear = 13262, wearSlot = "weapon",
         effect = { target = "friendly_creature", ops = {
             { op = "buff", to = "target", p = 3, t = 3, kw = { "lifelink", "firstStrike" }, perm = true },
         } },
-        text = "Equip: +3/+3, Drain and Strikes-First."
+        text = "Equip: +3/+3, Leech and Ambush."
     },
 })

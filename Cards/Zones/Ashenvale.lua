@@ -45,7 +45,7 @@ TTS:AddCards({
         power = 3, toughness = 2, haste = true, isMob = true, isBoss = true, displayId = 1207,
         zone = "Ashenvale", creatureType = "Beast", npcId = 3824,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ASH06"] = {
         id = "ASH06", name = "Befouled Water Elemental", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
@@ -66,7 +66,7 @@ TTS:AddCards({
         power = 5, toughness = 5, trample = true, isMob = true, isBoss = true, displayId = 11857,
         zone = "Ashenvale", creatureType = "Humanoid", npcId = 11656,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ASH09"] = {
         id = "ASH09", name = "Ghostpaw Alpha", cost = "{4}{G}{G}", cmc = 6, color = "G", type = "Creature",
@@ -82,7 +82,7 @@ TTS:AddCards({
         dropChance = { 100, 50, 25, 12 },   -- long respawn (about 26h)
         zone = "Ashenvale", creatureType = "Humanoid", npcId = 3792,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     -- Solo reward
     ["ASH11"] = {
@@ -91,6 +91,6 @@ TTS:AddCards({
         zone = "Ashenvale", creatureType = "Humanoid", npcEntry = 3691,
         anthem = { tag = "zone", value = "Ashenvale", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick. Other Ashenvale denizens you control get +1/+1."
+        text = "Charge. Other Ashenvale denizens you control get +1/+1."
     },
 })

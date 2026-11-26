@@ -204,6 +204,8 @@ local function CollectionStatus(card)
             how = L(card.campaignPrize == "all" and "link.campaignAll" or "link.campaignZones")
         elseif card.unlockOnDeath then
             how = L("link.dieToUnlock")
+        elseif card.critterUnlock then
+            how = L("link.critterSecret")
         else
             -- dropsFrom: copies come from killing another NPC (Sneed's Shredder from Sneed)
             local victim = TTS:CardName(card.dropsFrom and TTS.Cards[card.dropsFrom.card] or card)

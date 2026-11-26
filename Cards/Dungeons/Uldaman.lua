@@ -25,7 +25,7 @@ TTS:AddCards({
         power = 4, toughness = 3, firstStrike = true, isMob = true, isBoss = true, displayId = 6054,
         zone = "Uldaman", creatureType = "Humanoid", faction = "Dark Iron", npcId = 4847,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ULD03"] = {
         id = "ULD03", name = "Jadespine Basilisk", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
@@ -39,21 +39,21 @@ TTS:AddCards({
         power = 3, toughness = 4, deathtouch = true, isMob = true, isBoss = true, displayId = 2488,
         zone = "Uldaman", creatureType = "Beast", npcId = 7022,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["ULD05"] = {
         id = "ULD05", name = "Eric \"The Swift\"", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 4, toughness = 4, haste = true, isMob = true, isBoss = true, displayId = 5708,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 6907,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["ULD06"] = {
         id = "ULD06", name = "Baelog", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
         power = 5, toughness = 6, reach = true, support = true, isMob = true, isBoss = true, displayId = 5710,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 6906,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Support. Anti-Air."
+        text = "Support. Ranged."
     },
     ["ULD07"] = {
         id = "ULD07", name = "Olaf", cost = "{2}{W}{W}", cmc = 4, color = "W", type = "Creature",
@@ -74,21 +74,21 @@ TTS:AddCards({
         power = 4, toughness = 9, bulwark = 2, defender = true, isMob = true, isBoss = true, displayId = 5285,
         zone = "Uldaman", creatureType = "Mechanical", npcId = 7023,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Blocker. Bulwark 2."
+        text = "Protection. Shield Wall 2."
     },
     ["ULD10"] = {
         id = "ULD10", name = "Galgann Firehammer", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 7, toughness = 7, firstStrike = true, isMob = true, isBoss = true, displayId = 6059,
         zone = "Uldaman", creatureType = "Humanoid", faction = "Dark Iron", npcId = 7291,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["ULD11"] = {
         id = "ULD11", name = "Grimlok", cost = "{3}{R}{R}", cmc = 5, color = "R", type = "Creature",
         power = 8, toughness = 7, trample = true, isMob = true, isBoss = true, displayId = 11165,
         zone = "Uldaman", creatureType = "Humanoid", npcId = 4854,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["ULD12"] = {
         id = "ULD12", name = "Ancient Stone Keeper", cost = "{4}{W}{W}", cmc = 6, color = "W", type = "Creature",

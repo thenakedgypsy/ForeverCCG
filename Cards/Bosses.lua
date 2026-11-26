@@ -29,7 +29,7 @@ TTS:AddCards({
         zone = "The Deadmines", creatureType = "Humanoid", faction = "Defias", npcId = 639,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.20 },
         anthem = { tag = "faction", value = "Defias", p = 1 },
-        text = "Quick. Strikes-First. Other Defias you control get +1/+0."
+        text = "Charge. Ambush. Other Defias you control get +1/+0."
     },
 
     -- Wailing Caverns: Mutanus the Devourer
@@ -56,7 +56,7 @@ TTS:AddCards({
         power = 8, toughness = 9, trample = true, bulwark = 2, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 2837,
         zone = "Blackfathom Deeps", creatureType = "Beast", npcId = 4829,
         modelCam = { zoom = 0.50, camScale = 0.95, z = 0.00, rotation = 0 },
-        text = "Brutish. Bulwark 2."
+        text = "Cleave. Shield Wall 2."
     },
 
     -- Stockade: Bazil Thredd
@@ -84,7 +84,7 @@ TTS:AddCards({
         power = 5, toughness = 6, reach = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 4642,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4421,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.12, rotation = 0.15 },
-        text = "{T}, {1}{G}: Freeze target denizen. Anti-Air."
+        text = "{T}, {1}{G}: Freeze target denizen. Ranged."
     },
 
     -- SM Graveyard: Bloodmage Thalnos
@@ -93,7 +93,7 @@ TTS:AddCards({
         power = 2, toughness = 2, deathtouch = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 11396,
         zone = "Scarlet Monastery", creatureType = "Undead", faction = "Scarlet Crusade", npcId = 4543,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Martyrdom: Draw 1."
+        text = "Execute. Martyrdom: Draw 1."
     },
 
     -- SM Library: Arcanist Doan
@@ -111,7 +111,7 @@ TTS:AddCards({
         power = 6, toughness = 5, enrage = true, bulwark = 2, haste = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 2041,
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3975,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.15, rotation = 0.20 },
-        text = "Quick. Enrage. Bulwark 2. Attacks each combat if able. Aggro: Gets +2/+0 until end of turn."
+        text = "Charge. Enrage. Shield Wall 2. Attacks each combat if able. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- SM Cathedral: High Inquisitor Whitemane
@@ -121,7 +121,7 @@ TTS:AddCards({
         zone = "Scarlet Monastery", creatureType = "Humanoid", faction = "Scarlet Crusade", npcId = 3977,
         modelCam = { zoom = 0.85, camScale = 1.0, z = -0.15, rotation = 0.20 },
         enterSound = 5840,   -- "Arise, my champion!" (Sound.lua)
-        text = "Drain. Shielded. Arrival: Return the last other denizen card put into your graveyard to the battlefield."
+        text = "Leech. Absorb. Arrival: Return the last other denizen card put into your graveyard to the battlefield."
     },
 
     -- Razorfen Downs: Amnennar the Coldbringer
@@ -139,7 +139,7 @@ TTS:AddCards({
         power = 8, toughness = 10, vigilance = true, hexproof = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 5988,
         zone = "Uldaman", creatureType = "Giant", npcId = 2748,
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
-        text = "Vigilant. Warded."
+        text = "Vigilant. Anti-Magic."
     },
 
     -- Zul'Farrak: Chief Ukorz Sandscalp
@@ -148,7 +148,7 @@ TTS:AddCards({
         power = 7, toughness = 7, enrage = true, bulwark = 2, haste = true, trample = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 6439,
         zone = "Zul'Farrak", creatureType = "Humanoid", faction = "Troll", npcId = 7267,
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Quick. Enrage. Bulwark 2. Gets +3/+0 while your life is 10 or less."
+        text = "Cleave. Charge. Enrage. Shield Wall 2. Gets +3/+0 while your life is 10 or less."
     },
 
     -- Maraudon: Princess Theradras
@@ -157,7 +157,7 @@ TTS:AddCards({
         power = 9, toughness = 9, trample = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 12292,
         zone = "Maraudon", creatureType = "Elemental", npcId = 12201,
         modelCam = { zoom = 0.35, camScale = 1.60, z = -0.25, rotation = 0.10 },
-        text = "Brutish. Aggro: If unblocked, destroy one of the defending player's Prayers."
+        text = "Cleave. Aggro: If unblocked, destroy one of the defending player's Prayers."
     },
 
     -- Sunken Temple: Shade of Eranikus
@@ -184,7 +184,7 @@ TTS:AddCards({
         power = 9, toughness = 8, trample = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 8711,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock", npcId = 9568,
         modelCam = { zoom = 0.50, camScale = 1.35, z = -0.20, rotation = 0.15 },
-        text = "Brutish. Arrival: Deal 3 damage to each enemy denizen."
+        text = "Cleave. Arrival: Deal 3 damage to each enemy denizen."
     },
 
     -- UBRS: General Drakkisath
@@ -193,7 +193,7 @@ TTS:AddCards({
         power = 10, toughness = 9, bulwark = 2, hexproof = true, trample = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 10115,
         zone = "Blackrock Spire", creatureType = "Dragonkin", faction = "Blackrock", npcId = 10363,
         modelCam = { zoom = 0.40, camScale = 1.50, z = -0.25, rotation = 0.15 },
-        text = "Brutish. Warded. Bulwark 2. All other denizens lose and cannot gain Quick."
+        text = "Cleave. Anti-Magic. Shield Wall 2. All other denizens lose and cannot gain Charge."
     },
 
     -- Dire Maul East: Alzzin the Wildshaper
@@ -202,7 +202,7 @@ TTS:AddCards({
         power = 7, toughness = 8, deathtouch = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 14416,
         zone = "Dire Maul", creatureType = "Demon", faction = "Satyr", npcId = 11492,
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "{T}: You gain 4 life. Fatal."
+        text = "{T}: You gain 4 life. Execute."
     },
 
     -- Dire Maul West: Prince Tortheldrin
@@ -211,7 +211,7 @@ TTS:AddCards({
         power = 5, toughness = 5, bulwark = 2, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 11256,
         zone = "Dire Maul", creatureType = "Humanoid", npcId = 11486,
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.12, rotation = 0.15 },
-        text = "Bulwark 2. {2}{U}: Draw 1, then discard a card. Gets +1/+1 until end of turn."
+        text = "Shield Wall 2. {2}{U}: Draw 1, then discard a card. Gets +1/+1 until end of turn."
     },
 
     -- Dire Maul North: King Gordok
@@ -220,7 +220,7 @@ TTS:AddCards({
         power = 10, toughness = 8, enrage = true, trample = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 11583,
         zone = "Dire Maul", creatureType = "Humanoid", faction = "Ogre", npcId = 11501,
         modelCam = { zoom = 0.45, camScale = 1.45, z = -0.22, rotation = 0.15 },
-        text = "Brutish. Enrage. Aggro: Gets +2/+0 until end of turn."
+        text = "Cleave. Enrage. Aggro: Gets +2/+0 until end of turn."
     },
 
     -- Scholomance: Darkmaster Gandling
@@ -238,7 +238,7 @@ TTS:AddCards({
         power = 8, toughness = 8, lifelink = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 10729,
         zone = "Stratholme", creatureType = "Undead", npcId = 10440,
         modelCam = { zoom = 0.70, camScale = 1.15, z = -0.18, rotation = 0.15 },
-        text = "Drain. Whenever an opposing denizen dies, its controller takes 2 damage."
+        text = "Leech. Whenever an opposing denizen dies, its controller takes 2 damage."
     },
 
     -- Stratholme: Balnazzar
@@ -257,7 +257,7 @@ TTS:AddCards({
         zone = "The Hall of Thanes", creatureType = "Humanoid", faction = "Dark Iron", npcId = 261319,
         anthem = { tag = "faction", value = "Dark Iron", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Vigilant. Other Dark Iron you control get +1/+1."
+        text = "Ambush. Vigilant. Other Dark Iron you control get +1/+1."
     },
 
     -- Ruins of Lordaeron: Rath'mael
@@ -267,7 +267,7 @@ TTS:AddCards({
         zone = "Ruins of Lordaeron", creatureType = "Undead", npcId = 250657,
         anthem = { tag = "type", value = "Undead", p = 1 },
         modelCam = { zoom = 0.80, camScale = 1.0, z = -0.10, rotation = 0.15 },
-        text = "Fatal. Drain. Other Undead you control get +1/+0."
+        text = "Execute. Leech. Other Undead you control get +1/+0."
     },
 
     -- Excavation Site: Relic Guardian
@@ -276,7 +276,7 @@ TTS:AddCards({
         power = 8, toughness = 9, trample = true, vigilance = true, isMob = true, isBoss = true, packDrop = "dungeon", displayId = 144224,
         zone = "Excavation Site", creatureType = "Elemental", npcId = 260326,
         modelCam = { zoom = 0.55, camScale = 1.30, z = -0.20, rotation = 0.15 },
-        text = "Brutish. Vigilant."
+        text = "Cleave. Vigilant."
     },
 
     -- City of Dalaran: Shade of the Archmage
@@ -296,7 +296,7 @@ TTS:AddCards({
         zone = "The Drowned City", creatureType = "Humanoid", faction = "Naga", npcId = 260243,
         anthem = { tag = "faction", value = "Naga", p = 1, t = 1 },
         modelCam = { zoom = 0.60, camScale = 1.20, z = -0.15, rotation = 0.15 },
-        text = "Brutish. Other Naga you control get +1/+1."
+        text = "Cleave. Other Naga you control get +1/+1."
     },
 
     -- Alcaz Prison: Blazeroar
@@ -316,7 +316,7 @@ TTS:AddCards({
         zone = "Krol'dok Stronghold", creatureType = "Humanoid", faction = "Ogre", npcId = 258968,
         anthem = { tag = "faction", value = "Ogre", p = 1, t = 1 },
         modelCam = { zoom = 0.60, camScale = 1.20, z = -0.18, rotation = 0.15 },
-        text = "Brutish. Bulwark 2. Other Ogres you control get +1/+1."
+        text = "Cleave. Shield Wall 2. Other Ogres you control get +1/+1."
     },
 
     -- Blackmaw Hold: Varrox Bleakhoof
@@ -326,7 +326,7 @@ TTS:AddCards({
         zone = "Blackmaw Hold", creatureType = "Demon", faction = "Satyr", npcId = 247234,
         anthem = { tag = "faction", value = "Satyr", p = 1, t = 1 },
         modelCam = { zoom = 0.70, camScale = 1.10, z = -0.15, rotation = 0.15 },
-        text = "Strikes-First. Drain. Other Satyrs you control get +1/+1."
+        text = "Ambush. Leech. Other Satyrs you control get +1/+1."
     },
 
     -- Shaper's Terrace: Nanaya
@@ -336,6 +336,6 @@ TTS:AddCards({
         zone = "Shaper's Terrace", creatureType = "Giant", npcId = 261809,
         anthem = { tag = "type", value = "Beast", p = 1, t = 1 },
         modelCam = { zoom = 0.40, camScale = 1.40, z = -0.22, rotation = 0.15 },
-        text = "Brutish. Vigilant. Beasts you control get +1/+1."
+        text = "Cleave. Vigilant. Beasts you control get +1/+1."
     },
 })

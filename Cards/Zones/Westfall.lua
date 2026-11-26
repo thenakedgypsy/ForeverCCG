@@ -17,21 +17,21 @@ TTS:AddCards({
         power = 1, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 643,
         zone = "Westfall", creatureType = "Beast", npcId = 834,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Quick."
+        text = "Charge."
     },
     ["WES02"] = {
         id = "WES02", name = "Defias Smuggler", cost = "{B}", cmc = 1, color = "B", type = "Creature",
         power = 1, toughness = 1, reach = true, firstStrike = true, isMob = true, isBoss = true, displayId = 4418,
         zone = "Westfall", creatureType = "Humanoid", faction = "Defias", npcId = 95,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First. Anti-Air."
+        text = "Ambush. Ranged."
     },
     ["WES03"] = {
         id = "WES03", name = "Harvest Golem", cost = "{1}{W}", cmc = 2, color = "W", type = "Creature",
         power = 1, toughness = 5, defender = true, isMob = true, isBoss = true, displayId = 367,
         zone = "Westfall", creatureType = "Mechanical", npcId = 36,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["WES04"] = {
         id = "WES04", name = "Fleshripper", cost = "{1}{G}", cmc = 2, color = "G", type = "Creature",
@@ -45,14 +45,14 @@ TTS:AddCards({
         power = 2, toughness = 3, trample = true, isMob = true, isBoss = true, displayId = 3027,
         zone = "Westfall", creatureType = "Beast", npcId = 157,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish."
+        text = "Cleave."
     },
     ["WES06"] = {
         id = "WES06", name = "Harvest Watcher", cost = "{2}{W}", cmc = 3, color = "W", type = "Creature",
         power = 1, toughness = 7, defender = true, isMob = true, isBoss = true, displayId = 378,
         zone = "Westfall", creatureType = "Mechanical", npcId = 114,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Blocker."
+        text = "Protection."
     },
     ["WES07"] = {
         id = "WES07", name = "Defias Digger", cost = "{2}{B}{B}", cmc = 4, color = "B", type = "Creature",
@@ -67,7 +67,7 @@ TTS:AddCards({
         power = 5, toughness = 5, firstStrike = true, isMob = true, isBoss = true, displayId = 383,
         zone = "Westfall", creatureType = "Humanoid", faction = "Gnoll", npcId = 452,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Strikes-First."
+        text = "Ambush."
     },
     ["WES09"] = {
         id = "WES09", name = "Shore Crawler", cost = "{4}{U}{U}", cmc = 6, color = "U", type = "Creature",
@@ -93,5 +93,54 @@ TTS:AddCards({
         anthem = { tag = "zone", value = "Westfall", p = 1, t = 1, kw = { "support" } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
         text = "Vigilant. Other Westfall denizens you control get +1/+1 and Support."
+    },
+    -- MURLOCS (Westfall)
+    ["WES12"] = {
+        id = "WES12", name = "Murloc Raider", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 1, toughness = 1, isMob = true, isBoss = true, displayId = 441,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 515,
+        etb = { ops = { { op = "token", id = "TOK01", n = 1 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Spawn: 1 Murloc Tadpole Add (1/1)."
+    },
+    ["WES13"] = {
+        id = "WES13", name = "Murloc Coastrunner", cost = "{1}{U}", cmc = 2, color = "U", type = "Creature",
+        power = 2, toughness = 1, haste = true, isMob = true, isBoss = true, displayId = 983,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 126,
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Charge."
+    },
+    ["WES14"] = {
+        id = "WES14", name = "Murloc Tidehunter", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 2, toughness = 2, isMob = true, isBoss = true, displayId = 1995,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 127,
+        etb = { ops = { { op = "token", id = "TOK01", n = 1 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Spawn: 1 Murloc Tadpole Add (1/1)."
+    },
+    ["WES15"] = {
+        id = "WES15", name = "Murloc Oracle", cost = "{2}{U}", cmc = 3, color = "U", type = "Creature",
+        power = 1, toughness = 3, isMob = true, isBoss = true, displayId = 1079,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 517,
+        etb = { ops = { { op = "heal", to = "self_player", n = 3 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: You restore 3 life."
+    },
+    ["WES16"] = {
+        dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
+        id = "WES16", name = "Slark", cost = "{2}{U}{U}", cmc = 4, color = "U", type = "Creature",
+        power = 3, toughness = 2, isMob = true, isBoss = true, displayId = 540,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 519,
+        etb = { ops = { { op = "token", id = "TOK01", n = 2 } } },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Arrival: Spawn: 2 Murloc Tadpole Adds (1/1)."
+    },
+    ["WES17"] = {
+        id = "WES17", name = "Old Murk-Eye", cost = "{3}{U}{U}", cmc = 5, color = "U", type = "Creature",
+        power = 4, toughness = 4, isNamed = true, isMob = true, isBoss = true, displayId = 5243,
+        zone = "Westfall", creatureType = "Humanoid", faction = "Murloc", npcId = 391,
+        anthem = { tag = "faction", value = "Murloc", p = 1, t = 1 },
+        modelCam = { zoom = 0.73, camScale = 1.08, z = -0.12, rotation = 0.15 },
+        text = "Other Murlocs you control get +1/+1."
     },
 })

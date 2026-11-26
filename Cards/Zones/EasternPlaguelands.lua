@@ -59,14 +59,14 @@ TTS:AddCards({
         power = 2, toughness = 3, flying = true, lifelink = true, isMob = true, isBoss = true, displayId = 7897,
         zone = "Eastern Plaguelands", creatureType = "Beast", npcId = 8602,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Airborne. Drain."
+        text = "Airborne. Leech."
     },
     ["EPL08"] = {
         id = "EPL08", name = "Frenzied Plaguehound", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 5, toughness = 5, enrage = true, haste = true, isMob = true, isBoss = true, displayId = 9022,
         zone = "Eastern Plaguelands", creatureType = "Demon", npcId = 8598,
         modelCam = { zoom = 0.74, camScale = 1.08, z = -0.12, rotation = 0.15 },
-        text = "Quick. Enrage."
+        text = "Charge. Enrage."
     },
     ["EPL09"] = {
         id = "EPL09", name = "Stitched Horror", cost = "{4}{B}{B}", cmc = 6, color = "B", type = "Creature",

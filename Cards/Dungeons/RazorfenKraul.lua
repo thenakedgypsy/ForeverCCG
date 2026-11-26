@@ -46,7 +46,7 @@ TTS:AddCards({
         power = 3, toughness = 4, lifelink = true, isMob = true, isBoss = true, displayId = 6096,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4517,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech."
     },
     ["RFK06"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -65,17 +65,18 @@ TTS:AddCards({
     },
     ["RFK08"] = {
         id = "RFK08", name = "Aggem Thorncurse", cost = "{2}{G}{G}", cmc = 4, color = "G", type = "Creature",
-        power = 5, toughness = 7, lifelink = true, isMob = true, isBoss = true, displayId = 6097,
+        power = 4, toughness = 5, lifelink = true, isMob = true, isBoss = true, displayId = 6097,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4424,
+        ability = { cost = "{3}", ops = { { op = "token", id = "TOK15", n = 1 } } },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Drain."
+        text = "Leech. {3}: Spawn: 1 Boar Spirit Add (5/1, Blink)."
     },
     ["RFK09"] = {
         id = "RFK09", name = "Death Speaker Jargba", cost = "{3}{B}{B}", cmc = 5, color = "B", type = "Creature",
         power = 6, toughness = 7, deathtouch = true, isMob = true, isBoss = true, displayId = 4644,
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4428,
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Fatal."
+        text = "Execute."
     },
     ["RFK10"] = {
         dropChance = { 100, 25, 12, 6 }, rareSpawn = true,   -- rare spawn: normal rates
@@ -91,14 +92,14 @@ TTS:AddCards({
         zone = "Razorfen Kraul", creatureType = "Humanoid", faction = "Quilboar", npcId = 4420,
         anthem = { tag = "faction", value = "Quilboar", p = 1, t = 1 },
         modelCam = { zoom = 0.80, camScale = 1.00, z = -0.10, rotation = 0.15 },
-        text = "Brutish. Other Quilboar you control get +1/+1."
+        text = "Cleave. Other Quilboar you control get +1/+1."
     },
     ["RFK12"] = {
         id = "RFK12", name = "Agathelos the Raging", cost = "{3}{G}{G}", cmc = 5, color = "G", type = "Creature",
         power = 7, toughness = 7, haste = true, trample = true, isMob = true, isBoss = true, displayId = 2450,
         zone = "Razorfen Kraul", creatureType = "Beast", npcId = 4422,
         modelCam = { zoom = 0.62, camScale = 1.16, z = -0.13, rotation = 0.15 },
-        text = "Quick. Brutish."
+        text = "Charge. Cleave."
     },
     -- Solo reward
     ["RFK13"] = {
