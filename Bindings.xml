@@ -1,0 +1,20 @@
+<!--
+    ForeverCCG - Tragic: The Saddening Engine  |  © 2026 the_naked_gypsy
+    Key bindings (the game loads this file by name; it isn't in the .toc). None has a key to
+    start with: they're set in Options > Key Bindings (UI\Keybinds.lua) or the game's own
+    Key Bindings under AddOns. Names and the header are set in UI\Keybinds.lua.
+-->
+<Bindings>
+    <Binding name="FCCG_TOGGLE_MAIN" header="FCCG" category="ADDONS">TTS.Keybinds:Run("main")</Binding>
+    <Binding name="FCCG_TOGGLE_GUIDE" category="ADDONS">TTS.Keybinds:Run("guide")</Binding>
+    <Binding name="FCCG_TOGGLE_DECKBUILDER" category="ADDONS">TTS.Keybinds:Run("deckbuilder")</Binding>
+    <Binding name="FCCG_TOGGLE_RULES" category="ADDONS">TTS.Keybinds:Run("rules")</Binding>
+    <Binding name="FCCG_TOGGLE_WAITING" category="ADDONS">TTS.Keybinds:Run("waiting")</Binding>
+    <Binding name="FCCG_TOGGLE_OPTIONS" category="ADDONS">TTS.Keybinds:Run("options")</Binding>
+    <Binding name="FCCG_BOARD_MINIMIZE" category="ADDONS">TTS.Keybinds:Run("minimize")</Binding>
+    <Binding name="FCCG_BOARD_RESTORE" category="ADDONS">TTS.Keybinds:Run("restore")</Binding>
+    <Binding name="FCCG_BOARD_TOGGLE" category="ADDONS">TTS.Keybinds:Run("boardToggle")</Binding>
+    <Binding name="FCCG_END_TURN" category="ADDONS">TTS.Keybinds:Run("endTurn")</Binding>
+    <Binding name="FCCG_NEXT_PHASE" category="ADDONS">TTS.Keybinds:Run("nextPhase")</Binding>
+    <Binding name="FCCG_UNDO" category="ADDONS">TTS.Keybinds:Run("undo")</Binding>
+</Bindings>

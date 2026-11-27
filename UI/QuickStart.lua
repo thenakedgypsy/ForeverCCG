@@ -60,7 +60,7 @@ local SETS = {
     quickstart = { prefix = "qs", pages = 8, heading = "qs.heading", cards = QS_CARDS, tutorial = true },
     whatsnew   = { prefix = "wn14", pages = 9, heading = "wn14.heading", cards = WN_CARDS },
 }
-local MAX_PAGES = 8
+local MAX_PAGES = 9
 local set = SETS.quickstart
 local CARD_BACK = "Interface\\AddOns\\ForeverCCG\\Textures\\Cards\\card_back.png"
 
@@ -171,9 +171,20 @@ rule:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
 rule:SetPoint("RIGHT", Q, "RIGHT", -28, 0)
 rule:SetColorTexture(1, 0.82, 0, 0.35)
 
-local text = Q:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-text:SetPoint("TOPLEFT", rule, "BOTTOMLEFT", 0, -12)
-text:SetPoint("RIGHT", Q, "RIGHT", -28, 0)
+-- The text scrolls when a page has more than fits (its scroll bar only shows then)
+local TEXT_RIGHT = 28                  -- the text's gap from the window's right edge
+local BAR_ROOM = 20                    -- and how much more it leaves when the scroll bar shows
+local TEXT_W = W - 12 - 10 - SHOWCASE_W - 22 - TEXT_RIGHT
+local textScroll = CreateFrame("ScrollFrame", "TTS_QuickStartTextScroll", Q, "UIPanelScrollFrameTemplate")
+textScroll:SetPoint("TOPLEFT", rule, "BOTTOMLEFT", 0, -12)
+local textBar = textScroll.ScrollBar or _G["TTS_QuickStartTextScrollScrollBar"]
+local textChild = CreateFrame("Frame", nil, textScroll)
+textChild:SetSize(TEXT_W, 10)
+textScroll:SetScrollChild(textChild)
+
+local text = textChild:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+text:SetPoint("TOPLEFT")
+text:SetWidth(TEXT_W)
 text:SetJustifyH("LEFT")
 text:SetJustifyV("TOP")
 text:SetSpacing(3)
@@ -245,6 +256,28 @@ local function PaintShowcase(n)
     end
 end
 
+-- Sizes the text's scroll area: down to the footer (or above the tutorial button when it's
+-- up), full width with no scroll bar when the text fits, narrower with one when it doesn't
+local function FitText()
+    textScroll:ClearAllPoints()
+    textScroll:SetPoint("TOPLEFT", rule, "BOTTOMLEFT", 0, -12)
+    if tutorialBtn:IsShown() then
+        textScroll:SetPoint("BOTTOM", tutorialBtn, "TOP", 0, 8)
+    else
+        textScroll:SetPoint("BOTTOM", Q, "BOTTOM", 0, 58)
+    end
+    text:SetWidth(TEXT_W)
+    local over = text:GetStringHeight() > (textScroll:GetHeight() or 0) + 1
+    local w = over and (TEXT_W - BAR_ROOM) or TEXT_W
+    textScroll:SetPoint("RIGHT", Q, "RIGHT", -(TEXT_RIGHT + (over and BAR_ROOM or 0)), 0)
+    text:SetWidth(w)
+    textChild:SetSize(w, math.max(10, text:GetStringHeight()))
+    if textBar then textBar:SetShown(over) end
+    textScroll:UpdateScrollChildRect()
+    textScroll:SetVerticalScroll(0)
+end
+Q:HookScript("OnShow", function() FitText() end)
+
 -- n: the page; turned: a page turned by the player (plays its sound)
 Show = function(n, turned)
     local pages = set.pages
@@ -262,6 +295,7 @@ Show = function(n, turned)
     backBtn:SetEnabled(page > 1)
     nextBtn:SetText(L(page < pages and "qs.next" or (set.prefix .. ".done")))
     tutorialBtn:SetShown(set.tutorial and page == pages and TTS.StartTutorial ~= nil)
+    FitText()
     PaintShowcase(page)
     shownAt = GetTime()
 end

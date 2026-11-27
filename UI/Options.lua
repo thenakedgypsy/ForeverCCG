@@ -633,7 +633,6 @@ end)
         rb:SetScript("OnClick", function()
             O:Set("toastTier", tier)
             O:SyncToastControls()
-    O.motionCheck:SetChecked(db.uiMotion ~= false)
         end)
         rb:SetScript("OnEnter", function(self)
             if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L(key), L(key .. ".desc")) end
@@ -711,7 +710,7 @@ windowSection:SetPoint("TOPLEFT", O.toastSection, "BOTTOMLEFT", 0, -8)
 local OPACITY_ROOTS = { "TTS_MainDialog", "TTS_BoardFrame", "TTS_BoardRestoreFrame", "TTS_OptionsFrame",
     "TTS_DeckBuilderFrame", "TTS_DeckPicker", "TTS_RulesFrame", "TTS_SoloSelectFrame", "TTS_DungeonEntryFrame",
     "TTS_WaitingRoomFrame", "TTS_ChoicePopup", "TTS_HeroChoice", "TTS_QuickStart", "TTS_TutorialCoach",
-    "TTS_NpcGossipPanel", "TTS_CardLinkPreview", "TTS_MatchLogCopyFrame", "TTS_PvPRecordFrame", "TTS_MobCardWindow" }
+    "TTS_NpcGossipPanel", "TTS_CardLinkPreview", "TTS_MatchLogCopyFrame", "TTS_PvPRecordFrame", "TTS_MobCardWindow", "TTS_KeybindFrame" }
 local OPACITY_WALK = 1   -- seconds
 local adopted = setmetatable({}, { __mode = "k" })   -- frame -> its own colour { r, g, b, a, set }
 
@@ -766,13 +765,33 @@ O.motionCheck = CreateCheck(windowSection, 10, -64, "options.uiMotion")
 O.motionCheck:SetScript("OnClick", function(self) O:Set("uiMotion", self:GetChecked() and true or false) end)
 
 -- =========================================================================
+-- KEY BINDINGS SECTION
+-- A button opening the Key Bindings popout beside this window (UI\Keybinds.lua). (On O: few
+-- locals left here.)
+-- =========================================================================
+;(function()
+    local s = CreateSection("options.keybinds", 66)
+    s:SetPoint("TOPLEFT", windowSection, "BOTTOMLEFT", 0, -8)
+    O.keybindSection = s
+    local b = CreateFrame("Button", nil, s, "UIPanelButtonTemplate")
+    b:SetSize(170, 22)
+    b:SetPoint("TOPLEFT", s, "TOPLEFT", 12, -32)
+    Loc:Bind(b, "options.keybinds.open")
+    b:SetScript("OnClick", function() if TTS.Keybinds then TTS.Keybinds:Toggle(F) end end)
+    b:SetScript("OnEnter", function(self)
+        if TTS.Tooltip then TTS.Tooltip:ShowText(self, "ANCHOR_RIGHT", L("options.keybinds.open"), L("options.keybinds.open.desc")) end
+    end)
+    b:SetScript("OnLeave", function(self) if TTS.Tooltip then TTS.Tooltip:Hide(self) end end)
+end)()
+
+-- =========================================================================
 -- LANGUAGE SECTION
 -- A button showing the saved choice; clicking it lists the installed
 -- languages (English plus the ForeverCCG_Languages pack). A new choice is
 -- used after a /reload.
 -- =========================================================================
 local langSection = CreateSection("options.language", 66)
-langSection:SetPoint("TOPLEFT", windowSection, "BOTTOMLEFT", 0, -8)
+langSection:SetPoint("TOPLEFT", O.keybindSection, "BOTTOMLEFT", 0, -8)
 
 local langButton = CreateFrame("Button", nil, langSection, "UIPanelButtonTemplate")
 langButton:SetSize(170, 22)
@@ -876,7 +895,7 @@ end)
 -- The scrolled content: every section, the gaps between them, and a little room at each end
 local function UpdateContentHeight()
     local h = 8
-    for _, section in ipairs({ soundSection, tipSection, boardSection, O.npcSection, O.collectionSection, O.toastSection, windowSection, langSection, devSection }) do
+    for _, section in ipairs({ soundSection, tipSection, boardSection, O.npcSection, O.collectionSection, O.toastSection, windowSection, O.keybindSection, langSection, devSection }) do
         h = h + section:GetHeight() + 8
     end
     content:SetHeight(h)
@@ -964,6 +983,7 @@ function O:SyncControls()
     nudgeSlider:SetAlpha(db.actNudge ~= false and 1 or 0.4)
     opacitySlider:SetValue(db.windowOpacity or 1)
     opacitySlider:ShowValue(db.windowOpacity or 1)
+    O.motionCheck:SetChecked(db.uiMotion ~= false)
     local mode = TTS.CardControls and TTS.CardControls() or "both"
     for _, rb in ipairs(controlRadios) do rb:SetChecked(rb.key == mode) end
     langButton:SetText(ChoiceLabel(Loc:GetChoice()))

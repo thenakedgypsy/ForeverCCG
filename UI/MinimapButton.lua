@@ -96,6 +96,7 @@ local function ToggleWaitingRoom()
     end
     F:Show()
 end
+TTS.ToggleWaitingRoom = ToggleWaitingRoom   -- (its key binding too, UI\Keybinds.lua)
 
 -- =========================================================================
 -- CLICKS & TOOLTIP

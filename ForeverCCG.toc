@@ -132,6 +132,7 @@ UI\Tooltips.lua
 UI\Choice.lua
 UI\MainFrame.lua
 UI\Options.lua
+UI\Keybinds.lua
 UI\DeckStats.lua
 UI\DeckBuilder.lua
 UI\DeckPicker.lua
